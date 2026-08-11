@@ -1,0 +1,125 @@
+sidecar_version: v25_source_grouping_review_v1
+reviewer: codex_operator_phase2r13_source_reconciliation
+reviewed_at_utc: '2026-07-29T18:00:00Z'
+reviews:
+- review_id: v25-source-grouping-review:d3333d966bef0d39f326ef4c
+  sample_id: gonglu_24_table_formula
+  family_kind: rule_family
+  member_fact_keys:
+  - formwork.strength-rigidity-stability
+  - formwork.release-agent-prohibition
+  - formwork.lifting-ring-material
+  - formwork.lifting-ring-stress
+  - formwork.emergency-passage-separation
+  source_evidence_ids:
+  - ev:4b0c10cf94be018459452e14
+  - ev:5aeed111f1a65c491bae59c8
+  source_anchor_span_ids:
+  - span:cb28d0ea3b1ebc79c790c295
+  - span:39b910d758bb8ea0b172d199
+  - span:d4e88f7e635e38b71bc1cd3d
+  - span:db7d38a6b2042f811e7f0ba8
+  - span:fb7057c78f8d65c40aa02dc6
+  source_manifest_sha256s:
+  - d61a6721c1aba3edbb9a650a4826e92a4d2cef027e98f0765b4c7a78cadbfd54
+  basis: The source table joins the template and support requirements as one rule
+    family.
+- review_id: v25-source-grouping-review:6a671daaf7a027e3d119f2b1
+  sample_id: gonglu_24_table_formula
+  family_kind: rule_family
+  member_fact_keys:
+  - formwork.anti-overturning
+  - formwork.climb-speed
+  - formwork.preload
+  - formwork.arch-removal
+  source_evidence_ids:
+  - ev:d432b8aea3fb1b7dd3929c91
+  - ev:475bd5bb2cb7b9ceaebc951d
+  - ev:7a648e051806ade7c5c18281
+  - ev:fad8a9662295265ec28129a4
+  source_anchor_span_ids:
+  - span:37b8ff0ce5a82006eacaddef
+  - span:09c6c119a81f4ac1c7acf316
+  - span:e766a62c16ec423788927a47
+  - span:566a846e71fdd975f8630b25
+  source_manifest_sha256s:
+  - c28c394188ff6d4fccccbb15da1b169051d597248f9624a6e7c885402c13d316
+  - dab4d67f167a6dfc86ca31ba8267e0be74e3547d66199eea1cad811fc3aa9bab
+  - e1bbfd521749af8a2e948c5e94beb932daa49b4444c4b18e7638c6848208665c
+  basis: Source constraints and thresholds govern the same installation and removal
+    operation family.
+- review_id: v25-source-grouping-review:3b3649d037ff95c3e053d07f
+  sample_id: gonglu_41_diagram_mixed
+  family_kind: table_classification
+  member_fact_keys:
+  - tunnel.rock-classification-table
+  - tunnel.span-classification
+  source_evidence_ids:
+  - ev:67bb77bb020fe391b60a19dd
+  - ev:d03d85072fc4e57dad4a2460
+  source_anchor_span_ids:
+  - span:5bbdf035b29a3e67ba00b99b
+  - span:7727fc570d418ed29b1e6625
+  source_manifest_sha256s:
+  - 742c91ef77ccdefc36823847bee13c6ca979602aaee3a2a60b0124b25e694c2a
+  - 68f4bb0d97b9b59f4a7c6bb9acc451dc765a61b6e838e8520571674d3fe4e4e3
+  basis: The complete source table and its selected span-classification rule share
+    one reviewed table provenance.
+- review_id: v25-source-grouping-review:4d51484fe1f2f162af2ab3ba
+  sample_id: gonglu_55_standard_constraints
+  family_kind: rule_family
+  member_fact_keys:
+  - safety.production-duties
+  - safety.risk-threshold
+  source_evidence_ids:
+  - ev:9f7eadc8dd0ad36781960cbc
+  - ev:d68d3f7b9a499e5031c4f280
+  source_anchor_span_ids:
+  - span:5aeadef24996a802092fb7ab
+  - span:1a201392192a94f89fb60e94
+  source_manifest_sha256s:
+  - d79e994eeb2d34b1ef3e5474cf48c1ebc6e6e52ae13382662b6d0a1ef882c085
+  - 7adaf898125d1df3a17b2a1cac820b12d8b0fd98d8712f8ca7c802b4e87ed568
+  basis: Source requirements bind safety duties and the reviewed applicability threshold
+    as one rule family.
+- review_id: v25-source-grouping-review:9048fc54871e12c4a891da84
+  sample_id: gonglu_55_standard_constraints
+  family_kind: timed_enumeration
+  member_fact_keys:
+  - safety.accident-categories
+  - safety.report-deadline
+  source_evidence_ids:
+  - ev:f733e0f0f89528fb1ee705de
+  - ev:dc1bf303b3d4471fa9d78f42
+  - ev:2d8bc2bad65095beb2b5b054
+  source_anchor_span_ids:
+  - span:5b7c968badbcf4e293164730
+  - span:8a8df672043000e7a72c2bfc
+  - span:861ffbfbbedc7f8c941f6f5a
+  source_manifest_sha256s:
+  - 90f27cafcc87f3ded800f40f3ebf722324704efd512da04402241301ec010731
+  - 9b5cbb7326dd6d1fdb82d7f973fc401b7523f864c2f8289d10b9c034cd6e1c32
+  basis: Source evidence joins accident handling enumeration with its mandatory reporting
+    deadline.
+- review_id: v25-source-grouping-review:e03db3606329bee554ede65e
+  sample_id: gonglu_62_cost_flow_incident
+  family_kind: formula_family
+  member_fact_keys:
+  - cost.project-budget-formula
+  - cost.mechanical-rental-formula
+  - cost.plan-variance-formula
+  source_evidence_ids:
+  - ev:759b2e6cf5213f83a3ba54a6
+  - ev:7ca39e97fff916f81dc35e52
+  - ev:75e2cfcc3f5b51a85b2adf5a
+  - ev:79d57ad76e118cdae6a54d02
+  source_anchor_span_ids:
+  - span:7387270fb8169f496ff530d6
+  - span:07d590b65597ac93e26e45d8
+  - span:f5d15420e699374c51f19c1a
+  - span:f9afccc3ea2654b009aef3a6
+  source_manifest_sha256s:
+  - 550cfd172a096dae42dc423b809ba008e44f0c93254da612a0ad3216bbb8b9ac
+  - a6861053d18557b3db76c40729a19082c1945608b3dadbf3fde3f742bf2b892a
+  - 32daf56d8fbb805f1516736a1e6cb7b47635843fd9d217a4fee58641429b13a7
+  basis: The three source formulas are calculation rules in one cost-management family.

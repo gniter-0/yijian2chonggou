@@ -1,0 +1,46 @@
+[project]
+name = "examcard"
+version = "0.1.0"
+description = "考试知识图解卡片生成引擎（V2 内核，自 yijian2 抽包；materials→evidence→knowledge→compilers→gates 流水线）"
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "Proprietary" }
+authors = [{ name = "examcard maintainers" }]
+
+# 下限与 yijian2 requirements.txt 保持一致，上限由 uv.lock 固定。
+# 升级依赖：`uv add openai@latest`；同步本地：`uv sync`。
+dependencies = [
+    "PyMuPDF>=1.24.0",
+    "openai>=1.30.0",
+    "httpx>=0.27.0",
+    "Pillow>=10.0.0",
+    "PyYAML>=6.0",
+    "python-dotenv>=1.0.0",
+    "flask>=3.0.0",
+    "pydantic>=2.7.0",
+    # utils/table_render 确定性表格渲染分支依赖（缺失时 step3/step4 优雅回退 AI 生图）
+    "matplotlib>=3.8.0",
+    "rapidocr-onnxruntime>=1.4.4",
+    "opencv-python>=4.10.0,<5",
+    "numpy>=1.23.0",
+]
+
+# 与 yijian2 的差异：pytest 从运行时依赖移入 dev 组（uv sync 默认安装）。
+[dependency-groups]
+dev = [
+    "pytest>=8.0.0",
+]
+
+# 与 yijian2 的差异：本仓是可安装包（src 布局），不再 package = false。
+[build-system]
+requires = ["uv_build>=0.11.0,<0.13.0"]
+build-backend = "uv_build"
+
+[tool.pytest.ini_options]
+# 测试隔离规范见 docs/engineering_skeleton.md 第 4 节（T1–T8）。
+testpaths = ["tests"]
+addopts = '--strict-markers -m "not live"'
+markers = [
+    "live: 真实外部调用（LLM/生图/外网）。默认剔除，显式 `uv run pytest -m live` 运行。",
+    "slow: 本地慢用例（单条 >30s）。默认执行，可用 -m \"not slow\" 剔除。",
+]

@@ -1,0 +1,131 @@
+schema_version: "2.0"
+binding_version: table_continuation_binding_v1
+binding_id: "table-continuation:7c0923bfb0e6137de786def5"
+sample_id: gonglu_24_continuation_real
+source_document_sha256: 9308dac1b5aa40bd1da44c22d847f22b872bd8025abc3cdc5b5b34c1407e2cf3
+source_pdf_path: "input_pdf_公路/24 第3章（24）常用模板、支架和拱架设计与施工.pdf"
+source_pdf_sha256: 9308dac1b5aa40bd1da44c22d847f22b872bd8025abc3cdc5b5b34c1407e2cf3
+content_policy_id: core_only_v1
+content_policy_revision: 2
+content_policy_fingerprint_sha256: f61681a1af0e2066eee57641fba779abc268fcccd1af954b5da400cc2f8ea0af
+table_title: "刚度验算"
+state: reviewed
+reviewer: codex_operator_phase2r089
+reviewed_at_utc: "2026-07-28T02:45:00Z"
+review_basis: "人工核验原 PDF 第2至3页：第2页（7）刚度验算表的③条在“相应结构跨度的”处截断，第3页首行以1/400。闭合该句，并连续保留④钢模板面板变形和⑤钢棱、柱箍变形两条；两页表格的左列布局与相邻页位置一致。"
+evidence_bindings:
+  - page_num: 2
+    source_manifest_path: "data/shadow_v2/gonglu/phase3b11_smoke_20260726/chapters/24/evidence/pages/page_0002.json"
+    source_manifest_sha256: 9d28a7c603478cf6024f8eb083db36b94daf784aace710daa507349606a173aa
+    table_evidence_id: "ev:b911e2220d3b0233422aae7e"
+    table_bbox: {x0: 90.184, y0: 704.06, x1: 500.22, y1: 756.896}
+    row_evidence_id: "ev:c2a3b3e883d3410ac1db9d39"
+    row_bbox: {x0: 90.184, y0: 704.06, x1: 500.22, y1: 756.896}
+    cell_evidence_id: "ev:84f1971a269fcae54931411a"
+    cell_bbox: {x0: 90.184, y0: 704.06, x1: 194.33, y1: 756.896}
+    cell_canonical_text_sha256: 2dde4ac547a5d9644daa7ddcd1df1c53496c6c0feca09b91a309c4c81d6cf37b
+  - page_num: 2
+    source_manifest_path: "data/shadow_v2/gonglu/phase3b11_smoke_20260726/chapters/24/evidence/pages/page_0002.json"
+    source_manifest_sha256: 9d28a7c603478cf6024f8eb083db36b94daf784aace710daa507349606a173aa
+    table_evidence_id: "ev:b911e2220d3b0233422aae7e"
+    table_bbox: {x0: 90.184, y0: 704.06, x1: 500.22, y1: 756.896}
+    row_evidence_id: "ev:c2a3b3e883d3410ac1db9d39"
+    row_bbox: {x0: 90.184, y0: 704.06, x1: 500.22, y1: 756.896}
+    cell_evidence_id: "ev:2b70b65214d6f888499ebb83"
+    cell_bbox: {x0: 194.33, y0: 704.06, x1: 500.22, y1: 756.896}
+    cell_canonical_text_sha256: 1a5271ba13e103226e50e5ef335c5f8b0b7a5aa1bc48261626348f2f25d58765
+  - page_num: 3
+    source_manifest_path: "data/shadow_v2/gonglu/phase3b11_smoke_20260726/chapters/24/evidence/pages/page_0003.json"
+    source_manifest_sha256: 3ca131b90eb2be9a7aedb28e7404012556d6314a4ae43b9f732a593399064caa
+    table_evidence_id: "ev:9df02c54331a4a923e92ff93"
+    table_bbox: {x0: 90.2455, y0: 72.24, x1: 499.9923, y1: 177.62}
+    row_evidence_id: "ev:ac140fc6c830e91e20566a2e"
+    row_bbox: {x0: 90.2455, y0: 72.24, x1: 499.9923, y1: 140.54}
+    cell_evidence_id: "ev:e4e0cff4dc0c2f17c83b90b5"
+    cell_bbox: {x0: 195.69, y0: 72.24, x1: 499.9923, y1: 140.54}
+    cell_canonical_text_sha256: 984fcab50b29f4efa36b3dd770e265c6e9613ec1eb61b9c92002648f4868091c
+anchor_bindings:
+  - role: table_heading
+    page_num: 2
+    source_manifest_sha256: 9d28a7c603478cf6024f8eb083db36b94daf784aace710daa507349606a173aa
+    anchor_span_id: "span:da29f480e10fe93e825a7dec"
+    parent_evidence_id: "ev:84f1971a269fcae54931411a"
+    start: 0
+    end: 7
+    canonical_text: "（7）刚度验算"
+    exact_text_sha256: 2dde4ac547a5d9644daa7ddcd1df1c53496c6c0feca09b91a309c4c81d6cf37b
+  - role: complete_row
+    page_num: 2
+    source_manifest_sha256: 9d28a7c603478cf6024f8eb083db36b94daf784aace710daa507349606a173aa
+    anchor_span_id: "span:a812441493c325cc2deb9596"
+    parent_evidence_id: "ev:2b70b65214d6f888499ebb83"
+    start: 0
+    end: 30
+    canonical_text: "① 结构表面外露的模板，挠度不超过模板构件跨度的1/400。"
+    exact_text_sha256: 71d44b9559660e64a12a88c4468e10e6bfa60a801e195b428aa2f210a8b9b22c
+  - role: complete_row
+    page_num: 2
+    source_manifest_sha256: 9d28a7c603478cf6024f8eb083db36b94daf784aace710daa507349606a173aa
+    anchor_span_id: "span:db4c9c76f16395683824ff02"
+    parent_evidence_id: "ev:2b70b65214d6f888499ebb83"
+    start: 31
+    end: 61
+    canonical_text: "② 结构表面隐蔽的模板，挠度不超过模板构件跨度的1/250。"
+    exact_text_sha256: b46ceeb275e24bef91ad85f483980af8e158ff4cd958529a822b891849e8970a
+  - role: continued_source_fragment
+    page_num: 2
+    source_manifest_sha256: 9d28a7c603478cf6024f8eb083db36b94daf784aace710daa507349606a173aa
+    anchor_span_id: "span:caafc511635166321c62c6eb"
+    parent_evidence_id: "ev:2b70b65214d6f888499ebb83"
+    start: 62
+    end: 90
+    canonical_text: "③ 支架受荷载后挠曲的杆件，弹性挠度不超过相应结构跨度的"
+    exact_text_sha256: 81872b849e23155c5096990562c094c4a6501f64fca52a06a5e27153ac38c976
+  - role: closure_fragment
+    page_num: 3
+    source_manifest_sha256: 3ca131b90eb2be9a7aedb28e7404012556d6314a4ae43b9f732a593399064caa
+    anchor_span_id: "span:d87fbe681f7f5144123448fc"
+    parent_evidence_id: "ev:e4e0cff4dc0c2f17c83b90b5"
+    start: 0
+    end: 6
+    canonical_text: "1/400。"
+    exact_text_sha256: 1091315a93a8829b3f65f51ab09c508bd809b3198670ab65732a84f24e34a81a
+  - role: continued_row
+    page_num: 3
+    source_manifest_sha256: 3ca131b90eb2be9a7aedb28e7404012556d6314a4ae43b9f732a593399064caa
+    anchor_span_id: "span:9e2eb69480434c17c1b9c924"
+    parent_evidence_id: "ev:e4e0cff4dc0c2f17c83b90b5"
+    start: 7
+    end: 26
+    canonical_text: "④ 钢模板的面板变形不超过1.5mm。"
+    exact_text_sha256: b4b1542e9d259b902bc79117fb15623f2686558b6caccc1ba26d621317862879
+  - role: continued_row
+    page_num: 3
+    source_manifest_sha256: 3ca131b90eb2be9a7aedb28e7404012556d6314a4ae43b9f732a593399064caa
+    anchor_span_id: "span:5bd73477abf10c882fe1419e"
+    parent_evidence_id: "ev:e4e0cff4dc0c2f17c83b90b5"
+    start: 27
+    end: 61
+    canonical_text: "⑤ 钢模板的钢棱和柱箍变形分别为L/500 和B/500（其中L 为"
+    exact_text_sha256: bec3d57209b12a01f0c63fcb4c2f0db044a749b91ed8d0fc044ef32ccf0fe122
+  - role: continued_row
+    page_num: 3
+    source_manifest_sha256: 3ca131b90eb2be9a7aedb28e7404012556d6314a4ae43b9f732a593399064caa
+    anchor_span_id: "span:dd054a1f848cc85d88b1ab0b"
+    parent_evidence_id: "ev:e4e0cff4dc0c2f17c83b90b5"
+    start: 62
+    end: 74
+    canonical_text: "计算跨径，B 为柱宽）。"
+    exact_text_sha256: a45ffea8ccff00aae2a98a3eb0040cb8b9195a76bcbb6490800ac13fd64138e5
+complete_table_anchor_span_ids:
+  - "span:da29f480e10fe93e825a7dec"
+  - "span:a812441493c325cc2deb9596"
+  - "span:db4c9c76f16395683824ff02"
+  - "span:caafc511635166321c62c6eb"
+  - "span:d87fbe681f7f5144123448fc"
+  - "span:9e2eb69480434c17c1b9c924"
+  - "span:5bd73477abf10c882fe1419e"
+  - "span:dd054a1f848cc85d88b1ab0b"
+item_three_source_anchor_span_id: "span:caafc511635166321c62c6eb"
+item_three_closure_anchor_span_id: "span:d87fbe681f7f5144123448fc"
+item_three_required_assertion: "③ 支架受荷载后挠曲的杆件，弹性挠度不超过相应结构跨度的1/400。"

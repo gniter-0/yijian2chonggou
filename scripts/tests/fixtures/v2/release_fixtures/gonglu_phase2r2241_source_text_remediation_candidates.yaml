@@ -1,0 +1,450 @@
+schema_version: phase2r2241_source_text_remediation_candidate_v1
+fixture_id: gonglu_phase2r2241_source_text_remediation_candidates
+source_phase: 2R.2.4
+source_report_path: data/semantic_llm_v2/phase2r224_step3_final_review_run1/phase2r224_step3_final_review_report.json
+reviewer: codex_operator_phase2r2241_source_text_manual_remediation
+reviewed_at_utc: '2026-07-30T22:00:00Z'
+cards:
+- candidate_id: step3-remediation-candidate:e6a90dfe9d5240ead407b7ef
+  card_index: 3
+  source_card_id: v25-release-card:e6a90dfe9d5240ead407b7ef
+  sample_id: gonglu_01_text_list
+  fact_ids: [fact:2448270c7cee6e945b529767]
+  presentation: ordered_list
+  prior_risk_codes: [enumeration_endpoints_only]
+  source_artifacts:
+  - manifest_path: data/evidence_v2/golden/gonglu_phase0_v1/gonglu_01_text_list/pages/page_0002.json
+    manifest_sha256: 4cfdb64bfe460692bfe768f849c66a365564b012048c479843fc3dc510932e3b
+    page_num: 2
+    crop_path: data/evidence_v2/golden/gonglu_phase0_v1/gonglu_01_text_list/crops/p0002_table_000.png
+    crop_sha256: e689a9d4f2c1657277ac79494bb2ec30d2bcee5d363e7c93efa360b037b0a2df
+    visual_reviewed: true
+  repairs:
+  - fact_id: fact:2448270c7cee6e945b529767
+    source_kind: reviewed_remediation_ordered_list
+    replacement_text: |-
+      ① 路基施工准备
+      ② 原地基处理要求
+      ③ 挖方路基施工
+      ④ 填方路基施工
+      ⑤ 路基季节性施工
+      ⑥ 路基改（扩）建施工
+      ⑦ 特殊路基施工
+      ⑧ 路基施工测量
+    evidence_bindings:
+    - evidence_id: ev:596fc2468bbd859f889aade6
+      selected_text: |-
+        ① 路基施工准备
+        ② 原地基处理要求
+        ③ 挖方路基施工
+        ④ 填方路基施工
+        ⑤ 路基季节性施工
+        ⑥ 路基改（扩）建施工
+        ⑦ 特殊路基施工
+        ⑧ 路基施工测量
+      anchor_span_ids:
+      - span:fc0c5f0d70d99faef445ced4
+      - span:55dd9f6ddaef62b08b4a70f1
+      - span:fa1c19723a871b0893d80a83
+      - span:077c1e5d88105781985c9b55
+      - span:7e34b1deb5150a7547e17fcc
+      - span:be4ea334e2c28bf19d56c6c2
+      - span:63cd5b413602a06826583b9c
+      - span:0da8da89badb497d893f7680
+      extraction_mode: normalized_exact
+      manual_visual_confirmation: false
+      review_basis: 原始 table cell 与冻结 V25 request 的八个既有 span 逐项一致，crop 人工确认①至⑧无缺项。
+    ordered_item_labels: [①, ②, ③, ④, ⑤, ⑥, ⑦, ⑧]
+    review_basis: 原始表格、crop 与八个既有 anchor 共同确认完整 ordered-list，补齐中间六项且不改写来源文本。
+  review_basis: Card 3 仅修复 Phase 2R.2.4 指出的枚举端点问题；完整①至⑧均来自同一原始 table cell 和已存在的 V25 anchor，不生成新 ID。
+
+- candidate_id: step3-remediation-candidate:b87732d828c76d202372ae90
+  card_index: 5
+  source_card_id: v25-release-card:b87732d828c76d202372ae90
+  sample_id: gonglu_24_table_formula
+  fact_ids:
+  - fact:e9db47cf69e73e1bc6e78612
+  - fact:f5f9fdd1b487e4b1e95c7a87
+  - fact:51ba5da7b78c4e32d41b2eda
+  - fact:98c267f889999481277b9b77
+  presentation: constraint
+  prior_risk_codes: [truncated_source_assertion]
+  source_artifacts:
+  - manifest_path: data/evidence_v2/golden/gonglu_phase0_v1/gonglu_24_table_formula/pages/page_0003.json
+    manifest_sha256: c28c394188ff6d4fccccbb15da1b169051d597248f9624a6e7c885402c13d316
+    page_num: 3
+    crop_path: data/evidence_v2/golden/gonglu_phase0_v1/gonglu_24_table_formula/crops/p0003_table_001.png
+    crop_sha256: 21dfc6dbb3007cbd69700dcf861a6006c2acea8009332af807bf7f793fdf8a10
+    visual_reviewed: true
+  repairs:
+  - fact_id: fact:f5f9fdd1b487e4b1e95c7a87
+    source_kind: reviewed_remediation_assertion
+    replacement_text: ② 模板的滑升速度宜不大于250mm/h，滑升时应检测并控制其位置。
+    evidence_bindings:
+    - evidence_id: ev:475bd5bb2cb7b9ceaebc951d
+      selected_text: ② 模板的滑升速度宜不大于250mm/h，滑升时应检测并控制其位置。
+      anchor_span_ids: [span:09c6c119a81f4ac1c7acf316]
+      extraction_mode: crop_corrected
+      manual_visual_confirmation: true
+      review_basis: 原始 cell 在“其”与“位置”间混入水印字符；crop 清晰确认完整句为“应检测并控制其位置”。
+    ordered_item_labels: []
+    review_basis: 保留250mm/h阈值和冻结主 anchor，仅按原始 crop 删除 OCR 水印碎片并恢复完整控制对象。
+  review_basis: Card 5 只替换截断的滑升速度 Fact；同卡其余三条已通过 Phase 2R.2.4 source-owned Gate，保持冻结 assertion 与 provenance。
+
+- candidate_id: step3-remediation-candidate:f06d575da299041aae98895c
+  card_index: 6
+  source_card_id: v25-release-card:f06d575da299041aae98895c
+  sample_id: gonglu_24_table_formula
+  fact_ids: [fact:80ab4525cacc0aa1a10c9fcc]
+  presentation: table
+  prior_risk_codes: [complete_table_grid_not_rendered]
+  source_artifacts:
+  - manifest_path: data/evidence_v2/golden/gonglu_phase0_v1/gonglu_24_table_formula/pages/page_0001.json
+    manifest_sha256: d61a6721c1aba3edbb9a650a4826e92a4d2cef027e98f0765b4c7a78cadbfd54
+    page_num: 1
+    crop_path: data/evidence_v2/golden/gonglu_phase0_v1/gonglu_24_table_formula/crops/p0001_table_001.png
+    crop_sha256: 48f6ec8c0b8930f4508044d973b9964a6d70dcdd821d93fe889ed4f0e8a7993a
+    visual_reviewed: true
+  repairs:
+  - fact_id: fact:80ab4525cacc0aa1a10c9fcc
+    source_kind: reviewed_remediation_table_grid
+    replacement_text: |-
+      表3.1-2 模板、支架和拱架设计计算的荷载组合
+      模板、支架结构类别 | 荷载组合
+      计算强度用 | 验算刚度用
+      梁、板和拱的底模板以及支承板、支架及拱等 | ①+②+③+④+⑦+⑧ | ①+②+⑦+⑧
+      缘石、人行道、栏杆、柱、梁、板、拱等的侧模板 | ④+⑤ | ⑤
+      基础、墩台等厚大建筑物的侧模板 | ⑤+⑥ | ⑤
+    evidence_bindings: []
+    table_grid:
+      table_evidence_id: ev:ddbc36b6a00a72e55fd6eb45
+      row_count: 6
+      column_count: 3
+      cell_count: 14
+      cells:
+      - {row: 0, column: 0, evidence_id: ev:fc09e3c8e912db4b82494820, text: 表3.1-2 模板、支架和拱架设计计算的荷载组合}
+      - {row: 1, column: 0, evidence_id: ev:782cd39ec20a92a9bbdb35a5, text: 模板、支架结构类别}
+      - {row: 1, column: 1, evidence_id: ev:c9f32bad3bc0f45ac748a27f, text: 荷载组合}
+      - {row: 2, column: 1, evidence_id: ev:0a4bdb2a1294c10ca268145f, text: 计算强度用}
+      - {row: 2, column: 2, evidence_id: ev:898a584c53fff2df714568e4, text: 验算刚度用}
+      - {row: 3, column: 0, evidence_id: ev:4ba08a871a0e6320aed32719, text: 梁、板和拱的底模板以及支承板、支架及拱等}
+      - {row: 3, column: 1, evidence_id: ev:a4cb0c0301ee508a6bcd72ef, text: ①+②+③+④+⑦+⑧}
+      - {row: 3, column: 2, evidence_id: ev:74c97e0576279463bd9fddf8, text: ①+②+⑦+⑧}
+      - {row: 4, column: 0, evidence_id: ev:855848b7ef01057437956aa8, text: 缘石、人行道、栏杆、柱、梁、板、拱等的侧模板}
+      - {row: 4, column: 1, evidence_id: ev:a87bb1d19e822d734c5e90c7, text: ④+⑤}
+      - {row: 4, column: 2, evidence_id: ev:2a146b0db6e4ac56f13f8c2b, text: ⑤}
+      - {row: 5, column: 0, evidence_id: ev:53fde0b771369de62de1ef72, text: 基础、墩台等厚大建筑物的侧模板}
+      - {row: 5, column: 1, evidence_id: ev:f4b6133f569d4ff2e7d5c840, text: ⑤+⑥}
+      - {row: 5, column: 2, evidence_id: ev:b8068b13cccda738d504600f, text: ⑤}
+    ordered_item_labels: []
+    review_basis: 原始完整 grid 的14个 cell、坐标、Evidence 与冻结 Fact anchor 集合逐项回链，显示合同保留全部表头和三条数据行。
+  review_basis: Card 6 从概括句改为完整 table grid display contract；所有 cell 均为原始 source Evidence，不与原子规则 Card 合并。
+
+- candidate_id: step3-remediation-candidate:13ac7b620ddf9381a370ef86
+  card_index: 7
+  source_card_id: v25-release-card:13ac7b620ddf9381a370ef86
+  sample_id: gonglu_24_table_formula
+  fact_ids: [fact:49f9cae63d124ee3a4568d0b]
+  presentation: table
+  prior_risk_codes: [complete_table_grid_not_rendered]
+  source_artifacts:
+  - manifest_path: data/evidence_v2/golden/gonglu_phase0_v1/gonglu_24_table_formula/pages/page_0001.json
+    manifest_sha256: d61a6721c1aba3edbb9a650a4826e92a4d2cef027e98f0765b4c7a78cadbfd54
+    page_num: 1
+    crop_path: data/evidence_v2/golden/gonglu_phase0_v1/gonglu_24_table_formula/crops/p0001_table_000.png
+    crop_sha256: dcaa78a98757cd09d815eb84bea0a2cd8f5083513eded55127c4a77e5ffdc24d
+    visual_reviewed: true
+  repairs:
+  - fact_id: fact:49f9cae63d124ee3a4568d0b
+    source_kind: reviewed_remediation_table_grid
+    replacement_text: |-
+      模板 | （2）模板和支架应具有足够的强度、刚度和稳定性。
+      模板 | （4）模板与混凝土的接触面应涂刷隔离剂，但不得采用废机油等油料。
+      模板 | （5）在模板上设置的吊环应采用HPB300钢筋（一级钢），严禁采用冷加工钢筋制作。在模板自重标准值作用下，吊环的拉应力应不大于65MPa。
+      支架 | （6）支架不得与应急安全通道相连接。
+    evidence_bindings: []
+    table_grid:
+      table_evidence_id: ev:d13b3f653925a49fe84f6da4
+      row_count: 2
+      column_count: 2
+      cell_count: 4
+      cells:
+      - {row: 0, column: 0, evidence_id: ev:40e740ea109c364fc5ddfd14, text: 模板}
+      - row: 0
+        column: 1
+        evidence_id: ev:4b0c10cf94be018459452e14
+        text: |-
+          （2）模板和支架应具有足够的强度、刚度和稳定性。
+          （4）模板与混凝土的接触面应涂刷隔离剂，但不得采用废机油等油料。
+          （5）在模板上设置的吊环应采用HPB300钢筋（一级钢），严禁采用冷加工钢筋制作。在模板自重标准值作用下，吊环的拉应力应不大于65MPa。
+        extraction_mode: crop_corrected
+        manual_visual_confirmation: true
+      - {row: 1, column: 0, evidence_id: ev:7f14c6bc37c2effafd69b8cd, text: 支架}
+      - row: 1
+        column: 1
+        evidence_id: ev:5aeed111f1a65c491bae59c8
+        text: （6）支架不得与应急安全通道相连接。
+        extraction_mode: crop_corrected
+        manual_visual_confirmation: true
+    ordered_item_labels: []
+    review_basis: 原始2×2表格 cell 坐标保持不变；仅依据 crop 删除水印数字并合并来源换行，四条要求均逐字可确认。
+  review_basis: Card 7 建立完整2×2 table grid/cell display contract，OCR 清理有原始 crop hash 和人工依据，不覆盖冻结 Fact fixture。
+
+- candidate_id: step3-remediation-candidate:a7f00eb1d21cbe2249c62dcf
+  card_index: 8
+  source_card_id: v25-release-card:a7f00eb1d21cbe2249c62dcf
+  sample_id: gonglu_41_diagram_mixed
+  fact_ids:
+  - fact:0d239f5ba27e143aaaaec931
+  - fact:eb3f2251f29a9a20f88c902b
+  presentation: table
+  prior_risk_codes: [ocr_corruption_in_display_text]
+  source_artifacts:
+  - manifest_path: data/evidence_v2/golden/gonglu_phase0_v1/gonglu_41_diagram_mixed/pages/page_0001.json
+    manifest_sha256: 742c91ef77ccdefc36823847bee13c6ca979602aaee3a2a60b0124b25e694c2a
+    page_num: 1
+    crop_path: data/evidence_v2/golden/gonglu_phase0_v1/gonglu_41_diagram_mixed/crops/p0001_table_002.png
+    crop_sha256: c5df85234b405a60f7eb49e1f89d3dd4dc93ad3b6de79bb75f24b70e9d4242e8
+    visual_reviewed: true
+  repairs:
+  - fact_id: fact:0d239f5ba27e143aaaaec931
+    source_kind: reviewed_remediation_table_grid
+    replacement_text: |-
+      围岩级别 | 围岩或土体主要定性特征 | 岩体基本质量指标BQ
+      Ⅰ | 坚硬岩，岩体完整 | ＞550
+      Ⅱ | 坚硬岩，岩体较完整；较坚硬岩，岩体完整 | 550～451
+      Ⅲ | 坚硬岩，岩体较破碎；较坚硬岩，岩体较完整；较软岩，岩体完整，整体状或巨厚层状结构 | 450～351
+      Ⅳ | 坚硬岩，岩体破碎；较坚硬岩，岩体较破碎-破碎；较软岩，岩体较完整-较破碎；软岩，岩体完整-较完整 | 350～251
+      Ⅴ | 较软岩，岩体破碎；软岩，岩体较破碎-破碎；全部极软岩和全部极破碎 | ≤250
+      Ⅵ | 软塑状黏性土及潮湿、饱和粉细砂层、软土等 | —
+    evidence_bindings: []
+    table_grid:
+      table_evidence_id: ev:109acd6b5357faa2e419969e
+      row_count: 7
+      column_count: 3
+      cell_count: 21
+      cells:
+      - {row: 0, column: 0, evidence_id: ev:4e470d29a0e5667dd93675ca, text: 围岩级别}
+      - {row: 0, column: 1, evidence_id: ev:03c1ec1d27e80c392f63b5aa, text: 围岩或土体主要定性特征}
+      - {row: 0, column: 2, evidence_id: ev:1db10ff6ab50cdd30ae79db1, text: 岩体基本质量指标BQ}
+      - {row: 1, column: 0, evidence_id: ev:cbf9d00f70b8b8f0ef814362, text: Ⅰ}
+      - {row: 1, column: 1, evidence_id: ev:c0fbec700f045dda5dcde5f1, text: 坚硬岩，岩体完整}
+      - {row: 1, column: 2, evidence_id: ev:c41792b00d654421a1f99e8f, text: ＞550}
+      - {row: 2, column: 0, evidence_id: ev:72c45ae035621a9910ea1192, text: Ⅱ}
+      - {row: 2, column: 1, evidence_id: ev:ad3e2af30fb7b6693e3862a6, text: "坚硬岩，岩体较完整\n较坚硬岩，岩体完整"}
+      - {row: 2, column: 2, evidence_id: ev:de2d23445184f0ed9f2f1b4e, text: 550～451}
+      - {row: 3, column: 0, evidence_id: ev:9e3772a91d0fbd0c4c9f7d9e, text: Ⅲ}
+      - {row: 3, column: 1, evidence_id: ev:1a598af1194677f42d45a7c2, text: "坚硬岩，岩体较破碎\n较坚硬岩，岩体较完整\n较软岩，岩体完整，整体状或巨厚层状结构"}
+      - {row: 3, column: 2, evidence_id: ev:4e2fb63f3413aafe1d906f32, text: 450～351}
+      - {row: 4, column: 0, evidence_id: ev:1c8636ec480e25f3ddd26828, text: Ⅳ}
+      - row: 4
+        column: 1
+        evidence_id: ev:668c259e8043f8b81d344c75
+        text: 坚硬岩，岩体破碎；较坚硬岩，岩体较破碎-破碎；较软岩，岩体较完整-较破碎；软岩，岩体完整-较完整
+        extraction_mode: crop_corrected
+        manual_visual_confirmation: true
+      - {row: 4, column: 2, evidence_id: ev:630a7cd0b954c7938f5eae5e, text: 350～251}
+      - {row: 5, column: 0, evidence_id: ev:f6118bc0aed75ec2a233bcc2, text: Ⅴ}
+      - row: 5
+        column: 1
+        evidence_id: ev:67bb77bb020fe391b60a19dd
+        text: 较软岩，岩体破碎；软岩，岩体较破碎-破碎；全部极软岩和全部极破碎
+        extraction_mode: crop_corrected
+        manual_visual_confirmation: true
+      - {row: 5, column: 2, evidence_id: ev:5debb5f6b12aa04a7ecb9283, text: ≤250}
+      - {row: 6, column: 0, evidence_id: ev:5b701a383d69746a8eedec85, text: Ⅵ}
+      - {row: 6, column: 1, evidence_id: ev:510a3b6ff9c9470523b64d7d, text: 软塑状黏性土及潮湿、饱和粉细砂层、软土等}
+      - {row: 6, column: 2, evidence_id: ev:ab91af46018732df2a95cf24, text: —}
+    ordered_item_labels: []
+    review_basis: 原始7×3围岩表全部21个 cell 与坐标保留；Ⅳ、Ⅴ行只按 crop 删除水印字符，BQ范围和定性特征不推测、不续写。
+  review_basis: Card 8 仅校正围岩完整表的 OCR 污染；隧道跨度 Fact“14≤B<18”保持冻结 assertion 与 anchor，二者不跨表合并。
+
+- candidate_id: step3-remediation-candidate:10a6290cc820d12ac15e36dc
+  card_index: 11
+  source_card_id: v25-release-card:10a6290cc820d12ac15e36dc
+  sample_id: gonglu_55_standard_constraints
+  fact_ids:
+  - fact:69485e78499ec85c9d250324
+  - fact:9988249bee51e3c6ede49e55
+  presentation: ordered_list
+  prior_risk_codes: [incomplete_enumeration, truncated_source_assertion]
+  source_artifacts:
+  - manifest_path: data/evidence_v2/golden/gonglu_phase0_v1/gonglu_55_standard_constraints/pages/page_0005.json
+    manifest_sha256: 90f27cafcc87f3ded800f40f3ebf722324704efd512da04402241301ec010731
+    page_num: 5
+    crop_path: data/evidence_v2/golden/gonglu_phase0_v1/gonglu_55_standard_constraints/crops/p0005_image_000.png
+    crop_sha256: 9778be94a328d6b2d299a5faedd8027d827b86c753881597e439081fa97ca920
+    visual_reviewed: true
+  - manifest_path: data/evidence_v2/golden/gonglu_phase0_v1/gonglu_55_standard_constraints/pages/page_0007.json
+    manifest_sha256: 9b5cbb7326dd6d1fdb82d7f973fc401b7523f864c2f8289d10b9c034cd6e1c32
+    page_num: 7
+    crop_path: data/evidence_v2/golden/gonglu_phase0_v1/gonglu_55_standard_constraints/crops/p0007_image_000.png
+    crop_sha256: 90dd9c6b91f3fb637f6fe52f473ac2ea1a6ffd2c0b22015813ddc19ac23766e7
+    visual_reviewed: true
+  repairs:
+  - fact_id: fact:69485e78499ec85c9d250324
+    source_kind: reviewed_remediation_ordered_list
+    replacement_text: ①物体打击；②车辆伤害；③机械伤害；④起重伤害；⑤触电；⑥淹溺；⑦灼烫；⑧火灾；⑨高处坠落；⑩坍塌；⑪冒顶片帮；⑫透水；⑬放炮；⑭火药爆炸；⑮瓦斯爆炸；⑯锅炉爆炸；⑰容器爆炸；⑱其他爆炸；⑲中毒和窒息；⑳其他伤害。
+    evidence_bindings:
+    - evidence_id: ev:f733e0f0f89528fb1ee705de
+      selected_text: ①物体打击；②车辆伤害；③机械伤害；
+      anchor_span_ids: [span:5b7c968badbcf4e293164730, span:cb5b1100f7389ce14f8f4720, span:3558d93648d5f1ea08771754]
+      extraction_mode: exact
+      review_basis: 原始第5页事故类别枚举第一段及三个冻结 anchor 逐项一致。
+    - evidence_id: ev:407395322b21e98fc248d8bb
+      selected_text: ④起重伤害；⑤触电；⑥淹溺；⑦灼烫；⑧火灾；
+      anchor_span_ids: [span:e0a114d8fb06ebe6401fe5bb, span:c489095bd5d9bafb500fdd13, span:7c9f00594164356ac3a467ad, span:164bee2b9eaa8ce9517f5aac, span:c00da885297572c2748d984b]
+      extraction_mode: exact
+      review_basis: 原始第5页事故类别枚举第二段及五个冻结 anchor 逐项一致。
+    - evidence_id: ev:19f546138555b107233fc894
+      selected_text: ⑨高处坠落；⑩坍塌；⑪冒顶片帮；⑫透水；
+      anchor_span_ids: [span:b5734190f9ad84a1729e73ec, span:aeb831b3d5749059b48884a0, span:cb6ba5009926b3829e9671ac, span:36b8288dafb901be32659b39]
+      extraction_mode: exact
+      review_basis: 原始第5页事故类别枚举第三段及四个冻结 anchor 逐项一致。
+    - evidence_id: ev:ed54bf6ea70fb13b504e1239
+      selected_text: ⑬放炮；⑭火药爆炸；⑮瓦斯爆炸；⑯锅炉爆炸；
+      anchor_span_ids: [span:f10a4f1f3ac126d795d0fa99, span:1ac1bdf9492cf0d33c994659, span:51f9f44f9f30361007cf32cd, span:661e0cfc47f204fc35f6baeb]
+      extraction_mode: exact
+      review_basis: 原始第5页事故类别枚举第四段及四个冻结 anchor 逐项一致。
+    - evidence_id: ev:1bdccd64436a221a4c317fd3
+      selected_text: ⑰容器爆炸；⑱其他爆炸；⑲中毒和窒息；
+      anchor_span_ids: [span:0042632b90269118245d78e9, span:57d00ab62bcd5b026b045b1a, span:970bf8b3e4322900a41e6955]
+      extraction_mode: exact
+      review_basis: 原始第5页事故类别枚举第五段及三个冻结 anchor 逐项一致。
+    - evidence_id: ev:f68a806129e0e451ef08d4b8
+      selected_text: ⑳其他伤害。
+      anchor_span_ids: [span:c90e9c6a5cdd867b9b6c9bbd]
+      extraction_mode: exact
+      review_basis: 原始第5页事故类别枚举闭合项及冻结 anchor 一致。
+    ordered_item_labels: [①, ②, ③, ④, ⑤, ⑥, ⑦, ⑧, ⑨, ⑩, ⑪, ⑫, ⑬, ⑭, ⑮, ⑯, ⑰, ⑱, ⑲, ⑳]
+    review_basis: 20类事故从六个相邻 Evidence 与20个既有 anchor 顺序闭合，完整枚举未混入标题、水印或解释文字。
+  - fact_id: fact:9988249bee51e3c6ede49e55
+    source_kind: reviewed_remediation_assertion
+    replacement_text: |-
+      （1）事故报告责任单位应在接报2小时内，核实、汇总并向负责项目监管的交通运输主管部门及其工程质量监督机构报告。
+      （2）重大及以上质量事故，省级交通运输主管部门应在接报2小时内进一步核实，并按工程质量事故快报统一报交通运输部应急办转部工程质量监督管理部门。
+    evidence_bindings:
+    - evidence_id: ev:dc1bf303b3d4471fa9d78f42
+      selected_text: （1）事故报告责任单位应在接报2小时内，核实、汇总并向负责项目监管的交通运输
+      anchor_span_ids: [span:8a8df672043000e7a72c2bfc]
+      extraction_mode: exact
+      review_basis: 第一条报告时限前半句与原始 Evidence、冻结 anchor 一致。
+    - evidence_id: ev:dda72b72a1424b1c5c3739ab
+      selected_text: 主管部门及其工程质量监督机构报告。
+      anchor_span_ids: [span:690de0da3dbf9ce196af9574]
+      extraction_mode: exact
+      review_basis: 第一条报告时限后半句与相邻原始 Evidence、冻结 anchor 一致。
+    - evidence_id: ev:2d8bc2bad65095beb2b5b054
+      selected_text: （2）重大及以上质量事故，省级交通运输主管部门应在接报2小时内进一步核实，并
+      anchor_span_ids: [span:861ffbfbbedc7f8c941f6f5a]
+      extraction_mode: exact
+      review_basis: 第二条报告时限前半句与原始 Evidence、冻结 anchor 一致。
+    - evidence_id: ev:61c78aa009624da947a3f597
+      selected_text: 按工程质量事故快报统一报交通运输部应急办转部工程质量监督管理部门。
+      anchor_span_ids: [span:42d8e697ec15b3cd91f2dcd4]
+      extraction_mode: exact
+      review_basis: 第二条报告时限后半句与相邻原始 Evidence、冻结 anchor 一致。
+    ordered_item_labels: []
+    review_basis: 两条2小时条件各由前后相邻 Evidence 双 anchor 闭合，未截断责任主体、报告对象或后续动作。
+  review_basis: Card 11 补齐20项事故类别和两条完整2小时报告条件；全部文本来自第5、7页原始 Evidence 与既有 span。
+
+- candidate_id: step3-remediation-candidate:1f81dff1f9f9801edaee6d75
+  card_index: 13
+  source_card_id: v25-release-card:1f81dff1f9f9801edaee6d75
+  sample_id: gonglu_55_standard_constraints
+  fact_ids:
+  - fact:cc1ca460b079becae876452b
+  - fact:5e66ad9086f5df294c32de0f
+  presentation: constraint
+  prior_risk_codes: [truncated_source_assertion]
+  source_artifacts:
+  - manifest_path: data/evidence_v2/golden/gonglu_phase0_v1/gonglu_55_standard_constraints/pages/page_0001.json
+    manifest_sha256: d79e994eeb2d34b1ef3e5474cf48c1ebc6e6e52ae13382662b6d0a1ef882c085
+    page_num: 1
+    crop_path: data/evidence_v2/golden/gonglu_phase0_v1/gonglu_55_standard_constraints/crops/p0001_image_000.png
+    crop_sha256: f6eb60e9d4c5345ce1b598ac24cf6dbd7738300bb4d1db370533cb3ae025124e
+    visual_reviewed: true
+  - manifest_path: data/evidence_v2/golden/gonglu_phase0_v1/gonglu_55_standard_constraints/pages/page_0003.json
+    manifest_sha256: 7adaf898125d1df3a17b2a1cac820b12d8b0fd98d8712f8ca7c802b4e87ed568
+    page_num: 3
+    crop_path: data/evidence_v2/golden/gonglu_phase0_v1/gonglu_55_standard_constraints/crops/p0003_image_000.png
+    crop_sha256: 33aa09f6ada92752aea58fe40fb83375bc5d54677e536323cc35e2729b37db6d
+    visual_reviewed: true
+  repairs:
+  - fact_id: fact:cc1ca460b079becae876452b
+    source_kind: reviewed_remediation_assertion
+    replacement_text: （5）施工单位在工程投标报价中应当包含安全生产费用并单独计提，不得作为竞争性报价。
+    evidence_bindings:
+    - evidence_id: ev:9f7eadc8dd0ad36781960cbc
+      selected_text: （5）施工单位在工程投标报价中应当包含安全生产费用并单独计提，不得作为竞争性
+      anchor_span_ids: [span:5aeadef24996a802092fb7ab]
+      extraction_mode: exact
+      review_basis: 主句与第1页原始 Evidence 及冻结 anchor 逐字一致。
+    - evidence_id: ev:ff8f7308cfb3343a45a33c77
+      selected_text: 报价。
+      anchor_span_ids: [span:63f0abcc806ef37c286ffb49]
+      extraction_mode: exact
+      review_basis: 句尾与相邻原始 Evidence 及冻结 anchor 逐字一致，闭合“竞争性报价”。
+    ordered_item_labels: []
+    review_basis: 双 Evidence/双 anchor 恢复完整禁止竞争性报价条件，不改写安全生产费用与单独计提要求。
+  - fact_id: fact:5e66ad9086f5df294c32de0f
+    source_kind: reviewed_remediation_assertion
+    replacement_text: ③长度3000m及以上的隧道工程，V、VI级围岩连续长度超过50m或合计长度占隧道全长的30%及以上的隧道工程。
+    evidence_bindings:
+    - evidence_id: ev:d68d3f7b9a499e5031c4f280
+      selected_text: ③长度3000m及以上的隧道工程，V、VI级围岩连续长度超过50m或合计长度占隧道
+      anchor_span_ids: [span:1a201392192a94f89fb60e94]
+      extraction_mode: exact
+      review_basis: 风险阈值主句与第3页原始 Evidence 及冻结 anchor 一致。
+    - evidence_id: ev:99fcbde660ef522b6c528f7b
+      selected_text: 全长的30%及以上的隧道工程。
+      anchor_span_ids: []
+      extraction_mode: substring_excluding_exam_tag
+      manual_visual_confirmation: true
+      review_basis: 原始 exam_tag Evidence 含完整条件后缀和“（2019案）”；人工仅选取条件后缀，历史请求未生成该 span，故明确保持无新增 anchor。
+    ordered_item_labels: []
+    review_basis: 主 anchor 与原始后续 Evidence/crop 共同闭合3000m、50m和30%完整条件；排除考试标签且不合成 anchor。
+  review_basis: Card 13 的两条截断条件均按原始相邻 Evidence 闭合；无 anchor 的 exam-tag 后缀被显式记录，禁止伪造 span。
+
+- candidate_id: step3-remediation-candidate:958c0cd0a8d88fad4e4ffc6d
+  card_index: 15
+  source_card_id: v25-release-card:958c0cd0a8d88fad4e4ffc6d
+  sample_id: gonglu_62_cost_flow_incident
+  fact_ids: [fact:b62e1c50f05c43aff86771d5]
+  presentation: ordered_list
+  prior_risk_codes: [enumeration_endpoints_only]
+  source_artifacts:
+  - manifest_path: data/evidence_v2/golden/gonglu_phase0_v1/gonglu_62_cost_flow_incident/pages/page_0005.json
+    manifest_sha256: 8655a2df38611a98faaf560c6d33de0612f9c734c59cafdf07a11890a218532f
+    page_num: 5
+    crop_path: data/evidence_v2/golden/gonglu_phase0_v1/gonglu_62_cost_flow_incident/crops/p0005_table_000.png
+    crop_sha256: 3fb2fd45e7f9751bdf678f8f4f533fa242419524f0c9c9200e730ede42824c4a
+    visual_reviewed: true
+  repairs:
+  - fact_id: fact:b62e1c50f05c43aff86771d5
+    source_kind: reviewed_remediation_ordered_list
+    replacement_text: |-
+      ① 人工费的控制
+      ② 材料费的控制
+      ③ 周转工具使用费的控制
+      ④ 施工机械使用费的控制
+      ⑤ 现场管理费的控制
+    evidence_bindings:
+    - evidence_id: ev:a82c5133fd8f743fecd7fb2c
+      selected_text: |-
+        ① 人工费的控制
+        ② 材料费的控制
+        ③ 周转工具使用费的控制
+        ④ 施工机械使用费的控制
+        ⑤ 现场管理费的控制
+      anchor_span_ids:
+      - span:47ef1c7bf963572ae826c331
+      - span:d56aa15bdafeeafed7c2b775
+      - span:5380bd2ace13e59b3c90edd3
+      - span:ccf0ee6e902e3a7390dcd9d9
+      - span:77466f71ed57eca96222a3a0
+      extraction_mode: normalized_exact
+      review_basis: 原始第5页 table cell、crop 与五个冻结 span 逐项确认①至⑤完整成本控制内容。
+    ordered_item_labels: [①, ②, ③, ④, ⑤]
+    review_basis: 补齐②至④并保留①/⑤端点，完整文本、顺序和 anchor 均来自原始 source-owned table cell。
+  review_basis: Card 15 只修复枚举端点问题；①至⑤完整列表绑定原始 Evidence、manifest、crop 和既有 anchor。

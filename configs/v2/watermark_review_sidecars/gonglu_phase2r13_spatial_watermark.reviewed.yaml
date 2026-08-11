@@ -1,0 +1,67 @@
+sidecar_version: v25_spatial_watermark_review_v1
+reviewer: codex_operator_phase2r13_source_reconciliation
+reviewed_at_utc: '2026-07-29T18:00:00Z'
+reviews:
+- review_id: v25-watermark-review:e27827edad2c9b1b086467c1
+  sample_id: gonglu_01_text_list
+  candidate_text: 嗨学
+  evidence_ids:
+  - ev:f859d32a3f89a4bc09d8a643
+  - ev:d9bede0985ec255517d19677
+  - ev:99fb0240316de83e0a1f033e
+  page_nums:
+  - 1
+  - 5
+  - 6
+  source_manifest_sha256s:
+  - 7235e99a269fdb0c72c1526c66d66fefdf44a2db118530188a12dd923b40e17a
+  - be749fa7e66a680e27c8fed8dcca2b3c793569819586069c30cd233a0e358e79
+  - 4311c69bf597692afe0ef681f1af43e1647c8a6cbc2ec11aad909dcc99a25320
+  mean_x0: 376.238
+  mean_y0: 700.7097
+  disposition: excluded_as_watermark
+  basis: The same semi-transparent publisher watermark is visible at a stable location
+    across the original page crops; it is excluded from teaching output without changing
+    source Evidence.
+- review_id: v25-watermark-review:a9f16cf53b2f271ffa536b8f
+  sample_id: gonglu_41_diagram_mixed
+  candidate_text: 嗨学
+  evidence_ids:
+  - ev:d9061c4b78d2161a0fec39fb
+  - ev:b787b32a5d5d7f3a06b83613
+  - ev:62fd369af4e0349f941abd23
+  page_nums:
+  - 2
+  - 4
+  - 7
+  source_manifest_sha256s:
+  - 68f4bb0d97b9b59f4a7c6bb9acc451dc765a61b6e838e8520571674d3fe4e4e3
+  - b7ee169c972c534befcf352613c93419ea6ffc7a655a92ffbf2dce9f63f8fc13
+  - 55971a2172be5fa4fb03d7df4060c37d749ae8e6bdb0f3d3d1b6acc6834c417c
+  mean_x0: 376.379
+  mean_y0: 700.5682
+  disposition: excluded_as_watermark
+  basis: The same semi-transparent publisher watermark is visible at a stable location
+    across the original page crops; it is excluded from teaching output without changing
+    source Evidence.
+- review_id: v25-watermark-review:e3fdb4781a7bdd542a5d11a5
+  sample_id: gonglu_55_standard_constraints
+  candidate_text: 嗨学
+  evidence_ids:
+  - ev:2f0ca277ec502a03e52d1829
+  - ev:9000dc3d8adbd4eebb8477bc
+  - ev:015cb559829c09cc4ec42001
+  page_nums:
+  - 3
+  - 5
+  - 7
+  source_manifest_sha256s:
+  - 7adaf898125d1df3a17b2a1cac820b12d8b0fd98d8712f8ca7c802b4e87ed568
+  - 90f27cafcc87f3ded800f40f3ebf722324704efd512da04402241301ec010731
+  - 9b5cbb7326dd6d1fdb82d7f973fc401b7523f864c2f8289d10b9c034cd6e1c32
+  mean_x0: 376.238
+  mean_y0: 700.5682
+  disposition: excluded_as_watermark
+  basis: The same semi-transparent publisher watermark is visible at a stable location
+    across the original page crops; it is excluded from teaching output without changing
+    source Evidence.

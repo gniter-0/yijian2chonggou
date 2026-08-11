@@ -1,0 +1,1149 @@
+schema_version: phase2r224_step3_reviewed_release_fixture_v1
+fixture_id: gonglu_phase2r224_step3_reviewed_release
+source_phase: 2R.2.3.4
+source_report_path: data/semantic_llm_v2/phase2r2234_step3_openai_strict_run1/phase2r2234_step3_openai_strict_report.json
+source_report_sha256: b3fa75ee43e0f9dafca3a62080e951bd101e5e0ed0f5c40c7fa70ac4d7d171da
+source_request_id: step3-source-owned-openai-strict-request:748045c645f8d90faae0afb712ff5a69a789b01f11cf3467024e5e442bb58d55
+source_response_sha256: 3960b2d48b527f1b3ec7f4109cc9b2c88508b54493495d5225e2171fa4dd787e
+source_release_fixture_path: scripts/tests/fixtures/v2/release_fixtures/gonglu_phase2r16_v25_reviewed_release.yaml
+source_release_fixture_sha256: c77803983743488a71ba3a295b4f4be43b54ee2a2d8aa663047824298d08b3e8
+source_projection_path: data/semantic_llm_v2/phase2r22_step3_teaching_reconciliation_run2/source-card-text-projections.json
+source_projection_sha256: cba78e1c42023680fddcb6cd9475f9c4d560483cb574b2b42c3b7c94c9c70918
+decision_fixture_path: scripts/tests/fixtures/v2/release_fixtures/gonglu_phase2r224_step3_manual_review_decisions.yaml
+decision_fixture_sha256: d378779b53400da765a5cb1037efc443d7ec64a42a3d4d5a54f2e46d6ec2cb82
+reviewer: codex_operator_phase2r224_step3_final_manual_audit
+reviewed_at_utc: '2026-07-30T20:00:00Z'
+source_card_count: 16
+reviewed_card_count: 8
+manual_review_card_count: 8
+cards:
+- reviewed_card_id: step3-reviewed-card:5c75f0fc77ac53c391fc9b42
+  source_card_id: v25-release-card:1011b240d15e12f3f7084096
+  source_card_sha256: d4dd7481c2ba8ffe052abdcc179d892c04a7f3188437d3bc9d9ecf2630d2b028
+  source_projection_id: step3-source-card-text:4c0c02f71a8f2426d51f1897
+  sample_id: gonglu_01_text_list
+  canonical_title: 特殊路基类型
+  fact_ids:
+  - fact:e033c1238e91188132210383
+  presentation: table
+  image_prompt: 'Create a draft table-style visual study card. Display exactly this
+    text verbatim:
+
+    不良地质地段：滑坡地段路基、崩塌地段路基、岩堆地段路基、泥石流地段
+
+    路基、岩溶地区路基；特殊土（岩）地段：软土地区路基、红粘土与高液限土地区路基、膨胀土地区路
+
+    基、黄土地区路基、盐渍土地区路基、多年冻土地区路基；受水、气候等自然因素影响：风沙地区路基、雪害地段路基、涎流冰地段路基、采空区路
+
+    基、滨海路基、水库地区路基、季节性冰冻地区路基。'
+  expected_texts:
+  - '不良地质地段：滑坡地段路基、崩塌地段路基、岩堆地段路基、泥石流地段
+
+    路基、岩溶地区路基；特殊土（岩）地段：软土地区路基、红粘土与高液限土地区路基、膨胀土地区路
+
+    基、黄土地区路基、盐渍土地区路基、多年冻土地区路基；受水、气候等自然因素影响：风沙地区路基、雪害地段路基、涎流冰地段路基、采空区路
+
+    基、滨海路基、水库地区路基、季节性冰冻地区路基。'
+  layout_description: Draft table-style card with one large text cell; use clear spacing
+    and preserve line breaks.
+  display_text_provenance:
+  - fact_id: fact:e033c1238e91188132210383
+    text: '不良地质地段：滑坡地段路基、崩塌地段路基、岩堆地段路基、泥石流地段
+
+      路基、岩溶地区路基；特殊土（岩）地段：软土地区路基、红粘土与高液限土地区路基、膨胀土地区路
+
+      基、黄土地区路基、盐渍土地区路基、多年冻土地区路基；受水、气候等自然因素影响：风沙地区路基、雪害地段路基、涎流冰地段路基、采空区路
+
+      基、滨海路基、水库地区路基、季节性冰冻地区路基。'
+    source_kind: reviewed_fact_assertion
+    evidence_ids:
+    - ev:21a8181320dfbeba999a8ae3
+    - ev:f66b811044f174b565260eb9
+    - ev:52ef14bca4947f147182cf90
+    - ev:f6379fb6093c48dba5c87abb
+    - ev:285befb151f97cb34bebce3f
+    - ev:f07a46252e57c001e81b7591
+    anchor_span_ids:
+    - span:95cc3bfafcf2e8d266c052f5
+    - span:51e9e8bc7dd96d94e9073f29
+    - span:db659e1f66418b078200975f
+    - span:e9f1f5d8d758c9ce7f3db317
+    - span:5c403e06abf47f55fe86946f
+    - span:2318656d107438882df7bc3f
+    - span:03b010aae6c4da82ede730f1
+    - span:fbedecbce5bcca84965de33a
+    - span:b77e06958f565292f93be30d
+    source_table_ids:
+    - ev:d07f62362cbf839aa9489b00
+    continuation_binding_ids: []
+    complete_table_grid_verified: true
+    semantic_sidecar_sha256: null
+    semantic_node_id: null
+  semantic_edge_provenance: []
+  source_step3_request_id: step3-source-owned-openai-strict-request:748045c645f8d90faae0afb712ff5a69a789b01f11cf3467024e5e442bb58d55
+  source_step3_response_sha256: 3960b2d48b527f1b3ec7f4109cc9b2c88508b54493495d5225e2171fa4dd787e
+  review_state: reviewed
+  reviewer: codex_operator_phase2r224_step3_final_manual_audit
+  reviewed_at_utc: '2026-07-30T20:00:00Z'
+  review_basis: 人工核验特殊路基类型文本覆盖三类来源分组及全部列举项；分页换行未改变术语顺序或语义，table presentation、来源锚点和完整表
+    provenance 可确认。
+- reviewed_card_id: step3-reviewed-card:4d400a3ff4e7af6129aab99c
+  source_card_id: v25-release-card:c2712f4fcfbb9407a3140d57
+  source_card_sha256: 729480705449bfcb1e963d43fabe79b4206dd6494161eef530577974380fb476
+  source_projection_id: step3-source-card-text:2e638b330792f48403dc405c
+  sample_id: gonglu_01_text_list
+  canonical_title: 填方路基横断面
+  fact_ids:
+  - fact:bdc644b1c6bf1a0a84f2db4c
+  presentation: diagram
+  image_prompt: 'Create a draft diagram-style visual study card. Display exactly these
+    texts verbatim:
+
+    路面
+
+    填方路基
+
+    边坡
+
+    排水沟'
+  expected_texts:
+  - 路面
+  - 填方路基
+  - 边坡
+  - 排水沟
+  layout_description: Draft diagram layout with four labeled nodes arranged spatially;
+    use simple connector lines without any relation text.
+  display_text_provenance:
+  - fact_id: fact:bdc644b1c6bf1a0a84f2db4c
+    text: 路面
+    source_kind: reviewed_semantic_node_label
+    evidence_ids:
+    - ev:3a3de856bb37558c7b007d0e
+    anchor_span_ids: []
+    source_table_ids: []
+    continuation_binding_ids: []
+    complete_table_grid_verified: false
+    semantic_sidecar_sha256: 8e5144e346ac0f3ed0bc220970e632d549b9069480faba5a95a28aa4765837d0
+    semantic_node_id: node-road-surface
+  - fact_id: fact:bdc644b1c6bf1a0a84f2db4c
+    text: 填方路基
+    source_kind: reviewed_semantic_node_label
+    evidence_ids:
+    - ev:3a3de856bb37558c7b007d0e
+    anchor_span_ids: []
+    source_table_ids: []
+    continuation_binding_ids: []
+    complete_table_grid_verified: false
+    semantic_sidecar_sha256: 8e5144e346ac0f3ed0bc220970e632d549b9069480faba5a95a28aa4765837d0
+    semantic_node_id: node-fill-roadbed
+  - fact_id: fact:bdc644b1c6bf1a0a84f2db4c
+    text: 边坡
+    source_kind: reviewed_semantic_node_label
+    evidence_ids:
+    - ev:3a3de856bb37558c7b007d0e
+    anchor_span_ids: []
+    source_table_ids: []
+    continuation_binding_ids: []
+    complete_table_grid_verified: false
+    semantic_sidecar_sha256: 8e5144e346ac0f3ed0bc220970e632d549b9069480faba5a95a28aa4765837d0
+    semantic_node_id: node-slope
+  - fact_id: fact:bdc644b1c6bf1a0a84f2db4c
+    text: 排水沟
+    source_kind: reviewed_semantic_node_label
+    evidence_ids:
+    - ev:3a3de856bb37558c7b007d0e
+    anchor_span_ids: []
+    source_table_ids: []
+    continuation_binding_ids: []
+    complete_table_grid_verified: false
+    semantic_sidecar_sha256: 8e5144e346ac0f3ed0bc220970e632d549b9069480faba5a95a28aa4765837d0
+    semantic_node_id: node-drainage-ditch
+  semantic_edge_provenance:
+  - fact_id: fact:bdc644b1c6bf1a0a84f2db4c
+    source_node_id: node-road-surface
+    relation: 位于顶部
+    target_node_id: node-fill-roadbed
+    evidence_ids:
+    - ev:3a3de856bb37558c7b007d0e
+    basis: 原始 figure crop 中的连线、相对位置或层级分支直接支持该关系；未以 OCR 文字猜测替代人工确认。
+    confidence: 0.98
+    figure_evidence_id: ev:3a3de856bb37558c7b007d0e
+    source_manifest_sha256: 7235e99a269fdb0c72c1526c66d66fefdf44a2db118530188a12dd923b40e17a
+    semantic_sidecar_sha256: 8e5144e346ac0f3ed0bc220970e632d549b9069480faba5a95a28aa4765837d0
+  - fact_id: fact:bdc644b1c6bf1a0a84f2db4c
+    source_node_id: node-slope
+    relation: 位于两侧
+    target_node_id: node-fill-roadbed
+    evidence_ids:
+    - ev:3a3de856bb37558c7b007d0e
+    basis: 原始 figure crop 中的连线、相对位置或层级分支直接支持该关系；未以 OCR 文字猜测替代人工确认。
+    confidence: 0.98
+    figure_evidence_id: ev:3a3de856bb37558c7b007d0e
+    source_manifest_sha256: 7235e99a269fdb0c72c1526c66d66fefdf44a2db118530188a12dd923b40e17a
+    semantic_sidecar_sha256: 8e5144e346ac0f3ed0bc220970e632d549b9069480faba5a95a28aa4765837d0
+  - fact_id: fact:bdc644b1c6bf1a0a84f2db4c
+    source_node_id: node-drainage-ditch
+    relation: 位于坡脚外侧
+    target_node_id: node-slope
+    evidence_ids:
+    - ev:3a3de856bb37558c7b007d0e
+    basis: 原始 figure crop 中的连线、相对位置或层级分支直接支持该关系；未以 OCR 文字猜测替代人工确认。
+    confidence: 0.98
+    figure_evidence_id: ev:3a3de856bb37558c7b007d0e
+    source_manifest_sha256: 7235e99a269fdb0c72c1526c66d66fefdf44a2db118530188a12dd923b40e17a
+    semantic_sidecar_sha256: 8e5144e346ac0f3ed0bc220970e632d549b9069480faba5a95a28aa4765837d0
+  source_step3_request_id: step3-source-owned-openai-strict-request:748045c645f8d90faae0afb712ff5a69a789b01f11cf3467024e5e442bb58d55
+  source_step3_response_sha256: 3960b2d48b527f1b3ec7f4109cc9b2c88508b54493495d5225e2171fa4dd787e
+  review_state: reviewed
+  reviewer: codex_operator_phase2r224_step3_final_manual_audit
+  reviewed_at_utc: '2026-07-30T20:00:00Z'
+  review_basis: 人工核验填方路基横断面四个节点均来自 reviewed semantic_v2，三条关系边有 figure Evidence 与 sidecar
+    hash；输出未显示关系标签且未伪造文本 anchor。
+- reviewed_card_id: step3-reviewed-card:db614e139f1ed3eb2b0d6690
+  source_card_id: v25-release-card:cd1558d4e5d386183f1a4b31
+  source_card_sha256: ce2e2600abcbaa6aff0e5a07de02dc2b1ee1f051765cbdeaec30b3a1285947ca
+  source_projection_id: step3-source-card-text:0f478a5062407770811b269c
+  sample_id: gonglu_24_table_formula
+  canonical_title: 模板与支架一般要求
+  fact_ids:
+  - fact:2181e5bd6349775b25fd2b82
+  - fact:df38ba0d0992399d7acc910a
+  - fact:9f65fc117c8497c0185ef163
+  - fact:d1d886adf5616ac0a1153072
+  - fact:6d1bdf6072180f04f67bc8f4
+  presentation: constraint
+  image_prompt: 'Create a draft constraint-style visual study card. Display exactly
+    these texts verbatim:
+
+    （2）模板和支架应具有足够的强度、刚度和稳定性。
+
+    （4）模板与混凝土的接触面应涂刷隔离剂，但不得采用废机油等油料。
+
+    （5）在模板上设置的吊环应采用HPB300 钢筋（一级钢），严禁采用冷加工
+
+    钢筋制作。
+
+    在模板自重标准值作用下，吊环的拉应力应不大于65MPa。
+
+    （6）支架不得与应急安全通道相连接。'
+  expected_texts:
+  - （2）模板和支架应具有足够的强度、刚度和稳定性。
+  - （4）模板与混凝土的接触面应涂刷隔离剂，但不得采用废机油等油料。
+  - '（5）在模板上设置的吊环应采用HPB300 钢筋（一级钢），严禁采用冷加工
+
+    钢筋制作。'
+  - 在模板自重标准值作用下，吊环的拉应力应不大于65MPa。
+  - （6）支架不得与应急安全通道相连接。
+  layout_description: Draft constraint card with five separated text blocks in the
+    given order; preserve embedded line breaks.
+  display_text_provenance:
+  - fact_id: fact:2181e5bd6349775b25fd2b82
+    text: （2）模板和支架应具有足够的强度、刚度和稳定性。
+    source_kind: reviewed_fact_assertion
+    evidence_ids:
+    - ev:4b0c10cf94be018459452e14
+    anchor_span_ids:
+    - span:cb28d0ea3b1ebc79c790c295
+    source_table_ids:
+    - ev:d13b3f653925a49fe84f6da4
+    continuation_binding_ids: []
+    complete_table_grid_verified: false
+    semantic_sidecar_sha256: null
+    semantic_node_id: null
+  - fact_id: fact:df38ba0d0992399d7acc910a
+    text: （4）模板与混凝土的接触面应涂刷隔离剂，但不得采用废机油等油料。
+    source_kind: reviewed_fact_assertion
+    evidence_ids:
+    - ev:4b0c10cf94be018459452e14
+    anchor_span_ids:
+    - span:39b910d758bb8ea0b172d199
+    source_table_ids:
+    - ev:d13b3f653925a49fe84f6da4
+    continuation_binding_ids: []
+    complete_table_grid_verified: false
+    semantic_sidecar_sha256: null
+    semantic_node_id: null
+  - fact_id: fact:9f65fc117c8497c0185ef163
+    text: '（5）在模板上设置的吊环应采用HPB300 钢筋（一级钢），严禁采用冷加工
+
+      钢筋制作。'
+    source_kind: reviewed_fact_assertion
+    evidence_ids:
+    - ev:4b0c10cf94be018459452e14
+    - ev:7fdf390ab8741b110562d87d
+    anchor_span_ids:
+    - span:d4e88f7e635e38b71bc1cd3d
+    - span:9c55ea97526fd7466e1e1b7b
+    source_table_ids:
+    - ev:d13b3f653925a49fe84f6da4
+    continuation_binding_ids: []
+    complete_table_grid_verified: false
+    semantic_sidecar_sha256: null
+    semantic_node_id: null
+  - fact_id: fact:d1d886adf5616ac0a1153072
+    text: 在模板自重标准值作用下，吊环的拉应力应不大于65MPa。
+    source_kind: reviewed_fact_assertion
+    evidence_ids:
+    - ev:4b0c10cf94be018459452e14
+    anchor_span_ids:
+    - span:db7d38a6b2042f811e7f0ba8
+    source_table_ids:
+    - ev:d13b3f653925a49fe84f6da4
+    continuation_binding_ids: []
+    complete_table_grid_verified: false
+    semantic_sidecar_sha256: null
+    semantic_node_id: null
+  - fact_id: fact:6d1bdf6072180f04f67bc8f4
+    text: （6）支架不得与应急安全通道相连接。
+    source_kind: reviewed_fact_assertion
+    evidence_ids:
+    - ev:5aeed111f1a65c491bae59c8
+    anchor_span_ids:
+    - span:fb7057c78f8d65c40aa02dc6
+    source_table_ids:
+    - ev:d13b3f653925a49fe84f6da4
+    continuation_binding_ids: []
+    complete_table_grid_verified: false
+    semantic_sidecar_sha256: null
+    semantic_node_id: null
+  semantic_edge_provenance: []
+  source_step3_request_id: step3-source-owned-openai-strict-request:748045c645f8d90faae0afb712ff5a69a789b01f11cf3467024e5e442bb58d55
+  source_step3_response_sha256: 3960b2d48b527f1b3ec7f4109cc9b2c88508b54493495d5225e2171fa4dd787e
+  review_state: reviewed
+  reviewer: codex_operator_phase2r224_step3_final_manual_audit
+  reviewed_at_utc: '2026-07-30T20:00:00Z'
+  review_basis: 人工核验五条模板与支架一般要求均为完整 reviewed assertion，HPB300与严禁冷加工双条件、65MPa阈值及安全通道约束均未截断；编组和
+    constraint presentation 可确认。
+- reviewed_card_id: step3-reviewed-card:2d2adbc2d38335eb82e45c5a
+  source_card_id: v25-release-card:40b3629b5e9457052c440c3d
+  source_card_sha256: f96d842f2b36a584973fa94d24ef07bca5c1201884f43fb0af9f6acf3849c81a
+  source_projection_id: step3-source-card-text:cdd57f90ae0073426394652e
+  sample_id: gonglu_41_diagram_mixed
+  canonical_title: 洞门基础深度约束
+  fact_ids:
+  - fact:e1fef22867fb494f5aae85de
+  presentation: threshold
+  image_prompt: 'Create a draft threshold-style visual study card. Display exactly
+    this text verbatim:
+
+    ③地基为冻胀土层时，基底高程应在最大冻结深度以下不小于0.25m。'
+  expected_texts:
+  - ③地基为冻胀土层时，基底高程应在最大冻结深度以下不小于0.25m。
+  layout_description: Draft threshold card with one prominent text block.
+  display_text_provenance:
+  - fact_id: fact:e1fef22867fb494f5aae85de
+    text: ③地基为冻胀土层时，基底高程应在最大冻结深度以下不小于0.25m。
+    source_kind: reviewed_fact_assertion
+    evidence_ids:
+    - ev:ded41e882249b861db9819fa
+    anchor_span_ids:
+    - span:ef30369b6c129a3c74e9f1d5
+    source_table_ids: []
+    continuation_binding_ids: []
+    complete_table_grid_verified: false
+    semantic_sidecar_sha256: null
+    semantic_node_id: null
+  semantic_edge_provenance: []
+  source_step3_request_id: step3-source-owned-openai-strict-request:748045c645f8d90faae0afb712ff5a69a789b01f11cf3467024e5e442bb58d55
+  source_step3_response_sha256: 3960b2d48b527f1b3ec7f4109cc9b2c88508b54493495d5225e2171fa4dd787e
+  review_state: reviewed
+  reviewer: codex_operator_phase2r224_step3_final_manual_audit
+  reviewed_at_utc: '2026-07-30T20:00:00Z'
+  review_basis: 人工核验冻胀土基底高程 assertion 完整包含最大冻结深度以下不小于0.25m条件，数值、单位、primary anchor
+    与 threshold presentation 均可确认。
+- reviewed_card_id: step3-reviewed-card:ad958d3bc149c5feec61205a
+  source_card_id: v25-release-card:4995459aea0db1350c00cdec
+  source_card_sha256: 78d3c81cc91195f010c376389fc5497cc869b862752f0616bbaae1db56e79bb5
+  source_projection_id: step3-source-card-text:b6f2dad9f041019c69597798
+  sample_id: gonglu_41_diagram_mixed
+  canonical_title: 复合式衬砌横断面
+  fact_ids:
+  - fact:e9b0fada194b3f0c856905c8
+  presentation: diagram
+  image_prompt: 'Create a draft diagram-style visual study card. Display exactly these
+    texts verbatim:
+
+    围岩
+
+    初期支护
+
+    防水层
+
+    二次衬砌
+
+    排水盲管'
+  expected_texts:
+  - 围岩
+  - 初期支护
+  - 防水层
+  - 二次衬砌
+  - 排水盲管
+  layout_description: Draft diagram layout with five labeled nodes arranged in a layered
+    cross-section style; use simple connector lines without any relation text.
+  display_text_provenance:
+  - fact_id: fact:e9b0fada194b3f0c856905c8
+    text: 围岩
+    source_kind: reviewed_semantic_node_label
+    evidence_ids:
+    - ev:a2104e17b0e3b9748fdb89f4
+    - ev:8b8244ff57b18cd199bf6589
+    anchor_span_ids: []
+    source_table_ids: []
+    continuation_binding_ids: []
+    complete_table_grid_verified: false
+    semantic_sidecar_sha256: 8e5144e346ac0f3ed0bc220970e632d549b9069480faba5a95a28aa4765837d0
+    semantic_node_id: node-surrounding-rock
+  - fact_id: fact:e9b0fada194b3f0c856905c8
+    text: 初期支护
+    source_kind: reviewed_semantic_node_label
+    evidence_ids:
+    - ev:a2104e17b0e3b9748fdb89f4
+    - ev:28fa704c37f6d0a34a7e4cce
+    anchor_span_ids: []
+    source_table_ids: []
+    continuation_binding_ids: []
+    complete_table_grid_verified: false
+    semantic_sidecar_sha256: 8e5144e346ac0f3ed0bc220970e632d549b9069480faba5a95a28aa4765837d0
+    semantic_node_id: node-primary-support
+  - fact_id: fact:e9b0fada194b3f0c856905c8
+    text: 防水层
+    source_kind: reviewed_semantic_node_label
+    evidence_ids:
+    - ev:a2104e17b0e3b9748fdb89f4
+    - ev:01440fda0b8bb599c100ad14
+    anchor_span_ids: []
+    source_table_ids: []
+    continuation_binding_ids: []
+    complete_table_grid_verified: false
+    semantic_sidecar_sha256: 8e5144e346ac0f3ed0bc220970e632d549b9069480faba5a95a28aa4765837d0
+    semantic_node_id: node-waterproof-layer
+  - fact_id: fact:e9b0fada194b3f0c856905c8
+    text: 二次衬砌
+    source_kind: reviewed_semantic_node_label
+    evidence_ids:
+    - ev:a2104e17b0e3b9748fdb89f4
+    - ev:f69df926630d2177f0221b08
+    anchor_span_ids: []
+    source_table_ids: []
+    continuation_binding_ids: []
+    complete_table_grid_verified: false
+    semantic_sidecar_sha256: 8e5144e346ac0f3ed0bc220970e632d549b9069480faba5a95a28aa4765837d0
+    semantic_node_id: node-secondary-lining
+  - fact_id: fact:e9b0fada194b3f0c856905c8
+    text: 排水盲管
+    source_kind: reviewed_semantic_node_label
+    evidence_ids:
+    - ev:a2104e17b0e3b9748fdb89f4
+    anchor_span_ids: []
+    source_table_ids: []
+    continuation_binding_ids: []
+    complete_table_grid_verified: false
+    semantic_sidecar_sha256: 8e5144e346ac0f3ed0bc220970e632d549b9069480faba5a95a28aa4765837d0
+    semantic_node_id: node-drainage
+  semantic_edge_provenance:
+  - fact_id: fact:e9b0fada194b3f0c856905c8
+    source_node_id: node-primary-support
+    relation: 紧贴围岩
+    target_node_id: node-surrounding-rock
+    evidence_ids:
+    - ev:a2104e17b0e3b9748fdb89f4
+    - ev:28fa704c37f6d0a34a7e4cce
+    - ev:8b8244ff57b18cd199bf6589
+    basis: 原始 figure crop 中的连线、相对位置或层级分支直接支持该关系；未以 OCR 文字猜测替代人工确认。
+    confidence: 0.98
+    figure_evidence_id: ev:a2104e17b0e3b9748fdb89f4
+    source_manifest_sha256: 68f4bb0d97b9b59f4a7c6bb9acc451dc765a61b6e838e8520571674d3fe4e4e3
+    semantic_sidecar_sha256: 8e5144e346ac0f3ed0bc220970e632d549b9069480faba5a95a28aa4765837d0
+  - fact_id: fact:e9b0fada194b3f0c856905c8
+    source_node_id: node-waterproof-layer
+    relation: 位于内侧
+    target_node_id: node-primary-support
+    evidence_ids:
+    - ev:a2104e17b0e3b9748fdb89f4
+    - ev:01440fda0b8bb599c100ad14
+    - ev:28fa704c37f6d0a34a7e4cce
+    basis: 原始 figure crop 中的连线、相对位置或层级分支直接支持该关系；未以 OCR 文字猜测替代人工确认。
+    confidence: 0.98
+    figure_evidence_id: ev:a2104e17b0e3b9748fdb89f4
+    source_manifest_sha256: 68f4bb0d97b9b59f4a7c6bb9acc451dc765a61b6e838e8520571674d3fe4e4e3
+    semantic_sidecar_sha256: 8e5144e346ac0f3ed0bc220970e632d549b9069480faba5a95a28aa4765837d0
+  - fact_id: fact:e9b0fada194b3f0c856905c8
+    source_node_id: node-secondary-lining
+    relation: 位于内侧
+    target_node_id: node-waterproof-layer
+    evidence_ids:
+    - ev:a2104e17b0e3b9748fdb89f4
+    - ev:f69df926630d2177f0221b08
+    - ev:01440fda0b8bb599c100ad14
+    basis: 原始 figure crop 中的连线、相对位置或层级分支直接支持该关系；未以 OCR 文字猜测替代人工确认。
+    confidence: 0.98
+    figure_evidence_id: ev:a2104e17b0e3b9748fdb89f4
+    source_manifest_sha256: 68f4bb0d97b9b59f4a7c6bb9acc451dc765a61b6e838e8520571674d3fe4e4e3
+    semantic_sidecar_sha256: 8e5144e346ac0f3ed0bc220970e632d549b9069480faba5a95a28aa4765837d0
+  - fact_id: fact:e9b0fada194b3f0c856905c8
+    source_node_id: node-drainage
+    relation: 设置于侧部
+    target_node_id: node-secondary-lining
+    evidence_ids:
+    - ev:a2104e17b0e3b9748fdb89f4
+    - ev:f69df926630d2177f0221b08
+    basis: 原始 figure crop 中的连线、相对位置或层级分支直接支持该关系；未以 OCR 文字猜测替代人工确认。
+    confidence: 0.98
+    figure_evidence_id: ev:a2104e17b0e3b9748fdb89f4
+    source_manifest_sha256: 68f4bb0d97b9b59f4a7c6bb9acc451dc765a61b6e838e8520571674d3fe4e4e3
+    semantic_sidecar_sha256: 8e5144e346ac0f3ed0bc220970e632d549b9069480faba5a95a28aa4765837d0
+  source_step3_request_id: step3-source-owned-openai-strict-request:748045c645f8d90faae0afb712ff5a69a789b01f11cf3467024e5e442bb58d55
+  source_step3_response_sha256: 3960b2d48b527f1b3ec7f4109cc9b2c88508b54493495d5225e2171fa4dd787e
+  review_state: reviewed
+  reviewer: codex_operator_phase2r224_step3_final_manual_audit
+  reviewed_at_utc: '2026-07-30T20:00:00Z'
+  review_basis: 人工核验复合式衬砌五个节点与四条 reviewed semantic_v2 关系边完整回链，image prompt 仅含节点文本，不含关系标签、水印或伪造
+    anchor。
+- reviewed_card_id: step3-reviewed-card:789f2237718ab0b2bc57048a
+  source_card_id: v25-release-card:365e03a33bb2e9f00935c7f2
+  source_card_sha256: 5787e1adf51783a404cbbb5a01f269117d2ba47a4937bc88771ef3fa1ac013e9
+  source_projection_id: step3-source-card-text:0244672c1bfbf8ad5ae83129
+  sample_id: gonglu_55_standard_constraints
+  canonical_title: 生产安全事故等级
+  fact_ids:
+  - fact:ced6ce149a2fd340a7d7615b
+  presentation: diagram
+  image_prompt: 'Create a draft diagram-style visual study card. Display exactly these
+    texts verbatim:
+
+    一般事故
+
+    较大事故
+
+    重大事故
+
+    特别重大事故
+
+    死亡人数
+
+    重伤人数
+
+    直接经济损失'
+  expected_texts:
+  - 一般事故
+  - 较大事故
+  - 重大事故
+  - 特别重大事故
+  - 死亡人数
+  - 重伤人数
+  - 直接经济损失
+  layout_description: Draft diagram layout with seven labeled nodes; arrange the first
+    four in a sequence and the last three as associated indicator nodes, using simple
+    connector lines without any relation text.
+  display_text_provenance:
+  - fact_id: fact:ced6ce149a2fd340a7d7615b
+    text: 一般事故
+    source_kind: reviewed_semantic_node_label
+    evidence_ids:
+    - ev:4f63c03e1ee994ad80c45fdb
+    - ev:2ddd7068f81283862614cd6d
+    anchor_span_ids: []
+    source_table_ids: []
+    continuation_binding_ids: []
+    complete_table_grid_verified: false
+    semantic_sidecar_sha256: 8e5144e346ac0f3ed0bc220970e632d549b9069480faba5a95a28aa4765837d0
+    semantic_node_id: node-general
+  - fact_id: fact:ced6ce149a2fd340a7d7615b
+    text: 较大事故
+    source_kind: reviewed_semantic_node_label
+    evidence_ids:
+    - ev:4f63c03e1ee994ad80c45fdb
+    - ev:c5d56ac29270228e980143c7
+    anchor_span_ids: []
+    source_table_ids: []
+    continuation_binding_ids: []
+    complete_table_grid_verified: false
+    semantic_sidecar_sha256: 8e5144e346ac0f3ed0bc220970e632d549b9069480faba5a95a28aa4765837d0
+    semantic_node_id: node-large
+  - fact_id: fact:ced6ce149a2fd340a7d7615b
+    text: 重大事故
+    source_kind: reviewed_semantic_node_label
+    evidence_ids:
+    - ev:4f63c03e1ee994ad80c45fdb
+    - ev:4f9da8d06591422276597fc6
+    anchor_span_ids: []
+    source_table_ids: []
+    continuation_binding_ids: []
+    complete_table_grid_verified: false
+    semantic_sidecar_sha256: 8e5144e346ac0f3ed0bc220970e632d549b9069480faba5a95a28aa4765837d0
+    semantic_node_id: node-major
+  - fact_id: fact:ced6ce149a2fd340a7d7615b
+    text: 特别重大事故
+    source_kind: reviewed_semantic_node_label
+    evidence_ids:
+    - ev:4f63c03e1ee994ad80c45fdb
+    - ev:42124b51891dc235f79e179a
+    anchor_span_ids: []
+    source_table_ids: []
+    continuation_binding_ids: []
+    complete_table_grid_verified: false
+    semantic_sidecar_sha256: 8e5144e346ac0f3ed0bc220970e632d549b9069480faba5a95a28aa4765837d0
+    semantic_node_id: node-extraordinary-major
+  - fact_id: fact:ced6ce149a2fd340a7d7615b
+    text: 死亡人数
+    source_kind: reviewed_semantic_node_label
+    evidence_ids:
+    - ev:4f63c03e1ee994ad80c45fdb
+    - ev:135e3823c3feed401d05c2c5
+    anchor_span_ids: []
+    source_table_ids: []
+    continuation_binding_ids: []
+    complete_table_grid_verified: false
+    semantic_sidecar_sha256: 8e5144e346ac0f3ed0bc220970e632d549b9069480faba5a95a28aa4765837d0
+    semantic_node_id: node-death-count
+  - fact_id: fact:ced6ce149a2fd340a7d7615b
+    text: 重伤人数
+    source_kind: reviewed_semantic_node_label
+    evidence_ids:
+    - ev:4f63c03e1ee994ad80c45fdb
+    - ev:c2e1998eb15d1fb5536f5a4d
+    anchor_span_ids: []
+    source_table_ids: []
+    continuation_binding_ids: []
+    complete_table_grid_verified: false
+    semantic_sidecar_sha256: 8e5144e346ac0f3ed0bc220970e632d549b9069480faba5a95a28aa4765837d0
+    semantic_node_id: node-serious-injury-count
+  - fact_id: fact:ced6ce149a2fd340a7d7615b
+    text: 直接经济损失
+    source_kind: reviewed_semantic_node_label
+    evidence_ids:
+    - ev:4f63c03e1ee994ad80c45fdb
+    - ev:1b6b198540357ee564872921
+    anchor_span_ids: []
+    source_table_ids: []
+    continuation_binding_ids: []
+    complete_table_grid_verified: false
+    semantic_sidecar_sha256: 8e5144e346ac0f3ed0bc220970e632d549b9069480faba5a95a28aa4765837d0
+    semantic_node_id: node-economic-loss
+  semantic_edge_provenance:
+  - fact_id: fact:ced6ce149a2fd340a7d7615b
+    source_node_id: node-general
+    relation: 严重程度递增
+    target_node_id: node-large
+    evidence_ids:
+    - ev:4f63c03e1ee994ad80c45fdb
+    - ev:2ddd7068f81283862614cd6d
+    - ev:c5d56ac29270228e980143c7
+    basis: 原始 figure crop 中的连线、相对位置或层级分支直接支持该关系；未以 OCR 文字猜测替代人工确认。
+    confidence: 0.98
+    figure_evidence_id: ev:4f63c03e1ee994ad80c45fdb
+    source_manifest_sha256: 90f27cafcc87f3ded800f40f3ebf722324704efd512da04402241301ec010731
+    semantic_sidecar_sha256: 8e5144e346ac0f3ed0bc220970e632d549b9069480faba5a95a28aa4765837d0
+  - fact_id: fact:ced6ce149a2fd340a7d7615b
+    source_node_id: node-large
+    relation: 严重程度递增
+    target_node_id: node-major
+    evidence_ids:
+    - ev:4f63c03e1ee994ad80c45fdb
+    - ev:c5d56ac29270228e980143c7
+    - ev:4f9da8d06591422276597fc6
+    basis: 原始 figure crop 中的连线、相对位置或层级分支直接支持该关系；未以 OCR 文字猜测替代人工确认。
+    confidence: 0.98
+    figure_evidence_id: ev:4f63c03e1ee994ad80c45fdb
+    source_manifest_sha256: 90f27cafcc87f3ded800f40f3ebf722324704efd512da04402241301ec010731
+    semantic_sidecar_sha256: 8e5144e346ac0f3ed0bc220970e632d549b9069480faba5a95a28aa4765837d0
+  - fact_id: fact:ced6ce149a2fd340a7d7615b
+    source_node_id: node-major
+    relation: 严重程度递增
+    target_node_id: node-extraordinary-major
+    evidence_ids:
+    - ev:4f63c03e1ee994ad80c45fdb
+    - ev:4f9da8d06591422276597fc6
+    - ev:42124b51891dc235f79e179a
+    basis: 原始 figure crop 中的连线、相对位置或层级分支直接支持该关系；未以 OCR 文字猜测替代人工确认。
+    confidence: 0.98
+    figure_evidence_id: ev:4f63c03e1ee994ad80c45fdb
+    source_manifest_sha256: 90f27cafcc87f3ded800f40f3ebf722324704efd512da04402241301ec010731
+    semantic_sidecar_sha256: 8e5144e346ac0f3ed0bc220970e632d549b9069480faba5a95a28aa4765837d0
+  - fact_id: fact:ced6ce149a2fd340a7d7615b
+    source_node_id: node-death-count
+    relation: 作为等级判定指标
+    target_node_id: node-general
+    evidence_ids:
+    - ev:4f63c03e1ee994ad80c45fdb
+    - ev:135e3823c3feed401d05c2c5
+    - ev:2ddd7068f81283862614cd6d
+    basis: 原始 figure crop 中的连线、相对位置或层级分支直接支持该关系；未以 OCR 文字猜测替代人工确认。
+    confidence: 0.98
+    figure_evidence_id: ev:4f63c03e1ee994ad80c45fdb
+    source_manifest_sha256: 90f27cafcc87f3ded800f40f3ebf722324704efd512da04402241301ec010731
+    semantic_sidecar_sha256: 8e5144e346ac0f3ed0bc220970e632d549b9069480faba5a95a28aa4765837d0
+  - fact_id: fact:ced6ce149a2fd340a7d7615b
+    source_node_id: node-serious-injury-count
+    relation: 作为等级判定指标
+    target_node_id: node-general
+    evidence_ids:
+    - ev:4f63c03e1ee994ad80c45fdb
+    - ev:c2e1998eb15d1fb5536f5a4d
+    - ev:2ddd7068f81283862614cd6d
+    basis: 原始 figure crop 中的连线、相对位置或层级分支直接支持该关系；未以 OCR 文字猜测替代人工确认。
+    confidence: 0.98
+    figure_evidence_id: ev:4f63c03e1ee994ad80c45fdb
+    source_manifest_sha256: 90f27cafcc87f3ded800f40f3ebf722324704efd512da04402241301ec010731
+    semantic_sidecar_sha256: 8e5144e346ac0f3ed0bc220970e632d549b9069480faba5a95a28aa4765837d0
+  - fact_id: fact:ced6ce149a2fd340a7d7615b
+    source_node_id: node-economic-loss
+    relation: 作为等级判定指标
+    target_node_id: node-general
+    evidence_ids:
+    - ev:4f63c03e1ee994ad80c45fdb
+    - ev:1b6b198540357ee564872921
+    - ev:2ddd7068f81283862614cd6d
+    basis: 原始 figure crop 中的连线、相对位置或层级分支直接支持该关系；未以 OCR 文字猜测替代人工确认。
+    confidence: 0.98
+    figure_evidence_id: ev:4f63c03e1ee994ad80c45fdb
+    source_manifest_sha256: 90f27cafcc87f3ded800f40f3ebf722324704efd512da04402241301ec010731
+    semantic_sidecar_sha256: 8e5144e346ac0f3ed0bc220970e632d549b9069480faba5a95a28aa4765837d0
+  source_step3_request_id: step3-source-owned-openai-strict-request:748045c645f8d90faae0afb712ff5a69a789b01f11cf3467024e5e442bb58d55
+  source_step3_response_sha256: 3960b2d48b527f1b3ec7f4109cc9b2c88508b54493495d5225e2171fa4dd787e
+  review_state: reviewed
+  reviewer: codex_operator_phase2r224_step3_final_manual_audit
+  reviewed_at_utc: '2026-07-30T20:00:00Z'
+  review_basis: 人工核验四级事故节点和死亡人数、重伤人数、直接经济损失三个指标节点均来自 reviewed semantic_v2，六条边完整回链且关系词未进入输出文本。
+- reviewed_card_id: step3-reviewed-card:28fd47641d898f24382c7d6b
+  source_card_id: v25-release-card:c16e2fc7671047b24a16a4c1
+  source_card_sha256: 8ee9e5fdfede1c3f28a4c14e7b87afc7d4a7a4c42f9dda2bc0409536fd1479bf
+  source_projection_id: step3-source-card-text:7557456eead9e4155de005f7
+  sample_id: gonglu_62_cost_flow_incident
+  canonical_title: 成本预算与偏差公式
+  fact_ids:
+  - fact:677b17fa109b98499fabc81f
+  - fact:87cae4786327dd9895e63f0c
+  - fact:157c07ea911ab2c62b98cbc5
+  presentation: formula
+  image_prompt: 'Create a draft formula-style visual study card. Display exactly these
+    texts verbatim:
+
+    项目预算总成本=∑（标后预算清单单价×清单工程量）
+
+    机械租赁费=Σ［（机械租赁单价+使用费）×
+
+    租赁数量×租赁时间］
+
+    机械租赁费=Σ（机械租赁单价×租赁数量×
+
+    租赁时间）
+
+    计划成本偏差=施工预算成本-责任目标成本'
+  expected_texts:
+  - 项目预算总成本=∑（标后预算清单单价×清单工程量）
+  - '机械租赁费=Σ［（机械租赁单价+使用费）×
+
+    租赁数量×租赁时间］
+
+    机械租赁费=Σ（机械租赁单价×租赁数量×
+
+    租赁时间）'
+  - 计划成本偏差=施工预算成本-责任目标成本
+  layout_description: Draft formula card with three separated formula blocks in the
+    given order; preserve embedded line breaks.
+  display_text_provenance:
+  - fact_id: fact:677b17fa109b98499fabc81f
+    text: 项目预算总成本=∑（标后预算清单单价×清单工程量）
+    source_kind: reviewed_fact_assertion
+    evidence_ids:
+    - ev:759b2e6cf5213f83a3ba54a6
+    anchor_span_ids:
+    - span:7387270fb8169f496ff530d6
+    source_table_ids: []
+    continuation_binding_ids: []
+    complete_table_grid_verified: false
+    semantic_sidecar_sha256: null
+    semantic_node_id: null
+  - fact_id: fact:87cae4786327dd9895e63f0c
+    text: '机械租赁费=Σ［（机械租赁单价+使用费）×
+
+      租赁数量×租赁时间］
+
+      机械租赁费=Σ（机械租赁单价×租赁数量×
+
+      租赁时间）'
+    source_kind: reviewed_fact_assertion
+    evidence_ids:
+    - ev:7ca39e97fff916f81dc35e52
+    - ev:75e2cfcc3f5b51a85b2adf5a
+    anchor_span_ids:
+    - span:07d590b65597ac93e26e45d8
+    - span:974793ac15d9d4a98be76702
+    - span:f5d15420e699374c51f19c1a
+    - span:c2a923b80b4c84813c0b60d1
+    source_table_ids:
+    - ev:37cb524983bc45d87c9f97ec
+    continuation_binding_ids: []
+    complete_table_grid_verified: false
+    semantic_sidecar_sha256: null
+    semantic_node_id: null
+  - fact_id: fact:157c07ea911ab2c62b98cbc5
+    text: 计划成本偏差=施工预算成本-责任目标成本
+    source_kind: reviewed_fact_assertion
+    evidence_ids:
+    - ev:79d57ad76e118cdae6a54d02
+    anchor_span_ids:
+    - span:f9afccc3ea2654b009aef3a6
+    source_table_ids: []
+    continuation_binding_ids: []
+    complete_table_grid_verified: false
+    semantic_sidecar_sha256: null
+    semantic_node_id: null
+  semantic_edge_provenance: []
+  source_step3_request_id: step3-source-owned-openai-strict-request:748045c645f8d90faae0afb712ff5a69a789b01f11cf3467024e5e442bb58d55
+  source_step3_response_sha256: 3960b2d48b527f1b3ec7f4109cc9b2c88508b54493495d5225e2171fa4dd787e
+  review_state: reviewed
+  reviewer: codex_operator_phase2r224_step3_final_manual_audit
+  reviewed_at_utc: '2026-07-30T20:00:00Z'
+  review_basis: 人工核验项目预算总成本、机械租赁费双公式及计划成本偏差公式均完整，运算符、括号、变量和多 anchor provenance 可确认，formula
+    编组无跨源合并。
+- reviewed_card_id: step3-reviewed-card:0729c906aecd2b0be03b57f6
+  source_card_id: v25-release-card:e8a6d76882ba889296a6404f
+  source_card_sha256: 88f5f3301c020a97f83d75f9dc08de18f8c2cae3a0d1f33dc89b57f8a33138c5
+  source_projection_id: step3-source-card-text:e6ede97c848096fceba9a695
+  sample_id: gonglu_62_cost_flow_incident
+  canonical_title: 标后预算总费用结构
+  fact_ids:
+  - fact:73b218f87155cc55743cb801
+  presentation: diagram
+  image_prompt: 'Create a draft diagram-style visual study card. Display exactly these
+    texts verbatim:
+
+    标后预算总费用
+
+    上缴企业费用
+
+    总部管理费
+
+    利润
+
+    项目预算总成本
+
+    直接费
+
+    设备购置费
+
+    措施费
+
+    专项费用
+
+    现场管理费
+
+    规费
+
+    税金'
+  expected_texts:
+  - 标后预算总费用
+  - 上缴企业费用
+  - 总部管理费
+  - 利润
+  - 项目预算总成本
+  - 直接费
+  - 设备购置费
+  - 措施费
+  - 专项费用
+  - 现场管理费
+  - 规费
+  - 税金
+  layout_description: Draft diagram layout with twelve labeled nodes arranged hierarchically;
+    use simple connector lines without any relation text.
+  display_text_provenance:
+  - fact_id: fact:73b218f87155cc55743cb801
+    text: 标后预算总费用
+    source_kind: reviewed_semantic_node_label
+    evidence_ids:
+    - ev:4af15b958587bb00fcaac211
+    - ev:e0ca23f969789a26726443cb
+    anchor_span_ids: []
+    source_table_ids: []
+    continuation_binding_ids: []
+    complete_table_grid_verified: false
+    semantic_sidecar_sha256: 0ad43480d3b6957c1bdd14f47e8adf2b0caae04452372d4425a46f01deb8611f
+    semantic_node_id: node-total-cost
+  - fact_id: fact:73b218f87155cc55743cb801
+    text: 上缴企业费用
+    source_kind: reviewed_semantic_node_label
+    evidence_ids:
+    - ev:4af15b958587bb00fcaac211
+    - ev:e1c3c8b2efd9e0e98304a210
+    anchor_span_ids: []
+    source_table_ids: []
+    continuation_binding_ids: []
+    complete_table_grid_verified: false
+    semantic_sidecar_sha256: 0ad43480d3b6957c1bdd14f47e8adf2b0caae04452372d4425a46f01deb8611f
+    semantic_node_id: node-enterprise-cost
+  - fact_id: fact:73b218f87155cc55743cb801
+    text: 总部管理费
+    source_kind: reviewed_semantic_node_label
+    evidence_ids:
+    - ev:4af15b958587bb00fcaac211
+    - ev:62439e15c5f7735b6233ecbd
+    anchor_span_ids: []
+    source_table_ids: []
+    continuation_binding_ids: []
+    complete_table_grid_verified: false
+    semantic_sidecar_sha256: 0ad43480d3b6957c1bdd14f47e8adf2b0caae04452372d4425a46f01deb8611f
+    semantic_node_id: node-head-office
+  - fact_id: fact:73b218f87155cc55743cb801
+    text: 利润
+    source_kind: reviewed_semantic_node_label
+    evidence_ids:
+    - ev:4af15b958587bb00fcaac211
+    - ev:e2831626e91dcaefe155896b
+    anchor_span_ids: []
+    source_table_ids: []
+    continuation_binding_ids: []
+    complete_table_grid_verified: false
+    semantic_sidecar_sha256: 0ad43480d3b6957c1bdd14f47e8adf2b0caae04452372d4425a46f01deb8611f
+    semantic_node_id: node-profit
+  - fact_id: fact:73b218f87155cc55743cb801
+    text: 项目预算总成本
+    source_kind: reviewed_semantic_node_label
+    evidence_ids:
+    - ev:4af15b958587bb00fcaac211
+    - ev:3d8d49dd836996c4b9dbfb25
+    anchor_span_ids: []
+    source_table_ids: []
+    continuation_binding_ids: []
+    complete_table_grid_verified: false
+    semantic_sidecar_sha256: 0ad43480d3b6957c1bdd14f47e8adf2b0caae04452372d4425a46f01deb8611f
+    semantic_node_id: node-project-budget-cost
+  - fact_id: fact:73b218f87155cc55743cb801
+    text: 直接费
+    source_kind: reviewed_semantic_node_label
+    evidence_ids:
+    - ev:4af15b958587bb00fcaac211
+    - ev:411739cdebcbf2af9143920c
+    anchor_span_ids: []
+    source_table_ids: []
+    continuation_binding_ids: []
+    complete_table_grid_verified: false
+    semantic_sidecar_sha256: 0ad43480d3b6957c1bdd14f47e8adf2b0caae04452372d4425a46f01deb8611f
+    semantic_node_id: node-direct-cost
+  - fact_id: fact:73b218f87155cc55743cb801
+    text: 设备购置费
+    source_kind: reviewed_semantic_node_label
+    evidence_ids:
+    - ev:4af15b958587bb00fcaac211
+    - ev:323a24a21eeee2a9c219872b
+    anchor_span_ids: []
+    source_table_ids: []
+    continuation_binding_ids: []
+    complete_table_grid_verified: false
+    semantic_sidecar_sha256: 0ad43480d3b6957c1bdd14f47e8adf2b0caae04452372d4425a46f01deb8611f
+    semantic_node_id: node-equipment-cost
+  - fact_id: fact:73b218f87155cc55743cb801
+    text: 措施费
+    source_kind: reviewed_semantic_node_label
+    evidence_ids:
+    - ev:4af15b958587bb00fcaac211
+    - ev:d4f4403cd667fdd5eef1da83
+    anchor_span_ids: []
+    source_table_ids: []
+    continuation_binding_ids: []
+    complete_table_grid_verified: false
+    semantic_sidecar_sha256: 0ad43480d3b6957c1bdd14f47e8adf2b0caae04452372d4425a46f01deb8611f
+    semantic_node_id: node-measure-cost
+  - fact_id: fact:73b218f87155cc55743cb801
+    text: 专项费用
+    source_kind: reviewed_semantic_node_label
+    evidence_ids:
+    - ev:4af15b958587bb00fcaac211
+    - ev:d658ba56ff8bc90630f11db8
+    anchor_span_ids: []
+    source_table_ids: []
+    continuation_binding_ids: []
+    complete_table_grid_verified: false
+    semantic_sidecar_sha256: 0ad43480d3b6957c1bdd14f47e8adf2b0caae04452372d4425a46f01deb8611f
+    semantic_node_id: node-special-cost
+  - fact_id: fact:73b218f87155cc55743cb801
+    text: 现场管理费
+    source_kind: reviewed_semantic_node_label
+    evidence_ids:
+    - ev:4af15b958587bb00fcaac211
+    - ev:baf2ba52e6d6413b39f48cef
+    anchor_span_ids: []
+    source_table_ids: []
+    continuation_binding_ids: []
+    complete_table_grid_verified: false
+    semantic_sidecar_sha256: 0ad43480d3b6957c1bdd14f47e8adf2b0caae04452372d4425a46f01deb8611f
+    semantic_node_id: node-site-management-cost
+  - fact_id: fact:73b218f87155cc55743cb801
+    text: 规费
+    source_kind: reviewed_semantic_node_label
+    evidence_ids:
+    - ev:4af15b958587bb00fcaac211
+    - ev:8fd55bc531c7b881f0cb318f
+    anchor_span_ids: []
+    source_table_ids: []
+    continuation_binding_ids: []
+    complete_table_grid_verified: false
+    semantic_sidecar_sha256: 0ad43480d3b6957c1bdd14f47e8adf2b0caae04452372d4425a46f01deb8611f
+    semantic_node_id: node-fees
+  - fact_id: fact:73b218f87155cc55743cb801
+    text: 税金
+    source_kind: reviewed_semantic_node_label
+    evidence_ids:
+    - ev:4af15b958587bb00fcaac211
+    - ev:0d31b4729e337491f509d863
+    anchor_span_ids: []
+    source_table_ids: []
+    continuation_binding_ids: []
+    complete_table_grid_verified: false
+    semantic_sidecar_sha256: 0ad43480d3b6957c1bdd14f47e8adf2b0caae04452372d4425a46f01deb8611f
+    semantic_node_id: node-tax
+  semantic_edge_provenance:
+  - fact_id: fact:73b218f87155cc55743cb801
+    source_node_id: node-total-cost
+    relation: 包含
+    target_node_id: node-enterprise-cost
+    evidence_ids:
+    - ev:4af15b958587bb00fcaac211
+    - ev:e0ca23f969789a26726443cb
+    - ev:e1c3c8b2efd9e0e98304a210
+    basis: 原始 figure crop 的同层分支线从标后预算总费用连至上缴企业费用；关系由图形层级人工确认。
+    confidence: 0.98
+    figure_evidence_id: ev:4af15b958587bb00fcaac211
+    source_manifest_sha256: 550cfd172a096dae42dc423b809ba008e44f0c93254da612a0ad3216bbb8b9ac
+    semantic_sidecar_sha256: 0ad43480d3b6957c1bdd14f47e8adf2b0caae04452372d4425a46f01deb8611f
+  - fact_id: fact:73b218f87155cc55743cb801
+    source_node_id: node-enterprise-cost
+    relation: 包含
+    target_node_id: node-head-office
+    evidence_ids:
+    - ev:4af15b958587bb00fcaac211
+    - ev:e1c3c8b2efd9e0e98304a210
+    - ev:62439e15c5f7735b6233ecbd
+    basis: 原始 figure crop 的分支线将上缴企业费用与总部管理费连接为从属层级。
+    confidence: 0.98
+    figure_evidence_id: ev:4af15b958587bb00fcaac211
+    source_manifest_sha256: 550cfd172a096dae42dc423b809ba008e44f0c93254da612a0ad3216bbb8b9ac
+    semantic_sidecar_sha256: 0ad43480d3b6957c1bdd14f47e8adf2b0caae04452372d4425a46f01deb8611f
+  - fact_id: fact:73b218f87155cc55743cb801
+    source_node_id: node-enterprise-cost
+    relation: 包含
+    target_node_id: node-profit
+    evidence_ids:
+    - ev:4af15b958587bb00fcaac211
+    - ev:e1c3c8b2efd9e0e98304a210
+    - ev:e2831626e91dcaefe155896b
+    basis: 原始 figure crop 的分支线将上缴企业费用与利润连接为从属层级。
+    confidence: 0.98
+    figure_evidence_id: ev:4af15b958587bb00fcaac211
+    source_manifest_sha256: 550cfd172a096dae42dc423b809ba008e44f0c93254da612a0ad3216bbb8b9ac
+    semantic_sidecar_sha256: 0ad43480d3b6957c1bdd14f47e8adf2b0caae04452372d4425a46f01deb8611f
+  - fact_id: fact:73b218f87155cc55743cb801
+    source_node_id: node-total-cost
+    relation: 包含
+    target_node_id: node-project-budget-cost
+    evidence_ids:
+    - ev:4af15b958587bb00fcaac211
+    - ev:e0ca23f969789a26726443cb
+    - ev:3d8d49dd836996c4b9dbfb25
+    basis: 原始 figure crop 的主分支从标后预算总费用连至项目预算总成本；图中 OCR 尾随短线不改变可见节点名称。
+    confidence: 0.98
+    figure_evidence_id: ev:4af15b958587bb00fcaac211
+    source_manifest_sha256: 550cfd172a096dae42dc423b809ba008e44f0c93254da612a0ad3216bbb8b9ac
+    semantic_sidecar_sha256: 0ad43480d3b6957c1bdd14f47e8adf2b0caae04452372d4425a46f01deb8611f
+  - fact_id: fact:73b218f87155cc55743cb801
+    source_node_id: node-project-budget-cost
+    relation: 包含
+    target_node_id: node-direct-cost
+    evidence_ids:
+    - ev:4af15b958587bb00fcaac211
+    - ev:3d8d49dd836996c4b9dbfb25
+    - ev:411739cdebcbf2af9143920c
+    basis: 原始 figure crop 的分支线将项目预算总成本与直接费连接为从属层级。
+    confidence: 0.98
+    figure_evidence_id: ev:4af15b958587bb00fcaac211
+    source_manifest_sha256: 550cfd172a096dae42dc423b809ba008e44f0c93254da612a0ad3216bbb8b9ac
+    semantic_sidecar_sha256: 0ad43480d3b6957c1bdd14f47e8adf2b0caae04452372d4425a46f01deb8611f
+  - fact_id: fact:73b218f87155cc55743cb801
+    source_node_id: node-project-budget-cost
+    relation: 包含
+    target_node_id: node-equipment-cost
+    evidence_ids:
+    - ev:4af15b958587bb00fcaac211
+    - ev:3d8d49dd836996c4b9dbfb25
+    - ev:323a24a21eeee2a9c219872b
+    basis: 原始 figure crop 的分支线将项目预算总成本与设备购置费连接为从属层级。
+    confidence: 0.98
+    figure_evidence_id: ev:4af15b958587bb00fcaac211
+    source_manifest_sha256: 550cfd172a096dae42dc423b809ba008e44f0c93254da612a0ad3216bbb8b9ac
+    semantic_sidecar_sha256: 0ad43480d3b6957c1bdd14f47e8adf2b0caae04452372d4425a46f01deb8611f
+  - fact_id: fact:73b218f87155cc55743cb801
+    source_node_id: node-project-budget-cost
+    relation: 包含
+    target_node_id: node-measure-cost
+    evidence_ids:
+    - ev:4af15b958587bb00fcaac211
+    - ev:3d8d49dd836996c4b9dbfb25
+    - ev:d4f4403cd667fdd5eef1da83
+    basis: 原始 figure crop 的分支线将项目预算总成本与措施费连接为从属层级。
+    confidence: 0.98
+    figure_evidence_id: ev:4af15b958587bb00fcaac211
+    source_manifest_sha256: 550cfd172a096dae42dc423b809ba008e44f0c93254da612a0ad3216bbb8b9ac
+    semantic_sidecar_sha256: 0ad43480d3b6957c1bdd14f47e8adf2b0caae04452372d4425a46f01deb8611f
+  - fact_id: fact:73b218f87155cc55743cb801
+    source_node_id: node-project-budget-cost
+    relation: 包含
+    target_node_id: node-special-cost
+    evidence_ids:
+    - ev:4af15b958587bb00fcaac211
+    - ev:3d8d49dd836996c4b9dbfb25
+    - ev:d658ba56ff8bc90630f11db8
+    basis: 原始 figure crop 的分支线将项目预算总成本与专项费用连接为从属层级。
+    confidence: 0.98
+    figure_evidence_id: ev:4af15b958587bb00fcaac211
+    source_manifest_sha256: 550cfd172a096dae42dc423b809ba008e44f0c93254da612a0ad3216bbb8b9ac
+    semantic_sidecar_sha256: 0ad43480d3b6957c1bdd14f47e8adf2b0caae04452372d4425a46f01deb8611f
+  - fact_id: fact:73b218f87155cc55743cb801
+    source_node_id: node-project-budget-cost
+    relation: 包含
+    target_node_id: node-site-management-cost
+    evidence_ids:
+    - ev:4af15b958587bb00fcaac211
+    - ev:3d8d49dd836996c4b9dbfb25
+    - ev:baf2ba52e6d6413b39f48cef
+    basis: 原始 figure crop 的分支线将项目预算总成本与现场管理费连接为从属层级。
+    confidence: 0.98
+    figure_evidence_id: ev:4af15b958587bb00fcaac211
+    source_manifest_sha256: 550cfd172a096dae42dc423b809ba008e44f0c93254da612a0ad3216bbb8b9ac
+    semantic_sidecar_sha256: 0ad43480d3b6957c1bdd14f47e8adf2b0caae04452372d4425a46f01deb8611f
+  - fact_id: fact:73b218f87155cc55743cb801
+    source_node_id: node-total-cost
+    relation: 包含
+    target_node_id: node-fees
+    evidence_ids:
+    - ev:4af15b958587bb00fcaac211
+    - ev:e0ca23f969789a26726443cb
+    - ev:8fd55bc531c7b881f0cb318f
+    basis: 原始 figure crop 的独立主分支从标后预算总费用连至规费。
+    confidence: 0.98
+    figure_evidence_id: ev:4af15b958587bb00fcaac211
+    source_manifest_sha256: 550cfd172a096dae42dc423b809ba008e44f0c93254da612a0ad3216bbb8b9ac
+    semantic_sidecar_sha256: 0ad43480d3b6957c1bdd14f47e8adf2b0caae04452372d4425a46f01deb8611f
+  - fact_id: fact:73b218f87155cc55743cb801
+    source_node_id: node-total-cost
+    relation: 包含
+    target_node_id: node-tax
+    evidence_ids:
+    - ev:4af15b958587bb00fcaac211
+    - ev:e0ca23f969789a26726443cb
+    - ev:0d31b4729e337491f509d863
+    basis: 原始 figure crop 的独立主分支从标后预算总费用连至税金。
+    confidence: 0.98
+    figure_evidence_id: ev:4af15b958587bb00fcaac211
+    source_manifest_sha256: 550cfd172a096dae42dc423b809ba008e44f0c93254da612a0ad3216bbb8b9ac
+    semantic_sidecar_sha256: 0ad43480d3b6957c1bdd14f47e8adf2b0caae04452372d4425a46f01deb8611f
+  source_step3_request_id: step3-source-owned-openai-strict-request:748045c645f8d90faae0afb712ff5a69a789b01f11cf3467024e5e442bb58d55
+  source_step3_response_sha256: 3960b2d48b527f1b3ec7f4109cc9b2c88508b54493495d5225e2171fa4dd787e
+  review_state: reviewed
+  reviewer: codex_operator_phase2r224_step3_final_manual_audit
+  reviewed_at_utc: '2026-07-30T20:00:00Z'
+  review_basis: 人工核验标后预算总费用结构12个节点与11条 reviewed semantic_v2 层级边完整回链；输出仅含节点标签，不含“包含”等关系文本或伪造
+    anchor。
+review_basis: Phase 2R.2.4 逐卡人工复核真实 Step 3 draft 的 Fact exactly-once、presentation、source-owned
+  display text、Evidence/anchor/table/continuation/semantic_v2 provenance 与教学表达。仅显式判定为
+  reviewed 且无风险的 Card 进入本 fixture；截断、OCR 污染、枚举端点或未呈现完整表格的 Card 保持 manual_review。

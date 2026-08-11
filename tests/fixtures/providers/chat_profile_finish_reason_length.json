@@ -1,0 +1,31 @@
+{
+  "choices": [
+    {
+      "finish_reason": "length",
+      "index": 0,
+      "message": {
+        "content": "{\"draft_cards\":[{\"presentation\":\"table\"},{\"presentation\":\"ordered_list\"},{\"presentation\":\"formula\"}]}",
+        "role": "assistant"
+      }
+    }
+  ],
+  "created": 1754870400,
+  "id": "chatcmpl-a1b2c3d4e5f60718293a4b5c6d7e8f90",
+  "model": "gpt-5.5",
+  "object": "chat.completion",
+  "usage": {
+    "completion_tokens": 340,
+    "completion_tokens_details": {
+      "image_tokens": 0,
+      "reasoning_tokens": 0,
+      "text_tokens": 340
+    },
+    "prompt_tokens": 1200,
+    "prompt_tokens_details": {
+      "cached_tokens": 100,
+      "image_tokens": 0,
+      "text_tokens": 1100
+    },
+    "total_tokens": 1540
+  }
+}

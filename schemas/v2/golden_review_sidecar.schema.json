@@ -1,0 +1,488 @@
+{
+  "$defs": {
+    "AnnotationState": {
+      "enum": [
+        "draft",
+        "reviewed"
+      ],
+      "title": "AnnotationState",
+      "type": "string"
+    },
+    "BBox": {
+      "additionalProperties": false,
+      "properties": {
+        "x0": {
+          "minimum": 0,
+          "title": "X0",
+          "type": "number"
+        },
+        "y0": {
+          "minimum": 0,
+          "title": "Y0",
+          "type": "number"
+        },
+        "x1": {
+          "exclusiveMinimum": 0,
+          "title": "X1",
+          "type": "number"
+        },
+        "y1": {
+          "exclusiveMinimum": 0,
+          "title": "Y1",
+          "type": "number"
+        }
+      },
+      "required": [
+        "x0",
+        "y0",
+        "x1",
+        "y1"
+      ],
+      "title": "BBox",
+      "type": "object"
+    },
+    "ConflictClassification": {
+      "enum": [
+        "real_error",
+        "acceptable_layout_equivalence",
+        "noise_or_mismatch",
+        "manual_review"
+      ],
+      "title": "ConflictClassification",
+      "type": "string"
+    },
+    "ConflictReviewAudit": {
+      "additionalProperties": false,
+      "description": "Immutable proof for one conflict-level human adjudication.",
+      "properties": {
+        "reviewer": {
+          "minLength": 1,
+          "title": "Reviewer",
+          "type": "string"
+        },
+        "reviewed_at_utc": {
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}Z$",
+          "title": "Reviewed At Utc",
+          "type": "string"
+        },
+        "page_render_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Page Render Sha256",
+          "type": "string"
+        },
+        "crop_path": {
+          "minLength": 1,
+          "title": "Crop Path",
+          "type": "string"
+        },
+        "crop_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Crop Sha256",
+          "type": "string"
+        },
+        "basis": {
+          "minLength": 1,
+          "title": "Basis",
+          "type": "string"
+        }
+      },
+      "required": [
+        "reviewer",
+        "reviewed_at_utc",
+        "page_render_sha256",
+        "crop_path",
+        "crop_sha256",
+        "basis"
+      ],
+      "title": "ConflictReviewAudit",
+      "type": "object"
+    },
+    "ConflictReviewDraft": {
+      "additionalProperties": false,
+      "properties": {
+        "conflict_id": {
+          "pattern": "^conflict:[0-9a-f]{24}$",
+          "title": "Conflict Id",
+          "type": "string"
+        },
+        "locator": {
+          "$ref": "#/$defs/SourceLocator"
+        },
+        "native_text": {
+          "title": "Native Text",
+          "type": "string"
+        },
+        "visual_text": {
+          "title": "Visual Text",
+          "type": "string"
+        },
+        "classification": {
+          "$ref": "#/$defs/ConflictClassification"
+        },
+        "authoritative_channel": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/SourceChannel"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "proposed_canonical_text": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Proposed Canonical Text"
+        },
+        "proposed_action": {
+          "minLength": 1,
+          "title": "Proposed Action",
+          "type": "string"
+        },
+        "requires_human_confirmation": {
+          "default": false,
+          "title": "Requires Human Confirmation",
+          "type": "boolean"
+        },
+        "rationale": {
+          "minLength": 1,
+          "title": "Rationale",
+          "type": "string"
+        },
+        "audit": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ConflictReviewAudit"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        }
+      },
+      "required": [
+        "conflict_id",
+        "locator",
+        "native_text",
+        "visual_text",
+        "classification",
+        "proposed_action",
+        "rationale"
+      ],
+      "title": "ConflictReviewDraft",
+      "type": "object"
+    },
+    "GoldenPageReviewDraft": {
+      "additionalProperties": false,
+      "properties": {
+        "page_num": {
+          "minimum": 1,
+          "title": "Page Num",
+          "type": "integer"
+        },
+        "page_render_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Page Render Sha256",
+          "type": "string"
+        },
+        "state": {
+          "$ref": "#/$defs/AnnotationState",
+          "default": "draft"
+        },
+        "review_checklist": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "title": "Review Checklist",
+          "type": "array"
+        },
+        "conflicts": {
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/ConflictReviewDraft"
+          },
+          "title": "Conflicts",
+          "type": "array"
+        },
+        "audit": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PageReviewAudit"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        }
+      },
+      "required": [
+        "page_num",
+        "page_render_sha256"
+      ],
+      "title": "GoldenPageReviewDraft",
+      "type": "object"
+    },
+    "GoldenSampleReviewDraft": {
+      "additionalProperties": false,
+      "properties": {
+        "sample_id": {
+          "pattern": "^[a-z0-9][a-z0-9._-]*$",
+          "title": "Sample Id",
+          "type": "string"
+        },
+        "pdf_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Pdf Sha256",
+          "type": "string"
+        },
+        "config_hash": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Config Hash",
+          "type": "string"
+        },
+        "pages": {
+          "items": {
+            "$ref": "#/$defs/GoldenPageReviewDraft"
+          },
+          "title": "Pages",
+          "type": "array"
+        }
+      },
+      "required": [
+        "sample_id",
+        "pdf_sha256",
+        "config_hash",
+        "pages"
+      ],
+      "title": "GoldenSampleReviewDraft",
+      "type": "object"
+    },
+    "PageReviewAudit": {
+      "additionalProperties": false,
+      "description": "Immutable proof that a reviewer inspected one rendered golden page.",
+      "properties": {
+        "reviewer": {
+          "minLength": 1,
+          "title": "Reviewer",
+          "type": "string"
+        },
+        "reviewed_at_utc": {
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}Z$",
+          "title": "Reviewed At Utc",
+          "type": "string"
+        },
+        "page_render_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Page Render Sha256",
+          "type": "string"
+        },
+        "page_sheet_path": {
+          "minLength": 1,
+          "title": "Page Sheet Path",
+          "type": "string"
+        },
+        "page_sheet_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Page Sheet Sha256",
+          "type": "string"
+        },
+        "basis": {
+          "minLength": 1,
+          "title": "Basis",
+          "type": "string"
+        }
+      },
+      "required": [
+        "reviewer",
+        "reviewed_at_utc",
+        "page_render_sha256",
+        "page_sheet_path",
+        "page_sheet_sha256",
+        "basis"
+      ],
+      "title": "PageReviewAudit",
+      "type": "object"
+    },
+    "SourceChannel": {
+      "enum": [
+        "native_text",
+        "visual_ocr",
+        "layout",
+        "vision_structure",
+        "manual"
+      ],
+      "title": "SourceChannel",
+      "type": "string"
+    },
+    "SourceLocator": {
+      "additionalProperties": false,
+      "properties": {
+        "schema_version": {
+          "default": "2.0",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "document_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Document Sha256",
+          "type": "string"
+        },
+        "page_num": {
+          "minimum": 1,
+          "title": "Page Num",
+          "type": "integer"
+        },
+        "bbox": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/BBox"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "native_block_index": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Native Block Index"
+        },
+        "native_line_index": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Native Line Index"
+        },
+        "native_span_index": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Native Span Index"
+        },
+        "region_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Region Id"
+        }
+      },
+      "required": [
+        "document_sha256",
+        "page_num"
+      ],
+      "title": "SourceLocator",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "default": "2.0",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "sidecar_id": {
+      "pattern": "^[a-z0-9][a-z0-9._-]*$",
+      "title": "Sidecar Id",
+      "type": "string"
+    },
+    "registry_id": {
+      "title": "Registry Id",
+      "type": "string"
+    },
+    "material_profile_id": {
+      "title": "Material Profile Id",
+      "type": "string"
+    },
+    "annotation_revision": {
+      "minimum": 1,
+      "title": "Annotation Revision",
+      "type": "integer"
+    },
+    "state": {
+      "$ref": "#/$defs/AnnotationState",
+      "default": "draft"
+    },
+    "samples": {
+      "items": {
+        "$ref": "#/$defs/GoldenSampleReviewDraft"
+      },
+      "title": "Samples",
+      "type": "array"
+    },
+    "reviewer": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Reviewer"
+    },
+    "reviewed_at_utc": {
+      "anyOf": [
+        {
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}Z$",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Reviewed At Utc"
+    }
+  },
+  "required": [
+    "sidecar_id",
+    "registry_id",
+    "material_profile_id",
+    "annotation_revision",
+    "samples"
+  ],
+  "title": "GoldenReviewSidecar",
+  "type": "object"
+}

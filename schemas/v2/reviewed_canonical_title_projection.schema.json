@@ -1,0 +1,139 @@
+{
+  "$defs": {
+    "ContinuationTitleProjectionProvenance": {
+      "additionalProperties": false,
+      "description": "Immutable Phase 2R continuation-title audit carried into Step 2B.",
+      "properties": {
+        "projection_id": {
+          "pattern": "^continuation-title-projection:[0-9a-f]{24}$",
+          "title": "Projection Id",
+          "type": "string"
+        },
+        "projection_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Projection Sha256",
+          "type": "string"
+        },
+        "fixture_id": {
+          "minLength": 1,
+          "title": "Fixture Id",
+          "type": "string"
+        },
+        "fixture_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Fixture Sha256",
+          "type": "string"
+        },
+        "fact_key": {
+          "pattern": "^[a-z0-9][a-z0-9._-]*$",
+          "title": "Fact Key",
+          "type": "string"
+        },
+        "source_request_id": {
+          "pattern": "^step2a-request:[0-9a-f]{64}$",
+          "title": "Source Request Id",
+          "type": "string"
+        },
+        "source_request_version": {
+          "minLength": 1,
+          "title": "Source Request Version",
+          "type": "string"
+        },
+        "source_response_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Source Response Sha256",
+          "type": "string"
+        },
+        "source_proposal_key": {
+          "pattern": "^proposal:[a-z0-9][a-z0-9._-]*$",
+          "title": "Source Proposal Key",
+          "type": "string"
+        },
+        "model_label": {
+          "maxLength": 64,
+          "minLength": 2,
+          "title": "Model Label",
+          "type": "string"
+        },
+        "model_label_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Model Label Sha256",
+          "type": "string"
+        },
+        "canonical_title": {
+          "maxLength": 64,
+          "minLength": 2,
+          "title": "Canonical Title",
+          "type": "string"
+        }
+      },
+      "required": [
+        "projection_id",
+        "projection_sha256",
+        "fixture_id",
+        "fixture_sha256",
+        "fact_key",
+        "source_request_id",
+        "source_request_version",
+        "source_response_sha256",
+        "source_proposal_key",
+        "model_label",
+        "model_label_sha256",
+        "canonical_title"
+      ],
+      "title": "ContinuationTitleProjectionProvenance",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "description": "Reviewed title authority carried into the otherwise model-free Step 2B input.",
+  "properties": {
+    "fixture_id": {
+      "minLength": 1,
+      "title": "Fixture Id",
+      "type": "string"
+    },
+    "fact_key": {
+      "pattern": "^[a-z0-9][a-z0-9._-]*$",
+      "title": "Fact Key",
+      "type": "string"
+    },
+    "canonical_title": {
+      "maxLength": 64,
+      "minLength": 2,
+      "title": "Canonical Title",
+      "type": "string"
+    },
+    "source_label": {
+      "maxLength": 64,
+      "minLength": 2,
+      "title": "Source Label",
+      "type": "string"
+    },
+    "source_label_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Source Label Sha256",
+      "type": "string"
+    },
+    "continuation_title_projection": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/ContinuationTitleProjectionProvenance"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    }
+  },
+  "required": [
+    "fixture_id",
+    "fact_key",
+    "canonical_title",
+    "source_label",
+    "source_label_sha256"
+  ],
+  "title": "ReviewedCanonicalTitleProjection",
+  "type": "object"
+}

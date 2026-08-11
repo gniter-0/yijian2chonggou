@@ -1,0 +1,56 @@
+schema_version: "2.0"
+fixture_version: continuation_learning_golden_v1
+fixture_id: gonglu_24_continuation_real_pages_v1
+sample_id: gonglu_24_continuation_real
+source_document_sha256: 9308dac1b5aa40bd1da44c22d847f22b872bd8025abc3cdc5b5b34c1407e2cf3
+continuation_review_sidecar_id: "continuation-sidecar:46e3afa0309c7b2126ee38f5"
+continuation_review_sidecar_sha256: 7c8ac8a0503be080e93b5cb1b2fd87fc0d116c0ffb1753fb16fceafeaaa4fd64
+pages:
+  - page_num: 1
+    source_manifest_path: "data/shadow_v2/gonglu/phase3b11_smoke_20260726/chapters/24/evidence/pages/page_0001.json"
+    source_manifest_sha256: 7e1a2b4d9e9a1eb55669f559ae46e7a48e7ff1c8257ffdbfd9c05b4168b3c2d3
+  - page_num: 2
+    source_manifest_path: "data/shadow_v2/gonglu/phase3b11_smoke_20260726/chapters/24/evidence/pages/page_0002.json"
+    source_manifest_sha256: 9d28a7c603478cf6024f8eb083db36b94daf784aace710daa507349606a173aa
+target:
+  fact_key: formwork.design-loads-eight-items
+  canonical_title: "模板、支架和拱架设计荷载"
+  fact_type: enumeration
+  completeness_mode: all_items
+  required_evidence_ids:
+    - "ev:e789956d35379833b90c05bf"
+    - "ev:7eec74cb91094ab1443a0f88"
+    - "ev:fc4bd5ba41898224aff48c53"
+    - "ev:5918fbde22878a50a73f3541"
+    - "ev:1bdb9510e5b92858467327ae"
+    - "ev:62d380611f97ee7e69bdec79"
+    - "ev:b2962219cf5e844ec0478095"
+    - "ev:f6c89175523210077fb5c4b6"
+  required_anchor_span_ids:
+    - "span:cea2035ddacabc721b271e21"
+    - "span:a1dfa1f665ec21bdb3b97075"
+    - "span:9d62f96bafdb8f9472a44f23"
+    - "span:bb66d05868e704c34e0c6369"
+    - "span:2c796fa64b63ca67d6eae4a5"
+    - "span:82018b60699459ef22613315"
+    - "span:9fa1963ec8e8550b1192cbee"
+    - "span:13ae8ebf3ed18d1fb4b3c0a7"
+    - "span:267ce7a9b632f1a1bdc5f20f"
+    - "span:014f65f569ffe6811eac35fa"
+    - "span:590551ea7dc2068a9c0e1cb4"
+    - "span:3fe62f2d39d3c4fb615b190d"
+    - "span:898df627d76ee86d34977d70"
+    - "span:44c778bbaa62168eabd5d9a3"
+  required_assertion_terms:
+    - "模板、支架自重"
+    - "新浇筑混凝土、钢筋、预应力筋"
+    - "施工人员及施工设备"
+    - "振捣混凝土"
+    - "模板侧面的压力"
+    - "水平方向的冲击荷载"
+    - "水流压力、波浪力"
+    - "风荷载、雪荷载"
+state: reviewed
+reviewer: codex_operator_phase2r07
+reviewed_at_utc: "2026-07-27T13:20:00Z"
+review_basis: "原始 PDF 相邻两页的编号 ① 至 ⑧ 构成一个完整荷载枚举；第一页仅有 ①、②，第二页提供 ③ 至 ⑧ 及闭合。"

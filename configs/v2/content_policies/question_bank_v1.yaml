@@ -1,0 +1,20 @@
+schema_version: "2.0"
+policy_id: question_bank_v1
+revision: 1
+display_name: 独立题库视图
+included_roles:
+  - exercise_question
+  - exercise_option
+  - exercise_answer
+  - exercise_explanation
+optional_roles:
+  - exam_tag
+  - caption
+excluded_roles:
+  - core
+  - worked_example
+  - heading
+manual_review_roles:
+  - unknown
+allow_fact_promotion_from_excluded: false
+description: 从同一 canonical evidence 派生题干、选项、答案和解析，不重新 OCR。

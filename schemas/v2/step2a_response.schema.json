@@ -1,0 +1,538 @@
+{
+  "$defs": {
+    "CompleteTableSemanticCoverage": {
+      "additionalProperties": false,
+      "description": "Locally-derived proof that one composition Fact covers one full table.\n\nThe model selects only child anchor spans. This record is assembled from\nthe immutable structured table after selection, so it cannot be fabricated\nby a relay response or confused with an OCR reconstruction.",
+      "properties": {
+        "table_evidence_id": {
+          "title": "Table Evidence Id",
+          "type": "string"
+        },
+        "row_count": {
+          "minimum": 1,
+          "title": "Row Count",
+          "type": "integer"
+        },
+        "column_count": {
+          "minimum": 1,
+          "title": "Column Count",
+          "type": "integer"
+        },
+        "row_evidence_ids": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Row Evidence Ids",
+          "type": "array"
+        },
+        "header_cell_evidence_ids": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Header Cell Evidence Ids",
+          "type": "array"
+        },
+        "cell_evidence_ids": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Cell Evidence Ids",
+          "type": "array"
+        },
+        "cell_anchor_span_ids": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Cell Anchor Span Ids",
+          "type": "array"
+        }
+      },
+      "required": [
+        "table_evidence_id",
+        "row_count",
+        "column_count",
+        "row_evidence_ids",
+        "header_cell_evidence_ids",
+        "cell_evidence_ids",
+        "cell_anchor_span_ids"
+      ],
+      "title": "CompleteTableSemanticCoverage",
+      "type": "object"
+    },
+    "CompletenessMode": {
+      "enum": [
+        "atomic",
+        "all_items",
+        "ordered_steps",
+        "complete_formula",
+        "full_table_row",
+        "full_diagram_subgraph"
+      ],
+      "title": "CompletenessMode",
+      "type": "string"
+    },
+    "FactType": {
+      "enum": [
+        "definition",
+        "classification",
+        "enumeration",
+        "procedure",
+        "condition",
+        "threshold",
+        "formula",
+        "comparison",
+        "exception",
+        "composition",
+        "diagram_relation",
+        "visual_reference",
+        "exam_note",
+        "example",
+        "exercise"
+      ],
+      "title": "FactType",
+      "type": "string"
+    },
+    "GroundedConditionClaim": {
+      "additionalProperties": false,
+      "properties": {
+        "value": {
+          "description": "Complete condition span present in both the Fact assertion and selected source Evidence; never an isolated operator.",
+          "examples": [
+            "不得采用废机油",
+            "吊环的拉应力应不大于65MPa"
+          ],
+          "minLength": 2,
+          "title": "Value",
+          "type": "string"
+        },
+        "evidence_id": {
+          "title": "Evidence Id",
+          "type": "string"
+        },
+        "anchor_span_id": {
+          "pattern": "^span:[0-9a-f]{24}$",
+          "title": "Anchor Span Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "value",
+        "evidence_id",
+        "anchor_span_id"
+      ],
+      "title": "GroundedConditionClaim",
+      "type": "object"
+    },
+    "GroundedNumericClaim": {
+      "additionalProperties": false,
+      "description": "Canonical numeric claim with the locally-derived immutable parent Evidence.",
+      "properties": {
+        "value": {
+          "description": "Exact quantitative value present in the Fact assertion and the selected anchor span.",
+          "examples": [
+            "65MPa"
+          ],
+          "minLength": 1,
+          "title": "Value",
+          "type": "string"
+        },
+        "anchor_span_id": {
+          "pattern": "^span:[0-9a-f]{24}$",
+          "title": "Anchor Span Id",
+          "type": "string"
+        },
+        "evidence_id": {
+          "title": "Evidence Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "value",
+        "anchor_span_id",
+        "evidence_id"
+      ],
+      "title": "GroundedNumericClaim",
+      "type": "object"
+    },
+    "Step2AFactProposal": {
+      "additionalProperties": false,
+      "description": "Canonical Step 2A proposal after local span-to-Evidence derivation.",
+      "properties": {
+        "proposal_key": {
+          "pattern": "^proposal:[a-z0-9][a-z0-9._-]*$",
+          "title": "Proposal Key",
+          "type": "string"
+        },
+        "source_section_ids": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Source Section Ids",
+          "type": "array"
+        },
+        "fact_type": {
+          "$ref": "#/$defs/FactType"
+        },
+        "label": {
+          "maxLength": 64,
+          "minLength": 2,
+          "title": "Label",
+          "type": "string"
+        },
+        "assertion": {
+          "minLength": 2,
+          "title": "Assertion",
+          "type": "string"
+        },
+        "completeness_mode": {
+          "$ref": "#/$defs/CompletenessMode",
+          "default": "atomic"
+        },
+        "primary_anchor_span_ids": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Primary Anchor Span Ids",
+          "type": "array"
+        },
+        "secondary_anchor_span_ids": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "title": "Secondary Anchor Span Ids",
+          "type": "array"
+        },
+        "primary_evidence_ids": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Primary Evidence Ids",
+          "type": "array"
+        },
+        "secondary_evidence_ids": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "title": "Secondary Evidence Ids",
+          "type": "array"
+        },
+        "table_cell_anchor_span_ids": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "title": "Table Cell Anchor Span Ids",
+          "type": "array"
+        },
+        "table_cell_evidence_ids": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "title": "Table Cell Evidence Ids",
+          "type": "array"
+        },
+        "selected_table_evidence_ids": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "title": "Selected Table Evidence Ids",
+          "type": "array"
+        },
+        "complete_table_semantic_coverages": {
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/CompleteTableSemanticCoverage"
+          },
+          "title": "Complete Table Semantic Coverages",
+          "type": "array"
+        },
+        "numeric_claims": {
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/GroundedNumericClaim"
+          },
+          "title": "Numeric Claims",
+          "type": "array"
+        },
+        "condition_claims": {
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/GroundedConditionClaim"
+          },
+          "title": "Condition Claims",
+          "type": "array"
+        }
+      },
+      "required": [
+        "proposal_key",
+        "source_section_ids",
+        "fact_type",
+        "label",
+        "assertion",
+        "primary_anchor_span_ids",
+        "primary_evidence_ids"
+      ],
+      "title": "Step2AFactProposal",
+      "type": "object"
+    },
+    "Step2AFailure": {
+      "additionalProperties": false,
+      "properties": {
+        "state": {
+          "$ref": "#/$defs/Step2FailureState"
+        },
+        "message": {
+          "minLength": 1,
+          "title": "Message",
+          "type": "string"
+        },
+        "retryable": {
+          "default": false,
+          "title": "Retryable",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "state",
+        "message"
+      ],
+      "title": "Step2AFailure",
+      "type": "object"
+    },
+    "Step2DecoderConfig": {
+      "additionalProperties": false,
+      "description": "All output-affecting generation controls must participate in cache identity.",
+      "properties": {
+        "temperature": {
+          "default": 0,
+          "maximum": 2,
+          "minimum": 0,
+          "title": "Temperature",
+          "type": "number"
+        },
+        "max_tokens": {
+          "default": 1400,
+          "maximum": 4000,
+          "minimum": 64,
+          "title": "Max Tokens",
+          "type": "integer"
+        },
+        "response_format": {
+          "$ref": "#/$defs/Step2ResponseFormat",
+          "default": "json_schema_strict"
+        }
+      },
+      "title": "Step2DecoderConfig",
+      "type": "object"
+    },
+    "Step2FailureState": {
+      "enum": [
+        "validation_failed",
+        "source_missing",
+        "grounding_failed",
+        "invalid_response",
+        "upstream_unavailable",
+        "unknown_outcome"
+      ],
+      "title": "Step2FailureState",
+      "type": "string"
+    },
+    "Step2RequestIdentity": {
+      "additionalProperties": false,
+      "properties": {
+        "stage": {
+          "$ref": "#/$defs/Step2Stage"
+        },
+        "request_version": {
+          "minLength": 1,
+          "title": "Request Version",
+          "type": "string"
+        },
+        "model": {
+          "minLength": 1,
+          "title": "Model",
+          "type": "string"
+        },
+        "payload_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Payload Sha256",
+          "type": "string"
+        },
+        "relay_fingerprint_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Relay Fingerprint Sha256",
+          "type": "string"
+        },
+        "prompt_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Prompt Sha256",
+          "type": "string"
+        },
+        "response_schema_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Response Schema Sha256",
+          "type": "string"
+        },
+        "decoder": {
+          "$ref": "#/$defs/Step2DecoderConfig"
+        },
+        "projection_id": {
+          "anyOf": [
+            {
+              "pattern": "^step2a-projection:[0-9a-f]{24}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Projection Id"
+        },
+        "projection_sha256": {
+          "anyOf": [
+            {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Projection Sha256"
+        },
+        "source_manifest_sha256": {
+          "anyOf": [
+            {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Source Manifest Sha256"
+        },
+        "content_policy_fingerprint_sha256": {
+          "anyOf": [
+            {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Content Policy Fingerprint Sha256"
+        },
+        "manual_reissue_reason": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Manual Reissue Reason"
+        },
+        "request_id": {
+          "pattern": "^step2[ab]-request:[0-9a-f]{64}$",
+          "title": "Request Id",
+          "type": "string"
+        },
+        "cache_key": {
+          "pattern": "^step2-cache:[0-9a-f]{64}$",
+          "title": "Cache Key",
+          "type": "string"
+        },
+        "idempotency_key": {
+          "pattern": "^step2-[0-9a-f]{64}$",
+          "title": "Idempotency Key",
+          "type": "string"
+        }
+      },
+      "required": [
+        "stage",
+        "request_version",
+        "model",
+        "payload_sha256",
+        "relay_fingerprint_sha256",
+        "prompt_sha256",
+        "response_schema_sha256",
+        "decoder",
+        "request_id",
+        "cache_key",
+        "idempotency_key"
+      ],
+      "title": "Step2RequestIdentity",
+      "type": "object"
+    },
+    "Step2ResponseFormat": {
+      "enum": [
+        "json_schema_strict",
+        "json_object"
+      ],
+      "title": "Step2ResponseFormat",
+      "type": "string"
+    },
+    "Step2ResultState": {
+      "enum": [
+        "succeeded",
+        "failed"
+      ],
+      "title": "Step2ResultState",
+      "type": "string"
+    },
+    "Step2Stage": {
+      "enum": [
+        "step2a",
+        "step2b"
+      ],
+      "title": "Step2Stage",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "request": {
+      "$ref": "#/$defs/Step2RequestIdentity"
+    },
+    "state": {
+      "$ref": "#/$defs/Step2ResultState"
+    },
+    "proposals": {
+      "default": [],
+      "items": {
+        "$ref": "#/$defs/Step2AFactProposal"
+      },
+      "title": "Proposals",
+      "type": "array"
+    },
+    "failure": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/Step2AFailure"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    }
+  },
+  "required": [
+    "request",
+    "state"
+  ],
+  "title": "Step2AResponse",
+  "type": "object"
+}

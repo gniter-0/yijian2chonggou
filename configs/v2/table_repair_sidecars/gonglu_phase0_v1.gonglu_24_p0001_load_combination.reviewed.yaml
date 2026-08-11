@@ -1,0 +1,168 @@
+schema_version: "2.0"
+sidecar_version: table_repair_review_v1
+repair_id: table-repair:881dd6db3659381e21b94764
+sample_id: gonglu_24_table_formula
+page_num: 1
+state: reviewed
+reviewer: codex_phase2r04_visual_table_audit
+reviewed_at_utc: "2026-07-27T07:48:27Z"
+review_basis: >-
+  人工逐格核对原始表格 crop。14 个单元格的文字、bbox、行列起点均与原始 Evidence 一致；
+  缺口仅来自三个合并单元格 span 元数据：标题跨 3 列，模板、支架结构类别跨 2 行，荷载组合跨 2 列。
+  未使用 OCR 或 LLM 补字，未修改任何原始 Evidence。
+source_manifest_path: data/evidence_v2/golden/gonglu_phase0_v1/gonglu_24_table_formula/pages/page_0001.json
+source_manifest_sha256: d61a6721c1aba3edbb9a650a4826e92a4d2cef027e98f0765b4c7a78cadbfd54
+table_evidence_id: ev:ddbc36b6a00a72e55fd6eb45
+table_bbox: {x0: 90.224, y0: 415.85, x1: 492.2543, y1: 530.65}
+crop_path: data/evidence_v2/golden/gonglu_phase0_v1/gonglu_24_table_formula/crops/p0001_table_001.png
+crop_sha256: 48f6ec8c0b8930f4508044d973b9964a6d70dcdd821d93fe889ed4f0e8a7993a
+declared_row_count: 6
+declared_column_count: 3
+rows:
+  - {evidence_id: ev:e89e73b67893826c6baf0f84, row_index: 0}
+  - {evidence_id: ev:d521b2a1c228cdcb963a11a5, row_index: 1}
+  - {evidence_id: ev:fb4c5cdbf805e7643abe0de0, row_index: 2}
+  - {evidence_id: ev:ff96ee73753400066020c5b1, row_index: 3}
+  - {evidence_id: ev:5616d7426e5e00d694c4afe8, row_index: 4}
+  - {evidence_id: ev:8e5c2420a48e7e1dfcda361d, row_index: 5}
+cells:
+  - evidence_id: ev:fc09e3c8e912db4b82494820
+    row_evidence_id: ev:e89e73b67893826c6baf0f84
+    row_index: 0
+    column_index: 0
+    source_row_span: 1
+    source_col_span: 1
+    reviewed_row_span: 1
+    reviewed_col_span: 3
+    canonical_text_sha256: 570bbd1de262e143d11cd5b908f0bea3cb009f7006ea0ba59ec5ab51434a750d
+    bbox: {x0: 90.224, y0: 415.85, x1: 492.2543, y1: 432.53}
+  - evidence_id: ev:782cd39ec20a92a9bbdb35a5
+    row_evidence_id: ev:d521b2a1c228cdcb963a11a5
+    row_index: 1
+    column_index: 0
+    source_row_span: 1
+    source_col_span: 1
+    reviewed_row_span: 2
+    reviewed_col_span: 1
+    canonical_text_sha256: 57418ade9a7088cc387f301937ec35eb8da370783cc0c6aab64ea6e38b9f18cb
+    bbox: {x0: 90.224, y0: 432.53, x1: 302.69, y1: 465.55}
+  - evidence_id: ev:c9f32bad3bc0f45ac748a27f
+    row_evidence_id: ev:d521b2a1c228cdcb963a11a5
+    row_index: 1
+    column_index: 1
+    source_row_span: 1
+    source_col_span: 1
+    reviewed_row_span: 1
+    reviewed_col_span: 2
+    canonical_text_sha256: 181f8ff13670ce86aeece4eef9a75fdc8912cd9527b2e3d19611e7b24c6756f9
+    bbox: {x0: 302.69, y0: 432.53, x1: 492.2543, y1: 448.99}
+  - evidence_id: ev:0a4bdb2a1294c10ca268145f
+    row_evidence_id: ev:fb4c5cdbf805e7643abe0de0
+    row_index: 2
+    column_index: 1
+    source_row_span: 1
+    source_col_span: 1
+    reviewed_row_span: 1
+    reviewed_col_span: 1
+    canonical_text_sha256: 4a488fc4092ed22004fdd22e31fee7480469bda98b5b70e8b74467ec2741e226
+    bbox: {x0: 302.69, y0: 448.99, x1: 408.31, y1: 465.55}
+  - evidence_id: ev:898a584c53fff2df714568e4
+    row_evidence_id: ev:fb4c5cdbf805e7643abe0de0
+    row_index: 2
+    column_index: 2
+    source_row_span: 1
+    source_col_span: 1
+    reviewed_row_span: 1
+    reviewed_col_span: 1
+    canonical_text_sha256: 73b48abe6596e884868775682daae17774b336570f4636ecb4c3066a17f1fdda
+    bbox: {x0: 408.31, y0: 448.99, x1: 492.2543, y1: 465.55}
+  - evidence_id: ev:4ba08a871a0e6320aed32719
+    row_evidence_id: ev:ff96ee73753400066020c5b1
+    row_index: 3
+    column_index: 0
+    source_row_span: 1
+    source_col_span: 1
+    reviewed_row_span: 1
+    reviewed_col_span: 1
+    canonical_text_sha256: c19188aaa033c258e73a70640b5091e463b9c3223d54ed9039c7b3450ecc7274
+    bbox: {x0: 90.224, y0: 465.55, x1: 302.69, y1: 481.99}
+  - evidence_id: ev:a4cb0c0301ee508a6bcd72ef
+    row_evidence_id: ev:ff96ee73753400066020c5b1
+    row_index: 3
+    column_index: 1
+    source_row_span: 1
+    source_col_span: 1
+    reviewed_row_span: 1
+    reviewed_col_span: 1
+    canonical_text_sha256: e3ba5a9428afbca6a6539d68f2ab51461641555d4809d5b360f7aca1e155eb3e
+    bbox: {x0: 302.69, y0: 465.55, x1: 408.31, y1: 481.99}
+  - evidence_id: ev:74c97e0576279463bd9fddf8
+    row_evidence_id: ev:ff96ee73753400066020c5b1
+    row_index: 3
+    column_index: 2
+    source_row_span: 1
+    source_col_span: 1
+    reviewed_row_span: 1
+    reviewed_col_span: 1
+    canonical_text_sha256: d5e8558b03bba849ba9ba3af9702ea77da9cf5f7a5f365bc670e4402fdb150fd
+    bbox: {x0: 408.31, y0: 465.55, x1: 492.2543, y1: 481.99}
+  - evidence_id: ev:855848b7ef01057437956aa8
+    row_evidence_id: ev:5616d7426e5e00d694c4afe8
+    row_index: 4
+    column_index: 0
+    source_row_span: 1
+    source_col_span: 1
+    reviewed_row_span: 1
+    reviewed_col_span: 1
+    canonical_text_sha256: bed230d5f1093069e14b72a76086af29f7393d8d71d06a00edf6437dcbd07c6a
+    bbox: {x0: 90.224, y0: 481.99, x1: 302.69, y1: 514.15}
+  - evidence_id: ev:a87bb1d19e822d734c5e90c7
+    row_evidence_id: ev:5616d7426e5e00d694c4afe8
+    row_index: 4
+    column_index: 1
+    source_row_span: 1
+    source_col_span: 1
+    reviewed_row_span: 1
+    reviewed_col_span: 1
+    canonical_text_sha256: 6e7222f055c67f3ff61619c4d81f9af95aced53bd15989b2ffd4fbcfa1151ae8
+    bbox: {x0: 302.69, y0: 481.99, x1: 408.31, y1: 514.15}
+  - evidence_id: ev:2a146b0db6e4ac56f13f8c2b
+    row_evidence_id: ev:5616d7426e5e00d694c4afe8
+    row_index: 4
+    column_index: 2
+    source_row_span: 1
+    source_col_span: 1
+    reviewed_row_span: 1
+    reviewed_col_span: 1
+    canonical_text_sha256: f3eaa647e8a4604ea6bc01c74dfb365ace6754fb867e170b933cc24eb6a81e7b
+    bbox: {x0: 408.31, y0: 481.99, x1: 492.2543, y1: 514.15}
+  - evidence_id: ev:53fde0b771369de62de1ef72
+    row_evidence_id: ev:8e5c2420a48e7e1dfcda361d
+    row_index: 5
+    column_index: 0
+    source_row_span: 1
+    source_col_span: 1
+    reviewed_row_span: 1
+    reviewed_col_span: 1
+    canonical_text_sha256: 825945ee354e1a1b6081f76f79751c8fbc3d9857c69a86a70194a32f13900904
+    bbox: {x0: 90.224, y0: 514.15, x1: 302.69, y1: 530.65}
+  - evidence_id: ev:f4b6133f569d4ff2e7d5c840
+    row_evidence_id: ev:8e5c2420a48e7e1dfcda361d
+    row_index: 5
+    column_index: 1
+    source_row_span: 1
+    source_col_span: 1
+    reviewed_row_span: 1
+    reviewed_col_span: 1
+    canonical_text_sha256: 720940f713a68c05af72b624ad554da430bc8527668b35381a154b6fb1c97fba
+    bbox: {x0: 302.69, y0: 514.15, x1: 408.31, y1: 530.65}
+  - evidence_id: ev:b8068b13cccda738d504600f
+    row_evidence_id: ev:8e5c2420a48e7e1dfcda361d
+    row_index: 5
+    column_index: 2
+    source_row_span: 1
+    source_col_span: 1
+    reviewed_row_span: 1
+    reviewed_col_span: 1
+    canonical_text_sha256: f3eaa647e8a4604ea6bc01c74dfb365ace6754fb867e170b933cc24eb6a81e7b
+    bbox: {x0: 408.31, y0: 514.15, x1: 492.2543, y1: 530.65}

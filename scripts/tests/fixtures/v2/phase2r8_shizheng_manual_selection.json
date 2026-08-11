@@ -1,0 +1,103 @@
+[
+  {
+    "schema_version": "phase2r8_manual_selection_spec_v1",
+    "selection_id": "selection:r8:shizheng:diagram:road-structure",
+    "subject_id": "shizheng",
+    "record_id": "record:r71:b46b0bd5126fe3087623b472",
+    "presentation": "diagram",
+    "page": 4,
+    "anchor_index": 0,
+    "bindings": [
+      {"source_role": "diagram_node", "text": "上（表）面层"},
+      {"source_role": "diagram_node", "text": "中面层（根据设计要求增加）"},
+      {"source_role": "diagram_node", "text": "下（底）面层"},
+      {"source_role": "diagram_node", "text": "上基层"},
+      {"source_role": "diagram_node", "text": "下基层"},
+      {"source_role": "diagram_node", "text": "垫层（根据设计要求增加）"},
+      {"source_role": "diagram_node", "text": "路基"}
+    ],
+    "diagram_edges": [[1, 2], [2, 3], [3, 4], [4, 5], [5, 6], [6, 7]],
+    "excluded_noise_kinds": ["header_footer", "brand", "watermark", "contact", "page_number"],
+    "notes": "重新查看 page 4 道路结构断面图，逐字确认七个层次标签和上下阅读顺序；不采纳同页道路横断面照片、品牌、水印、联系方式和页眉页脚。"
+  },
+  {
+    "schema_version": "phase2r8_manual_selection_spec_v1",
+    "selection_id": "selection:r8:shizheng:ordered-list:roadbed-topics",
+    "subject_id": "shizheng",
+    "record_id": "record:r71:0fa308cda2d9fe34ab47ab25",
+    "presentation": "ordered_list",
+    "page": 1,
+    "anchor_index": 0,
+    "bindings": [
+      {"source_role": "ordered_list_item", "text": "【1】路基施工特点与程序"},
+      {"source_role": "ordered_list_item", "text": "【2】路基施工要点"},
+      {"source_role": "ordered_list_item", "text": "【3】路基压实作业要点"}
+    ],
+    "list_markers": ["【1】", "【2】", "【3】"],
+    "excluded_noise_kinds": ["header_footer", "brand", "watermark", "contact", "page_number", "exam_table"],
+    "notes": "重新查看 page 1，确认三个黑色方括号编号和标题逐字、顺序及独立行；排除课程标题、考试年份表、品牌、水印、联系方式和页眉页脚。"
+  },
+  {
+    "schema_version": "phase2r8_manual_selection_spec_v1",
+    "selection_id": "selection:r8:shizheng:constraint:arch-bridge",
+    "subject_id": "shizheng",
+    "record_id": "record:r71:4a5db5526927737cd2cd321b",
+    "presentation": "constraint",
+    "page": 2,
+    "anchor_index": 0,
+    "bindings": [
+      {"source_role": "constraint_token", "text": "1.装配式拱桥构件在吊装时，混凝土的强度不得低于设计要求；设计无要求时，不得低于设计强度值的75%。"},
+      {"source_role": "constraint_token", "text": "2.按设计设预拱度；根据跨度大小、恒载挠度、拱架刚度等计算预拱度。拱顶宜取计算跨度的1/1000~1/500。"},
+      {"source_role": "constraint_token", "text": "3.拱圈（拱肋）封拱合龙温度应符合设计要求，设计无要求时，宜在当地年平均温度或5～10℃时进行。"}
+    ],
+    "token_orders": [1, 2, 3],
+    "excluded_noise_kinds": ["header_footer", "brand", "watermark", "contact", "page_number", "illustration"],
+    "notes": "重新查看 page 2 下半部现浇拱桥一般规定，确认三条约束及 75%、1/1000~1/500、5～10℃ token；排除上半部照片、品牌、水印、联系方式和页眉页脚。"
+  },
+  {
+    "schema_version": "phase2r8_manual_selection_spec_v1",
+    "selection_id": "selection:r8:shizheng:table:soil-classification",
+    "subject_id": "shizheng",
+    "record_id": "record:r71:68800b8818c145b0cdd0ef09",
+    "presentation": "table",
+    "page": 4,
+    "anchor_index": 0,
+    "bindings": [
+      {"source_role": "table_cell", "text": "分类"},
+      {"source_role": "table_cell", "text": "名称"},
+      {"source_role": "table_cell", "text": "举例"},
+      {"source_role": "table_cell", "text": "一类土\n0.5-0.6"},
+      {"source_role": "table_cell", "text": "松软土"},
+      {"source_role": "table_cell", "text": "砂土、粉土、冲击砂土层、疏松种植土等"},
+      {"source_role": "table_cell", "text": "二类土\n0.6-0.8"},
+      {"source_role": "table_cell", "text": "普通土"},
+      {"source_role": "table_cell", "text": "粉质粘土、潮湿黄土、夹石砂、种植土、填土等"},
+      {"source_role": "table_cell", "text": "三类土\n0.8-1.0"},
+      {"source_role": "table_cell", "text": "坚土"},
+      {"source_role": "table_cell", "text": "软及中等密实黏土、重粉质黏土、砾石土、干黄土、压实的填土等"},
+      {"source_role": "table_cell", "text": "四类土\n1.0-1.5"},
+      {"source_role": "table_cell", "text": "砂砾坚土"},
+      {"source_role": "table_cell", "text": "坚硬密实的黏性土或黄土、粗卵石、天然级配砂石等"}
+    ],
+    "table_rows": 5,
+    "table_columns": 3,
+    "excluded_noise_kinds": ["header_footer", "brand", "watermark", "contact", "page_number", "exam_table", "formula_diagram"],
+    "notes": "重新查看 page 4 工程用土分类表，逐格确认 5 行 3 列、15 个 cell、行列顺序和换行；排除上方考试年份表、下方公式/状态图、品牌、水印、联系方式和页眉页脚。"
+  },
+  {
+    "schema_version": "phase2r8_manual_selection_spec_v1",
+    "selection_id": "selection:r8:shizheng:formula:soil-index",
+    "subject_id": "shizheng",
+    "record_id": "record:r71:72e0b2fd9ce3764c44c6caf5",
+    "presentation": "formula",
+    "page": 4,
+    "anchor_index": 0,
+    "bindings": [
+      {"source_role": "formula_token", "text": "Ip＝ωL-ωp"},
+      {"source_role": "formula_token", "text": "IL＝（ω-ωp）/Ip"}
+    ],
+    "token_orders": [1, 2],
+    "excluded_noise_kinds": ["header_footer", "brand", "watermark", "contact", "page_number", "table", "illustration"],
+    "notes": "重新查看 page 4 常用路基土性能参数，确认 Ip、IL 公式中的全角等号、ω、下标字符、括号、减号和除号；排除同页表格、状态图、品牌、水印、联系方式和页眉页脚。"
+  }
+]

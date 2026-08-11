@@ -1,0 +1,153 @@
+{
+  "$defs": {
+    "CardPresentation": {
+      "enum": [
+        "text",
+        "ordered_list",
+        "table",
+        "diagram",
+        "formula",
+        "constraint",
+        "threshold",
+        "visual_reference"
+      ],
+      "title": "CardPresentation",
+      "type": "string"
+    },
+    "ContinuationCardGoldenCardAlignment": {
+      "additionalProperties": false,
+      "properties": {
+        "card_key": {
+          "title": "Card Key",
+          "type": "string"
+        },
+        "expected_title": {
+          "title": "Expected Title",
+          "type": "string"
+        },
+        "expected_presentation": {
+          "$ref": "#/$defs/CardPresentation"
+        },
+        "expected_primary_proposal_keys": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Expected Primary Proposal Keys",
+          "type": "array"
+        },
+        "match_state": {
+          "title": "Match State",
+          "type": "string"
+        },
+        "actual_card_proposal_key": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Actual Card Proposal Key"
+        },
+        "title_drift": {
+          "default": false,
+          "title": "Title Drift",
+          "type": "boolean"
+        },
+        "presentation_drift": {
+          "default": false,
+          "title": "Presentation Drift",
+          "type": "boolean"
+        },
+        "grouping_drift": {
+          "default": false,
+          "title": "Grouping Drift",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "card_key",
+        "expected_title",
+        "expected_presentation",
+        "expected_primary_proposal_keys",
+        "match_state"
+      ],
+      "title": "ContinuationCardGoldenCardAlignment",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "fixture_id": {
+      "title": "Fixture Id",
+      "type": "string"
+    },
+    "sample_id": {
+      "title": "Sample Id",
+      "type": "string"
+    },
+    "valid": {
+      "title": "Valid",
+      "type": "boolean"
+    },
+    "failure_codes": {
+      "default": [],
+      "items": {
+        "type": "string"
+      },
+      "title": "Failure Codes",
+      "type": "array"
+    },
+    "fact_failure_codes": {
+      "default": [],
+      "items": {
+        "type": "string"
+      },
+      "title": "Fact Failure Codes",
+      "type": "array"
+    },
+    "review_ready_for_real_step2b": {
+      "title": "Review Ready For Real Step2B",
+      "type": "boolean"
+    },
+    "review_failure_codes": {
+      "default": [],
+      "items": {
+        "type": "string"
+      },
+      "title": "Review Failure Codes",
+      "type": "array"
+    },
+    "card_alignments": {
+      "items": {
+        "$ref": "#/$defs/ContinuationCardGoldenCardAlignment"
+      },
+      "title": "Card Alignments",
+      "type": "array"
+    },
+    "extra_card_proposal_keys": {
+      "default": [],
+      "items": {
+        "type": "string"
+      },
+      "title": "Extra Card Proposal Keys",
+      "type": "array"
+    },
+    "basis": {
+      "title": "Basis",
+      "type": "string"
+    }
+  },
+  "required": [
+    "fixture_id",
+    "sample_id",
+    "valid",
+    "review_ready_for_real_step2b",
+    "card_alignments",
+    "basis"
+  ],
+  "title": "ContinuationCardGoldenAlignment",
+  "type": "object"
+}

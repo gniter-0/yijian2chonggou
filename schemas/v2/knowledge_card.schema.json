@@ -1,0 +1,419 @@
+{
+  "$defs": {
+    "BBox": {
+      "additionalProperties": false,
+      "properties": {
+        "x0": {
+          "minimum": 0,
+          "title": "X0",
+          "type": "number"
+        },
+        "y0": {
+          "minimum": 0,
+          "title": "Y0",
+          "type": "number"
+        },
+        "x1": {
+          "exclusiveMinimum": 0,
+          "title": "X1",
+          "type": "number"
+        },
+        "y1": {
+          "exclusiveMinimum": 0,
+          "title": "Y1",
+          "type": "number"
+        }
+      },
+      "required": [
+        "x0",
+        "y0",
+        "x1",
+        "y1"
+      ],
+      "title": "BBox",
+      "type": "object"
+    },
+    "ContentQualityFlag": {
+      "enum": [
+        "diagram_missing_structure",
+        "diagram_unreadable_ocr",
+        "known_noise_leak",
+        "embedded_example_leak",
+        "visual_reference_only"
+      ],
+      "title": "ContentQualityFlag",
+      "type": "string"
+    },
+    "ContentSegment": {
+      "additionalProperties": false,
+      "properties": {
+        "text": {
+          "minLength": 1,
+          "title": "Text",
+          "type": "string"
+        },
+        "fact_ids": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Fact Ids",
+          "type": "array"
+        },
+        "evidence_ids": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Evidence Ids",
+          "type": "array"
+        },
+        "renderer": {
+          "title": "Renderer",
+          "type": "string"
+        },
+        "presentation_transforms": {
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/PresentationTransform"
+          },
+          "title": "Presentation Transforms",
+          "type": "array"
+        }
+      },
+      "required": [
+        "text",
+        "fact_ids",
+        "evidence_ids",
+        "renderer"
+      ],
+      "title": "ContentSegment",
+      "type": "object"
+    },
+    "DiagramDispositionTrace": {
+      "additionalProperties": false,
+      "properties": {
+        "disposition_id": {
+          "pattern": "^visual:[0-9a-f]{24}$",
+          "title": "Disposition Id",
+          "type": "string"
+        },
+        "disposition": {
+          "minLength": 1,
+          "title": "Disposition",
+          "type": "string"
+        },
+        "source_diagram_review_sidecar_id": {
+          "minLength": 1,
+          "title": "Source Diagram Review Sidecar Id",
+          "type": "string"
+        },
+        "source_diagram_review_sidecar_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Source Diagram Review Sidecar Sha256",
+          "type": "string"
+        },
+        "original_crop_path": {
+          "minLength": 1,
+          "title": "Original Crop Path",
+          "type": "string"
+        },
+        "original_crop_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Original Crop Sha256",
+          "type": "string"
+        },
+        "review_crop_manifest_path": {
+          "minLength": 1,
+          "title": "Review Crop Manifest Path",
+          "type": "string"
+        },
+        "review_crop_manifest_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Review Crop Manifest Sha256",
+          "type": "string"
+        },
+        "review_crop_path": {
+          "minLength": 1,
+          "title": "Review Crop Path",
+          "type": "string"
+        },
+        "review_crop_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Review Crop Sha256",
+          "type": "string"
+        },
+        "review_crop_render_dpi": {
+          "minimum": 300,
+          "title": "Review Crop Render Dpi",
+          "type": "integer"
+        },
+        "review_crop_bbox": {
+          "$ref": "#/$defs/BBox"
+        }
+      },
+      "required": [
+        "disposition_id",
+        "disposition",
+        "source_diagram_review_sidecar_id",
+        "source_diagram_review_sidecar_sha256",
+        "original_crop_path",
+        "original_crop_sha256",
+        "review_crop_manifest_path",
+        "review_crop_manifest_sha256",
+        "review_crop_path",
+        "review_crop_sha256",
+        "review_crop_render_dpi",
+        "review_crop_bbox"
+      ],
+      "title": "DiagramDispositionTrace",
+      "type": "object"
+    },
+    "EvidenceRef": {
+      "additionalProperties": false,
+      "properties": {
+        "evidence_id": {
+          "title": "Evidence Id",
+          "type": "string"
+        },
+        "page_num": {
+          "minimum": 1,
+          "title": "Page Num",
+          "type": "integer"
+        },
+        "bbox": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/BBox"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "visual_only": {
+          "default": false,
+          "title": "Visual Only",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "evidence_id",
+        "page_num"
+      ],
+      "title": "EvidenceRef",
+      "type": "object"
+    },
+    "GroundingStatus": {
+      "enum": [
+        "verified",
+        "degraded",
+        "unresolved",
+        "manual_verified"
+      ],
+      "title": "GroundingStatus",
+      "type": "string"
+    },
+    "PresentationTransform": {
+      "additionalProperties": false,
+      "description": "A source-span-preserving transformation used only in Fact/Card rendering.",
+      "properties": {
+        "evidence_id": {
+          "title": "Evidence Id",
+          "type": "string"
+        },
+        "start": {
+          "minimum": 0,
+          "title": "Start",
+          "type": "integer"
+        },
+        "end": {
+          "exclusiveMinimum": 0,
+          "title": "End",
+          "type": "integer"
+        },
+        "rule_id": {
+          "pattern": "^[a-z0-9][a-z0-9._-]*$",
+          "title": "Rule Id",
+          "type": "string"
+        },
+        "before_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Before Sha256",
+          "type": "string"
+        },
+        "after_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "After Sha256",
+          "type": "string"
+        }
+      },
+      "required": [
+        "evidence_id",
+        "start",
+        "end",
+        "rule_id",
+        "before_sha256",
+        "after_sha256"
+      ],
+      "title": "PresentationTransform",
+      "type": "object"
+    },
+    "Renderability": {
+      "enum": [
+        "publishable",
+        "manual_review"
+      ],
+      "title": "Renderability",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "default": "2.0",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "id": {
+      "title": "Id",
+      "type": "string"
+    },
+    "raw_id": {
+      "pattern": "^kp:[0-9a-f]{24}$",
+      "title": "Raw Id",
+      "type": "string"
+    },
+    "title": {
+      "title": "Title",
+      "type": "string"
+    },
+    "content": {
+      "title": "Content",
+      "type": "string"
+    },
+    "content_segments": {
+      "items": {
+        "$ref": "#/$defs/ContentSegment"
+      },
+      "title": "Content Segments",
+      "type": "array"
+    },
+    "evidence_refs": {
+      "items": {
+        "$ref": "#/$defs/EvidenceRef"
+      },
+      "title": "Evidence Refs",
+      "type": "array"
+    },
+    "grounding_status": {
+      "$ref": "#/$defs/GroundingStatus"
+    },
+    "renderability": {
+      "$ref": "#/$defs/Renderability",
+      "default": "publishable"
+    },
+    "quality_flags": {
+      "default": [],
+      "items": {
+        "$ref": "#/$defs/ContentQualityFlag"
+      },
+      "title": "Quality Flags",
+      "type": "array"
+    },
+    "diagram_review_id": {
+      "anyOf": [
+        {
+          "pattern": "^diagram:[0-9a-f]{24}$",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Diagram Review Id"
+    },
+    "diagram_disposition_id": {
+      "anyOf": [
+        {
+          "pattern": "^visual:[0-9a-f]{24}$",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Diagram Disposition Id"
+    },
+    "diagram_disposition_trace": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/DiagramDispositionTrace"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "key_words": {
+      "default": [],
+      "items": {
+        "type": "string"
+      },
+      "title": "Key Words",
+      "type": "array"
+    },
+    "diagram_type": {
+      "default": "",
+      "title": "Diagram Type",
+      "type": "string"
+    },
+    "diagram_elements": {
+      "default": [],
+      "items": {
+        "type": "string"
+      },
+      "title": "Diagram Elements",
+      "type": "array"
+    },
+    "annotations": {
+      "default": [],
+      "items": {
+        "type": "string"
+      },
+      "title": "Annotations",
+      "type": "array"
+    },
+    "source_pages": {
+      "items": {
+        "type": "integer"
+      },
+      "title": "Source Pages",
+      "type": "array"
+    },
+    "is_overview": {
+      "default": false,
+      "title": "Is Overview",
+      "type": "boolean"
+    },
+    "kp_type": {
+      "default": "content",
+      "title": "Kp Type",
+      "type": "string"
+    }
+  },
+  "required": [
+    "id",
+    "raw_id",
+    "title",
+    "content",
+    "content_segments",
+    "evidence_refs",
+    "grounding_status",
+    "source_pages"
+  ],
+  "title": "KnowledgeCard",
+  "type": "object"
+}

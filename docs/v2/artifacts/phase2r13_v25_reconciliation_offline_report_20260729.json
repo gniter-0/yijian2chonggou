@@ -1,0 +1,891 @@
+{
+  "schema_version": "phase2r13_v25_reconciliation_v1",
+  "phase": "2R.1.3",
+  "mode": "offline_source_reconciliation",
+  "generated_at_utc": "2026-07-29T18:00:00Z",
+  "reviewed_fixture_sha256": "65232d2c3025979e393b3710cf3db8e56f8f1c392adee93382593bbf4aacdec5",
+  "semantic_sidecar_sha256": "8e5144e346ac0f3ed0bc220970e632d549b9069480faba5a95a28aa4765837d0",
+  "semantic_diagram_review_bridge_count": 5,
+  "semantic_diagram_fact_summary_count": 4,
+  "semantic_diagram_evidence_only_count": 1,
+  "semantic_diagram_bridges": [
+    {
+      "sample_id": "gonglu_01_text_list",
+      "bridge": {
+        "bridge_id": "v25-semantic-diagram-bridge:fdbdacd3b3d9eb138f176105",
+        "review_id": "diagram:1e2f8c831d4edb33e43dfd80",
+        "semantic_sidecar_sha256": "8e5144e346ac0f3ed0bc220970e632d549b9069480faba5a95a28aa4765837d0",
+        "source_manifest_sha256": "7235e99a269fdb0c72c1526c66d66fefdf44a2db118530188a12dd923b40e17a",
+        "figure_evidence_id": "ev:3a3de856bb37558c7b007d0e",
+        "nodes": [
+          {
+            "node_id": "node-road-surface",
+            "label": "路面",
+            "evidence_ids": [
+              "ev:3a3de856bb37558c7b007d0e"
+            ]
+          },
+          {
+            "node_id": "node-fill-roadbed",
+            "label": "填方路基",
+            "evidence_ids": [
+              "ev:3a3de856bb37558c7b007d0e"
+            ]
+          },
+          {
+            "node_id": "node-slope",
+            "label": "边坡",
+            "evidence_ids": [
+              "ev:3a3de856bb37558c7b007d0e"
+            ]
+          },
+          {
+            "node_id": "node-drainage-ditch",
+            "label": "排水沟",
+            "evidence_ids": [
+              "ev:3a3de856bb37558c7b007d0e"
+            ]
+          }
+        ],
+        "edges": [
+          {
+            "source_node_id": "node-road-surface",
+            "target_node_id": "node-fill-roadbed",
+            "relation": "位于顶部",
+            "evidence_ids": [
+              "ev:3a3de856bb37558c7b007d0e"
+            ],
+            "basis": "原始 figure crop 中的连线、相对位置或层级分支直接支持该关系；未以 OCR 文字猜测替代人工确认。",
+            "confidence": 0.98
+          },
+          {
+            "source_node_id": "node-slope",
+            "target_node_id": "node-fill-roadbed",
+            "relation": "位于两侧",
+            "evidence_ids": [
+              "ev:3a3de856bb37558c7b007d0e"
+            ],
+            "basis": "原始 figure crop 中的连线、相对位置或层级分支直接支持该关系；未以 OCR 文字猜测替代人工确认。",
+            "confidence": 0.98
+          },
+          {
+            "source_node_id": "node-drainage-ditch",
+            "target_node_id": "node-slope",
+            "relation": "位于坡脚外侧",
+            "evidence_ids": [
+              "ev:3a3de856bb37558c7b007d0e"
+            ],
+            "basis": "原始 figure crop 中的连线、相对位置或层级分支直接支持该关系；未以 OCR 文字猜测替代人工确认。",
+            "confidence": 0.98
+          }
+        ],
+        "basis": "Reviewed semantic_v2 diagram bridge preserves the original figure, reviewed nodes, edge Evidence, basis, and confidence without synthetic text anchors."
+      },
+      "disposition": "fact_summary",
+      "fact_key": "roadbed.fill-cross-section",
+      "basis": "Reviewed diagram_relation Fact enters V25B with its source figure, semantic_v2 nodes/edges, sidecar hash, and source manifest."
+    },
+    {
+      "sample_id": "gonglu_24_table_formula",
+      "bridge": {
+        "bridge_id": "v25-semantic-diagram-bridge:1989211aeb0a167df8046a2f",
+        "review_id": "diagram:e465c1249176989867fe4da0",
+        "semantic_sidecar_sha256": "8e5144e346ac0f3ed0bc220970e632d549b9069480faba5a95a28aa4765837d0",
+        "source_manifest_sha256": "d61a6721c1aba3edbb9a650a4826e92a4d2cef027e98f0765b4c7a78cadbfd54",
+        "figure_evidence_id": "ev:ef46c363269d2e99c929b38c",
+        "nodes": [
+          {
+            "node_id": "node-top-load",
+            "label": "顶部荷载",
+            "evidence_ids": [
+              "ev:ef46c363269d2e99c929b38c"
+            ]
+          },
+          {
+            "node_id": "node-support-frame",
+            "label": "支架立杆",
+            "evidence_ids": [
+              "ev:ef46c363269d2e99c929b38c"
+            ]
+          },
+          {
+            "node_id": "node-diagonal-brace",
+            "label": "斜撑",
+            "evidence_ids": [
+              "ev:ef46c363269d2e99c929b38c"
+            ]
+          }
+        ],
+        "edges": [
+          {
+            "source_node_id": "node-top-load",
+            "target_node_id": "node-support-frame",
+            "relation": "由其承受",
+            "evidence_ids": [
+              "ev:ef46c363269d2e99c929b38c"
+            ],
+            "basis": "原始 figure crop 中的连线、相对位置或层级分支直接支持该关系；未以 OCR 文字猜测替代人工确认。",
+            "confidence": 0.98
+          },
+          {
+            "source_node_id": "node-diagonal-brace",
+            "target_node_id": "node-support-frame",
+            "relation": "用于稳定",
+            "evidence_ids": [
+              "ev:ef46c363269d2e99c929b38c"
+            ],
+            "basis": "原始 figure crop 中的连线、相对位置或层级分支直接支持该关系；未以 OCR 文字猜测替代人工确认。",
+            "confidence": 0.98
+          }
+        ],
+        "basis": "Reviewed semantic_v2 diagram bridge preserves the original figure, reviewed nodes, edge Evidence, basis, and confidence without synthetic text anchors."
+      },
+      "disposition": "evidence_only",
+      "fact_key": null,
+      "basis": "Reviewed semantic_v2 diagram has no reviewed Fact target, so it remains evidence-only and is excluded from V25B FactSummary fail-closed."
+    },
+    {
+      "sample_id": "gonglu_41_diagram_mixed",
+      "bridge": {
+        "bridge_id": "v25-semantic-diagram-bridge:312b933b13312357b361b2aa",
+        "review_id": "diagram:4f94e9436f680395aff43e61",
+        "semantic_sidecar_sha256": "8e5144e346ac0f3ed0bc220970e632d549b9069480faba5a95a28aa4765837d0",
+        "source_manifest_sha256": "68f4bb0d97b9b59f4a7c6bb9acc451dc765a61b6e838e8520571674d3fe4e4e3",
+        "figure_evidence_id": "ev:a2104e17b0e3b9748fdb89f4",
+        "nodes": [
+          {
+            "node_id": "node-surrounding-rock",
+            "label": "围岩",
+            "evidence_ids": [
+              "ev:a2104e17b0e3b9748fdb89f4",
+              "ev:8b8244ff57b18cd199bf6589"
+            ]
+          },
+          {
+            "node_id": "node-primary-support",
+            "label": "初期支护",
+            "evidence_ids": [
+              "ev:a2104e17b0e3b9748fdb89f4",
+              "ev:28fa704c37f6d0a34a7e4cce"
+            ]
+          },
+          {
+            "node_id": "node-waterproof-layer",
+            "label": "防水层",
+            "evidence_ids": [
+              "ev:a2104e17b0e3b9748fdb89f4",
+              "ev:01440fda0b8bb599c100ad14"
+            ]
+          },
+          {
+            "node_id": "node-secondary-lining",
+            "label": "二次衬砌",
+            "evidence_ids": [
+              "ev:a2104e17b0e3b9748fdb89f4",
+              "ev:f69df926630d2177f0221b08"
+            ]
+          },
+          {
+            "node_id": "node-drainage",
+            "label": "排水盲管",
+            "evidence_ids": [
+              "ev:a2104e17b0e3b9748fdb89f4"
+            ]
+          }
+        ],
+        "edges": [
+          {
+            "source_node_id": "node-primary-support",
+            "target_node_id": "node-surrounding-rock",
+            "relation": "紧贴围岩",
+            "evidence_ids": [
+              "ev:a2104e17b0e3b9748fdb89f4",
+              "ev:28fa704c37f6d0a34a7e4cce",
+              "ev:8b8244ff57b18cd199bf6589"
+            ],
+            "basis": "原始 figure crop 中的连线、相对位置或层级分支直接支持该关系；未以 OCR 文字猜测替代人工确认。",
+            "confidence": 0.98
+          },
+          {
+            "source_node_id": "node-waterproof-layer",
+            "target_node_id": "node-primary-support",
+            "relation": "位于内侧",
+            "evidence_ids": [
+              "ev:a2104e17b0e3b9748fdb89f4",
+              "ev:01440fda0b8bb599c100ad14",
+              "ev:28fa704c37f6d0a34a7e4cce"
+            ],
+            "basis": "原始 figure crop 中的连线、相对位置或层级分支直接支持该关系；未以 OCR 文字猜测替代人工确认。",
+            "confidence": 0.98
+          },
+          {
+            "source_node_id": "node-secondary-lining",
+            "target_node_id": "node-waterproof-layer",
+            "relation": "位于内侧",
+            "evidence_ids": [
+              "ev:a2104e17b0e3b9748fdb89f4",
+              "ev:f69df926630d2177f0221b08",
+              "ev:01440fda0b8bb599c100ad14"
+            ],
+            "basis": "原始 figure crop 中的连线、相对位置或层级分支直接支持该关系；未以 OCR 文字猜测替代人工确认。",
+            "confidence": 0.98
+          },
+          {
+            "source_node_id": "node-drainage",
+            "target_node_id": "node-secondary-lining",
+            "relation": "设置于侧部",
+            "evidence_ids": [
+              "ev:a2104e17b0e3b9748fdb89f4",
+              "ev:f69df926630d2177f0221b08"
+            ],
+            "basis": "原始 figure crop 中的连线、相对位置或层级分支直接支持该关系；未以 OCR 文字猜测替代人工确认。",
+            "confidence": 0.98
+          }
+        ],
+        "basis": "Reviewed semantic_v2 diagram bridge preserves the original figure, reviewed nodes, edge Evidence, basis, and confidence without synthetic text anchors."
+      },
+      "disposition": "fact_summary",
+      "fact_key": "tunnel.composite-lining-section",
+      "basis": "Reviewed diagram_relation Fact enters V25B with its source figure, semantic_v2 nodes/edges, sidecar hash, and source manifest."
+    },
+    {
+      "sample_id": "gonglu_55_standard_constraints",
+      "bridge": {
+        "bridge_id": "v25-semantic-diagram-bridge:18dd222b8d47c5b294ccdbeb",
+        "review_id": "diagram:be3108b2c66810ac5ee8e646",
+        "semantic_sidecar_sha256": "8e5144e346ac0f3ed0bc220970e632d549b9069480faba5a95a28aa4765837d0",
+        "source_manifest_sha256": "90f27cafcc87f3ded800f40f3ebf722324704efd512da04402241301ec010731",
+        "figure_evidence_id": "ev:4f63c03e1ee994ad80c45fdb",
+        "nodes": [
+          {
+            "node_id": "node-general",
+            "label": "一般事故",
+            "evidence_ids": [
+              "ev:4f63c03e1ee994ad80c45fdb",
+              "ev:2ddd7068f81283862614cd6d"
+            ]
+          },
+          {
+            "node_id": "node-large",
+            "label": "较大事故",
+            "evidence_ids": [
+              "ev:4f63c03e1ee994ad80c45fdb",
+              "ev:c5d56ac29270228e980143c7"
+            ]
+          },
+          {
+            "node_id": "node-major",
+            "label": "重大事故",
+            "evidence_ids": [
+              "ev:4f63c03e1ee994ad80c45fdb",
+              "ev:4f9da8d06591422276597fc6"
+            ]
+          },
+          {
+            "node_id": "node-extraordinary-major",
+            "label": "特别重大事故",
+            "evidence_ids": [
+              "ev:4f63c03e1ee994ad80c45fdb",
+              "ev:42124b51891dc235f79e179a"
+            ]
+          },
+          {
+            "node_id": "node-death-count",
+            "label": "死亡人数",
+            "evidence_ids": [
+              "ev:4f63c03e1ee994ad80c45fdb",
+              "ev:135e3823c3feed401d05c2c5"
+            ]
+          },
+          {
+            "node_id": "node-serious-injury-count",
+            "label": "重伤人数",
+            "evidence_ids": [
+              "ev:4f63c03e1ee994ad80c45fdb",
+              "ev:c2e1998eb15d1fb5536f5a4d"
+            ]
+          },
+          {
+            "node_id": "node-economic-loss",
+            "label": "直接经济损失",
+            "evidence_ids": [
+              "ev:4f63c03e1ee994ad80c45fdb",
+              "ev:1b6b198540357ee564872921"
+            ]
+          }
+        ],
+        "edges": [
+          {
+            "source_node_id": "node-general",
+            "target_node_id": "node-large",
+            "relation": "严重程度递增",
+            "evidence_ids": [
+              "ev:4f63c03e1ee994ad80c45fdb",
+              "ev:2ddd7068f81283862614cd6d",
+              "ev:c5d56ac29270228e980143c7"
+            ],
+            "basis": "原始 figure crop 中的连线、相对位置或层级分支直接支持该关系；未以 OCR 文字猜测替代人工确认。",
+            "confidence": 0.98
+          },
+          {
+            "source_node_id": "node-large",
+            "target_node_id": "node-major",
+            "relation": "严重程度递增",
+            "evidence_ids": [
+              "ev:4f63c03e1ee994ad80c45fdb",
+              "ev:c5d56ac29270228e980143c7",
+              "ev:4f9da8d06591422276597fc6"
+            ],
+            "basis": "原始 figure crop 中的连线、相对位置或层级分支直接支持该关系；未以 OCR 文字猜测替代人工确认。",
+            "confidence": 0.98
+          },
+          {
+            "source_node_id": "node-major",
+            "target_node_id": "node-extraordinary-major",
+            "relation": "严重程度递增",
+            "evidence_ids": [
+              "ev:4f63c03e1ee994ad80c45fdb",
+              "ev:4f9da8d06591422276597fc6",
+              "ev:42124b51891dc235f79e179a"
+            ],
+            "basis": "原始 figure crop 中的连线、相对位置或层级分支直接支持该关系；未以 OCR 文字猜测替代人工确认。",
+            "confidence": 0.98
+          },
+          {
+            "source_node_id": "node-death-count",
+            "target_node_id": "node-general",
+            "relation": "作为等级判定指标",
+            "evidence_ids": [
+              "ev:4f63c03e1ee994ad80c45fdb",
+              "ev:135e3823c3feed401d05c2c5",
+              "ev:2ddd7068f81283862614cd6d"
+            ],
+            "basis": "原始 figure crop 中的连线、相对位置或层级分支直接支持该关系；未以 OCR 文字猜测替代人工确认。",
+            "confidence": 0.98
+          },
+          {
+            "source_node_id": "node-serious-injury-count",
+            "target_node_id": "node-general",
+            "relation": "作为等级判定指标",
+            "evidence_ids": [
+              "ev:4f63c03e1ee994ad80c45fdb",
+              "ev:c2e1998eb15d1fb5536f5a4d",
+              "ev:2ddd7068f81283862614cd6d"
+            ],
+            "basis": "原始 figure crop 中的连线、相对位置或层级分支直接支持该关系；未以 OCR 文字猜测替代人工确认。",
+            "confidence": 0.98
+          },
+          {
+            "source_node_id": "node-economic-loss",
+            "target_node_id": "node-general",
+            "relation": "作为等级判定指标",
+            "evidence_ids": [
+              "ev:4f63c03e1ee994ad80c45fdb",
+              "ev:1b6b198540357ee564872921",
+              "ev:2ddd7068f81283862614cd6d"
+            ],
+            "basis": "原始 figure crop 中的连线、相对位置或层级分支直接支持该关系；未以 OCR 文字猜测替代人工确认。",
+            "confidence": 0.98
+          }
+        ],
+        "basis": "Reviewed semantic_v2 diagram bridge preserves the original figure, reviewed nodes, edge Evidence, basis, and confidence without synthetic text anchors."
+      },
+      "disposition": "fact_summary",
+      "fact_key": "safety.accident-level-diagram",
+      "basis": "Reviewed diagram_relation Fact enters V25B with its source figure, semantic_v2 nodes/edges, sidecar hash, and source manifest."
+    },
+    {
+      "sample_id": "gonglu_62_cost_flow_incident",
+      "bridge": {
+        "bridge_id": "v25-semantic-diagram-bridge:a61d951fcd37b41105b8a062",
+        "review_id": "diagram:83c9c0d82088d5fa43c365b4",
+        "semantic_sidecar_sha256": "8e5144e346ac0f3ed0bc220970e632d549b9069480faba5a95a28aa4765837d0",
+        "source_manifest_sha256": "550cfd172a096dae42dc423b809ba008e44f0c93254da612a0ad3216bbb8b9ac",
+        "figure_evidence_id": "ev:4af15b958587bb00fcaac211",
+        "nodes": [
+          {
+            "node_id": "node-1",
+            "label": "标后预算总费用",
+            "evidence_ids": [
+              "ev:4af15b958587bb00fcaac211",
+              "ev:e0ca23f969789a26726443cb"
+            ]
+          },
+          {
+            "node_id": "node-2",
+            "label": "上缴企业费用",
+            "evidence_ids": [
+              "ev:4af15b958587bb00fcaac211",
+              "ev:e1c3c8b2efd9e0e98304a210"
+            ]
+          },
+          {
+            "node_id": "node-3",
+            "label": "总部管理费",
+            "evidence_ids": [
+              "ev:4af15b958587bb00fcaac211",
+              "ev:62439e15c5f7735b6233ecbd"
+            ]
+          },
+          {
+            "node_id": "node-4",
+            "label": "利润",
+            "evidence_ids": [
+              "ev:4af15b958587bb00fcaac211",
+              "ev:e2831626e91dcaefe155896b"
+            ]
+          },
+          {
+            "node_id": "node-5",
+            "label": "项目预算总成本",
+            "evidence_ids": [
+              "ev:4af15b958587bb00fcaac211"
+            ]
+          },
+          {
+            "node_id": "node-6",
+            "label": "直接费",
+            "evidence_ids": [
+              "ev:4af15b958587bb00fcaac211",
+              "ev:411739cdebcbf2af9143920c"
+            ]
+          },
+          {
+            "node_id": "node-7",
+            "label": "设备购置费",
+            "evidence_ids": [
+              "ev:4af15b958587bb00fcaac211",
+              "ev:323a24a21eeee2a9c219872b"
+            ]
+          },
+          {
+            "node_id": "node-8",
+            "label": "措施费",
+            "evidence_ids": [
+              "ev:4af15b958587bb00fcaac211",
+              "ev:d4f4403cd667fdd5eef1da83"
+            ]
+          },
+          {
+            "node_id": "node-9",
+            "label": "专项费用",
+            "evidence_ids": [
+              "ev:4af15b958587bb00fcaac211",
+              "ev:d658ba56ff8bc90630f11db8"
+            ]
+          },
+          {
+            "node_id": "node-10",
+            "label": "现场管理费",
+            "evidence_ids": [
+              "ev:4af15b958587bb00fcaac211",
+              "ev:baf2ba52e6d6413b39f48cef"
+            ]
+          },
+          {
+            "node_id": "node-11",
+            "label": "规费",
+            "evidence_ids": [
+              "ev:4af15b958587bb00fcaac211",
+              "ev:8fd55bc531c7b881f0cb318f"
+            ]
+          },
+          {
+            "node_id": "node-12",
+            "label": "税金",
+            "evidence_ids": [
+              "ev:4af15b958587bb00fcaac211",
+              "ev:0d31b4729e337491f509d863"
+            ]
+          }
+        ],
+        "edges": [
+          {
+            "source_node_id": "node-1",
+            "target_node_id": "node-2",
+            "relation": "包含",
+            "evidence_ids": [
+              "ev:4af15b958587bb00fcaac211",
+              "ev:e0ca23f969789a26726443cb",
+              "ev:e1c3c8b2efd9e0e98304a210"
+            ],
+            "basis": "原始 figure crop 中的连线、相对位置或层级分支直接支持该关系；未以 OCR 文字猜测替代人工确认。",
+            "confidence": 0.98
+          },
+          {
+            "source_node_id": "node-2",
+            "target_node_id": "node-3",
+            "relation": "包含",
+            "evidence_ids": [
+              "ev:4af15b958587bb00fcaac211",
+              "ev:e1c3c8b2efd9e0e98304a210",
+              "ev:62439e15c5f7735b6233ecbd"
+            ],
+            "basis": "原始 figure crop 中的连线、相对位置或层级分支直接支持该关系；未以 OCR 文字猜测替代人工确认。",
+            "confidence": 0.98
+          },
+          {
+            "source_node_id": "node-2",
+            "target_node_id": "node-4",
+            "relation": "包含",
+            "evidence_ids": [
+              "ev:4af15b958587bb00fcaac211",
+              "ev:e1c3c8b2efd9e0e98304a210",
+              "ev:e2831626e91dcaefe155896b"
+            ],
+            "basis": "原始 figure crop 中的连线、相对位置或层级分支直接支持该关系；未以 OCR 文字猜测替代人工确认。",
+            "confidence": 0.98
+          },
+          {
+            "source_node_id": "node-1",
+            "target_node_id": "node-5",
+            "relation": "包含",
+            "evidence_ids": [
+              "ev:4af15b958587bb00fcaac211",
+              "ev:e0ca23f969789a26726443cb"
+            ],
+            "basis": "原始 figure crop 中的连线、相对位置或层级分支直接支持该关系；未以 OCR 文字猜测替代人工确认。",
+            "confidence": 0.98
+          },
+          {
+            "source_node_id": "node-5",
+            "target_node_id": "node-6",
+            "relation": "包含",
+            "evidence_ids": [
+              "ev:4af15b958587bb00fcaac211",
+              "ev:411739cdebcbf2af9143920c"
+            ],
+            "basis": "原始 figure crop 中的连线、相对位置或层级分支直接支持该关系；未以 OCR 文字猜测替代人工确认。",
+            "confidence": 0.98
+          },
+          {
+            "source_node_id": "node-5",
+            "target_node_id": "node-7",
+            "relation": "包含",
+            "evidence_ids": [
+              "ev:4af15b958587bb00fcaac211",
+              "ev:323a24a21eeee2a9c219872b"
+            ],
+            "basis": "原始 figure crop 中的连线、相对位置或层级分支直接支持该关系；未以 OCR 文字猜测替代人工确认。",
+            "confidence": 0.98
+          },
+          {
+            "source_node_id": "node-5",
+            "target_node_id": "node-8",
+            "relation": "包含",
+            "evidence_ids": [
+              "ev:4af15b958587bb00fcaac211",
+              "ev:d4f4403cd667fdd5eef1da83"
+            ],
+            "basis": "原始 figure crop 中的连线、相对位置或层级分支直接支持该关系；未以 OCR 文字猜测替代人工确认。",
+            "confidence": 0.98
+          },
+          {
+            "source_node_id": "node-5",
+            "target_node_id": "node-9",
+            "relation": "包含",
+            "evidence_ids": [
+              "ev:4af15b958587bb00fcaac211",
+              "ev:d658ba56ff8bc90630f11db8"
+            ],
+            "basis": "原始 figure crop 中的连线、相对位置或层级分支直接支持该关系；未以 OCR 文字猜测替代人工确认。",
+            "confidence": 0.98
+          },
+          {
+            "source_node_id": "node-5",
+            "target_node_id": "node-10",
+            "relation": "包含",
+            "evidence_ids": [
+              "ev:4af15b958587bb00fcaac211",
+              "ev:baf2ba52e6d6413b39f48cef"
+            ],
+            "basis": "原始 figure crop 中的连线、相对位置或层级分支直接支持该关系；未以 OCR 文字猜测替代人工确认。",
+            "confidence": 0.98
+          },
+          {
+            "source_node_id": "node-1",
+            "target_node_id": "node-11",
+            "relation": "包含",
+            "evidence_ids": [
+              "ev:4af15b958587bb00fcaac211",
+              "ev:e0ca23f969789a26726443cb",
+              "ev:8fd55bc531c7b881f0cb318f"
+            ],
+            "basis": "原始 figure crop 中的连线、相对位置或层级分支直接支持该关系；未以 OCR 文字猜测替代人工确认。",
+            "confidence": 0.98
+          },
+          {
+            "source_node_id": "node-1",
+            "target_node_id": "node-12",
+            "relation": "包含",
+            "evidence_ids": [
+              "ev:4af15b958587bb00fcaac211",
+              "ev:e0ca23f969789a26726443cb",
+              "ev:0d31b4729e337491f509d863"
+            ],
+            "basis": "原始 figure crop 中的连线、相对位置或层级分支直接支持该关系；未以 OCR 文字猜测替代人工确认。",
+            "confidence": 0.98
+          }
+        ],
+        "basis": "Reviewed semantic_v2 diagram bridge preserves the original figure, reviewed nodes, edge Evidence, basis, and confidence without synthetic text anchors."
+      },
+      "disposition": "fact_summary",
+      "fact_key": "cost.budget-cost-structure",
+      "basis": "Reviewed diagram_relation Fact enters V25B with its source figure, semantic_v2 nodes/edges, sidecar hash, and source manifest."
+    }
+  ],
+  "new_table_repair_sidecar_sha256s": [
+    "aea321d3b778e6ae74cc98581cca922fe550fa888ecef97811db3ddf1ab9d6e4",
+    "814cb63306a74ed93d64f24256c061220ced1b137b63279bb2bbda9c77061070"
+  ],
+  "source_grouping_sidecar_sha256": "1aa02afa4c06b8d296e0853a32fcef9e16af60383855f18aa06ebb3731066054",
+  "watermark_sidecar_sha256": "5585f9a5e9325376894a56ca7124a06b534e63f019532cec3c6e346f487edaab",
+  "samples": [
+    {
+      "sample_id": "gonglu_01_text_list",
+      "v25_step2a_gate": {
+        "request_id": "step2a-request:5b2e73ae9de53d33c5583ee2cac4ddc1a099b86e62abdaa681e6f439863d1266",
+        "valid": true,
+        "failure_codes": [],
+        "proposal_count": 8,
+        "obligation_count": 7,
+        "complete_obligation_count": 7,
+        "source_anchor_linked": true,
+        "heading_only_failures": 0,
+        "unsupported_diagram_fact_count": 0,
+        "basis": "V25 checks source-local anchor ownership, exact structural obligation coverage, and heading-only/diagram fail-closed behavior without consulting Learning Golden targets."
+      },
+      "v25b_grouping_gate": {
+        "request_id": "step2b-request:82b21b21c815fa025863d43d4daaba696627604db26613644107edaf815e56fd",
+        "valid": true,
+        "failure_codes": [],
+        "exact_obligation_count": 3,
+        "missing_obligation_count": 0,
+        "split_obligation_count": 0,
+        "merged_obligation_count": 0,
+        "wrong_presentation_count": 0,
+        "extra_card_count": 0,
+        "exactly_once": true,
+        "basis": "V25B checks source-table ownership, complete-table separation, typed rule families, and exactly-once Fact assignment without consuming Card Golden targets."
+      },
+      "reviewed_fact_count": 3,
+      "fact_summary_count": 3,
+      "semantic_diagram_bridge_count": 1,
+      "eligible_repaired_fact_keys": [],
+      "source_grouping_review_count": 0,
+      "reviewed_card_alignment_count": 3,
+      "reviewed_card_drift_count": 0,
+      "unresolved_watermark_count": 0,
+      "teaching_gate": {
+        "evaluation_state": "evaluated",
+        "title_failures": 0,
+        "table_structure_failures": 0,
+        "diagram_semantic_failures": 0,
+        "heading_only_fact_failures": 0,
+        "manual_review_items": 0,
+        "spatial_watermark_candidates": 0,
+        "blockers": [],
+        "publishable": true
+      }
+    },
+    {
+      "sample_id": "gonglu_24_table_formula",
+      "v25_step2a_gate": {
+        "request_id": "step2a-request:e9a3395588d3e3f7931791fe928d91aa5f3fa59cf0fd789cba30fff985c02d4b",
+        "valid": true,
+        "failure_codes": [],
+        "proposal_count": 43,
+        "obligation_count": 42,
+        "complete_obligation_count": 42,
+        "source_anchor_linked": true,
+        "heading_only_failures": 0,
+        "unsupported_diagram_fact_count": 0,
+        "basis": "V25 checks source-local anchor ownership, exact structural obligation coverage, and heading-only/diagram fail-closed behavior without consulting Learning Golden targets."
+      },
+      "v25b_grouping_gate": {
+        "request_id": "step2b-request:7fb4778294150cbc3d9f73db0464d3e2f3a64d2b3f05ba4986fa04aa5c31e4b1",
+        "valid": true,
+        "failure_codes": [],
+        "exact_obligation_count": 4,
+        "missing_obligation_count": 0,
+        "split_obligation_count": 0,
+        "merged_obligation_count": 0,
+        "wrong_presentation_count": 0,
+        "extra_card_count": 0,
+        "exactly_once": true,
+        "basis": "V25B checks source-table ownership, complete-table separation, typed rule families, and exactly-once Fact assignment without consuming Card Golden targets."
+      },
+      "reviewed_fact_count": 11,
+      "fact_summary_count": 11,
+      "semantic_diagram_bridge_count": 0,
+      "eligible_repaired_fact_keys": [
+        "formwork.arch-removal"
+      ],
+      "source_grouping_review_count": 2,
+      "reviewed_card_alignment_count": 4,
+      "reviewed_card_drift_count": 0,
+      "unresolved_watermark_count": 0,
+      "teaching_gate": {
+        "evaluation_state": "evaluated",
+        "title_failures": 0,
+        "table_structure_failures": 0,
+        "diagram_semantic_failures": 0,
+        "heading_only_fact_failures": 0,
+        "manual_review_items": 0,
+        "spatial_watermark_candidates": 0,
+        "blockers": [],
+        "publishable": true
+      }
+    },
+    {
+      "sample_id": "gonglu_41_diagram_mixed",
+      "v25_step2a_gate": {
+        "request_id": "step2a-request:ff658c5945ec7831fd547b3b85b9daa0a8b0f831a9618a9d68c5b876662bc964",
+        "valid": true,
+        "failure_codes": [],
+        "proposal_count": 23,
+        "obligation_count": 22,
+        "complete_obligation_count": 22,
+        "source_anchor_linked": true,
+        "heading_only_failures": 0,
+        "unsupported_diagram_fact_count": 0,
+        "basis": "V25 checks source-local anchor ownership, exact structural obligation coverage, and heading-only/diagram fail-closed behavior without consulting Learning Golden targets."
+      },
+      "v25b_grouping_gate": {
+        "request_id": "step2b-request:9498bc3fbb23e139c1ac7bcaa3e41d53b17831861fd54a74881801ed03fea630",
+        "valid": true,
+        "failure_codes": [],
+        "exact_obligation_count": 3,
+        "missing_obligation_count": 0,
+        "split_obligation_count": 0,
+        "merged_obligation_count": 0,
+        "wrong_presentation_count": 0,
+        "extra_card_count": 0,
+        "exactly_once": true,
+        "basis": "V25B checks source-table ownership, complete-table separation, typed rule families, and exactly-once Fact assignment without consuming Card Golden targets."
+      },
+      "reviewed_fact_count": 4,
+      "fact_summary_count": 4,
+      "semantic_diagram_bridge_count": 1,
+      "eligible_repaired_fact_keys": [
+        "tunnel.span-classification"
+      ],
+      "source_grouping_review_count": 1,
+      "reviewed_card_alignment_count": 3,
+      "reviewed_card_drift_count": 0,
+      "unresolved_watermark_count": 0,
+      "teaching_gate": {
+        "evaluation_state": "evaluated",
+        "title_failures": 0,
+        "table_structure_failures": 0,
+        "diagram_semantic_failures": 0,
+        "heading_only_fact_failures": 0,
+        "manual_review_items": 0,
+        "spatial_watermark_candidates": 0,
+        "blockers": [],
+        "publishable": true
+      }
+    },
+    {
+      "sample_id": "gonglu_55_standard_constraints",
+      "v25_step2a_gate": {
+        "request_id": "step2a-request:f634e1453205674c7177f64e0ec05e12920c5f33155ff972811614a1e5bdc92b",
+        "valid": true,
+        "failure_codes": [],
+        "proposal_count": 1,
+        "obligation_count": 0,
+        "complete_obligation_count": 0,
+        "source_anchor_linked": true,
+        "heading_only_failures": 0,
+        "unsupported_diagram_fact_count": 0,
+        "basis": "V25 checks source-local anchor ownership, exact structural obligation coverage, and heading-only/diagram fail-closed behavior without consulting Learning Golden targets."
+      },
+      "v25b_grouping_gate": {
+        "request_id": "step2b-request:e2c1098d89ab4312b5c992f08ddf40b755edc5ae9daded50ea165614f11abf05",
+        "valid": true,
+        "failure_codes": [],
+        "exact_obligation_count": 3,
+        "missing_obligation_count": 0,
+        "split_obligation_count": 0,
+        "merged_obligation_count": 0,
+        "wrong_presentation_count": 0,
+        "extra_card_count": 0,
+        "exactly_once": true,
+        "basis": "V25B checks source-table ownership, complete-table separation, typed rule families, and exactly-once Fact assignment without consuming Card Golden targets."
+      },
+      "reviewed_fact_count": 5,
+      "fact_summary_count": 5,
+      "semantic_diagram_bridge_count": 1,
+      "eligible_repaired_fact_keys": [],
+      "source_grouping_review_count": 2,
+      "reviewed_card_alignment_count": 3,
+      "reviewed_card_drift_count": 0,
+      "unresolved_watermark_count": 0,
+      "teaching_gate": {
+        "evaluation_state": "evaluated",
+        "title_failures": 0,
+        "table_structure_failures": 0,
+        "diagram_semantic_failures": 0,
+        "heading_only_fact_failures": 0,
+        "manual_review_items": 0,
+        "spatial_watermark_candidates": 0,
+        "blockers": [],
+        "publishable": true
+      }
+    },
+    {
+      "sample_id": "gonglu_62_cost_flow_incident",
+      "v25_step2a_gate": {
+        "request_id": "step2a-request:d6c224ddede92459178786167098f30f98f1072e8f9310db4fe2297b1ad0944c",
+        "valid": true,
+        "failure_codes": [],
+        "proposal_count": 18,
+        "obligation_count": 17,
+        "complete_obligation_count": 17,
+        "source_anchor_linked": true,
+        "heading_only_failures": 0,
+        "unsupported_diagram_fact_count": 0,
+        "basis": "V25 checks source-local anchor ownership, exact structural obligation coverage, and heading-only/diagram fail-closed behavior without consulting Learning Golden targets."
+      },
+      "v25b_grouping_gate": {
+        "request_id": "step2b-request:66f6bd8db71863117c9cc91f98283357d2d4086070ebd68519ffeb2bcb3dc263",
+        "valid": true,
+        "failure_codes": [],
+        "exact_obligation_count": 3,
+        "missing_obligation_count": 0,
+        "split_obligation_count": 0,
+        "merged_obligation_count": 0,
+        "wrong_presentation_count": 0,
+        "extra_card_count": 0,
+        "exactly_once": true,
+        "basis": "V25B checks source-table ownership, complete-table separation, typed rule families, and exactly-once Fact assignment without consuming Card Golden targets."
+      },
+      "reviewed_fact_count": 5,
+      "fact_summary_count": 5,
+      "semantic_diagram_bridge_count": 1,
+      "eligible_repaired_fact_keys": [],
+      "source_grouping_review_count": 1,
+      "reviewed_card_alignment_count": 3,
+      "reviewed_card_drift_count": 0,
+      "unresolved_watermark_count": 0,
+      "teaching_gate": {
+        "evaluation_state": "evaluated",
+        "title_failures": 0,
+        "table_structure_failures": 0,
+        "diagram_semantic_failures": 0,
+        "heading_only_fact_failures": 0,
+        "manual_review_items": 0,
+        "spatial_watermark_candidates": 0,
+        "blockers": [],
+        "publishable": true
+      }
+    }
+  ],
+  "network_calls": 0,
+  "real_step2a_requests": 0,
+  "real_step2b_requests": 0,
+  "source_mutations": 0,
+  "frozen_inputs_unchanged": true,
+  "accepted": true,
+  "next_required_phase": "Phase 2R.1.4 bounded real V25/V25B smoke only after explicit approval"
+}

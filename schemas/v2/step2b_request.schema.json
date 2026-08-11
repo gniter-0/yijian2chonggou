@@ -1,0 +1,464 @@
+{
+  "$defs": {
+    "CompletenessMode": {
+      "enum": [
+        "atomic",
+        "all_items",
+        "ordered_steps",
+        "complete_formula",
+        "full_table_row",
+        "full_diagram_subgraph"
+      ],
+      "title": "CompletenessMode",
+      "type": "string"
+    },
+    "ContinuationTitleProjectionProvenance": {
+      "additionalProperties": false,
+      "description": "Immutable Phase 2R continuation-title audit carried into Step 2B.",
+      "properties": {
+        "projection_id": {
+          "pattern": "^continuation-title-projection:[0-9a-f]{24}$",
+          "title": "Projection Id",
+          "type": "string"
+        },
+        "projection_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Projection Sha256",
+          "type": "string"
+        },
+        "fixture_id": {
+          "minLength": 1,
+          "title": "Fixture Id",
+          "type": "string"
+        },
+        "fixture_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Fixture Sha256",
+          "type": "string"
+        },
+        "fact_key": {
+          "pattern": "^[a-z0-9][a-z0-9._-]*$",
+          "title": "Fact Key",
+          "type": "string"
+        },
+        "source_request_id": {
+          "pattern": "^step2a-request:[0-9a-f]{64}$",
+          "title": "Source Request Id",
+          "type": "string"
+        },
+        "source_request_version": {
+          "minLength": 1,
+          "title": "Source Request Version",
+          "type": "string"
+        },
+        "source_response_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Source Response Sha256",
+          "type": "string"
+        },
+        "source_proposal_key": {
+          "pattern": "^proposal:[a-z0-9][a-z0-9._-]*$",
+          "title": "Source Proposal Key",
+          "type": "string"
+        },
+        "model_label": {
+          "maxLength": 64,
+          "minLength": 2,
+          "title": "Model Label",
+          "type": "string"
+        },
+        "model_label_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Model Label Sha256",
+          "type": "string"
+        },
+        "canonical_title": {
+          "maxLength": 64,
+          "minLength": 2,
+          "title": "Canonical Title",
+          "type": "string"
+        }
+      },
+      "required": [
+        "projection_id",
+        "projection_sha256",
+        "fixture_id",
+        "fixture_sha256",
+        "fact_key",
+        "source_request_id",
+        "source_request_version",
+        "source_response_sha256",
+        "source_proposal_key",
+        "model_label",
+        "model_label_sha256",
+        "canonical_title"
+      ],
+      "title": "ContinuationTitleProjectionProvenance",
+      "type": "object"
+    },
+    "FactSummaryInput": {
+      "additionalProperties": false,
+      "properties": {
+        "fact_id": {
+          "pattern": "^fact:[0-9a-f]{24}$",
+          "title": "Fact Id",
+          "type": "string"
+        },
+        "fact_type": {
+          "$ref": "#/$defs/FactType"
+        },
+        "label": {
+          "maxLength": 64,
+          "minLength": 2,
+          "title": "Label",
+          "type": "string"
+        },
+        "assertion_summary": {
+          "maxLength": 500,
+          "minLength": 2,
+          "title": "Assertion Summary",
+          "type": "string"
+        },
+        "completeness_mode": {
+          "$ref": "#/$defs/CompletenessMode"
+        },
+        "must_cover": {
+          "title": "Must Cover",
+          "type": "boolean"
+        },
+        "selected_table_evidence_ids": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "title": "Selected Table Evidence Ids",
+          "type": "array"
+        },
+        "complete_table_evidence_ids": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "title": "Complete Table Evidence Ids",
+          "type": "array"
+        },
+        "reviewed_title_projection": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ReviewedCanonicalTitleProjection"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "source_proposal_key": {
+          "anyOf": [
+            {
+              "pattern": "^proposal:[a-z0-9][a-z0-9._-]*$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Source Proposal Key"
+        }
+      },
+      "required": [
+        "fact_id",
+        "fact_type",
+        "label",
+        "assertion_summary",
+        "completeness_mode",
+        "must_cover"
+      ],
+      "title": "FactSummaryInput",
+      "type": "object"
+    },
+    "FactType": {
+      "enum": [
+        "definition",
+        "classification",
+        "enumeration",
+        "procedure",
+        "condition",
+        "threshold",
+        "formula",
+        "comparison",
+        "exception",
+        "composition",
+        "diagram_relation",
+        "visual_reference",
+        "exam_note",
+        "example",
+        "exercise"
+      ],
+      "title": "FactType",
+      "type": "string"
+    },
+    "ReviewedCanonicalTitleProjection": {
+      "additionalProperties": false,
+      "description": "Reviewed title authority carried into the otherwise model-free Step 2B input.",
+      "properties": {
+        "fixture_id": {
+          "minLength": 1,
+          "title": "Fixture Id",
+          "type": "string"
+        },
+        "fact_key": {
+          "pattern": "^[a-z0-9][a-z0-9._-]*$",
+          "title": "Fact Key",
+          "type": "string"
+        },
+        "canonical_title": {
+          "maxLength": 64,
+          "minLength": 2,
+          "title": "Canonical Title",
+          "type": "string"
+        },
+        "source_label": {
+          "maxLength": 64,
+          "minLength": 2,
+          "title": "Source Label",
+          "type": "string"
+        },
+        "source_label_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Source Label Sha256",
+          "type": "string"
+        },
+        "continuation_title_projection": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ContinuationTitleProjectionProvenance"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        }
+      },
+      "required": [
+        "fixture_id",
+        "fact_key",
+        "canonical_title",
+        "source_label",
+        "source_label_sha256"
+      ],
+      "title": "ReviewedCanonicalTitleProjection",
+      "type": "object"
+    },
+    "Step2DecoderConfig": {
+      "additionalProperties": false,
+      "description": "All output-affecting generation controls must participate in cache identity.",
+      "properties": {
+        "temperature": {
+          "default": 0,
+          "maximum": 2,
+          "minimum": 0,
+          "title": "Temperature",
+          "type": "number"
+        },
+        "max_tokens": {
+          "default": 1400,
+          "maximum": 4000,
+          "minimum": 64,
+          "title": "Max Tokens",
+          "type": "integer"
+        },
+        "response_format": {
+          "$ref": "#/$defs/Step2ResponseFormat",
+          "default": "json_schema_strict"
+        }
+      },
+      "title": "Step2DecoderConfig",
+      "type": "object"
+    },
+    "Step2RequestIdentity": {
+      "additionalProperties": false,
+      "properties": {
+        "stage": {
+          "$ref": "#/$defs/Step2Stage"
+        },
+        "request_version": {
+          "minLength": 1,
+          "title": "Request Version",
+          "type": "string"
+        },
+        "model": {
+          "minLength": 1,
+          "title": "Model",
+          "type": "string"
+        },
+        "payload_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Payload Sha256",
+          "type": "string"
+        },
+        "relay_fingerprint_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Relay Fingerprint Sha256",
+          "type": "string"
+        },
+        "prompt_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Prompt Sha256",
+          "type": "string"
+        },
+        "response_schema_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Response Schema Sha256",
+          "type": "string"
+        },
+        "decoder": {
+          "$ref": "#/$defs/Step2DecoderConfig"
+        },
+        "projection_id": {
+          "anyOf": [
+            {
+              "pattern": "^step2a-projection:[0-9a-f]{24}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Projection Id"
+        },
+        "projection_sha256": {
+          "anyOf": [
+            {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Projection Sha256"
+        },
+        "source_manifest_sha256": {
+          "anyOf": [
+            {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Source Manifest Sha256"
+        },
+        "content_policy_fingerprint_sha256": {
+          "anyOf": [
+            {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Content Policy Fingerprint Sha256"
+        },
+        "manual_reissue_reason": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Manual Reissue Reason"
+        },
+        "request_id": {
+          "pattern": "^step2[ab]-request:[0-9a-f]{64}$",
+          "title": "Request Id",
+          "type": "string"
+        },
+        "cache_key": {
+          "pattern": "^step2-cache:[0-9a-f]{64}$",
+          "title": "Cache Key",
+          "type": "string"
+        },
+        "idempotency_key": {
+          "pattern": "^step2-[0-9a-f]{64}$",
+          "title": "Idempotency Key",
+          "type": "string"
+        }
+      },
+      "required": [
+        "stage",
+        "request_version",
+        "model",
+        "payload_sha256",
+        "relay_fingerprint_sha256",
+        "prompt_sha256",
+        "response_schema_sha256",
+        "decoder",
+        "request_id",
+        "cache_key",
+        "idempotency_key"
+      ],
+      "title": "Step2RequestIdentity",
+      "type": "object"
+    },
+    "Step2ResponseFormat": {
+      "enum": [
+        "json_schema_strict",
+        "json_object"
+      ],
+      "title": "Step2ResponseFormat",
+      "type": "string"
+    },
+    "Step2Stage": {
+      "enum": [
+        "step2a",
+        "step2b"
+      ],
+      "title": "Step2Stage",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "identity": {
+      "$ref": "#/$defs/Step2RequestIdentity"
+    },
+    "sample_id": {
+      "pattern": "^[a-z0-9][a-z0-9._-]*$",
+      "title": "Sample Id",
+      "type": "string"
+    },
+    "material_profile_id": {
+      "minLength": 1,
+      "title": "Material Profile Id",
+      "type": "string"
+    },
+    "facts": {
+      "items": {
+        "$ref": "#/$defs/FactSummaryInput"
+      },
+      "title": "Facts",
+      "type": "array"
+    }
+  },
+  "required": [
+    "identity",
+    "sample_id",
+    "material_profile_id",
+    "facts"
+  ],
+  "title": "Step2BRequest",
+  "type": "object"
+}

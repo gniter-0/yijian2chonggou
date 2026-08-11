@@ -1,0 +1,105 @@
+schema_version: phase2r224_step3_manual_decisions_v1
+fixture_id: gonglu_phase2r224_step3_manual_review_decisions
+source_phase: 2R.2.3.4
+source_report_path: data/semantic_llm_v2/phase2r2234_step3_openai_strict_run1/phase2r2234_step3_openai_strict_report.json
+reviewer: codex_operator_phase2r224_step3_final_manual_audit
+reviewed_at_utc: '2026-07-30T20:00:00Z'
+decisions:
+- source_card_id: v25-release-card:1011b240d15e12f3f7084096
+  fact_ids: [fact:e033c1238e91188132210383]
+  disposition: reviewed
+  risk_codes: []
+  basis: 人工核验特殊路基类型文本覆盖三类来源分组及全部列举项；分页换行未改变术语顺序或语义，table presentation、来源锚点和完整表 provenance 可确认。
+- source_card_id: v25-release-card:c2712f4fcfbb9407a3140d57
+  fact_ids: [fact:bdc644b1c6bf1a0a84f2db4c]
+  disposition: reviewed
+  risk_codes: []
+  basis: 人工核验填方路基横断面四个节点均来自 reviewed semantic_v2，三条关系边有 figure Evidence 与 sidecar hash；输出未显示关系标签且未伪造文本 anchor。
+- source_card_id: v25-release-card:e6a90dfe9d5240ead407b7ef
+  fact_ids: [fact:2448270c7cee6e945b529767]
+  disposition: manual_review
+  risk_codes: [enumeration_endpoints_only]
+  basis: 真实 Card 仅显示①与⑧两个闭合端点，虽能证明 ordered-list source binding，但不能作为完整“路基施工目录”教学卡，需补齐中间条目后再审。
+- source_card_id: v25-release-card:cd1558d4e5d386183f1a4b31
+  fact_ids:
+  - fact:2181e5bd6349775b25fd2b82
+  - fact:df38ba0d0992399d7acc910a
+  - fact:9f65fc117c8497c0185ef163
+  - fact:d1d886adf5616ac0a1153072
+  - fact:6d1bdf6072180f04f67bc8f4
+  disposition: reviewed
+  risk_codes: []
+  basis: 人工核验五条模板与支架一般要求均为完整 reviewed assertion，HPB300与严禁冷加工双条件、65MPa阈值及安全通道约束均未截断；编组和 constraint presentation 可确认。
+- source_card_id: v25-release-card:b87732d828c76d202372ae90
+  fact_ids:
+  - fact:e9db47cf69e73e1bc6e78612
+  - fact:f5f9fdd1b487e4b1e95c7a87
+  - fact:51ba5da7b78c4e32d41b2eda
+  - fact:98c267f889999481277b9b77
+  disposition: manual_review
+  risk_codes: [truncated_source_assertion]
+  basis: 滑模速度 assertion 以“滑升时应检测并控制其 联”截断，无法确认完整控制对象；同卡其余三条虽完整，但整张 Card 必须保持 manual_review。
+- source_card_id: v25-release-card:f06d575da299041aae98895c
+  fact_ids: [fact:80ab4525cacc0aa1a10c9fcc]
+  disposition: manual_review
+  risk_codes: [complete_table_grid_not_rendered]
+  basis: Fact 绑定完整荷载组合表 grid，但真实 table Card 仅显示“完整记录”摘要，未呈现任何行列或 cell 内容，教学表达不足以代表完整表。
+- source_card_id: v25-release-card:13ac7b620ddf9381a370ef86
+  fact_ids: [fact:49f9cae63d124ee3a4568d0b]
+  disposition: manual_review
+  risk_codes: [complete_table_grid_not_rendered]
+  basis: Fact 绑定模板与支架完整规定表，但真实 table Card 仅显示概括句，未呈现 source grid、条款行列或 cell 内容，不能升为 reviewed 教学卡。
+- source_card_id: v25-release-card:a7f00eb1d21cbe2249c62dcf
+  fact_ids:
+  - fact:0d239f5ba27e143aaaaec931
+  - fact:eb3f2251f29a9a20f88c902b
+  disposition: manual_review
+  risk_codes: [ocr_corruption_in_display_text]
+  basis: 围岩级别表 display text 含“8、7、1、9、4、信、微、联、一、唯、系”等明显 OCR 污染，虽逐字来源且 provenance 完整，仍不具备 reviewed 教学质量。
+- source_card_id: v25-release-card:40b3629b5e9457052c440c3d
+  fact_ids: [fact:e1fef22867fb494f5aae85de]
+  disposition: reviewed
+  risk_codes: []
+  basis: 人工核验冻胀土基底高程 assertion 完整包含最大冻结深度以下不小于0.25m条件，数值、单位、primary anchor 与 threshold presentation 均可确认。
+- source_card_id: v25-release-card:4995459aea0db1350c00cdec
+  fact_ids: [fact:e9b0fada194b3f0c856905c8]
+  disposition: reviewed
+  risk_codes: []
+  basis: 人工核验复合式衬砌五个节点与四条 reviewed semantic_v2 关系边完整回链，image prompt 仅含节点文本，不含关系标签、水印或伪造 anchor。
+- source_card_id: v25-release-card:10a6290cc820d12ac15e36dc
+  fact_ids:
+  - fact:69485e78499ec85c9d250324
+  - fact:9988249bee51e3c6ede49e55
+  disposition: manual_review
+  risk_codes: [incomplete_enumeration, truncated_source_assertion]
+  basis: 事故类别仅显示“①物体打击”，未覆盖完整类别枚举；两条2小时报告要求均在句中截断，无法形成完整 ordered-list 教学表达。
+- source_card_id: v25-release-card:365e03a33bb2e9f00935c7f2
+  fact_ids: [fact:ced6ce149a2fd340a7d7615b]
+  disposition: reviewed
+  risk_codes: []
+  basis: 人工核验四级事故节点和死亡人数、重伤人数、直接经济损失三个指标节点均来自 reviewed semantic_v2，六条边完整回链且关系词未进入输出文本。
+- source_card_id: v25-release-card:1f81dff1f9f9801edaee6d75
+  fact_ids:
+  - fact:cc1ca460b079becae876452b
+  - fact:5e66ad9086f5df294c32de0f
+  disposition: manual_review
+  risk_codes: [truncated_source_assertion]
+  basis: 安全生产费用条款止于“不得作为竞争性”，隧道3000m风险阈值止于“合计长度占隧道”，两条均缺完整条件，禁止升 reviewed。
+- source_card_id: v25-release-card:c16e2fc7671047b24a16a4c1
+  fact_ids:
+  - fact:677b17fa109b98499fabc81f
+  - fact:87cae4786327dd9895e63f0c
+  - fact:157c07ea911ab2c62b98cbc5
+  disposition: reviewed
+  risk_codes: []
+  basis: 人工核验项目预算总成本、机械租赁费双公式及计划成本偏差公式均完整，运算符、括号、变量和多 anchor provenance 可确认，formula 编组无跨源合并。
+- source_card_id: v25-release-card:958c0cd0a8d88fad4e4ffc6d
+  fact_ids: [fact:b62e1c50f05c43aff86771d5]
+  disposition: manual_review
+  risk_codes: [enumeration_endpoints_only]
+  basis: 成本控制内容真实 Card 仅显示①人工费与⑤现场管理费两个端点，未呈现②至④内容，不能作为完整 ordered-list 教学卡。
+- source_card_id: v25-release-card:e8a6d76882ba889296a6404f
+  fact_ids: [fact:73b218f87155cc55743cb801]
+  disposition: reviewed
+  risk_codes: []
+  basis: 人工核验标后预算总费用结构12个节点与11条 reviewed semantic_v2 层级边完整回链；输出仅含节点标签，不含“包含”等关系文本或伪造 anchor。

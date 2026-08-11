@@ -1,0 +1,296 @@
+schema_version: phase2r225_step4_handoff_manifest_v1
+handoff_id: step4-handoff:e3cb904bba48dbb99b07bc91
+source_phase: 2R.2.4.2
+unified_fixture_path: scripts/tests/fixtures/v2/release_fixtures/gonglu_phase2r2242_step3_reviewed_release.yaml
+unified_fixture_sha256: 8a6226e4a7f1cdece711a770566b2401a91e43428b85897d9ded7c778cda5ab3
+source_fixtures:
+- source_tier: phase2r224_reviewed
+  path: scripts/tests/fixtures/v2/release_fixtures/gonglu_phase2r224_step3_reviewed_release.yaml
+  sha256: a8904cdb583a79ad40355d173eb4f969d603c8399485c1f4d427936ef5b97a06
+  card_count: 8
+- source_tier: phase2r2241_remediation
+  path: scripts/tests/fixtures/v2/release_fixtures/gonglu_phase2r2241_reviewed_source_text_remediation.yaml
+  sha256: 42df6dd0b5b0c2b5b8d6bc6985717f221d4e7bb403229f53b5781a79577fe3c0
+  card_count: 8
+schema_bindings:
+- path: schemas/v2/step3_unified_reviewed_release_fixture.schema.json
+  sha256: 92ba5c3590f8e2d5b9db7814b47653f66e9bb61ea7b5b526329b0544914f89fd
+- path: schemas/v2/step3_merged_reviewed_release_card.schema.json
+  sha256: 966a29185d534e98736c82c091247f8b982b3b55456b830ecac6d345655c3f6a
+- path: schemas/v2/step3_merged_source_owned_display_text.schema.json
+  sha256: ad0f1385444ece09993d2d480b2a00a8a193d9f371cdb686010659ebb95c1b85
+- path: schemas/v2/step3_reviewed_release_readiness_audit.schema.json
+  sha256: 043a655a82c14e83569f4dfee9b18cc70ea480751551aa0147a245788ddb04f5
+- path: schemas/v2/phase2r2242_report.schema.json
+  sha256: 4ab018826a013bfe5b3675f160f84415a66a1bc49998b1e48df3d930ff4c0a8e
+reviewed_fact_count: 28
+reviewed_card_count: 16
+source_owned_display_text_count: 52
+semantic_edge_count: 24
+cards:
+- card_index: 1
+  source_card_id: v25-release-card:1011b240d15e12f3f7084096
+  source_tier: phase2r224_reviewed
+  source_fixture_sha256: a8904cdb583a79ad40355d173eb4f969d603c8399485c1f4d427936ef5b97a06
+  fact_ids:
+  - fact:e033c1238e91188132210383
+  presentation: table
+  image_prompt_sha256: 396dfd80bfd9dc5bfd1e78a191e0dbb5240b39ba26e062155a14d2c6476e7451
+  display_text_sha256s:
+  - 916df7b0cf2de8b963487c919c07dc3398b776627164d467be2787d3ca6a9171
+  semantic_edge_sha256s: []
+  content_contract_sha256: dbb6bd618ea99c201c2c2ef3993646313c526164b900c134b2760adc04c0b98d
+- card_index: 2
+  source_card_id: v25-release-card:c2712f4fcfbb9407a3140d57
+  source_tier: phase2r224_reviewed
+  source_fixture_sha256: a8904cdb583a79ad40355d173eb4f969d603c8399485c1f4d427936ef5b97a06
+  fact_ids:
+  - fact:bdc644b1c6bf1a0a84f2db4c
+  presentation: diagram
+  image_prompt_sha256: 5d46123cc4b5a4243a2b8631bcb58f0e0c195c0803295bdd7389c7f767a5db07
+  display_text_sha256s:
+  - 86f07fd2465eb4a04bfa72f44ca115dedd321d33defb8e1bf85c8c15f5b95987
+  - af39b3754954232abb42f0554eb0bc829810578125a1a2787f70320f303739ff
+  - 5a65ffeb15c4819ca0732230d1abdd3d40a4deead7f11fc6ed97cd2cbd2d90b8
+  - daae18364e1e32e42a414fbc84fb85a68a05ee8df8f552f0fb68833aff0ae477
+  semantic_edge_sha256s:
+  - b644bc0f9d004253d800c472c1d7567a950bb26e6601ebd48df2f3b7fd0c4f29
+  - 34c5617c19a4a0fb6d8db1270991b95bd77eafbf56d1ece6a7aa4fdddd4804ef
+  - 6de47342ee022608c2967517f82ae4ea73a8b86e1d42335ef5d1c7b6d8e6ccd0
+  content_contract_sha256: 84bf0195586f4520f037dabdbecb9fd17d401aa8402e54a482006c69b48f563f
+- card_index: 3
+  source_card_id: v25-release-card:e6a90dfe9d5240ead407b7ef
+  source_tier: phase2r2241_remediation
+  source_fixture_sha256: 42df6dd0b5b0c2b5b8d6bc6985717f221d4e7bb403229f53b5781a79577fe3c0
+  fact_ids:
+  - fact:2448270c7cee6e945b529767
+  presentation: ordered_list
+  image_prompt_sha256: cd31c0a8389c3da7ee0e9ddfa8e1d617a551bdbc468ed52af499483908677bb9
+  display_text_sha256s:
+  - 708c0240efdadaf2922310009c802b17ca8164a0117f0b95695a43f85546c6dd
+  semantic_edge_sha256s: []
+  content_contract_sha256: 1de2693437a303a710a9a94950320831946ee695ff0aab6ec877fce445d309a5
+- card_index: 4
+  source_card_id: v25-release-card:cd1558d4e5d386183f1a4b31
+  source_tier: phase2r224_reviewed
+  source_fixture_sha256: a8904cdb583a79ad40355d173eb4f969d603c8399485c1f4d427936ef5b97a06
+  fact_ids:
+  - fact:2181e5bd6349775b25fd2b82
+  - fact:df38ba0d0992399d7acc910a
+  - fact:9f65fc117c8497c0185ef163
+  - fact:d1d886adf5616ac0a1153072
+  - fact:6d1bdf6072180f04f67bc8f4
+  presentation: constraint
+  image_prompt_sha256: d91dafdddc9c0d9531de301136bb9cf4751acd2ae70b68061f9893b8ed105a67
+  display_text_sha256s:
+  - 4cfd59e1722b92f49c82b21e547dc3b85a99794337f670c05bd64b758cf1707d
+  - 52248d9149f19d5b06d9eb86e3a073f8a88d5fc620f6685773fd3eae9f47b7c2
+  - f89c2e4a5dc61a02c9e4e67b18d4989f9d9be64955513a09f000cffaf4b2132f
+  - 0f4f62db8cac7238a5504eb258576fbc3c06345fd9cd5e1f77d4612693b40896
+  - ba40f32bdd2d00bfb35f13ac60f4bdb648c20dca0c1048f46dcd40214f9056b2
+  semantic_edge_sha256s: []
+  content_contract_sha256: 9266b632e6dad21e724a14fac417222f8dea3554fff396546349c013ab929da3
+- card_index: 5
+  source_card_id: v25-release-card:b87732d828c76d202372ae90
+  source_tier: phase2r2241_remediation
+  source_fixture_sha256: 42df6dd0b5b0c2b5b8d6bc6985717f221d4e7bb403229f53b5781a79577fe3c0
+  fact_ids:
+  - fact:e9db47cf69e73e1bc6e78612
+  - fact:f5f9fdd1b487e4b1e95c7a87
+  - fact:51ba5da7b78c4e32d41b2eda
+  - fact:98c267f889999481277b9b77
+  presentation: constraint
+  image_prompt_sha256: e320b99882fbba7ebcea4a30fd69d9e88e61d1f162ea3f7f5988c2edf96cb603
+  display_text_sha256s:
+  - bd0adb115813ecb0c3128f772af9ca5bc6288a3cdc3883f3321e761eed5e37bc
+  - e27faab7ca516ad835bb0b4d575c588a542a6bf2375c0f8869771319f85c6f71
+  - 99acffeeed803353515535c1c4decb4bba449ed20279a3759ef613ccb927d40f
+  - f9ce97796d35d2661a4cee07906614f1c8c32d306e4cde8a9a9e404ecb298e5d
+  semantic_edge_sha256s: []
+  content_contract_sha256: 662fd1af306cc30123c05b1f8bed46901e10d75dc68638bcc93c5e4edafde923
+- card_index: 6
+  source_card_id: v25-release-card:f06d575da299041aae98895c
+  source_tier: phase2r2241_remediation
+  source_fixture_sha256: 42df6dd0b5b0c2b5b8d6bc6985717f221d4e7bb403229f53b5781a79577fe3c0
+  fact_ids:
+  - fact:80ab4525cacc0aa1a10c9fcc
+  presentation: table
+  image_prompt_sha256: 94610cd4d215b68c3628e3230729e5b86fc377b4625289b0736d5dac7aed9c0b
+  display_text_sha256s:
+  - d7b70f93e0cf10dba58d2278309e32e41ab7024021a08f8622308b10fdd7003b
+  semantic_edge_sha256s: []
+  content_contract_sha256: a81842e47f82d8e6de162bb60892e81b4162e22cae76be809ee2f25d2e8a4e0a
+- card_index: 7
+  source_card_id: v25-release-card:13ac7b620ddf9381a370ef86
+  source_tier: phase2r2241_remediation
+  source_fixture_sha256: 42df6dd0b5b0c2b5b8d6bc6985717f221d4e7bb403229f53b5781a79577fe3c0
+  fact_ids:
+  - fact:49f9cae63d124ee3a4568d0b
+  presentation: table
+  image_prompt_sha256: ae7792f674d8265ff526bb502cc03e7715eabf07c2139ce00b45d5cf2dcfc4fd
+  display_text_sha256s:
+  - d900a69f8765cf3e35686710ffda87837c58325385d32b9ffe4ddc38d642dda6
+  semantic_edge_sha256s: []
+  content_contract_sha256: 6e4ff505f1058dece4b6bbdaefa53932d4da2b00c389718cff1ecb7977f18a83
+- card_index: 8
+  source_card_id: v25-release-card:a7f00eb1d21cbe2249c62dcf
+  source_tier: phase2r2241_remediation
+  source_fixture_sha256: 42df6dd0b5b0c2b5b8d6bc6985717f221d4e7bb403229f53b5781a79577fe3c0
+  fact_ids:
+  - fact:0d239f5ba27e143aaaaec931
+  - fact:eb3f2251f29a9a20f88c902b
+  presentation: table
+  image_prompt_sha256: ce64684d5480ea8bb411a0eec54dba01d5fe20368c7e6b8b34d179f932ea16da
+  display_text_sha256s:
+  - 66d292c71df9479005523d21d039ca8749d3077d63f3d536be0a2bb7a4bff9e7
+  - 8189ccc6cb2981026abfb487386b716649e310a74e8c9ab06ea41a4d97c68c8d
+  semantic_edge_sha256s: []
+  content_contract_sha256: e2bdcb8cd7cf4c82861a19cc29a3175a2799242ad8b586bfa473e09684009862
+- card_index: 9
+  source_card_id: v25-release-card:40b3629b5e9457052c440c3d
+  source_tier: phase2r224_reviewed
+  source_fixture_sha256: a8904cdb583a79ad40355d173eb4f969d603c8399485c1f4d427936ef5b97a06
+  fact_ids:
+  - fact:e1fef22867fb494f5aae85de
+  presentation: threshold
+  image_prompt_sha256: 1dbd331d7fe3d5e71ae9c130261abe0e5e794916f4f2355c3e3eb7d70eff937f
+  display_text_sha256s:
+  - b6aff0f9bffc357d8cc9a05d7fe97dfca28bfbf5ce09a2d1a15e5c341c824024
+  semantic_edge_sha256s: []
+  content_contract_sha256: 7e05c756bb142dc589ae60b2e207f535209ad76d0059e8f2a83bf4e5096756b5
+- card_index: 10
+  source_card_id: v25-release-card:4995459aea0db1350c00cdec
+  source_tier: phase2r224_reviewed
+  source_fixture_sha256: a8904cdb583a79ad40355d173eb4f969d603c8399485c1f4d427936ef5b97a06
+  fact_ids:
+  - fact:e9b0fada194b3f0c856905c8
+  presentation: diagram
+  image_prompt_sha256: 19be6ce5cb56a4a8aea6e6555eec3aba07e097675c8c046cdbeaff7a577683cd
+  display_text_sha256s:
+  - a16b2da43745a1b49ee244fb1cf5bf836e12e9f65375bd11eb7c6e1fcaf6d63b
+  - 20b249e3f3a43c0d32b9a53fed02d7c3532ea3d98f88f34a6aae17cdb81243b2
+  - 2c2d083fd7d4fdc8c34e8d54c3d3d25904f8e745b170385ecfe83fbd9245dee7
+  - a3f1b59ea0053cd44841b1619cee4e94e9b3901290b542ce4b692564d23c6b19
+  - 3f27261374b3e71f709cce3451911f9cca076a64cbd270adc9631a22308d19a5
+  semantic_edge_sha256s:
+  - 8f3e92bf06e2ed444797caeecc5f1e7bd6d52c6ef4814aa24fdc64ac81dbc6fc
+  - 050f75e071ee7206a403bc1257e02aeada3f8c629f75d510170577117fce2214
+  - 9fe2fb30eeb2755240b7dda333c638cf458c0d18ab354ba9857c12ed615c8611
+  - 430110396801f27761ce6ee2a1a2ce7a5342e07f03eb483fa75fa4c6e420f828
+  content_contract_sha256: 2a70e344aaa909652801f910c4bc28b20b7ca2ac5d3c0f456b45fc6d7ed61112
+- card_index: 11
+  source_card_id: v25-release-card:10a6290cc820d12ac15e36dc
+  source_tier: phase2r2241_remediation
+  source_fixture_sha256: 42df6dd0b5b0c2b5b8d6bc6985717f221d4e7bb403229f53b5781a79577fe3c0
+  fact_ids:
+  - fact:69485e78499ec85c9d250324
+  - fact:9988249bee51e3c6ede49e55
+  presentation: ordered_list
+  image_prompt_sha256: c3eace24d50016c6f592742a6b0badbbf817285abffadc93cd814a09fd9e0c73
+  display_text_sha256s:
+  - b1fd78cf0895f4f58e5ab0f4aca5ba00fc52041f4977b3f3b63452baeebfedb8
+  - 73585b3b7b8508438172b0223746412cbefff84130ea51bbe6ffc72deda20e54
+  semantic_edge_sha256s: []
+  content_contract_sha256: 7459f3dee6666661be50910fab08a1050ee0dd11cd037bb03af480b48b15c313
+- card_index: 12
+  source_card_id: v25-release-card:365e03a33bb2e9f00935c7f2
+  source_tier: phase2r224_reviewed
+  source_fixture_sha256: a8904cdb583a79ad40355d173eb4f969d603c8399485c1f4d427936ef5b97a06
+  fact_ids:
+  - fact:ced6ce149a2fd340a7d7615b
+  presentation: diagram
+  image_prompt_sha256: cff5138cd633df058d74feb4074fc44985e98471ba7799560b04ec5c4fe1c1e5
+  display_text_sha256s:
+  - c9d794d12e83d9c6e89ec32545c806a64fa809562d6e70838eb651d4475781b5
+  - 1da229c1990d7b382915411fb52b15a2a953520344187d76b72e6a090567d89e
+  - c5b6223dd940e1fcfd09c48a334caeb4f8d2859d411023e12c0ffa55e1bd3697
+  - 88177b9f25c930d541812787814290bcaf6801e26c36cb575c7f55d304d2977f
+  - 935c548cead8e30041e99af369f53b883a41fce0ea1770d82af3e5dc5d4cbb53
+  - 3936ae1cc9c5e7b50f21c0effd2a79cdeab031413dbba2e4c947acbe32288959
+  - 3c8001f31fbf01f2c06f779e6ab7740e8de5cd4a211b97824895dc1138d054a8
+  semantic_edge_sha256s:
+  - 06dd033870647c303bea77c8461a662d93edbe4ca877443349c8e0df298193ed
+  - 3de4f9de3343dcd9306ed3b93ad89f5b5b225af935f0c23006e7ca623ff5a772
+  - defcdfd3ead2274fc89c206ac47e4c033b031dc3a0eefadcc8c61606360726ae
+  - a1824c16858407868ef933dacdf7472b59e098e474d36d6d73ed856923c938d8
+  - caad39bc6baeca83546a60ddeec3b88ab0b5a232c8e2e6458074b834611def64
+  - 41000e66f86fc88b55f27f375bc8b94a6ef4b98e3b72162d26176e9b7f8af480
+  content_contract_sha256: 88aab5fbb3cbcdb04a0f46d76fd55d4c61d968704c9fd6a01aa83b5517043a92
+- card_index: 13
+  source_card_id: v25-release-card:1f81dff1f9f9801edaee6d75
+  source_tier: phase2r2241_remediation
+  source_fixture_sha256: 42df6dd0b5b0c2b5b8d6bc6985717f221d4e7bb403229f53b5781a79577fe3c0
+  fact_ids:
+  - fact:cc1ca460b079becae876452b
+  - fact:5e66ad9086f5df294c32de0f
+  presentation: constraint
+  image_prompt_sha256: 007e243ba6791a924ab65da8484a01cafdae8320e830cc8d0ee39802959e56d1
+  display_text_sha256s:
+  - bc27098665ca7eae421f95012f4f57dc3e268d00311df920beb312fece797892
+  - 4f80826203f6d91950152f04fefc8efd50933866b9b24037c4d3984c5be52864
+  semantic_edge_sha256s: []
+  content_contract_sha256: 06f816160d3831e294846c0c28582679d411ac0bb4c8c0ca846d52f4d44eb6b1
+- card_index: 14
+  source_card_id: v25-release-card:c16e2fc7671047b24a16a4c1
+  source_tier: phase2r224_reviewed
+  source_fixture_sha256: a8904cdb583a79ad40355d173eb4f969d603c8399485c1f4d427936ef5b97a06
+  fact_ids:
+  - fact:677b17fa109b98499fabc81f
+  - fact:87cae4786327dd9895e63f0c
+  - fact:157c07ea911ab2c62b98cbc5
+  presentation: formula
+  image_prompt_sha256: 26bc167cd337690f65beebcde6709056dc29f84d1083e88b7c6485c6b46533ae
+  display_text_sha256s:
+  - f21631fe406381f608646bd320d01e789c26ad735b3324c608d459312cd30a44
+  - fc8f2fa621e04dc9e2ba40ceb501c42c69e5bf398f28f956dbd78496e3a9b83e
+  - 1f702461be0873890d0f5f1ac6bec5b1bf178f648d57497741856e729027c6fb
+  semantic_edge_sha256s: []
+  content_contract_sha256: 5c6953434d24dbbe005169b0c23eb949d2e7d2c27c0734c318b107b9160bd403
+- card_index: 15
+  source_card_id: v25-release-card:958c0cd0a8d88fad4e4ffc6d
+  source_tier: phase2r2241_remediation
+  source_fixture_sha256: 42df6dd0b5b0c2b5b8d6bc6985717f221d4e7bb403229f53b5781a79577fe3c0
+  fact_ids:
+  - fact:b62e1c50f05c43aff86771d5
+  presentation: ordered_list
+  image_prompt_sha256: 071c849506239628454c62a4707031e239f67714fa05d783ab553b81b630b077
+  display_text_sha256s:
+  - b3f774972adcf342896b29fa9aa49e9f1431dda0c6f5b6ecb1ef14c669fdcf70
+  semantic_edge_sha256s: []
+  content_contract_sha256: b6f60236690b186fa7273dda9a779a66c4415d798465f1595ed1aa8bc9c14701
+- card_index: 16
+  source_card_id: v25-release-card:e8a6d76882ba889296a6404f
+  source_tier: phase2r224_reviewed
+  source_fixture_sha256: a8904cdb583a79ad40355d173eb4f969d603c8399485c1f4d427936ef5b97a06
+  fact_ids:
+  - fact:73b218f87155cc55743cb801
+  presentation: diagram
+  image_prompt_sha256: d1c710902ebcbdd8ce8ce6c7a7eace2974ed217d58ef3d8493ff5c5c3849c563
+  display_text_sha256s:
+  - 615b0ae64d8f35c85f7280cb7fdd81eb411f3f95d35c94012844a9d7718668d6
+  - cfe06dfbddf09c02ddcf0b234cf352437c3773a220f9ab1f3b50ed3949ac6902
+  - f7a2484e9e2ceae5fb49730b7638d0c1967938ebfcfc3eaa4ab66c78f806d620
+  - a7f6a3a82ee8b9a2ff875328d3923812e209d7ac9007d00c0c37207399bbc493
+  - 7e746c3fe5ded884e2aa5cd6a7143a1dbfadb00ca470901d5aaef32ae13a0375
+  - 1c67db88468e7c19adf7aa575e6207bb25501b70f76b65199716224a82644b62
+  - 8f457d1e907a39f325a539f3aa6c4cbdfd94474606584cf2087b5f2bf70b359c
+  - 60c896da7fe065769444dde89588563d463fd0de9cd32d0263ee84cf2e2c65ec
+  - 4cc3dca3712420780bf3972633ca4c68853d7af2b26796b343903037c2442247
+  - 9f615a73075b4b6760ec9c9b0b1ed9b8de1151d610ad4c5cc1905f4085f61af7
+  - 75f753e543f7ebaf1e107360ba8d3a84384c3527ccc2273990e139f0ea870ff8
+  - e6d16a59ae78a829538adf0c5ce978733056c6e7ee1363a99ed9d4ee43c6bbd9
+  semantic_edge_sha256s:
+  - 785b0bc39834c465470ef851ee2fc56134e46b66b646db07562128bd62e8baf5
+  - cd5d17db7851111ad5e855dfc4aa2b5db2396c14614c1c9ac68f1a47eb7eb402
+  - fa14f71a06c800787359aa16324ec4b2f36377a804035f9c15624a3fbd23ce58
+  - 2ba69f223fe81c9b194565b138de7f86479c7168af398b7c9d8078ca84121140
+  - 4936fe2be4784978997b75fd882e4dbe30fb7741a6ee4f8d3eb9764930c01fb4
+  - 4e5f625c1fc5e7aa9abf4cfcd2060981ed6d2c316f3bab01a14dfb76efa4efff
+  - a9227bb868e104b05be7f8c2c0457e6572561f7d34d4ac18656d46a5d0bbee1c
+  - 6c2ece5e74ea10f79a9f05d6db34d1c88d5d1fed2fdd1021094eb975afa406ec
+  - d6103d83cea2be264333655d5884a639199257c06fb98aec05934fb4c1a6efc9
+  - 2269677541b89409a88ff88d9465049fb6aa41e2e5224c14e9b61ce2925b1952
+  - a6895c8e4b960d969b181877490b18f3ef3856b090b19b4284a6c0ff99521274
+  content_contract_sha256: c8a5cf5173cb3d569a49fb53bd82b78ed152fbedfc2967be8f68e6f02d9d4161
+step3_release_ready: true
+step4_execution_authorized: false

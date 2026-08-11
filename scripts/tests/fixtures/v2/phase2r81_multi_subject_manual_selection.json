@@ -1,0 +1,150 @@
+[
+  {
+    "selection_id": "selection:r81:jidian:ordered-list:graphite",
+    "subject_id": "jidian",
+    "record_id": "record:r71:08c0396655f88d8838902b29",
+    "presentation": "ordered_list",
+    "page": 2,
+    "anchor_index": 0,
+    "bindings": [
+      {"source_role": "ordered_list_item", "text": "①普通灰铸铁。铸铁中石墨呈片状存在。"},
+      {"source_role": "ordered_list_item", "text": "②可锻铸铁。铸铁中石墨呈团絮状存在；有较高的强度、塑性和冲击韧度。用于制造弹簧支架、低压阀门、低压阀、管接头等受冲击和振动的零件。"},
+      {"source_role": "ordered_list_item", "text": "③球墨铸铁。铸铁中石墨呈球状存在；这类铸铁不仅机械性能比灰口铸铁和可锻铸铁高，生产工艺比可锻铸铁简单，而且还可以通过热处理进一步提高其机械性能。"},
+      {"source_role": "ordered_list_item", "text": "④蠕墨铸铁。铸造前加蠕化剂(镁或稀土)后凝固而制得；在汽车发动机、排气管、柴油机缸盖、制动零件等方面的应用取得了良好的效果。"}
+    ],
+    "list_markers": ["①", "②", "③", "④"],
+    "excluded_noise_kinds": ["header_footer", "brand", "watermark", "contact", "page_number"],
+    "notes": "人工查看 page 2，逐项确认四条铸铁石墨形态分类、编号和顺序；排除页眉、品牌、水印、联系方式和页码。"
+  },
+  {
+    "selection_id": "selection:r81:jingji:formula:compound-interest",
+    "subject_id": "jingji",
+    "record_id": "record:r71:ef69706c3a409e4aeb063a94",
+    "presentation": "formula",
+    "page": 1,
+    "anchor_index": 0,
+    "bindings": [
+      {"source_role": "formula_token", "text": "F=P（1+i）ⁿ。"}
+    ],
+    "token_orders": [1],
+    "excluded_noise_kinds": ["header_footer", "brand", "watermark", "contact", "page_number", "table", "qr_code"],
+    "notes": "人工查看 page 1 高亮学习内容，逐字确认 F、P、全角括号、i、上标 n 和句号；排除课程导学表、品牌、水印、二维码和页眉页脚。"
+  },
+  {
+    "selection_id": "selection:r81:guanli:diagram:dbb",
+    "subject_id": "guanli",
+    "record_id": "record:r71:3436bbf31e66fa83f349afd2",
+    "presentation": "diagram",
+    "page": 1,
+    "anchor_index": 0,
+    "bindings": [
+      {"source_role": "diagram_node", "text": "建设单位"},
+      {"source_role": "diagram_node", "text": "勘察设计单位"},
+      {"source_role": "diagram_node", "text": "施工总承包单位"},
+      {"source_role": "diagram_node", "text": "专业勘察设计单位1"},
+      {"source_role": "diagram_node", "text": "专业勘察设计单位2"},
+      {"source_role": "diagram_node", "text": "专业勘察设计单位m"},
+      {"source_role": "diagram_node", "text": "施工分包单位1"},
+      {"source_role": "diagram_node", "text": "施工分包单位2"},
+      {"source_role": "diagram_node", "text": "施工分包单位n"}
+    ],
+    "diagram_edges": [[1, 2], [1, 3], [2, 4], [2, 5], [2, 6], [3, 7], [3, 8], [3, 9]],
+    "excluded_noise_kinds": ["header_footer", "brand", "watermark", "contact", "page_number", "figure_caption"],
+    "notes": "人工查看 page 1 DBB 合同结构图，逐项确认九个可见节点和八条连接；排除图题、机构标识、水印、联系方式和页眉页脚。"
+  },
+  {
+    "selection_id": "selection:r81:jianzhu:ordered-list:building-classification",
+    "subject_id": "jianzhu",
+    "record_id": "record:r71:193e9998cba9d2a797bd505d",
+    "presentation": "ordered_list",
+    "page": 1,
+    "anchor_index": 0,
+    "bindings": [
+      {"source_role": "ordered_list_item", "text": "①建筑物的分类：民用建筑、工业建筑、农业建筑"}
+    ],
+    "list_markers": ["①"],
+    "excluded_noise_kinds": ["header_footer", "brand", "watermark", "contact", "page_number", "qr_code"],
+    "notes": "人工查看 page 1 高亮学习内容，确认建筑物分类这一条完整 source text；没有把课程框架、红字提示、二维码和水印混入。"
+  },
+  {
+    "selection_id": "selection:r81:shuili:table:survey-instruments",
+    "subject_id": "shuili",
+    "record_id": "record:r71:f1c88ecfcd94a9684271bb24",
+    "presentation": "table",
+    "page": 3,
+    "anchor_index": 0,
+    "bindings": [
+      {"source_role": "table_cell", "text": "测量仪器"},
+      {"source_role": "table_cell", "text": "分类及作用"},
+      {"source_role": "table_cell", "text": "卫星定位系统"},
+      {"source_role": "table_cell", "text": "1. 具有全天候、高精度、自动化、高效益等显著特点\n2. 中国北斗卫星导航系统（BDS）、美国全球定位系统（GPS）、俄罗斯格洛纳斯卫星导航系统（GLONASS）、欧盟伽利略定位系统（GALILEO）"},
+      {"source_role": "table_cell", "text": "水准尺"},
+      {"source_role": "table_cell", "text": "1. 水准测量使用的标尺\n2. 双面水准尺：尺长3m，以厘米为分划单位，黑面尺为主尺，红面尺为辅助尺\n3. 红面底部常数=一根 K=4687mm，另一根 K=4787mm"}
+    ],
+    "table_rows": 3,
+    "table_columns": 2,
+    "excluded_noise_kinds": ["header_footer", "brand", "watermark", "contact", "page_number", "photograph", "caption"],
+    "notes": "人工查看 page 3 测量仪器表，逐格确认 3 行 2 列、表头、两行 cell 文本和换行；排除上方图片、品牌、水印、联系方式和页眉页脚。"
+  },
+  {
+    "selection_id": "selection:r81:kuangye:constraint:survey-control",
+    "subject_id": "kuangye",
+    "record_id": "record:r71:568e78197e5d3a974b3784ef",
+    "presentation": "constraint",
+    "page": 3,
+    "anchor_index": 0,
+    "bindings": [
+      {"source_role": "constraint_token", "text": "一个矿区应采用统一的坐标和高程系统。"},
+      {"source_role": "constraint_token", "text": "平面直角坐标：采用国家3°带高斯平面直角坐标系统。"},
+      {"source_role": "constraint_token", "text": "矿区高程：采用1985国家高程基准。"}
+    ],
+    "token_orders": [1, 2, 3],
+    "excluded_noise_kinds": ["header_footer", "brand", "watermark", "contact", "page_number", "illustration", "qr_code"],
+    "notes": "人工查看 page 3，逐字确认统一坐标/高程系统、国家3°带和1985国家高程基准；排除投影图、编号、水印、二维码和页眉页脚。"
+  },
+  {
+    "selection_id": "selection:r81:tielu:ordered-list:construction-survey",
+    "subject_id": "tielu",
+    "record_id": "record:r71:180274717d543e70a8bb5572",
+    "presentation": "ordered_list",
+    "page": 1,
+    "anchor_index": 0,
+    "bindings": [
+      {"source_role": "ordered_list_item", "text": "①铁路工程建设施工阶段进行的测量工作即施工测量，包括线路施工、桥梁施工、隧道施工、轨道施工、“四电”施工中的测量工作和竣工测量。"}
+    ],
+    "list_markers": ["①"],
+    "excluded_noise_kinds": ["header_footer", "brand", "watermark", "contact", "page_number", "table"],
+    "notes": "人工查看 page 1，确认施工测量定义整条 source text、编号和标点；排除同页表格、品牌、水印、联系方式和页眉页脚。"
+  },
+  {
+    "selection_id": "selection:r81:tongxin:ordered-list:information-types",
+    "subject_id": "tongxin",
+    "record_id": "record:r71:1be594e0a341121eefa6d923",
+    "presentation": "ordered_list",
+    "page": 1,
+    "anchor_index": 0,
+    "bindings": [
+      {"source_role": "ordered_list_item", "text": "用户信息（如语音、数据、图像等）"},
+      {"source_role": "ordered_list_item", "text": "控制信息（如信令信息、路由信息等）"},
+      {"source_role": "ordered_list_item", "text": "网络管理信息"}
+    ],
+    "list_markers": ["", "", ""],
+    "excluded_noise_kinds": ["header_footer", "brand", "watermark", "contact", "page_number", "figure", "exam_table"],
+    "notes": "人工查看 page 1，确认信息类型三个 source-owned block；排除章节统计表、物流图、品牌、水印、二维码和页眉页脚。"
+  },
+  {
+    "selection_id": "selection:r81:ganghang:formula:wave-elements",
+    "subject_id": "ganghang",
+    "record_id": "record:r71:3ca50264b8764fcccc98da4c",
+    "presentation": "formula",
+    "page": 1,
+    "anchor_index": 0,
+    "bindings": [
+      {"source_role": "formula_token", "text": "δ=H/L"},
+      {"source_role": "formula_token", "text": "C=L/T"}
+    ],
+    "token_orders": [1, 2],
+    "excluded_noise_kinds": ["header_footer", "brand", "watermark", "contact", "page_number", "table", "example"],
+    "notes": "人工查看 page 1 波浪要素说明，逐字确认 δ=H/L 与 C=L/T；排除考试统计表、例题、品牌、水印、二维码和页眉页脚。"
+  }
+]

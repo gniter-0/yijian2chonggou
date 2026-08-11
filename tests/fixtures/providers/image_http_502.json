@@ -1,0 +1,10 @@
+{
+  "body": {
+    "error": {
+      "message": "Bad gateway from upstream relay",
+      "type": "server_error"
+    }
+  },
+  "prompt": "Render exam card 2: four labelled roadbed layers, exact source text, no invented wording.",
+  "status": 502
+}

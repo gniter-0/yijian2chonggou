@@ -1,0 +1,59 @@
+{
+  "$defs": {
+    "TeachingQualityEvaluationState": {
+      "enum": [
+        "evaluated",
+        "not_evaluated"
+      ],
+      "title": "TeachingQualityEvaluationState",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "evaluation_state": {
+      "$ref": "#/$defs/TeachingQualityEvaluationState",
+      "default": "evaluated"
+    },
+    "title_failures": {
+      "minimum": 0,
+      "title": "Title Failures",
+      "type": "integer"
+    },
+    "table_structure_failures": {
+      "minimum": 0,
+      "title": "Table Structure Failures",
+      "type": "integer"
+    },
+    "diagram_semantic_failures": {
+      "minimum": 0,
+      "title": "Diagram Semantic Failures",
+      "type": "integer"
+    },
+    "heading_only_fact_failures": {
+      "minimum": 0,
+      "title": "Heading Only Fact Failures",
+      "type": "integer"
+    },
+    "manual_review_items": {
+      "minimum": 0,
+      "title": "Manual Review Items",
+      "type": "integer"
+    },
+    "spatial_watermark_candidates": {
+      "minimum": 0,
+      "title": "Spatial Watermark Candidates",
+      "type": "integer"
+    }
+  },
+  "required": [
+    "title_failures",
+    "table_structure_failures",
+    "diagram_semantic_failures",
+    "heading_only_fact_failures",
+    "manual_review_items",
+    "spatial_watermark_candidates"
+  ],
+  "title": "TeachingQualityGate",
+  "type": "object"
+}

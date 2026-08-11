@@ -1,0 +1,20 @@
+schema_version: "2.0"
+policy_id: core_with_examples_v1
+revision: 1
+display_name: 核心知识卡与讲解型例题
+included_roles:
+  - core
+  - worked_example
+optional_roles:
+  - heading
+  - caption
+  - exam_tag
+excluded_roles:
+  - exercise_question
+  - exercise_option
+  - exercise_answer
+  - exercise_explanation
+manual_review_roles:
+  - unknown
+allow_fact_promotion_from_excluded: false
+description: 保留核心内容和讲解型例题，但独立练习题仍进入题库视图。

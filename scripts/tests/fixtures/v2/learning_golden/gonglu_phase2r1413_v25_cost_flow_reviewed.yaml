@@ -1,0 +1,158 @@
+schema_version: '2.0'
+fixture_id: gonglu_phase2r1413_v25_cost_flow_reviewed
+registry_id: gonglu_phase0_v1
+material_profile_id: yijian_gonglu_2026
+sample:
+  sample_id: gonglu_62_cost_flow_incident
+  facts:
+  - fact_key: cost.project-budget-formula
+    fact_type: formula
+    title: 项目预算总成本公式
+    title_aliases: []
+    primary_anchors:
+    - text: 项目预算总成本=
+      kind: formula
+    required_terms:
+    - 项目预算总成本=
+    table_structure: null
+    allow_heading_only: false
+    review:
+      state: reviewed
+      reviewer: codex_operator_phase2r1413_manual_audit
+      reviewed_at_utc: '2026-07-29T15:20:00Z'
+      basis: 原始 V2 第1页公式 crop 可读；公式左值、求和符号、预算清单单价和清单工程量均由该唯一 formula Evidence 支持。
+  - fact_key: cost.mechanical-rental-formula
+    fact_type: formula
+    title: 机械租赁费公式
+    title_aliases: []
+    primary_anchors:
+    - text: 机械租赁费=Σ［（机械租赁单价+使用费）×
+      kind: table_cell
+    - text: 租赁数量×租赁时间］
+      kind: table_cell
+    - text: 机械租赁费=Σ（机械租赁单价×租赁数量×
+      kind: table_cell
+    - text: 租赁时间）
+      kind: table_cell
+    required_terms:
+    - 机械租赁费=Σ［（机械租赁单价+使用费）×
+    - 租赁数量×租赁时间］
+    - 机械租赁费=Σ（机械租赁单价×租赁数量×
+    - 租赁时间）
+    table_structure: null
+    allow_heading_only: false
+    review:
+      state: reviewed
+      reviewer: codex_operator_phase2r1413_manual_audit
+      reviewed_at_utc: '2026-07-29T15:20:00Z'
+      basis: 原始 V2 第2页 2×2 租赁机械表的两条 formula cell 分别给出项目经理部承担和出租方承担使用费时的完整公式；每条公式均跨两个原始 cell span，四个 span 均需保留，不能截断或择一。
+  - fact_key: cost.control-enumeration
+    fact_type: enumeration
+    title: 成本控制内容
+    title_aliases: []
+    primary_anchors:
+    - text: ①人工费的控制
+      kind: list_item
+    - text: ⑤现场管理费的控制
+      kind: list_item
+    required_terms:
+    - ①人工费的控制
+    - ⑤现场管理费的控制
+    table_structure: null
+    allow_heading_only: false
+    review:
+      state: reviewed
+      reviewer: codex_operator_phase2r1413_manual_audit
+      reviewed_at_utc: '2026-07-29T15:20:00Z'
+      basis: 原始 V2 第5页同一表格 cell 内的①至⑤连续列举清晰可见；①和⑤构成受控有序枚举的闭合端点。
+  - fact_key: cost.plan-variance-formula
+    fact_type: formula
+    title: 计划成本偏差公式
+    title_aliases: []
+    primary_anchors:
+    - text: 计划成本偏差=施工预算成本-责任目标成本
+      kind: formula
+    required_terms:
+    - 计划成本偏差=施工预算成本-责任目标成本
+    table_structure: null
+    allow_heading_only: false
+    review:
+      state: reviewed
+      reviewer: codex_operator_phase2r1413_manual_audit
+      reviewed_at_utc: '2026-07-29T15:20:00Z'
+      basis: 原始 V2 第4页公式 crop 与正文比较说明一致；等式两侧及减号后的责任目标成本均可确认。
+  - fact_key: cost.budget-cost-structure
+    fact_type: diagram_relation
+    title: 标后预算总费用结构
+    title_aliases: []
+    primary_anchors:
+    - text: 项目预算总成本
+      kind: diagram_node
+    required_terms: []
+    table_structure: null
+    allow_heading_only: false
+    review:
+      state: reviewed
+      reviewer: codex_operator_phase2r1413_manual_audit
+      reviewed_at_utc: '2026-07-29T15:20:00Z'
+      basis: 原始 V2 第1页 figure crop 的费用结构树可人工确认；图示 Fact 仅依赖 figure Evidence 和独立 semantic_v2 边，不伪造文本 anchor。
+  cards:
+  - card_key: cost.formulas-card
+    title: 成本预算与偏差公式
+    primary_fact_keys:
+    - cost.project-budget-formula
+    - cost.mechanical-rental-formula
+    - cost.plan-variance-formula
+    presentation: formula
+    split_reason: 三条源公式均为施工成本预算与偏差计算规则，且每条公式保留独立完整表达式。
+    short_card_exception: null
+    review:
+      state: reviewed
+      reviewer: codex_operator_phase2r1413_manual_audit
+      reviewed_at_utc: '2026-07-29T15:20:00Z'
+      basis: 编组仅由三条已审核 formula Fact 的同一成本计算主题和原始 Evidence provenance 决定，不使用旧 Card Golden。
+  - card_key: cost.control-card
+    title: 成本控制内容
+    primary_fact_keys:
+    - cost.control-enumeration
+    presentation: ordered_list
+    split_reason: ①至⑤为同一 source cell 中连续且闭合的成本控制枚举。
+    short_card_exception: null
+    review:
+      state: reviewed
+      reviewer: codex_operator_phase2r1413_manual_audit
+      reviewed_at_utc: '2026-07-29T15:20:00Z'
+      basis: Card 仅承载完整有序枚举，未把任何表格 composition 或无关成本条目混入。
+  - card_key: cost.structure-card
+    title: 标后预算总费用结构
+    primary_fact_keys:
+    - cost.budget-cost-structure
+    presentation: diagram
+    split_reason: 费用包含关系由已审核 semantic_v2 图示节点和边本地投影。
+    short_card_exception: null
+    review:
+      state: reviewed
+      reviewer: codex_operator_phase2r1413_manual_audit
+      reviewed_at_utc: '2026-07-29T15:20:00Z'
+      basis: Card 只消费同轮独立 semantic_v2 sidecar 的原始 figure Evidence 和可确认关系边。
+  diagrams:
+  - review_id: diagram:83c9c0d82088d5fa43c365b4
+    figure_evidence_id: ev:4af15b958587bb00fcaac211
+    review_title: 标后预算总费用结构
+    required_nodes:
+    - 标后预算总费用
+    - 上缴企业费用
+    - 项目预算总成本
+    required_edges:
+    - source_label: 标后预算总费用
+      relation: 包含
+      target_label: 上缴企业费用
+    - source_label: 标后预算总费用
+      relation: 包含
+      target_label: 项目预算总成本
+    review:
+      state: reviewed
+      reviewer: codex_operator_phase2r1413_manual_audit
+      reviewed_at_utc: '2026-07-29T15:20:00Z'
+      basis: 原始 figure crop 明确显示标后预算总费用向上缴企业费用、项目预算总成本的两个包含分支；其余关系由独立 sidecar 完整记录。
+  proposal_dispositions: []

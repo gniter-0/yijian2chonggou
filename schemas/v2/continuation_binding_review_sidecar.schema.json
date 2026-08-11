@@ -1,0 +1,287 @@
+{
+  "$defs": {
+    "ContinuationClosureReview": {
+      "additionalProperties": false,
+      "properties": {
+        "review_id": {
+          "pattern": "^continuation-review:[0-9a-f]{24}$",
+          "title": "Review Id",
+          "type": "string"
+        },
+        "continuation_id": {
+          "pattern": "^continuation:[0-9a-f]{24}$",
+          "title": "Continuation Id",
+          "type": "string"
+        },
+        "source_projection_id": {
+          "pattern": "^step2a-projection:[0-9a-f]{24}$",
+          "title": "Source Projection Id",
+          "type": "string"
+        },
+        "source_manifest_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Source Manifest Sha256",
+          "type": "string"
+        },
+        "source_page_num": {
+          "minimum": 1,
+          "title": "Source Page Num",
+          "type": "integer"
+        },
+        "source_section_id": {
+          "pattern": "^section:[0-9a-f]{24}$",
+          "title": "Source Section Id",
+          "type": "string"
+        },
+        "source_anchor_span_ids": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Source Anchor Span Ids",
+          "type": "array"
+        },
+        "adjacent_projection_id": {
+          "pattern": "^step2a-projection:[0-9a-f]{24}$",
+          "title": "Adjacent Projection Id",
+          "type": "string"
+        },
+        "adjacent_manifest_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Adjacent Manifest Sha256",
+          "type": "string"
+        },
+        "adjacent_page_num": {
+          "minimum": 1,
+          "title": "Adjacent Page Num",
+          "type": "integer"
+        },
+        "adjacent_section_id": {
+          "pattern": "^section:[0-9a-f]{24}$",
+          "title": "Adjacent Section Id",
+          "type": "string"
+        },
+        "closure_anchor_span_ids": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Closure Anchor Span Ids",
+          "type": "array"
+        },
+        "basis": {
+          "maxLength": 1000,
+          "minLength": 16,
+          "title": "Basis",
+          "type": "string"
+        }
+      },
+      "required": [
+        "review_id",
+        "continuation_id",
+        "source_projection_id",
+        "source_manifest_sha256",
+        "source_page_num",
+        "source_section_id",
+        "source_anchor_span_ids",
+        "adjacent_projection_id",
+        "adjacent_manifest_sha256",
+        "adjacent_page_num",
+        "adjacent_section_id",
+        "closure_anchor_span_ids",
+        "basis"
+      ],
+      "title": "ContinuationClosureReview",
+      "type": "object"
+    },
+    "ContinuationMarkerDisposition": {
+      "description": "Human disposition for a detector-created continuation record.",
+      "enum": [
+        "page_continuation",
+        "inline_direction_marker",
+        "unresolved"
+      ],
+      "title": "ContinuationMarkerDisposition",
+      "type": "string"
+    },
+    "ContinuationMarkerReview": {
+      "additionalProperties": false,
+      "properties": {
+        "continuation_id": {
+          "pattern": "^continuation:[0-9a-f]{24}$",
+          "title": "Continuation Id",
+          "type": "string"
+        },
+        "disposition": {
+          "$ref": "#/$defs/ContinuationMarkerDisposition"
+        },
+        "projection_id": {
+          "pattern": "^step2a-projection:[0-9a-f]{24}$",
+          "title": "Projection Id",
+          "type": "string"
+        },
+        "source_manifest_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Source Manifest Sha256",
+          "type": "string"
+        },
+        "page_num": {
+          "minimum": 1,
+          "title": "Page Num",
+          "type": "integer"
+        },
+        "section_id": {
+          "pattern": "^section:[0-9a-f]{24}$",
+          "title": "Section Id",
+          "type": "string"
+        },
+        "anchor_span_ids": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Anchor Span Ids",
+          "type": "array"
+        },
+        "marker_token_span_ids": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Marker Token Span Ids",
+          "type": "array"
+        },
+        "source_evidence_ids": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Source Evidence Ids",
+          "type": "array"
+        },
+        "basis": {
+          "maxLength": 1000,
+          "minLength": 16,
+          "title": "Basis",
+          "type": "string"
+        }
+      },
+      "required": [
+        "continuation_id",
+        "disposition",
+        "projection_id",
+        "source_manifest_sha256",
+        "page_num",
+        "section_id",
+        "anchor_span_ids",
+        "marker_token_span_ids",
+        "source_evidence_ids",
+        "basis"
+      ],
+      "title": "ContinuationMarkerReview",
+      "type": "object"
+    },
+    "ContinuationReviewState": {
+      "enum": [
+        "draft",
+        "reviewed"
+      ],
+      "title": "ContinuationReviewState",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "default": "2.0",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "sidecar_version": {
+      "default": "continuation_review_v1",
+      "title": "Sidecar Version",
+      "type": "string"
+    },
+    "sidecar_id": {
+      "pattern": "^continuation-sidecar:[0-9a-f]{24}$",
+      "title": "Sidecar Id",
+      "type": "string"
+    },
+    "sample_id": {
+      "pattern": "^[a-z0-9][a-z0-9._-]*$",
+      "title": "Sample Id",
+      "type": "string"
+    },
+    "source_document_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Source Document Sha256",
+      "type": "string"
+    },
+    "source_pdf_path": {
+      "minLength": 1,
+      "title": "Source Pdf Path",
+      "type": "string"
+    },
+    "source_pdf_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Source Pdf Sha256",
+      "type": "string"
+    },
+    "state": {
+      "$ref": "#/$defs/ContinuationReviewState"
+    },
+    "reviewer": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Reviewer"
+    },
+    "reviewed_at_utc": {
+      "anyOf": [
+        {
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}Z$",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Reviewed At Utc"
+    },
+    "review_basis": {
+      "maxLength": 1000,
+      "minLength": 16,
+      "title": "Review Basis",
+      "type": "string"
+    },
+    "marker_reviews": {
+      "items": {
+        "$ref": "#/$defs/ContinuationMarkerReview"
+      },
+      "title": "Marker Reviews",
+      "type": "array"
+    },
+    "closure_reviews": {
+      "default": [],
+      "items": {
+        "$ref": "#/$defs/ContinuationClosureReview"
+      },
+      "title": "Closure Reviews",
+      "type": "array"
+    }
+  },
+  "required": [
+    "sidecar_id",
+    "sample_id",
+    "source_document_sha256",
+    "source_pdf_path",
+    "source_pdf_sha256",
+    "state",
+    "review_basis",
+    "marker_reviews"
+  ],
+  "title": "ContinuationBindingReviewSidecar",
+  "type": "object"
+}

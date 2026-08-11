@@ -1,0 +1,85 @@
+{
+  "$defs": {
+    "FactType": {
+      "enum": [
+        "definition",
+        "classification",
+        "enumeration",
+        "procedure",
+        "condition",
+        "threshold",
+        "formula",
+        "comparison",
+        "exception",
+        "composition",
+        "diagram_relation",
+        "visual_reference",
+        "exam_note",
+        "example",
+        "exercise"
+      ],
+      "title": "FactType",
+      "type": "string"
+    },
+    "TableAtomicSubfactKind": {
+      "description": "One independently teachable rule detected in a complete table cell.",
+      "enum": [
+        "condition",
+        "threshold",
+        "material_rule"
+      ],
+      "title": "TableAtomicSubfactKind",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "description": "A deterministic table-cell clause that needs its own non-composition Fact.",
+  "properties": {
+    "requirement_id": {
+      "pattern": "^table-subfact:[0-9a-f]{24}$",
+      "title": "Requirement Id",
+      "type": "string"
+    },
+    "table_evidence_id": {
+      "title": "Table Evidence Id",
+      "type": "string"
+    },
+    "cell_evidence_id": {
+      "title": "Cell Evidence Id",
+      "type": "string"
+    },
+    "anchor_span_id": {
+      "pattern": "^span:[0-9a-f]{24}$",
+      "title": "Anchor Span Id",
+      "type": "string"
+    },
+    "kind": {
+      "$ref": "#/$defs/TableAtomicSubfactKind"
+    },
+    "expected_fact_type": {
+      "$ref": "#/$defs/FactType"
+    },
+    "required_assertion": {
+      "minLength": 2,
+      "title": "Required Assertion",
+      "type": "string"
+    },
+    "required_assertion_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Required Assertion Sha256",
+      "type": "string"
+    }
+  },
+  "required": [
+    "requirement_id",
+    "table_evidence_id",
+    "cell_evidence_id",
+    "anchor_span_id",
+    "kind",
+    "expected_fact_type",
+    "required_assertion",
+    "required_assertion_sha256"
+  ],
+  "title": "TableAtomicSubfactRequirement",
+  "type": "object"
+}

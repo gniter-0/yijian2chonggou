@@ -1,0 +1,105 @@
+{
+  "$defs": {
+    "CardPresentation": {
+      "enum": [
+        "text",
+        "ordered_list",
+        "table",
+        "diagram",
+        "formula",
+        "constraint",
+        "threshold",
+        "visual_reference"
+      ],
+      "title": "CardPresentation",
+      "type": "string"
+    },
+    "ShortCardException": {
+      "description": "Explicitly reviewed reasons why a compact learning card is acceptable.",
+      "enum": [
+        "atomic_formula",
+        "diagram_summary",
+        "compact_enumeration",
+        "identifier_only"
+      ],
+      "title": "ShortCardException",
+      "type": "string"
+    },
+    "Step2BCardProposal": {
+      "additionalProperties": false,
+      "properties": {
+        "proposal_key": {
+          "pattern": "^card-proposal:[a-z0-9][a-z0-9._-]*$",
+          "title": "Proposal Key",
+          "type": "string"
+        },
+        "title": {
+          "maxLength": 64,
+          "minLength": 2,
+          "title": "Title",
+          "type": "string"
+        },
+        "primary_fact_ids": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Primary Fact Ids",
+          "type": "array"
+        },
+        "secondary_fact_ids": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "title": "Secondary Fact Ids",
+          "type": "array"
+        },
+        "presentation": {
+          "$ref": "#/$defs/CardPresentation"
+        },
+        "split_reason": {
+          "maxLength": 240,
+          "minLength": 6,
+          "title": "Split Reason",
+          "type": "string"
+        },
+        "short_card_exception": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ShortCardException"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        }
+      },
+      "required": [
+        "proposal_key",
+        "title",
+        "primary_fact_ids",
+        "presentation",
+        "split_reason"
+      ],
+      "title": "Step2BCardProposal",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "description": "The only JSON shape a real Step 2B model may return.",
+  "properties": {
+    "proposals": {
+      "items": {
+        "$ref": "#/$defs/Step2BCardProposal"
+      },
+      "title": "Proposals",
+      "type": "array"
+    }
+  },
+  "required": [
+    "proposals"
+  ],
+  "title": "Step2BResultPayload",
+  "type": "object"
+}

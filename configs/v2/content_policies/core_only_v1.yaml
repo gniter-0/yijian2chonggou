@@ -1,0 +1,35 @@
+schema_version: "2.0"
+policy_id: core_only_v1
+revision: 2
+display_name: 核心知识卡（排除例题）
+included_roles:
+  - core
+optional_roles: []
+excluded_roles:
+  - worked_example
+  - exercise_question
+  - exercise_option
+  - exercise_answer
+  - exercise_explanation
+  - heading
+  - caption
+  - exam_tag
+manual_review_roles:
+  - unknown
+known_noise_patterns:
+  - '3849178'
+  - 'www\.haixue\.com'
+  - '^嗨字$'
+presentation_transform_rules:
+  - rule_id: watermark-haixue-embedded
+    pattern: '嗨学'
+    action: remove_matches
+  - rule_id: example-tail-embedded
+    pattern: '(?ms)(?:^|\n)\s*(?:【?例题】?|例题[：:]|例如[：:]|【?答案】?|答案[：:]|答[：:]).*$'
+    action: truncate_from_match
+allow_fact_promotion_from_excluded: false
+description: >-
+  保留完整证据，但知识卡只消费教材核心内容。例题、答案和解析使用
+  excluded_by_policy，不能标记为 ignored，也不能自动提升为核心事实。嵌入核心
+  Evidence 的水印和例题通过 presentation transform 从派生 Fact/Card 隐去，原始
+  Evidence 与 span 审计记录保持不变。

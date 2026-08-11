@@ -1,0 +1,105 @@
+schema_version: "2.0"
+fixture_version: table_continuation_request_candidate_v3
+fixture_id: gonglu_24_phase2r09_v17_table_continuation_candidates
+state: reviewed
+review:
+  state: reviewed
+  reviewer: codex_operator_phase2r091
+  reviewed_at_utc: "2026-07-28T03:06:56Z"
+  basis: "Phase 2R.0.9.1 逐项核验 11 条 V17 Fact 与 5 张 Card：均仅回链 V17 request、不可变 Evidence、reviewed 续接 binding 和 reviewed 刚度表 binding；本审核不把 deterministic fake response 视为真实模型结果。"
+sample_id: gonglu_24_continuation_real
+material_profile_id: yijian_gonglu_2026
+source_request_id: "step2a-request:e4b508d96056b21905c160958e5d467dc452d2c5f801dcd818d10003f94552f9"
+source_request_version: step2a_contract_v17_table_continuation_integration
+source_request_payload_sha256: ab633d4a1a71d1e4c85cfb495468a5fdb7e7043de5b343de28ea6e87040db669
+source_model_input_sha256: 060d52097e1b2209beb0754461d56ddc00f5feea44722fbe387d0cd02384280d
+source_response_sha256: 38c22acc4616aaf69e892454d5da0a5dc0d035eadf9f02b3aa80813655987e77
+table_continuation_input_id: "table-request-input:dd8e24a2702f75da1bc80a6e"
+table_continuation_binding_id: "table-continuation:7c0923bfb0e6137de786def5"
+table_continuation_binding_fingerprint_sha256: 7c0923bfb0e6137de786def569b10b27dc38e6c9c4a2bb8f48d1158d940f827b
+table_continuation_sidecar_sha256: 1d01673fc01972c380d0e9413279c48d19e99f3fdd393a5f327f0e338c0bd728
+continuation_review_sidecar_id: "continuation-sidecar:46e3afa0309c7b2126ee38f5"
+continuation_review_sidecar_sha256: 7c8ac8a0503be080e93b5cb1b2fd87fc0d116c0ffb1753fb16fceafeaaa4fd64
+facts:
+  - proposal_key: "proposal:4dc25fafd6ded94c6304d1e2"
+    canonical_title_candidate: "模板、支架和拱架设计荷载"
+    fact_type: enumeration
+    primary_anchor_span_ids: ["span:cea2035ddacabc721b271e21", "span:a1dfa1f665ec21bdb3b97075", "span:9d62f96bafdb8f9472a44f23", "span:bb66d05868e704c34e0c6369", "span:2c796fa64b63ca67d6eae4a5", "span:82018b60699459ef22613315", "span:9fa1963ec8e8550b1192cbee", "span:13ae8ebf3ed18d1fb4b3c0a7", "span:267ce7a9b632f1a1bdc5f20f", "span:014f65f569ffe6811eac35fa", "span:590551ea7dc2068a9c0e1cb4", "span:3fe62f2d39d3c4fb615b190d", "span:898df627d76ee86d34977d70", "span:44c778bbaa62168eabd5d9a3"]
+    review: {state: reviewed, reviewer: codex_operator_phase2r091, reviewed_at_utc: "2026-07-28T03:06:56Z", basis: "核验原 PDF 第1页①②与第2页③至⑧及 reviewed continuation binding；14 个主 span 覆盖八项荷载，all-items 枚举闭合，标题与类型准确。"}
+  - proposal_key: "proposal:01074dd278d1ef377f600d51"
+    canonical_title_candidate: "模板和支架要求表"
+    fact_type: composition
+    primary_anchor_span_ids: ["span:476ebd60eb860a6bb19256e1", "span:51a283208982491fcc193a60", "span:c16daf27d09188296c4569f0", "span:b919486f40b4ac019800c011", "span:009fdbc4b16370bbab8cb1f4", "span:27fe6799c472e389766c5cf4", "span:6484bb3d2e48843a9788b5a9", "span:23620274e8a990e169e07352", "span:3c89620e5dbec074dae5e483", "span:7407086a2d1ff27d1b8718de", "span:08670bbde10f3ee673f23225", "span:9889154bd9d76de0be530666", "span:8e89102fc8dc7e6b288b5a3c", "span:317ee5f329cbfec7820662de"]
+    review: {state: reviewed, reviewer: codex_operator_phase2r091, reviewed_at_utc: "2026-07-28T03:06:56Z", basis: "核验原 PDF 第1页“模板和支架要求”完整表格；表头、模板行、支架行及其可安全投影 span 均在 V17 主 anchor 集合内，composition Fact 不替代下列原子规则。"}
+  - proposal_key: "proposal:33246a15debbcd74abb2216e"
+    canonical_title_candidate: "模板和支架强度刚度稳定性要求"
+    fact_type: condition
+    primary_anchor_span_ids: ["span:51a283208982491fcc193a60"]
+    review: {state: reviewed, reviewer: codex_operator_phase2r091, reviewed_at_utc: "2026-07-28T03:06:56Z", basis: "核验第1页模板行（2）条；“应具有足够的强度、刚度和稳定性”完整落在唯一主 span，作为独立 condition Fact，未与整表 Fact 混淆。"}
+  - proposal_key: "proposal:9bc816040168ecc719bb1f07"
+    canonical_title_candidate: "模板接触面隔离剂要求"
+    fact_type: condition
+    primary_anchor_span_ids: ["span:c16daf27d09188296c4569f0"]
+    review: {state: reviewed, reviewer: codex_operator_phase2r091, reviewed_at_utc: "2026-07-28T03:06:56Z", basis: "核验第1页模板行（4）条；隔离剂要求及“不得采用废机油等油料”限制同在唯一主 span，标题和 condition 类型准确。"}
+  - proposal_key: "proposal:a91648942b2a747f24774b52"
+    canonical_title_candidate: "模板吊环钢筋要求"
+    fact_type: condition
+    primary_anchor_span_ids: ["span:b919486f40b4ac019800c011"]
+    review: {state: reviewed, reviewer: codex_operator_phase2r091, reviewed_at_utc: "2026-07-28T03:06:56Z", basis: "核验第1页模板行（5）条前半；HPB300 与严禁冷加工钢筋制作规则均由唯一主 span 直接支持，作为吊环钢筋 condition Fact 独立保留。"}
+  - proposal_key: "proposal:65fabcd9598ea45ce04a3d14"
+    canonical_title_candidate: "模板吊环拉应力限值"
+    fact_type: threshold
+    primary_anchor_span_ids: ["span:27fe6799c472e389766c5cf4"]
+    review: {state: reviewed, reviewer: codex_operator_phase2r091, reviewed_at_utc: "2026-07-28T03:06:56Z", basis: "核验第1页模板行（5）条后半；模板自重标准值条件与65MPa上限在唯一主 span 完整共现，threshold 类型和标题准确。"}
+  - proposal_key: "proposal:89db93974465899e6d97dad4"
+    canonical_title_candidate: "支架与应急安全通道连接限制"
+    fact_type: condition
+    primary_anchor_span_ids: ["span:08670bbde10f3ee673f23225"]
+    review: {state: reviewed, reviewer: codex_operator_phase2r091, reviewed_at_utc: "2026-07-28T03:06:56Z", basis: "核验第1页支架行（6）条；“支架不应与应急安全通道相连”完整位于唯一主 span，condition 类型准确。"}
+  - proposal_key: "proposal:a5308b9f5d9ffbac301180fd"
+    canonical_title_candidate: "刚度验算要求表"
+    fact_type: composition
+    primary_anchor_span_ids: ["span:da29f480e10fe93e825a7dec", "span:a812441493c325cc2deb9596", "span:db4c9c76f16395683824ff02", "span:caafc511635166321c62c6eb", "span:d87fbe681f7f5144123448fc", "span:9e2eb69480434c17c1b9c924", "span:5bd73477abf10c882fe1419e", "span:dd054a1f848cc85d88b1ab0b"]
+    review: {state: reviewed, reviewer: codex_operator_phase2r091, reviewed_at_utc: "2026-07-28T03:06:56Z", basis: "核验 reviewed 第2至3页刚度验算 table-continuation binding；表题、①②、③源片段与1/400闭合、④、⑤及其说明共8个 span 全覆盖，完整表 composition Fact 成立。"}
+  - proposal_key: "proposal:4f4873768fdf2f9539295180"
+    canonical_title_candidate: "外露模板挠度限值"
+    fact_type: threshold
+    primary_anchor_span_ids: ["span:a812441493c325cc2deb9596"]
+    review: {state: reviewed, reviewer: codex_operator_phase2r091, reviewed_at_utc: "2026-07-28T03:06:56Z", basis: "核验刚度验算表①；外露模板与1/400阈值完整位于第2页唯一主 span，作为整表的原子 threshold Fact 合理。"}
+  - proposal_key: "proposal:b3c3893595463a2d055efcba"
+    canonical_title_candidate: "隐蔽模板挠度限值"
+    fact_type: threshold
+    primary_anchor_span_ids: ["span:db4c9c76f16395683824ff02"]
+    review: {state: reviewed, reviewer: codex_operator_phase2r091, reviewed_at_utc: "2026-07-28T03:06:56Z", basis: "核验刚度验算表②；隐蔽模板与1/250阈值完整位于第2页唯一主 span，作为整表的原子 threshold Fact 合理。"}
+  - proposal_key: "proposal:08018541233130db8c94f501"
+    canonical_title_candidate: "支架受荷载后挠曲杆件弹性挠度限值"
+    fact_type: threshold
+    primary_anchor_span_ids: ["span:caafc511635166321c62c6eb", "span:d87fbe681f7f5144123448fc"]
+    review: {state: reviewed, reviewer: codex_operator_phase2r091, reviewed_at_utc: "2026-07-28T03:06:56Z", basis: "核验刚度验算表③的第2页源片段与第3页1/400。闭合片段；两主 span 是 reviewed binding 指定的唯一闭合对，完整阈值 assertion、标题和类型均成立。"}
+cards:
+  - card_key: formwork.design-loads
+    title: "模板、支架和拱架设计荷载"
+    presentation: ordered_list
+    primary_proposal_keys: ["proposal:4dc25fafd6ded94c6304d1e2"]
+    review: {state: reviewed, reviewer: codex_operator_phase2r091, reviewed_at_utc: "2026-07-28T03:06:56Z", basis: "核验唯一跨页八项荷载 enumeration Fact；标题精确，ordered_list 保留编号顺序，单 Fact 编组无遗漏或重复。"}
+  - card_key: formwork.requirements-table
+    title: "模板和支架要求"
+    presentation: table
+    primary_proposal_keys: ["proposal:01074dd278d1ef377f600d51"]
+    review: {state: reviewed, reviewer: codex_operator_phase2r091, reviewed_at_utc: "2026-07-28T03:06:56Z", basis: "核验完整“模板和支架要求表” composition Fact；table presentation 保留行列关系，标题不把原子规则误合并为普通文本。"}
+  - card_key: formwork.requirements-constraints
+    title: "模板和支架施工限制"
+    presentation: constraint
+    primary_proposal_keys: ["proposal:33246a15debbcd74abb2216e", "proposal:9bc816040168ecc719bb1f07", "proposal:a91648942b2a747f24774b52", "proposal:65fabcd9598ea45ce04a3d14", "proposal:89db93974465899e6d97dad4"]
+    review: {state: reviewed, reviewer: codex_operator_phase2r091, reviewed_at_utc: "2026-07-28T03:06:56Z", basis: "核验五条第1页模板/支架原子规则；65MPa阈值作为吊环限制子项与四条 condition 同组，constraint presentation 与教学编组一致。"}
+  - card_key: formwork.stiffness-table
+    title: "刚度验算要求"
+    presentation: table
+    primary_proposal_keys: ["proposal:a5308b9f5d9ffbac301180fd"]
+    review: {state: reviewed, reviewer: codex_operator_phase2r091, reviewed_at_utc: "2026-07-28T03:06:56Z", basis: "核验 V17 受控第2至3页刚度表输入及8-span composition Fact；table presentation 是保留跨页表格关系的唯一合适形式。"}
+  - card_key: formwork.deflection-limits
+    title: "模板和支架挠度限制"
+    presentation: threshold
+    primary_proposal_keys: ["proposal:4f4873768fdf2f9539295180", "proposal:b3c3893595463a2d055efcba", "proposal:08018541233130db8c94f501"]
+    review: {state: reviewed, reviewer: codex_operator_phase2r091, reviewed_at_utc: "2026-07-28T03:06:56Z", basis: "核验刚度表①外露、②隐蔽、③支架杆件三项完整阈值；③已跨页闭合，三条均属同一挠度限制主题，threshold presentation 和编组准确。"}
+review_basis: "Phase 2R.0.9.1 人工定版：V17 仅为第2至3页刚度验算表引入经审核的受控输入；11条 Fact 和5张 Card 已逐项审核为 reviewed，未复用或升级 V16 产物，也不代表真实模型输出。"

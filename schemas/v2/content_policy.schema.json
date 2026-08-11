@@ -1,0 +1,150 @@
+{
+  "$defs": {
+    "PresentationTransformAction": {
+      "description": "A deterministic, non-destructive change applied only to derived text.",
+      "enum": [
+        "remove_matches",
+        "truncate_from_match"
+      ],
+      "title": "PresentationTransformAction",
+      "type": "string"
+    },
+    "PresentationTransformRule": {
+      "additionalProperties": false,
+      "description": "Policy-owned render transform; never changes the source EvidenceUnit.",
+      "properties": {
+        "rule_id": {
+          "pattern": "^[a-z0-9][a-z0-9._-]*$",
+          "title": "Rule Id",
+          "type": "string"
+        },
+        "pattern": {
+          "minLength": 1,
+          "title": "Pattern",
+          "type": "string"
+        },
+        "action": {
+          "$ref": "#/$defs/PresentationTransformAction"
+        }
+      },
+      "required": [
+        "rule_id",
+        "pattern",
+        "action"
+      ],
+      "title": "PresentationTransformRule",
+      "type": "object"
+    },
+    "SemanticRole": {
+      "enum": [
+        "core",
+        "worked_example",
+        "exercise_question",
+        "exercise_option",
+        "exercise_answer",
+        "exercise_explanation",
+        "exam_tag",
+        "heading",
+        "caption",
+        "header_footer",
+        "watermark",
+        "page_number",
+        "decorative",
+        "unknown"
+      ],
+      "title": "SemanticRole",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "default": "2.0",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "policy_id": {
+      "pattern": "^[a-z0-9][a-z0-9._-]*$",
+      "title": "Policy Id",
+      "type": "string"
+    },
+    "revision": {
+      "minimum": 1,
+      "title": "Revision",
+      "type": "integer"
+    },
+    "display_name": {
+      "title": "Display Name",
+      "type": "string"
+    },
+    "included_roles": {
+      "items": {
+        "$ref": "#/$defs/SemanticRole"
+      },
+      "title": "Included Roles",
+      "type": "array",
+      "uniqueItems": true
+    },
+    "excluded_roles": {
+      "default": [],
+      "items": {
+        "$ref": "#/$defs/SemanticRole"
+      },
+      "title": "Excluded Roles",
+      "type": "array",
+      "uniqueItems": true
+    },
+    "optional_roles": {
+      "default": [],
+      "items": {
+        "$ref": "#/$defs/SemanticRole"
+      },
+      "title": "Optional Roles",
+      "type": "array",
+      "uniqueItems": true
+    },
+    "manual_review_roles": {
+      "default": [],
+      "items": {
+        "$ref": "#/$defs/SemanticRole"
+      },
+      "title": "Manual Review Roles",
+      "type": "array",
+      "uniqueItems": true
+    },
+    "known_noise_patterns": {
+      "default": [],
+      "items": {
+        "type": "string"
+      },
+      "title": "Known Noise Patterns",
+      "type": "array"
+    },
+    "presentation_transform_rules": {
+      "default": [],
+      "items": {
+        "$ref": "#/$defs/PresentationTransformRule"
+      },
+      "title": "Presentation Transform Rules",
+      "type": "array"
+    },
+    "allow_fact_promotion_from_excluded": {
+      "default": false,
+      "title": "Allow Fact Promotion From Excluded",
+      "type": "boolean"
+    },
+    "description": {
+      "default": "",
+      "title": "Description",
+      "type": "string"
+    }
+  },
+  "required": [
+    "policy_id",
+    "revision",
+    "display_name",
+    "included_roles"
+  ],
+  "title": "ContentPolicy",
+  "type": "object"
+}

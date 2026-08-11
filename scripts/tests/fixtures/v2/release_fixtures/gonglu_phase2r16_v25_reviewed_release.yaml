@@ -1,0 +1,1557 @@
+schema_version: phase2r16_v25_reviewed_release_fixture_v1
+fixture_id: gonglu_phase2r16_v25_reviewed_release
+source_phase: 2R.1.5.2
+source_refresh_report_path: data/semantic_llm_v2/phase2r152_five_golden_release_readiness_refresh_run1/phase2r152_five_golden_release_readiness_refresh_report.json
+source_refresh_report_sha256: 5074b5c10841c0088e593e15801154bea83809e057e0e713b473c4937e4b6f92
+reviewer: codex_operator_phase2r16_final_manual_audit
+reviewed_at_utc: '2026-07-29T19:00:00Z'
+samples:
+- sample_id: gonglu_01_text_list
+  source_step2a_request_id: step2a-request:aca4ae0c141ec669659673d7f7bc9d00136884d7e58b7342eb4589de4285f897
+  source_step2b_request_id: step2b-request:2c70afe180208cb4059f871d7fd55de005dbfcba1bb5ca54f960e93435ac2345
+  facts:
+  - fact_id: fact:2448270c7cee6e945b529767
+    sample_id: gonglu_01_text_list
+    fact_key: roadbed.construction-outline
+    canonical_title: 路基施工目录
+    fact_type: enumeration
+    assertion_summary: '① 路基施工准备
+
+      ⑧ 路基施工测量'
+    primary_evidence_ids:
+    - ev:596fc2468bbd859f889aade6
+    primary_anchor_span_ids:
+    - span:fc0c5f0d70d99faef445ced4
+    - span:0da8da89badb497d893f7680
+    source_table_ids:
+    - ev:748251cbeadcf68c15efbd87
+    continuation_binding_ids: []
+    complete_table_grid_verified: false
+    semantic_diagram_bridge: null
+    semantic_diagram_bridge_id: null
+    coverage_obligation_ids:
+    - v25-list-source-obligation:8b179b22c66955501a5e8042
+    source_projection_id: v25-canonical-projection:e6f1b8f9ae9df8df4daaede6
+    source_step2a_request_id: step2a-request:aca4ae0c141ec669659673d7f7bc9d00136884d7e58b7342eb4589de4285f897
+    source_step2a_response_sha256: 7e0b91efde93aa3b44cf122bbb2191e4e6d6035b361c4200d62910a38891a294
+    model_label_sha256: d5bd4261cc2185e33ae44524407d0da270f83fe7bdce1a717da432114ac55ec9
+    review_state: reviewed
+    reviewer: codex_operator_phase2r16_final_manual_audit
+    reviewed_at_utc: '2026-07-29T19:00:00Z'
+    review_basis: 人工逐条复核 canonical title、类型、完整 assertion、Evidence 与 primary anchor；enumeration 的 Teaching Gate 与 Learning
+      Golden 本地对账均通过。
+  - fact_id: fact:e033c1238e91188132210383
+    sample_id: gonglu_01_text_list
+    fact_key: roadbed.special-types-table
+    canonical_title: 特殊路基类型
+    fact_type: composition
+    assertion_summary: '不良地质地段：滑坡地段路基、崩塌地段路基、岩堆地段路基、泥石流地段
+
+      路基、岩溶地区路基；特殊土（岩）地段：软土地区路基、红粘土与高液限土地区路基、膨胀土地区路
+
+      基、黄土地区路基、盐渍土地区路基、多年冻土地区路基；受水、气候等自然因素影响：风沙地区路基、雪害地段路基、涎流冰地段路基、采空区路
+
+      基、滨海路基、水库地区路基、季节性冰冻地区路基。'
+    primary_evidence_ids:
+    - ev:21a8181320dfbeba999a8ae3
+    - ev:f66b811044f174b565260eb9
+    - ev:52ef14bca4947f147182cf90
+    - ev:f6379fb6093c48dba5c87abb
+    - ev:285befb151f97cb34bebce3f
+    - ev:f07a46252e57c001e81b7591
+    primary_anchor_span_ids:
+    - span:95cc3bfafcf2e8d266c052f5
+    - span:51e9e8bc7dd96d94e9073f29
+    - span:db659e1f66418b078200975f
+    - span:e9f1f5d8d758c9ce7f3db317
+    - span:5c403e06abf47f55fe86946f
+    - span:2318656d107438882df7bc3f
+    - span:03b010aae6c4da82ede730f1
+    - span:fbedecbce5bcca84965de33a
+    - span:b77e06958f565292f93be30d
+    source_table_ids:
+    - ev:d07f62362cbf839aa9489b00
+    continuation_binding_ids: []
+    complete_table_grid_verified: true
+    semantic_diagram_bridge: null
+    semantic_diagram_bridge_id: null
+    coverage_obligation_ids:
+    - coverage-obligation:f1d5d90089ae3633dbedefbe
+    source_projection_id: v25-canonical-projection:13eb1e2dc4ea0a944e1f99ab
+    source_step2a_request_id: step2a-request:aca4ae0c141ec669659673d7f7bc9d00136884d7e58b7342eb4589de4285f897
+    source_step2a_response_sha256: 7e0b91efde93aa3b44cf122bbb2191e4e6d6035b361c4200d62910a38891a294
+    model_label_sha256: 63d2ddf78a83aaa934a332adfbab5cbafacfbb91e5f7d66a17857ebabd8b5da0
+    review_state: reviewed
+    reviewer: codex_operator_phase2r16_final_manual_audit
+    reviewed_at_utc: '2026-07-29T19:00:00Z'
+    review_basis: 人工逐条复核 canonical title、类型、完整 assertion、Evidence 与 primary anchor；完整 grid、cell anchor 与 source-table provenance；composition
+      的 Teaching Gate 与 Learning Golden 本地对账均通过。
+  - fact_id: fact:bdc644b1c6bf1a0a84f2db4c
+    sample_id: gonglu_01_text_list
+    fact_key: roadbed.fill-cross-section
+    canonical_title: 填方路基横断面
+    fact_type: diagram_relation
+    assertion_summary: Reviewed semantic_v2 diagram bridge preserves the original figure, reviewed nodes, edge Evidence, basis,
+      and confidence without synthetic text anchors.
+    primary_evidence_ids:
+    - ev:3a3de856bb37558c7b007d0e
+    primary_anchor_span_ids: []
+    source_table_ids: []
+    continuation_binding_ids: []
+    complete_table_grid_verified: false
+    semantic_diagram_bridge:
+      basis: Reviewed semantic_v2 diagram bridge preserves the original figure, reviewed nodes, edge Evidence, basis, and
+        confidence without synthetic text anchors.
+      bridge_id: v25-semantic-diagram-bridge:75f83c4e6009ddd7558fe338
+      edges:
+      - basis: 原始 figure crop 中的连线、相对位置或层级分支直接支持该关系；未以 OCR 文字猜测替代人工确认。
+        confidence: 0.98
+        evidence_ids:
+        - ev:3a3de856bb37558c7b007d0e
+        relation: 位于顶部
+        source_node_id: node-road-surface
+        target_node_id: node-fill-roadbed
+      - basis: 原始 figure crop 中的连线、相对位置或层级分支直接支持该关系；未以 OCR 文字猜测替代人工确认。
+        confidence: 0.98
+        evidence_ids:
+        - ev:3a3de856bb37558c7b007d0e
+        relation: 位于两侧
+        source_node_id: node-slope
+        target_node_id: node-fill-roadbed
+      - basis: 原始 figure crop 中的连线、相对位置或层级分支直接支持该关系；未以 OCR 文字猜测替代人工确认。
+        confidence: 0.98
+        evidence_ids:
+        - ev:3a3de856bb37558c7b007d0e
+        relation: 位于坡脚外侧
+        source_node_id: node-drainage-ditch
+        target_node_id: node-slope
+      figure_evidence_id: ev:3a3de856bb37558c7b007d0e
+      nodes:
+      - evidence_ids:
+        - ev:3a3de856bb37558c7b007d0e
+        label: 路面
+        node_id: node-road-surface
+      - evidence_ids:
+        - ev:3a3de856bb37558c7b007d0e
+        label: 填方路基
+        node_id: node-fill-roadbed
+      - evidence_ids:
+        - ev:3a3de856bb37558c7b007d0e
+        label: 边坡
+        node_id: node-slope
+      - evidence_ids:
+        - ev:3a3de856bb37558c7b007d0e
+        label: 排水沟
+        node_id: node-drainage-ditch
+      review_id: diagram:1e2f8c831d4edb33e43dfd80
+      semantic_sidecar_sha256: 8e5144e346ac0f3ed0bc220970e632d549b9069480faba5a95a28aa4765837d0
+      semantic_title: 填方路基横断面
+      source_manifest_sha256: 7235e99a269fdb0c72c1526c66d66fefdf44a2db118530188a12dd923b40e17a
+    semantic_diagram_bridge_id: v25-semantic-diagram-bridge:75f83c4e6009ddd7558fe338
+    coverage_obligation_ids: []
+    source_projection_id: v25-canonical-projection:feb80de34b4d44bc5c5b23b3
+    source_step2a_request_id: step2a-request:aca4ae0c141ec669659673d7f7bc9d00136884d7e58b7342eb4589de4285f897
+    source_step2a_response_sha256: 7e0b91efde93aa3b44cf122bbb2191e4e6d6035b361c4200d62910a38891a294
+    model_label_sha256: null
+    review_state: reviewed
+    reviewer: codex_operator_phase2r16_final_manual_audit
+    reviewed_at_utc: '2026-07-29T19:00:00Z'
+    review_basis: 人工逐条复核 canonical title、类型、完整 assertion、Evidence 与 primary anchor；semantic_v2 figure、节点、关系边、sidecar hash，且未伪造文本
+      anchor；diagram_relation 的 Teaching Gate 与 Learning Golden 本地对账均通过。
+  cards:
+  - card_id: v25-release-card:1011b240d15e12f3f7084096
+    sample_id: gonglu_01_text_list
+    canonical_title: 特殊路基类型
+    primary_fact_ids:
+    - fact:e033c1238e91188132210383
+    presentation: table
+    short_card_exception: null
+    source_step2b_request_id: step2b-request:2c70afe180208cb4059f871d7fd55de005dbfcba1bb5ca54f960e93435ac2345
+    source_step2b_response_sha256: 5a35c9a4b66d3b78eb3fac963b7adcc610d5bb593994ebc7650fca0c72b1684d
+    source_title_projection_sha256: cceed828a37f519ce1c2d6e8fa0cd712a54ea291d85c9e324a16feb2195fd20f
+    review_state: reviewed
+    reviewer: codex_operator_phase2r16_final_manual_audit
+    reviewed_at_utc: '2026-07-29T19:00:00Z'
+    review_basis: 人工逐卡复核本地 canonical title、Fact 编组、presentation、完整表与原子规则分离及审核依据；table 表达与 source-derived grouping obligation、exactly-once
+      bridge 一致，未使用模型 Card 标题授权。
+  - card_id: v25-release-card:c2712f4fcfbb9407a3140d57
+    sample_id: gonglu_01_text_list
+    canonical_title: 填方路基横断面
+    primary_fact_ids:
+    - fact:bdc644b1c6bf1a0a84f2db4c
+    presentation: diagram
+    short_card_exception: null
+    source_step2b_request_id: step2b-request:2c70afe180208cb4059f871d7fd55de005dbfcba1bb5ca54f960e93435ac2345
+    source_step2b_response_sha256: 5a35c9a4b66d3b78eb3fac963b7adcc610d5bb593994ebc7650fca0c72b1684d
+    source_title_projection_sha256: 6d59090b147e6b88858d6270aec903129860a89f08282881483206b0233f3816
+    review_state: reviewed
+    reviewer: codex_operator_phase2r16_final_manual_audit
+    reviewed_at_utc: '2026-07-29T19:00:00Z'
+    review_basis: 人工逐卡复核本地 canonical title、Fact 编组、presentation、完整表与原子规则分离及审核依据；diagram 表达与 source-derived grouping obligation、exactly-once
+      bridge 一致，未使用模型 Card 标题授权。
+  - card_id: v25-release-card:e6a90dfe9d5240ead407b7ef
+    sample_id: gonglu_01_text_list
+    canonical_title: 路基施工目录
+    primary_fact_ids:
+    - fact:2448270c7cee6e945b529767
+    presentation: ordered_list
+    short_card_exception: null
+    source_step2b_request_id: step2b-request:2c70afe180208cb4059f871d7fd55de005dbfcba1bb5ca54f960e93435ac2345
+    source_step2b_response_sha256: 5a35c9a4b66d3b78eb3fac963b7adcc610d5bb593994ebc7650fca0c72b1684d
+    source_title_projection_sha256: 4169d186c6b1265b042d9fa0ebd5f2c403f225ebfd3bc305328d2bb5f674999b
+    review_state: reviewed
+    reviewer: codex_operator_phase2r16_final_manual_audit
+    reviewed_at_utc: '2026-07-29T19:00:00Z'
+    review_basis: 人工逐卡复核本地 canonical title、Fact 编组、presentation、完整表与原子规则分离及审核依据；ordered_list 表达与 source-derived grouping obligation、exactly-once
+      bridge 一致，未使用模型 Card 标题授权。
+- sample_id: gonglu_24_table_formula
+  source_step2a_request_id: step2a-request:c4d636b1ca311a4fc904cb34a8e468cd28c36fbb29e7226b24f26d4ef35f50d0
+  source_step2b_request_id: step2b-request:1a21376b235c98fb92ca2e641f28b45f92287f6f568ec4c92542c40a538ec2e7
+  facts:
+  - fact_id: fact:80ab4525cacc0aa1a10c9fcc
+    sample_id: gonglu_24_table_formula
+    fact_key: formwork.load-combination-table
+    canonical_title: 模板、支架和拱架荷载组合
+    fact_type: composition
+    assertion_summary: 表3.1-2完整记录模板、支架和拱架设计计算的荷载组合。
+    primary_evidence_ids:
+    - ev:fc09e3c8e912db4b82494820
+    - ev:782cd39ec20a92a9bbdb35a5
+    - ev:c9f32bad3bc0f45ac748a27f
+    - ev:0a4bdb2a1294c10ca268145f
+    - ev:898a584c53fff2df714568e4
+    - ev:4ba08a871a0e6320aed32719
+    - ev:a4cb0c0301ee508a6bcd72ef
+    - ev:74c97e0576279463bd9fddf8
+    - ev:855848b7ef01057437956aa8
+    - ev:a87bb1d19e822d734c5e90c7
+    - ev:2a146b0db6e4ac56f13f8c2b
+    - ev:53fde0b771369de62de1ef72
+    - ev:f4b6133f569d4ff2e7d5c840
+    - ev:b8068b13cccda738d504600f
+    primary_anchor_span_ids:
+    - span:dd50e787b31340b8bf5d0075
+    - span:1f3254bf7ceaad67171d63d3
+    - span:d2c94b531772c57b8efdcdce
+    - span:b361953e7a389cf40f86c903
+    - span:e31be928b3d781c9ca55c9f4
+    - span:469078d625890d26ea269a77
+    - span:73be2f8a8683d73c2b32f26b
+    - span:9f8b62083b6a037d697fd384
+    - span:76a05f991f3a3772c750b54b
+    - span:f88ee3b3e2ac36d4ade4b830
+    - span:7f460e3fe706de3b39a69761
+    - span:269debb72ae8da2c0df939b6
+    - span:7f35a1503bcd1ab27ae58f26
+    - span:8498c111fe2d6b8023250524
+    - span:c4d108ddf923832902c35d22
+    source_table_ids:
+    - ev:ddbc36b6a00a72e55fd6eb45
+    continuation_binding_ids: []
+    complete_table_grid_verified: true
+    semantic_diagram_bridge: null
+    semantic_diagram_bridge_id: null
+    coverage_obligation_ids:
+    - coverage-obligation:c9ee7aae6b8788f586138a43
+    source_projection_id: v25-canonical-projection:0fad61e465bddf2c10768226
+    source_step2a_request_id: step2a-request:c4d636b1ca311a4fc904cb34a8e468cd28c36fbb29e7226b24f26d4ef35f50d0
+    source_step2a_response_sha256: 0912d882e6f1fc2afcec681df9830ba5e8d4e4ccbd8378ca3f55cc5524a7f469
+    model_label_sha256: be7dd8d7531463a23118d647e5ff42bb689010c6f7d5a48989e88c54599d2f4e
+    review_state: reviewed
+    reviewer: codex_operator_phase2r16_final_manual_audit
+    reviewed_at_utc: '2026-07-29T19:00:00Z'
+    review_basis: 人工逐条复核 canonical title、类型、完整 assertion、Evidence 与 primary anchor；完整 grid、cell anchor 与 source-table provenance；composition
+      的 Teaching Gate 与 Learning Golden 本地对账均通过。
+  - fact_id: fact:49f9cae63d124ee3a4568d0b
+    sample_id: gonglu_24_table_formula
+    fact_key: formwork.general-requirements-table
+    canonical_title: 模板与支架一般要求表
+    fact_type: composition
+    assertion_summary: 表格完整记录模板与支架的相关规定。
+    primary_evidence_ids:
+    - ev:40e740ea109c364fc5ddfd14
+    - ev:4b0c10cf94be018459452e14
+    - ev:7f14c6bc37c2effafd69b8cd
+    - ev:5aeed111f1a65c491bae59c8
+    primary_anchor_span_ids:
+    - span:944572577f73c647870a64f0
+    - span:cb28d0ea3b1ebc79c790c295
+    - span:39b910d758bb8ea0b172d199
+    - span:d4e88f7e635e38b71bc1cd3d
+    - span:6121e6b917b9bf09ccabf89e
+    - span:db7d38a6b2042f811e7f0ba8
+    - span:39e265b33a58cd3847bb77b7
+    - span:1c88fdd8fdb95a5c12f43f54
+    - span:af35c294fbccc4123b51f990
+    - span:37ef12fcae2896921962543b
+    - span:fb7057c78f8d65c40aa02dc6
+    - span:d9662fa7cf95283ab7ff41fd
+    - span:7c4c4a586495dab5aa09d7af
+    - span:ef98bb05a0711080131007f2
+    source_table_ids:
+    - ev:d13b3f653925a49fe84f6da4
+    continuation_binding_ids: []
+    complete_table_grid_verified: true
+    semantic_diagram_bridge: null
+    semantic_diagram_bridge_id: null
+    coverage_obligation_ids:
+    - coverage-obligation:5273daa86e7958a912d376ca
+    source_projection_id: v25-canonical-projection:9795e55c95f1646c521b8c56
+    source_step2a_request_id: step2a-request:c4d636b1ca311a4fc904cb34a8e468cd28c36fbb29e7226b24f26d4ef35f50d0
+    source_step2a_response_sha256: 0912d882e6f1fc2afcec681df9830ba5e8d4e4ccbd8378ca3f55cc5524a7f469
+    model_label_sha256: b193a872cded27bd168805d31f648beb3b00d497cfb6f929302d803d0218ad38
+    review_state: reviewed
+    reviewer: codex_operator_phase2r16_final_manual_audit
+    reviewed_at_utc: '2026-07-29T19:00:00Z'
+    review_basis: 人工逐条复核 canonical title、类型、完整 assertion、Evidence 与 primary anchor；完整 grid、cell anchor 与 source-table provenance；composition
+      的 Teaching Gate 与 Learning Golden 本地对账均通过。
+  - fact_id: fact:2181e5bd6349775b25fd2b82
+    sample_id: gonglu_24_table_formula
+    fact_key: formwork.strength-rigidity-stability
+    canonical_title: 模板与支架强度刚度稳定性要求
+    fact_type: condition
+    assertion_summary: （2）模板和支架应具有足够的强度、刚度和稳定性。
+    primary_evidence_ids:
+    - ev:4b0c10cf94be018459452e14
+    primary_anchor_span_ids:
+    - span:cb28d0ea3b1ebc79c790c295
+    source_table_ids:
+    - ev:d13b3f653925a49fe84f6da4
+    continuation_binding_ids: []
+    complete_table_grid_verified: false
+    semantic_diagram_bridge: null
+    semantic_diagram_bridge_id: null
+    coverage_obligation_ids:
+    - coverage-obligation:18574d4d651959e02e840fbf
+    source_projection_id: v25-canonical-projection:bfeaf0bfb6e81812bcc1a590
+    source_step2a_request_id: step2a-request:c4d636b1ca311a4fc904cb34a8e468cd28c36fbb29e7226b24f26d4ef35f50d0
+    source_step2a_response_sha256: 0912d882e6f1fc2afcec681df9830ba5e8d4e4ccbd8378ca3f55cc5524a7f469
+    model_label_sha256: a19160064b9314ea6084ab57e1c7d08725d6bae5fd7aac06579b6608eec783d0
+    review_state: reviewed
+    reviewer: codex_operator_phase2r16_final_manual_audit
+    reviewed_at_utc: '2026-07-29T19:00:00Z'
+    review_basis: 人工逐条复核 canonical title、类型、完整 assertion、Evidence 与 primary anchor；condition 的 Teaching Gate 与 Learning Golden
+      本地对账均通过。
+  - fact_id: fact:df38ba0d0992399d7acc910a
+    sample_id: gonglu_24_table_formula
+    fact_key: formwork.release-agent-prohibition
+    canonical_title: 模板隔离剂禁用油料要求
+    fact_type: condition
+    assertion_summary: （4）模板与混凝土的接触面应涂刷隔离剂，但不得采用废机油等油料。
+    primary_evidence_ids:
+    - ev:4b0c10cf94be018459452e14
+    primary_anchor_span_ids:
+    - span:39b910d758bb8ea0b172d199
+    source_table_ids:
+    - ev:d13b3f653925a49fe84f6da4
+    continuation_binding_ids: []
+    complete_table_grid_verified: false
+    semantic_diagram_bridge: null
+    semantic_diagram_bridge_id: null
+    coverage_obligation_ids:
+    - coverage-obligation:84565f9e1d6eeebb122fcc83
+    source_projection_id: v25-canonical-projection:5c01e94553faff86dc5181ab
+    source_step2a_request_id: step2a-request:c4d636b1ca311a4fc904cb34a8e468cd28c36fbb29e7226b24f26d4ef35f50d0
+    source_step2a_response_sha256: 0912d882e6f1fc2afcec681df9830ba5e8d4e4ccbd8378ca3f55cc5524a7f469
+    model_label_sha256: ad4ba3bc1049cd7854ad2ca25b515ed3d6c63faccceb2057c5514abac244d3d9
+    review_state: reviewed
+    reviewer: codex_operator_phase2r16_final_manual_audit
+    reviewed_at_utc: '2026-07-29T19:00:00Z'
+    review_basis: 人工逐条复核 canonical title、类型、完整 assertion、Evidence 与 primary anchor；condition 的 Teaching Gate 与 Learning Golden
+      本地对账均通过。
+  - fact_id: fact:9f65fc117c8497c0185ef163
+    sample_id: gonglu_24_table_formula
+    fact_key: formwork.lifting-ring-material
+    canonical_title: 模板吊环钢筋材料要求
+    fact_type: condition
+    assertion_summary: '（5）在模板上设置的吊环应采用HPB300 钢筋（一级钢），严禁采用冷加工
+
+      钢筋制作。'
+    primary_evidence_ids:
+    - ev:4b0c10cf94be018459452e14
+    - ev:7fdf390ab8741b110562d87d
+    primary_anchor_span_ids:
+    - span:d4e88f7e635e38b71bc1cd3d
+    - span:9c55ea97526fd7466e1e1b7b
+    source_table_ids:
+    - ev:d13b3f653925a49fe84f6da4
+    continuation_binding_ids: []
+    complete_table_grid_verified: false
+    semantic_diagram_bridge: null
+    semantic_diagram_bridge_id: null
+    coverage_obligation_ids:
+    - v25-atomic-obligation:7176af1724a737e93962acf3
+    source_projection_id: v25-canonical-projection:3d3447446451bf583056a4a0
+    source_step2a_request_id: step2a-request:c4d636b1ca311a4fc904cb34a8e468cd28c36fbb29e7226b24f26d4ef35f50d0
+    source_step2a_response_sha256: 0912d882e6f1fc2afcec681df9830ba5e8d4e4ccbd8378ca3f55cc5524a7f469
+    model_label_sha256: ccaa1f7d0ed9efe6740fa955357645bb87caacef6433960ba86d4f75c64279ec
+    review_state: reviewed
+    reviewer: codex_operator_phase2r16_final_manual_audit
+    reviewed_at_utc: '2026-07-29T19:00:00Z'
+    review_basis: 人工逐条复核 canonical title、类型、完整 assertion、Evidence 与 primary anchor；condition 的 Teaching Gate 与 Learning Golden
+      本地对账均通过。
+  - fact_id: fact:d1d886adf5616ac0a1153072
+    sample_id: gonglu_24_table_formula
+    fact_key: formwork.lifting-ring-stress
+    canonical_title: 模板吊环拉应力限值
+    fact_type: threshold
+    assertion_summary: 在模板自重标准值作用下，吊环的拉应力应不大于65MPa。
+    primary_evidence_ids:
+    - ev:4b0c10cf94be018459452e14
+    primary_anchor_span_ids:
+    - span:db7d38a6b2042f811e7f0ba8
+    source_table_ids:
+    - ev:d13b3f653925a49fe84f6da4
+    continuation_binding_ids: []
+    complete_table_grid_verified: false
+    semantic_diagram_bridge: null
+    semantic_diagram_bridge_id: null
+    coverage_obligation_ids:
+    - coverage-obligation:07c0f9355300b60c03d6c797
+    source_projection_id: v25-canonical-projection:6c31f77651f21542c2b90167
+    source_step2a_request_id: step2a-request:c4d636b1ca311a4fc904cb34a8e468cd28c36fbb29e7226b24f26d4ef35f50d0
+    source_step2a_response_sha256: 0912d882e6f1fc2afcec681df9830ba5e8d4e4ccbd8378ca3f55cc5524a7f469
+    model_label_sha256: 5e038ce696bee7f69e561ca0d28c64cd52c9c30ba71494080005bac99af808d1
+    review_state: reviewed
+    reviewer: codex_operator_phase2r16_final_manual_audit
+    reviewed_at_utc: '2026-07-29T19:00:00Z'
+    review_basis: 人工逐条复核 canonical title、类型、完整 assertion、Evidence 与 primary anchor；threshold 的 Teaching Gate 与 Learning Golden
+      本地对账均通过。
+  - fact_id: fact:6d1bdf6072180f04f67bc8f4
+    sample_id: gonglu_24_table_formula
+    fact_key: formwork.emergency-passage-separation
+    canonical_title: 支架与应急通道隔离要求
+    fact_type: condition
+    assertion_summary: （6）支架不得与应急安全通道相连接。
+    primary_evidence_ids:
+    - ev:5aeed111f1a65c491bae59c8
+    primary_anchor_span_ids:
+    - span:fb7057c78f8d65c40aa02dc6
+    source_table_ids:
+    - ev:d13b3f653925a49fe84f6da4
+    continuation_binding_ids: []
+    complete_table_grid_verified: false
+    semantic_diagram_bridge: null
+    semantic_diagram_bridge_id: null
+    coverage_obligation_ids:
+    - coverage-obligation:dbecbfa6e7d8b00a06949105
+    source_projection_id: v25-canonical-projection:aeef89949646deab7190f6d1
+    source_step2a_request_id: step2a-request:c4d636b1ca311a4fc904cb34a8e468cd28c36fbb29e7226b24f26d4ef35f50d0
+    source_step2a_response_sha256: 0912d882e6f1fc2afcec681df9830ba5e8d4e4ccbd8378ca3f55cc5524a7f469
+    model_label_sha256: 21514f52e18e2e59d5c30bea5dfbad95d694499e5dbb16065cf2d77219d268eb
+    review_state: reviewed
+    reviewer: codex_operator_phase2r16_final_manual_audit
+    reviewed_at_utc: '2026-07-29T19:00:00Z'
+    review_basis: 人工逐条复核 canonical title、类型、完整 assertion、Evidence 与 primary anchor；condition 的 Teaching Gate 与 Learning Golden
+      本地对账均通过。
+  - fact_id: fact:e9db47cf69e73e1bc6e78612
+    sample_id: gonglu_24_table_formula
+    fact_key: formwork.anti-overturning
+    canonical_title: 模板防倾覆要求
+    fact_type: condition
+    assertion_summary: ③ 模板在安装过程中，必须设置防倾覆的临时固定设施。
+    primary_evidence_ids:
+    - ev:d432b8aea3fb1b7dd3929c91
+    primary_anchor_span_ids:
+    - span:37b8ff0ce5a82006eacaddef
+    source_table_ids:
+    - ev:e12191dceee7c739182276ff
+    continuation_binding_ids: []
+    complete_table_grid_verified: false
+    semantic_diagram_bridge: null
+    semantic_diagram_bridge_id: null
+    coverage_obligation_ids:
+    - coverage-obligation:023652e00ca26a70817db905
+    source_projection_id: v25-canonical-projection:71571067fbe67d2d3c05549e
+    source_step2a_request_id: step2a-request:c4d636b1ca311a4fc904cb34a8e468cd28c36fbb29e7226b24f26d4ef35f50d0
+    source_step2a_response_sha256: 0912d882e6f1fc2afcec681df9830ba5e8d4e4ccbd8378ca3f55cc5524a7f469
+    model_label_sha256: 16990078f5f15d56c25744579f5877bfc600ecf8656d7784cb1b579cd7ff8a2b
+    review_state: reviewed
+    reviewer: codex_operator_phase2r16_final_manual_audit
+    reviewed_at_utc: '2026-07-29T19:00:00Z'
+    review_basis: 人工逐条复核 canonical title、类型、完整 assertion、Evidence 与 primary anchor；condition 的 Teaching Gate 与 Learning Golden
+      本地对账均通过。
+  - fact_id: fact:f5f9fdd1b487e4b1e95c7a87
+    sample_id: gonglu_24_table_formula
+    fact_key: formwork.climb-speed
+    canonical_title: 模板滑升速度
+    fact_type: threshold
+    assertion_summary: ② 模板的滑升速度宜不大于250mm/h，滑升时应检测并控制其 联
+    primary_evidence_ids:
+    - ev:475bd5bb2cb7b9ceaebc951d
+    primary_anchor_span_ids:
+    - span:09c6c119a81f4ac1c7acf316
+    source_table_ids:
+    - ev:e12191dceee7c739182276ff
+    continuation_binding_ids: []
+    complete_table_grid_verified: false
+    semantic_diagram_bridge: null
+    semantic_diagram_bridge_id: null
+    coverage_obligation_ids:
+    - coverage-obligation:32112dd2427b834993a6fcef
+    source_projection_id: v25-canonical-projection:3697ccff6a5da6796259a9b7
+    source_step2a_request_id: step2a-request:c4d636b1ca311a4fc904cb34a8e468cd28c36fbb29e7226b24f26d4ef35f50d0
+    source_step2a_response_sha256: 0912d882e6f1fc2afcec681df9830ba5e8d4e4ccbd8378ca3f55cc5524a7f469
+    model_label_sha256: c5c68d853c84c24051a3d05b7e4adc26dadf58411f09ffb30128e218496dcdc3
+    review_state: reviewed
+    reviewer: codex_operator_phase2r16_final_manual_audit
+    reviewed_at_utc: '2026-07-29T19:00:00Z'
+    review_basis: 人工逐条复核 canonical title、类型、完整 assertion、Evidence 与 primary anchor；threshold 的 Teaching Gate 与 Learning Golden
+      本地对账均通过。
+  - fact_id: fact:51ba5da7b78c4e32d41b2eda
+    sample_id: gonglu_24_table_formula
+    fact_key: formwork.preload
+    canonical_title: 支架预压荷载
+    fact_type: threshold
+    assertion_summary: ④ 预压荷载：宜为支架所承受荷载的1.05～1.1 倍。
+    primary_evidence_ids:
+    - ev:7a648e051806ade7c5c18281
+    primary_anchor_span_ids:
+    - span:e766a62c16ec423788927a47
+    source_table_ids:
+    - ev:e9fc5fa94bf3b2b04667eafb
+    continuation_binding_ids: []
+    complete_table_grid_verified: false
+    semantic_diagram_bridge: null
+    semantic_diagram_bridge_id: null
+    coverage_obligation_ids:
+    - v25-atomic-obligation:78abc5d4ef86b89fbc98d42e
+    source_projection_id: v25-canonical-projection:a8ff5e029738540a6145f8f5
+    source_step2a_request_id: step2a-request:c4d636b1ca311a4fc904cb34a8e468cd28c36fbb29e7226b24f26d4ef35f50d0
+    source_step2a_response_sha256: 0912d882e6f1fc2afcec681df9830ba5e8d4e4ccbd8378ca3f55cc5524a7f469
+    model_label_sha256: 1ca1f2b75bf0b125259d109d57f83e931b461bf422b8060c99a5e723e9e66248
+    review_state: reviewed
+    reviewer: codex_operator_phase2r16_final_manual_audit
+    reviewed_at_utc: '2026-07-29T19:00:00Z'
+    review_basis: 人工逐条复核 canonical title、类型、完整 assertion、Evidence 与 primary anchor；threshold 的 Teaching Gate 与 Learning Golden
+      本地对账均通过。
+  - fact_id: fact:98c267f889999481277b9b77
+    sample_id: gonglu_24_table_formula
+    fact_key: formwork.arch-removal
+    canonical_title: 拱架卸落条件
+    fact_type: condition
+    assertion_summary: ① 浆砌石拱桥，应待砂浆强度达到设计强度的85%后方可卸落。
+    primary_evidence_ids:
+    - ev:fad8a9662295265ec28129a4
+    primary_anchor_span_ids:
+    - span:566a846e71fdd975f8630b25
+    source_table_ids:
+    - ev:6a3d7510fca1e3542931b397
+    continuation_binding_ids: []
+    complete_table_grid_verified: false
+    semantic_diagram_bridge: null
+    semantic_diagram_bridge_id: null
+    coverage_obligation_ids:
+    - v25-atomic-obligation:b881983c26f1be0ae47c6482
+    source_projection_id: v25-canonical-projection:981468b0789f890f9c4ec414
+    source_step2a_request_id: step2a-request:c4d636b1ca311a4fc904cb34a8e468cd28c36fbb29e7226b24f26d4ef35f50d0
+    source_step2a_response_sha256: 0912d882e6f1fc2afcec681df9830ba5e8d4e4ccbd8378ca3f55cc5524a7f469
+    model_label_sha256: 128d924f541fc9865ec4ae550d3c9c02ea2dcccbcdccf4d8e477d900e3818f58
+    review_state: reviewed
+    reviewer: codex_operator_phase2r16_final_manual_audit
+    reviewed_at_utc: '2026-07-29T19:00:00Z'
+    review_basis: 人工逐条复核 canonical title、类型、完整 assertion、Evidence 与 primary anchor；condition 的 Teaching Gate 与 Learning Golden
+      本地对账均通过。
+  cards:
+  - card_id: v25-release-card:cd1558d4e5d386183f1a4b31
+    sample_id: gonglu_24_table_formula
+    canonical_title: 模板与支架一般要求
+    primary_fact_ids:
+    - fact:2181e5bd6349775b25fd2b82
+    - fact:df38ba0d0992399d7acc910a
+    - fact:9f65fc117c8497c0185ef163
+    - fact:d1d886adf5616ac0a1153072
+    - fact:6d1bdf6072180f04f67bc8f4
+    presentation: constraint
+    short_card_exception: null
+    source_step2b_request_id: step2b-request:1a21376b235c98fb92ca2e641f28b45f92287f6f568ec4c92542c40a538ec2e7
+    source_step2b_response_sha256: 09eb28d492fa5fb81a4f50a1723a15d553e3561266d8bacecfd32d1c2fa2577f
+    source_title_projection_sha256: 62b74b7a7f83f74313c451b9ccdcdcb9eebb12df1b28c58bc3fbfb577206531c
+    review_state: reviewed
+    reviewer: codex_operator_phase2r16_final_manual_audit
+    reviewed_at_utc: '2026-07-29T19:00:00Z'
+    review_basis: 人工逐卡复核本地 canonical title、Fact 编组、presentation、完整表与原子规则分离及审核依据；constraint 表达与 source-derived grouping obligation、exactly-once
+      bridge 一致，未使用模型 Card 标题授权。
+  - card_id: v25-release-card:b87732d828c76d202372ae90
+    sample_id: gonglu_24_table_formula
+    canonical_title: 模板安装与预压约束
+    primary_fact_ids:
+    - fact:e9db47cf69e73e1bc6e78612
+    - fact:f5f9fdd1b487e4b1e95c7a87
+    - fact:51ba5da7b78c4e32d41b2eda
+    - fact:98c267f889999481277b9b77
+    presentation: constraint
+    short_card_exception: null
+    source_step2b_request_id: step2b-request:1a21376b235c98fb92ca2e641f28b45f92287f6f568ec4c92542c40a538ec2e7
+    source_step2b_response_sha256: 09eb28d492fa5fb81a4f50a1723a15d553e3561266d8bacecfd32d1c2fa2577f
+    source_title_projection_sha256: 5a82d34bb4f698dae6ee909fa365b6fc732613fed6410f298b4e6590fc0de958
+    review_state: reviewed
+    reviewer: codex_operator_phase2r16_final_manual_audit
+    reviewed_at_utc: '2026-07-29T19:00:00Z'
+    review_basis: 人工逐卡复核本地 canonical title、Fact 编组、presentation、完整表与原子规则分离及审核依据；constraint 表达与 source-derived grouping obligation、exactly-once
+      bridge 一致，未使用模型 Card 标题授权。
+  - card_id: v25-release-card:f06d575da299041aae98895c
+    sample_id: gonglu_24_table_formula
+    canonical_title: 模板、支架和拱架荷载组合
+    primary_fact_ids:
+    - fact:80ab4525cacc0aa1a10c9fcc
+    presentation: table
+    short_card_exception: null
+    source_step2b_request_id: step2b-request:1a21376b235c98fb92ca2e641f28b45f92287f6f568ec4c92542c40a538ec2e7
+    source_step2b_response_sha256: 09eb28d492fa5fb81a4f50a1723a15d553e3561266d8bacecfd32d1c2fa2577f
+    source_title_projection_sha256: 2785226df012fc104769beca8c4812327efe37c2fd6bdc26b7537632b4694fbf
+    review_state: reviewed
+    reviewer: codex_operator_phase2r16_final_manual_audit
+    reviewed_at_utc: '2026-07-29T19:00:00Z'
+    review_basis: 人工逐卡复核本地 canonical title、Fact 编组、presentation、完整表与原子规则分离及审核依据；table 表达与 source-derived grouping obligation、exactly-once
+      bridge 一致，未使用模型 Card 标题授权。
+  - card_id: v25-release-card:13ac7b620ddf9381a370ef86
+    sample_id: gonglu_24_table_formula
+    canonical_title: 模板与支架一般要求表
+    primary_fact_ids:
+    - fact:49f9cae63d124ee3a4568d0b
+    presentation: table
+    short_card_exception: null
+    source_step2b_request_id: step2b-request:1a21376b235c98fb92ca2e641f28b45f92287f6f568ec4c92542c40a538ec2e7
+    source_step2b_response_sha256: 09eb28d492fa5fb81a4f50a1723a15d553e3561266d8bacecfd32d1c2fa2577f
+    source_title_projection_sha256: d77df49109b366ab2a0df0260631870e2d6684b596bb2cf1a68b3fc1be55f5f3
+    review_state: reviewed
+    reviewer: codex_operator_phase2r16_final_manual_audit
+    reviewed_at_utc: '2026-07-29T19:00:00Z'
+    review_basis: 人工逐卡复核本地 canonical title、Fact 编组、presentation、完整表与原子规则分离及审核依据；table 表达与 source-derived grouping obligation、exactly-once
+      bridge 一致，未使用模型 Card 标题授权。
+- sample_id: gonglu_41_diagram_mixed
+  source_step2a_request_id: step2a-request:cb5ade9f78fd106189b0f5e3a0ee1bd2417c1b3ef3c5bb3a85a42df2c395ddb4
+  source_step2b_request_id: step2b-request:9570712ca0b6a23d9f39ad675b7ef832134e618449a7bcfc94db252fb98be77a
+  facts:
+  - fact_id: fact:0d239f5ba27e143aaaaec931
+    sample_id: gonglu_41_diagram_mixed
+    fact_key: tunnel.rock-classification-table
+    canonical_title: 围岩分级表
+    fact_type: composition
+    assertion_summary: 隧道围岩分级表：围岩级别、围岩或土体主要定性特征、岩体基本质量指标BQ；Ⅰ：坚硬岩，岩体完整，＞550；Ⅱ：坚硬岩，岩体较完整，较坚硬岩，岩体完整，550～451；Ⅲ：坚硬岩，岩体较破碎，较坚硬岩，岩体较完整，较软岩，岩体完整，整体状或巨厚层状结构，450～351；Ⅳ：8、7、坚硬岩，岩体破碎
+      1、9、4、较坚硬岩，岩体较破碎-破碎 8、3、信、较软岩，岩体较完整-较破碎、微、软岩，岩体完整-较完整 系，350～251；Ⅴ：联、较软岩，岩体破碎 一、唯、软岩，岩体较破碎-破碎、全部极软岩和全部极破碎，≤250；Ⅵ：软塑状黏性土及潮湿、饱和粉细砂层、软土等，—。
+    primary_evidence_ids:
+    - ev:4e470d29a0e5667dd93675ca
+    - ev:03c1ec1d27e80c392f63b5aa
+    - ev:1db10ff6ab50cdd30ae79db1
+    - ev:cbf9d00f70b8b8f0ef814362
+    - ev:c0fbec700f045dda5dcde5f1
+    - ev:c41792b00d654421a1f99e8f
+    - ev:72c45ae035621a9910ea1192
+    - ev:ad3e2af30fb7b6693e3862a6
+    - ev:de2d23445184f0ed9f2f1b4e
+    - ev:9e3772a91d0fbd0c4c9f7d9e
+    - ev:1a598af1194677f42d45a7c2
+    - ev:4e2fb63f3413aafe1d906f32
+    - ev:1c8636ec480e25f3ddd26828
+    - ev:668c259e8043f8b81d344c75
+    - ev:630a7cd0b954c7938f5eae5e
+    - ev:f6118bc0aed75ec2a233bcc2
+    - ev:67bb77bb020fe391b60a19dd
+    - ev:5debb5f6b12aa04a7ecb9283
+    - ev:5b701a383d69746a8eedec85
+    - ev:510a3b6ff9c9470523b64d7d
+    - ev:ab91af46018732df2a95cf24
+    primary_anchor_span_ids:
+    - span:65f8f6624cb90ac823059fdb
+    - span:37ea0a5e3c110f3ccd02c087
+    - span:011a8f3629efdb005113eec8
+    - span:4c5d32a2eb3651a5d1ed1c6f
+    - span:1a2362b0a03167db3288018c
+    - span:de8e1d4839d488a783d11e79
+    - span:c902b31e3a0492a22c54612b
+    - span:3e05490df3897059b13a92ee
+    - span:f23c544d6be4227e6ff9efd4
+    - span:075da22ee51ff5dbe5b84cc7
+    - span:4b8bd720fd2014a5870c4495
+    - span:007f3afdb70f8d41899d914a
+    - span:0fd11816c33b41df1158adb8
+    - span:a98a3aef2d5f65f5411aa5e0
+    - span:a37f9eece2195e8057a37147
+    - span:f73d0cfb3d01c6d8b6f923f2
+    - span:b6be467968d896404f470575
+    - span:52cda96f440f9c78ecff1a0f
+    - span:893fb7ff9aaea28bb71320d2
+    - span:c17c38c269e1d879bdd2fa4e
+    - span:9f7ced9886b1bd75458e9dfe
+    - span:75766b5f72b5c0224f50244e
+    - span:f8494147fd76469925b1150c
+    - span:84b51bb021fcbb1c8552b49c
+    - span:561c2cd22bc3da9623689257
+    - span:0fbbccd565b3f2ec67e8f261
+    - span:f31d2311c1a1bfc73c9e33d9
+    - span:254aa64e2a89dd1f862f1330
+    - span:980d63e70a97249317f147d1
+    - span:c8d04d4e70dffc390cdf8a97
+    - span:60d7d989f2fa0c5a4723d6ac
+    - span:1593ccf37167d77cddbc147b
+    - span:5bbdf035b29a3e67ba00b99b
+    - span:a800f8e2be2f9bb1a89eabc9
+    - span:24d8e53e521de4dff53f795b
+    - span:53d955ecae07160fe1e004f1
+    - span:41f2ed583b4898265d1ca92c
+    - span:d7b3ecb17d0ea76ed8f653e0
+    source_table_ids:
+    - ev:109acd6b5357faa2e419969e
+    continuation_binding_ids: []
+    complete_table_grid_verified: true
+    semantic_diagram_bridge: null
+    semantic_diagram_bridge_id: null
+    coverage_obligation_ids:
+    - coverage-obligation:5cb34c3412de2da7fc1cf076
+    source_projection_id: v25-canonical-projection:a24d0c4b1fe9c18f8b8a649a
+    source_step2a_request_id: step2a-request:cb5ade9f78fd106189b0f5e3a0ee1bd2417c1b3ef3c5bb3a85a42df2c395ddb4
+    source_step2a_response_sha256: 063c7a5689ee3574387563786008b83c2de67bc04748537044383c0a75c4f97b
+    model_label_sha256: 924c5e6f5bf94951fc047bdbfd7be37b38697df85e865c016ba887b1b7a13db5
+    review_state: reviewed
+    reviewer: codex_operator_phase2r16_final_manual_audit
+    reviewed_at_utc: '2026-07-29T19:00:00Z'
+    review_basis: 人工逐条复核 canonical title、类型、完整 assertion、Evidence 与 primary anchor；完整 grid、cell anchor 与 source-table provenance；composition
+      的 Teaching Gate 与 Learning Golden 本地对账均通过。
+  - fact_id: fact:eb3f2251f29a9a20f88c902b
+    sample_id: gonglu_41_diagram_mixed
+    fact_key: tunnel.span-classification
+    canonical_title: 隧道跨度分类
+    fact_type: classification
+    assertion_summary: 14≤B<18
+    primary_evidence_ids:
+    - ev:d03d85072fc4e57dad4a2460
+    primary_anchor_span_ids:
+    - span:7727fc570d418ed29b1e6625
+    source_table_ids:
+    - ev:b1e1478b0d3f4e33b6d26f90
+    continuation_binding_ids: []
+    complete_table_grid_verified: false
+    semantic_diagram_bridge: null
+    semantic_diagram_bridge_id: null
+    coverage_obligation_ids:
+    - v25-text-source-obligation:894653a95b561ef6d742893e
+    source_projection_id: v25-canonical-projection:81c4d19400289c541d9acaf9
+    source_step2a_request_id: step2a-request:cb5ade9f78fd106189b0f5e3a0ee1bd2417c1b3ef3c5bb3a85a42df2c395ddb4
+    source_step2a_response_sha256: 063c7a5689ee3574387563786008b83c2de67bc04748537044383c0a75c4f97b
+    model_label_sha256: ba7baa1a108cc25aa6d411f33eaf48fb26f4a28c180c26206b11ae1a5ffda6b5
+    review_state: reviewed
+    reviewer: codex_operator_phase2r16_final_manual_audit
+    reviewed_at_utc: '2026-07-29T19:00:00Z'
+    review_basis: 人工逐条复核 canonical title、类型、完整 assertion、Evidence 与 primary anchor；classification 的 Teaching Gate 与 Learning
+      Golden 本地对账均通过。
+  - fact_id: fact:e1fef22867fb494f5aae85de
+    sample_id: gonglu_41_diagram_mixed
+    fact_key: tunnel.portal-foundation-depth
+    canonical_title: 洞门基础深度约束
+    fact_type: threshold
+    assertion_summary: ③地基为冻胀土层时，基底高程应在最大冻结深度以下不小于0.25m。
+    primary_evidence_ids:
+    - ev:ded41e882249b861db9819fa
+    primary_anchor_span_ids:
+    - span:ef30369b6c129a3c74e9f1d5
+    source_table_ids: []
+    continuation_binding_ids: []
+    complete_table_grid_verified: false
+    semantic_diagram_bridge: null
+    semantic_diagram_bridge_id: null
+    coverage_obligation_ids:
+    - v25-text-source-obligation:286d860bad88eeaf45b5daa2
+    source_projection_id: v25-canonical-projection:5228992fe7fe32ac0f5d60a6
+    source_step2a_request_id: step2a-request:cb5ade9f78fd106189b0f5e3a0ee1bd2417c1b3ef3c5bb3a85a42df2c395ddb4
+    source_step2a_response_sha256: 063c7a5689ee3574387563786008b83c2de67bc04748537044383c0a75c4f97b
+    model_label_sha256: 780087ad67e62ffc33fb6e38e26f1a54c6d5a21a5eaffeafa12a38075470ab60
+    review_state: reviewed
+    reviewer: codex_operator_phase2r16_final_manual_audit
+    reviewed_at_utc: '2026-07-29T19:00:00Z'
+    review_basis: 人工逐条复核 canonical title、类型、完整 assertion、Evidence 与 primary anchor；threshold 的 Teaching Gate 与 Learning Golden
+      本地对账均通过。
+  - fact_id: fact:e9b0fada194b3f0c856905c8
+    sample_id: gonglu_41_diagram_mixed
+    fact_key: tunnel.composite-lining-section
+    canonical_title: 复合式衬砌横断面
+    fact_type: diagram_relation
+    assertion_summary: Reviewed semantic_v2 diagram bridge preserves the original figure, reviewed nodes, edge Evidence, basis,
+      and confidence without synthetic text anchors.
+    primary_evidence_ids:
+    - ev:a2104e17b0e3b9748fdb89f4
+    primary_anchor_span_ids: []
+    source_table_ids: []
+    continuation_binding_ids: []
+    complete_table_grid_verified: false
+    semantic_diagram_bridge:
+      basis: Reviewed semantic_v2 diagram bridge preserves the original figure, reviewed nodes, edge Evidence, basis, and
+        confidence without synthetic text anchors.
+      bridge_id: v25-semantic-diagram-bridge:ecfd0bff2ef4406606aea40b
+      edges:
+      - basis: 原始 figure crop 中的连线、相对位置或层级分支直接支持该关系；未以 OCR 文字猜测替代人工确认。
+        confidence: 0.98
+        evidence_ids:
+        - ev:a2104e17b0e3b9748fdb89f4
+        - ev:28fa704c37f6d0a34a7e4cce
+        - ev:8b8244ff57b18cd199bf6589
+        relation: 紧贴围岩
+        source_node_id: node-primary-support
+        target_node_id: node-surrounding-rock
+      - basis: 原始 figure crop 中的连线、相对位置或层级分支直接支持该关系；未以 OCR 文字猜测替代人工确认。
+        confidence: 0.98
+        evidence_ids:
+        - ev:a2104e17b0e3b9748fdb89f4
+        - ev:01440fda0b8bb599c100ad14
+        - ev:28fa704c37f6d0a34a7e4cce
+        relation: 位于内侧
+        source_node_id: node-waterproof-layer
+        target_node_id: node-primary-support
+      - basis: 原始 figure crop 中的连线、相对位置或层级分支直接支持该关系；未以 OCR 文字猜测替代人工确认。
+        confidence: 0.98
+        evidence_ids:
+        - ev:a2104e17b0e3b9748fdb89f4
+        - ev:f69df926630d2177f0221b08
+        - ev:01440fda0b8bb599c100ad14
+        relation: 位于内侧
+        source_node_id: node-secondary-lining
+        target_node_id: node-waterproof-layer
+      - basis: 原始 figure crop 中的连线、相对位置或层级分支直接支持该关系；未以 OCR 文字猜测替代人工确认。
+        confidence: 0.98
+        evidence_ids:
+        - ev:a2104e17b0e3b9748fdb89f4
+        - ev:f69df926630d2177f0221b08
+        relation: 设置于侧部
+        source_node_id: node-drainage
+        target_node_id: node-secondary-lining
+      figure_evidence_id: ev:a2104e17b0e3b9748fdb89f4
+      nodes:
+      - evidence_ids:
+        - ev:a2104e17b0e3b9748fdb89f4
+        - ev:8b8244ff57b18cd199bf6589
+        label: 围岩
+        node_id: node-surrounding-rock
+      - evidence_ids:
+        - ev:a2104e17b0e3b9748fdb89f4
+        - ev:28fa704c37f6d0a34a7e4cce
+        label: 初期支护
+        node_id: node-primary-support
+      - evidence_ids:
+        - ev:a2104e17b0e3b9748fdb89f4
+        - ev:01440fda0b8bb599c100ad14
+        label: 防水层
+        node_id: node-waterproof-layer
+      - evidence_ids:
+        - ev:a2104e17b0e3b9748fdb89f4
+        - ev:f69df926630d2177f0221b08
+        label: 二次衬砌
+        node_id: node-secondary-lining
+      - evidence_ids:
+        - ev:a2104e17b0e3b9748fdb89f4
+        label: 排水盲管
+        node_id: node-drainage
+      review_id: diagram:4f94e9436f680395aff43e61
+      semantic_sidecar_sha256: 8e5144e346ac0f3ed0bc220970e632d549b9069480faba5a95a28aa4765837d0
+      semantic_title: 隧道复合式衬砌横断面
+      source_manifest_sha256: 68f4bb0d97b9b59f4a7c6bb9acc451dc765a61b6e838e8520571674d3fe4e4e3
+    semantic_diagram_bridge_id: v25-semantic-diagram-bridge:ecfd0bff2ef4406606aea40b
+    coverage_obligation_ids: []
+    source_projection_id: v25-canonical-projection:0912296ba52da3fe8e93cd4f
+    source_step2a_request_id: step2a-request:cb5ade9f78fd106189b0f5e3a0ee1bd2417c1b3ef3c5bb3a85a42df2c395ddb4
+    source_step2a_response_sha256: 063c7a5689ee3574387563786008b83c2de67bc04748537044383c0a75c4f97b
+    model_label_sha256: null
+    review_state: reviewed
+    reviewer: codex_operator_phase2r16_final_manual_audit
+    reviewed_at_utc: '2026-07-29T19:00:00Z'
+    review_basis: 人工逐条复核 canonical title、类型、完整 assertion、Evidence 与 primary anchor；semantic_v2 figure、节点、关系边、sidecar hash，且未伪造文本
+      anchor；diagram_relation 的 Teaching Gate 与 Learning Golden 本地对账均通过。
+  cards:
+  - card_id: v25-release-card:a7f00eb1d21cbe2249c62dcf
+    sample_id: gonglu_41_diagram_mixed
+    canonical_title: 围岩与隧道跨度分类
+    primary_fact_ids:
+    - fact:0d239f5ba27e143aaaaec931
+    - fact:eb3f2251f29a9a20f88c902b
+    presentation: table
+    short_card_exception: null
+    source_step2b_request_id: step2b-request:9570712ca0b6a23d9f39ad675b7ef832134e618449a7bcfc94db252fb98be77a
+    source_step2b_response_sha256: 866ef357fa61022f548ab435667467b5f64f28a7888ed8c4a397ecd1523a65e9
+    source_title_projection_sha256: 0e8d62edd7a6f321f8a1422c704de6bbd13c33f29f872171754fa914b95ef52d
+    review_state: reviewed
+    reviewer: codex_operator_phase2r16_final_manual_audit
+    reviewed_at_utc: '2026-07-29T19:00:00Z'
+    review_basis: 人工逐卡复核本地 canonical title、Fact 编组、presentation、完整表与原子规则分离及审核依据；table 表达与 source-derived grouping obligation、exactly-once
+      bridge 一致，未使用模型 Card 标题授权。
+  - card_id: v25-release-card:40b3629b5e9457052c440c3d
+    sample_id: gonglu_41_diagram_mixed
+    canonical_title: 洞门基础深度约束
+    primary_fact_ids:
+    - fact:e1fef22867fb494f5aae85de
+    presentation: threshold
+    short_card_exception: null
+    source_step2b_request_id: step2b-request:9570712ca0b6a23d9f39ad675b7ef832134e618449a7bcfc94db252fb98be77a
+    source_step2b_response_sha256: 866ef357fa61022f548ab435667467b5f64f28a7888ed8c4a397ecd1523a65e9
+    source_title_projection_sha256: bb9dd9eb3bd8a920acf902774b14a8322f81acfff1b45354a7377b213e340d67
+    review_state: reviewed
+    reviewer: codex_operator_phase2r16_final_manual_audit
+    reviewed_at_utc: '2026-07-29T19:00:00Z'
+    review_basis: 人工逐卡复核本地 canonical title、Fact 编组、presentation、完整表与原子规则分离及审核依据；threshold 表达与 source-derived grouping obligation、exactly-once
+      bridge 一致，未使用模型 Card 标题授权。
+  - card_id: v25-release-card:4995459aea0db1350c00cdec
+    sample_id: gonglu_41_diagram_mixed
+    canonical_title: 复合式衬砌横断面
+    primary_fact_ids:
+    - fact:e9b0fada194b3f0c856905c8
+    presentation: diagram
+    short_card_exception: null
+    source_step2b_request_id: step2b-request:9570712ca0b6a23d9f39ad675b7ef832134e618449a7bcfc94db252fb98be77a
+    source_step2b_response_sha256: 866ef357fa61022f548ab435667467b5f64f28a7888ed8c4a397ecd1523a65e9
+    source_title_projection_sha256: 35585d5c941a4ea0404348121b5ea31f8cc4239b83c4205d4952fb6e486406d5
+    review_state: reviewed
+    reviewer: codex_operator_phase2r16_final_manual_audit
+    reviewed_at_utc: '2026-07-29T19:00:00Z'
+    review_basis: 人工逐卡复核本地 canonical title、Fact 编组、presentation、完整表与原子规则分离及审核依据；diagram 表达与 source-derived grouping obligation、exactly-once
+      bridge 一致，未使用模型 Card 标题授权。
+- sample_id: gonglu_55_standard_constraints
+  source_step2a_request_id: step2a-request:a78f10b0efa63e75de9d5c9b11e6f54e996fb392d18361fada410493886afc0f
+  source_step2b_request_id: step2b-request:874ec2de945c3880dc2f4e35d848b6e2d0e3f15dbc81aa169c5720b2c08f4297
+  facts:
+  - fact_id: fact:cc1ca460b079becae876452b
+    sample_id: gonglu_55_standard_constraints
+    fact_key: safety.production-duties
+    canonical_title: 安全生产职责
+    fact_type: enumeration
+    assertion_summary: （5）施工单位在工程投标报价中应当包含安全生产费用并单独计提，不得作为竞争性
+    primary_evidence_ids:
+    - ev:9f7eadc8dd0ad36781960cbc
+    primary_anchor_span_ids:
+    - span:5aeadef24996a802092fb7ab
+    source_table_ids: []
+    continuation_binding_ids: []
+    complete_table_grid_verified: false
+    semantic_diagram_bridge: null
+    semantic_diagram_bridge_id: null
+    coverage_obligation_ids:
+    - v25-text-source-obligation:e72bfa085c049e1833167ec4
+    source_projection_id: v25-canonical-projection:de1120f942a52788c258fc15
+    source_step2a_request_id: step2a-request:a78f10b0efa63e75de9d5c9b11e6f54e996fb392d18361fada410493886afc0f
+    source_step2a_response_sha256: 4aecaecfb89f68d954fd04dd4f3979916d05f7a8ae7da3e98cc14b1ad6a0d672
+    model_label_sha256: 4b3dd04ae1bb5d9571e5f3d51fd42e4f07e9302c6a4f658ee16e2788eda35745
+    review_state: reviewed
+    reviewer: codex_operator_phase2r16_final_manual_audit
+    reviewed_at_utc: '2026-07-29T19:00:00Z'
+    review_basis: 人工逐条复核 canonical title、类型、完整 assertion、Evidence 与 primary anchor；enumeration 的 Teaching Gate 与 Learning
+      Golden 本地对账均通过。
+  - fact_id: fact:5e66ad9086f5df294c32de0f
+    sample_id: gonglu_55_standard_constraints
+    fact_key: safety.risk-threshold
+    canonical_title: 风险评估阈值
+    fact_type: threshold
+    assertion_summary: ③长度3000m及以上的隧道工程，V、VI级围岩连续长度超过50m或合计长度占隧道
+    primary_evidence_ids:
+    - ev:d68d3f7b9a499e5031c4f280
+    primary_anchor_span_ids:
+    - span:1a201392192a94f89fb60e94
+    source_table_ids: []
+    continuation_binding_ids: []
+    complete_table_grid_verified: false
+    semantic_diagram_bridge: null
+    semantic_diagram_bridge_id: null
+    coverage_obligation_ids:
+    - v25-text-source-obligation:89a9d32d1274d8d99dcb4d8b
+    source_projection_id: v25-canonical-projection:7509720b30da05dbd6d214e6
+    source_step2a_request_id: step2a-request:a78f10b0efa63e75de9d5c9b11e6f54e996fb392d18361fada410493886afc0f
+    source_step2a_response_sha256: 4aecaecfb89f68d954fd04dd4f3979916d05f7a8ae7da3e98cc14b1ad6a0d672
+    model_label_sha256: cc280ae983494dd42970f52230bccdb97b36e98f9168104616d5000adfadc07b
+    review_state: reviewed
+    reviewer: codex_operator_phase2r16_final_manual_audit
+    reviewed_at_utc: '2026-07-29T19:00:00Z'
+    review_basis: 人工逐条复核 canonical title、类型、完整 assertion、Evidence 与 primary anchor；threshold 的 Teaching Gate 与 Learning Golden
+      本地对账均通过。
+  - fact_id: fact:69485e78499ec85c9d250324
+    sample_id: gonglu_55_standard_constraints
+    fact_key: safety.accident-categories
+    canonical_title: 事故类别
+    fact_type: enumeration
+    assertion_summary: ①物体打击；
+    primary_evidence_ids:
+    - ev:f733e0f0f89528fb1ee705de
+    primary_anchor_span_ids:
+    - span:5b7c968badbcf4e293164730
+    source_table_ids: []
+    continuation_binding_ids: []
+    complete_table_grid_verified: false
+    semantic_diagram_bridge: null
+    semantic_diagram_bridge_id: null
+    coverage_obligation_ids:
+    - v25-text-source-obligation:5bfed46c115a2f66b2c8878d
+    source_projection_id: v25-canonical-projection:9060b3b2d00843fac25890cb
+    source_step2a_request_id: step2a-request:a78f10b0efa63e75de9d5c9b11e6f54e996fb392d18361fada410493886afc0f
+    source_step2a_response_sha256: 4aecaecfb89f68d954fd04dd4f3979916d05f7a8ae7da3e98cc14b1ad6a0d672
+    model_label_sha256: 76f8e5fa6cb929074bd2efb5cc3c9215c8f5a8946d49681da659789d7f6082d2
+    review_state: reviewed
+    reviewer: codex_operator_phase2r16_final_manual_audit
+    reviewed_at_utc: '2026-07-29T19:00:00Z'
+    review_basis: 人工逐条复核 canonical title、类型、完整 assertion、Evidence 与 primary anchor；enumeration 的 Teaching Gate 与 Learning
+      Golden 本地对账均通过。
+  - fact_id: fact:9988249bee51e3c6ede49e55
+    sample_id: gonglu_55_standard_constraints
+    fact_key: safety.report-deadline
+    canonical_title: 质量事故报告时限
+    fact_type: threshold
+    assertion_summary: '（1）事故报告责任单位应在接报2小时内，核实、汇总并向负责项目监管的交通运输
+
+      （2）重大及以上质量事故，省级交通运输主管部门应在接报2小时内进一步核实，并'
+    primary_evidence_ids:
+    - ev:dc1bf303b3d4471fa9d78f42
+    - ev:2d8bc2bad65095beb2b5b054
+    primary_anchor_span_ids:
+    - span:8a8df672043000e7a72c2bfc
+    - span:861ffbfbbedc7f8c941f6f5a
+    source_table_ids: []
+    continuation_binding_ids: []
+    complete_table_grid_verified: false
+    semantic_diagram_bridge: null
+    semantic_diagram_bridge_id: null
+    coverage_obligation_ids:
+    - v25-text-source-obligation:4e73732da6e96a6ac7f5c783
+    source_projection_id: v25-canonical-projection:0cb96677eeb381ed4c50abdd
+    source_step2a_request_id: step2a-request:a78f10b0efa63e75de9d5c9b11e6f54e996fb392d18361fada410493886afc0f
+    source_step2a_response_sha256: 4aecaecfb89f68d954fd04dd4f3979916d05f7a8ae7da3e98cc14b1ad6a0d672
+    model_label_sha256: b1bee6b90ad0b84f32a6300457c929244cfccd167ba8955af4a277a251866168
+    review_state: reviewed
+    reviewer: codex_operator_phase2r16_final_manual_audit
+    reviewed_at_utc: '2026-07-29T19:00:00Z'
+    review_basis: 人工逐条复核 canonical title、类型、完整 assertion、Evidence 与 primary anchor；threshold 的 Teaching Gate 与 Learning Golden
+      本地对账均通过。
+  - fact_id: fact:ced6ce149a2fd340a7d7615b
+    sample_id: gonglu_55_standard_constraints
+    fact_key: safety.accident-level-diagram
+    canonical_title: 生产安全事故等级
+    fact_type: diagram_relation
+    assertion_summary: Reviewed semantic_v2 diagram bridge preserves the original figure, reviewed nodes, edge Evidence, basis,
+      and confidence without synthetic text anchors.
+    primary_evidence_ids:
+    - ev:4f63c03e1ee994ad80c45fdb
+    primary_anchor_span_ids: []
+    source_table_ids: []
+    continuation_binding_ids: []
+    complete_table_grid_verified: false
+    semantic_diagram_bridge:
+      basis: Reviewed semantic_v2 diagram bridge preserves the original figure, reviewed nodes, edge Evidence, basis, and
+        confidence without synthetic text anchors.
+      bridge_id: v25-semantic-diagram-bridge:2141da341c91aefd77fc0977
+      edges:
+      - basis: 原始 figure crop 中的连线、相对位置或层级分支直接支持该关系；未以 OCR 文字猜测替代人工确认。
+        confidence: 0.98
+        evidence_ids:
+        - ev:4f63c03e1ee994ad80c45fdb
+        - ev:2ddd7068f81283862614cd6d
+        - ev:c5d56ac29270228e980143c7
+        relation: 严重程度递增
+        source_node_id: node-general
+        target_node_id: node-large
+      - basis: 原始 figure crop 中的连线、相对位置或层级分支直接支持该关系；未以 OCR 文字猜测替代人工确认。
+        confidence: 0.98
+        evidence_ids:
+        - ev:4f63c03e1ee994ad80c45fdb
+        - ev:c5d56ac29270228e980143c7
+        - ev:4f9da8d06591422276597fc6
+        relation: 严重程度递增
+        source_node_id: node-large
+        target_node_id: node-major
+      - basis: 原始 figure crop 中的连线、相对位置或层级分支直接支持该关系；未以 OCR 文字猜测替代人工确认。
+        confidence: 0.98
+        evidence_ids:
+        - ev:4f63c03e1ee994ad80c45fdb
+        - ev:4f9da8d06591422276597fc6
+        - ev:42124b51891dc235f79e179a
+        relation: 严重程度递增
+        source_node_id: node-major
+        target_node_id: node-extraordinary-major
+      - basis: 原始 figure crop 中的连线、相对位置或层级分支直接支持该关系；未以 OCR 文字猜测替代人工确认。
+        confidence: 0.98
+        evidence_ids:
+        - ev:4f63c03e1ee994ad80c45fdb
+        - ev:135e3823c3feed401d05c2c5
+        - ev:2ddd7068f81283862614cd6d
+        relation: 作为等级判定指标
+        source_node_id: node-death-count
+        target_node_id: node-general
+      - basis: 原始 figure crop 中的连线、相对位置或层级分支直接支持该关系；未以 OCR 文字猜测替代人工确认。
+        confidence: 0.98
+        evidence_ids:
+        - ev:4f63c03e1ee994ad80c45fdb
+        - ev:c2e1998eb15d1fb5536f5a4d
+        - ev:2ddd7068f81283862614cd6d
+        relation: 作为等级判定指标
+        source_node_id: node-serious-injury-count
+        target_node_id: node-general
+      - basis: 原始 figure crop 中的连线、相对位置或层级分支直接支持该关系；未以 OCR 文字猜测替代人工确认。
+        confidence: 0.98
+        evidence_ids:
+        - ev:4f63c03e1ee994ad80c45fdb
+        - ev:1b6b198540357ee564872921
+        - ev:2ddd7068f81283862614cd6d
+        relation: 作为等级判定指标
+        source_node_id: node-economic-loss
+        target_node_id: node-general
+      figure_evidence_id: ev:4f63c03e1ee994ad80c45fdb
+      nodes:
+      - evidence_ids:
+        - ev:4f63c03e1ee994ad80c45fdb
+        - ev:2ddd7068f81283862614cd6d
+        label: 一般事故
+        node_id: node-general
+      - evidence_ids:
+        - ev:4f63c03e1ee994ad80c45fdb
+        - ev:c5d56ac29270228e980143c7
+        label: 较大事故
+        node_id: node-large
+      - evidence_ids:
+        - ev:4f63c03e1ee994ad80c45fdb
+        - ev:4f9da8d06591422276597fc6
+        label: 重大事故
+        node_id: node-major
+      - evidence_ids:
+        - ev:4f63c03e1ee994ad80c45fdb
+        - ev:42124b51891dc235f79e179a
+        label: 特别重大事故
+        node_id: node-extraordinary-major
+      - evidence_ids:
+        - ev:4f63c03e1ee994ad80c45fdb
+        - ev:135e3823c3feed401d05c2c5
+        label: 死亡人数
+        node_id: node-death-count
+      - evidence_ids:
+        - ev:4f63c03e1ee994ad80c45fdb
+        - ev:c2e1998eb15d1fb5536f5a4d
+        label: 重伤人数
+        node_id: node-serious-injury-count
+      - evidence_ids:
+        - ev:4f63c03e1ee994ad80c45fdb
+        - ev:1b6b198540357ee564872921
+        label: 直接经济损失
+        node_id: node-economic-loss
+      review_id: diagram:be3108b2c66810ac5ee8e646
+      semantic_sidecar_sha256: 8e5144e346ac0f3ed0bc220970e632d549b9069480faba5a95a28aa4765837d0
+      semantic_title: 生产安全事故等级划分阈值
+      source_manifest_sha256: 90f27cafcc87f3ded800f40f3ebf722324704efd512da04402241301ec010731
+    semantic_diagram_bridge_id: v25-semantic-diagram-bridge:2141da341c91aefd77fc0977
+    coverage_obligation_ids: []
+    source_projection_id: v25-canonical-projection:844c3207b86e5f4effcb4d38
+    source_step2a_request_id: step2a-request:a78f10b0efa63e75de9d5c9b11e6f54e996fb392d18361fada410493886afc0f
+    source_step2a_response_sha256: 4aecaecfb89f68d954fd04dd4f3979916d05f7a8ae7da3e98cc14b1ad6a0d672
+    model_label_sha256: null
+    review_state: reviewed
+    reviewer: codex_operator_phase2r16_final_manual_audit
+    reviewed_at_utc: '2026-07-29T19:00:00Z'
+    review_basis: 人工逐条复核 canonical title、类型、完整 assertion、Evidence 与 primary anchor；semantic_v2 figure、节点、关系边、sidecar hash，且未伪造文本
+      anchor；diagram_relation 的 Teaching Gate 与 Learning Golden 本地对账均通过。
+  cards:
+  - card_id: v25-release-card:10a6290cc820d12ac15e36dc
+    sample_id: gonglu_55_standard_constraints
+    canonical_title: 事故类别与报告时限
+    primary_fact_ids:
+    - fact:69485e78499ec85c9d250324
+    - fact:9988249bee51e3c6ede49e55
+    presentation: ordered_list
+    short_card_exception: null
+    source_step2b_request_id: step2b-request:874ec2de945c3880dc2f4e35d848b6e2d0e3f15dbc81aa169c5720b2c08f4297
+    source_step2b_response_sha256: 5843057ab5303a55c5d1a92f7be31f2f7040432febec0d743b18b122317eb96b
+    source_title_projection_sha256: c3d4f46f95df6cc167122bf197042e03a13e32e25a1738be59fb91b53c57b86b
+    review_state: reviewed
+    reviewer: codex_operator_phase2r16_final_manual_audit
+    reviewed_at_utc: '2026-07-29T19:00:00Z'
+    review_basis: 人工逐卡复核本地 canonical title、Fact 编组、presentation、完整表与原子规则分离及审核依据；ordered_list 表达与 source-derived grouping obligation、exactly-once
+      bridge 一致，未使用模型 Card 标题授权。
+  - card_id: v25-release-card:365e03a33bb2e9f00935c7f2
+    sample_id: gonglu_55_standard_constraints
+    canonical_title: 生产安全事故等级
+    primary_fact_ids:
+    - fact:ced6ce149a2fd340a7d7615b
+    presentation: diagram
+    short_card_exception: null
+    source_step2b_request_id: step2b-request:874ec2de945c3880dc2f4e35d848b6e2d0e3f15dbc81aa169c5720b2c08f4297
+    source_step2b_response_sha256: 5843057ab5303a55c5d1a92f7be31f2f7040432febec0d743b18b122317eb96b
+    source_title_projection_sha256: cd3e9ef77f8525c9e0959ca37c85b5225dbf0d0b0226fcd69a4e14b9af81c31f
+    review_state: reviewed
+    reviewer: codex_operator_phase2r16_final_manual_audit
+    reviewed_at_utc: '2026-07-29T19:00:00Z'
+    review_basis: 人工逐卡复核本地 canonical title、Fact 编组、presentation、完整表与原子规则分离及审核依据；diagram 表达与 source-derived grouping obligation、exactly-once
+      bridge 一致，未使用模型 Card 标题授权。
+  - card_id: v25-release-card:1f81dff1f9f9801edaee6d75
+    sample_id: gonglu_55_standard_constraints
+    canonical_title: 安全职责与风险评估
+    primary_fact_ids:
+    - fact:cc1ca460b079becae876452b
+    - fact:5e66ad9086f5df294c32de0f
+    presentation: constraint
+    short_card_exception: null
+    source_step2b_request_id: step2b-request:874ec2de945c3880dc2f4e35d848b6e2d0e3f15dbc81aa169c5720b2c08f4297
+    source_step2b_response_sha256: 5843057ab5303a55c5d1a92f7be31f2f7040432febec0d743b18b122317eb96b
+    source_title_projection_sha256: 6b32711cbe0a548495f1d042d9f8dc63b3eac961fdfe9afac397008d7ca30b2a
+    review_state: reviewed
+    reviewer: codex_operator_phase2r16_final_manual_audit
+    reviewed_at_utc: '2026-07-29T19:00:00Z'
+    review_basis: 人工逐卡复核本地 canonical title、Fact 编组、presentation、完整表与原子规则分离及审核依据；constraint 表达与 source-derived grouping obligation、exactly-once
+      bridge 一致，未使用模型 Card 标题授权。
+- sample_id: gonglu_62_cost_flow_incident
+  source_step2a_request_id: step2a-request:79f6595d22d5d835c1984b42978c63289e0dc72721856941e4d5ce4709955258
+  source_step2b_request_id: step2b-request:b1cc1aa522267cd50ee99d7ef22675fa70aa193bf37a2c379ef1fcebcdc8bf93
+  facts:
+  - fact_id: fact:677b17fa109b98499fabc81f
+    sample_id: gonglu_62_cost_flow_incident
+    fact_key: cost.project-budget-formula
+    canonical_title: 项目预算总成本公式
+    fact_type: formula
+    assertion_summary: 项目预算总成本=∑（标后预算清单单价×清单工程量）
+    primary_evidence_ids:
+    - ev:759b2e6cf5213f83a3ba54a6
+    primary_anchor_span_ids:
+    - span:7387270fb8169f496ff530d6
+    source_table_ids: []
+    continuation_binding_ids: []
+    complete_table_grid_verified: false
+    semantic_diagram_bridge: null
+    semantic_diagram_bridge_id: null
+    coverage_obligation_ids:
+    - v25-text-source-obligation:ba97e388c69ed0924bc163e0
+    source_projection_id: v25-canonical-projection:59a12b2fedbdf4b781103278
+    source_step2a_request_id: step2a-request:79f6595d22d5d835c1984b42978c63289e0dc72721856941e4d5ce4709955258
+    source_step2a_response_sha256: 90f3936d070b2c54de0c160175272a5154137b79993a84ee1a9fd53d4a25d592
+    model_label_sha256: 01bd8dc0a91af936104f65321dc10fab028ff4a8f7124f2841e128947e6d74f7
+    review_state: reviewed
+    reviewer: codex_operator_phase2r16_final_manual_audit
+    reviewed_at_utc: '2026-07-29T19:00:00Z'
+    review_basis: 人工逐条复核 canonical title、类型、完整 assertion、Evidence 与 primary anchor；formula 的 Teaching Gate 与 Learning Golden
+      本地对账均通过。
+  - fact_id: fact:87cae4786327dd9895e63f0c
+    sample_id: gonglu_62_cost_flow_incident
+    fact_key: cost.mechanical-rental-formula
+    canonical_title: 机械租赁费公式
+    fact_type: formula
+    assertion_summary: '机械租赁费=Σ［（机械租赁单价+使用费）×
+
+      租赁数量×租赁时间］
+
+      机械租赁费=Σ（机械租赁单价×租赁数量×
+
+      租赁时间）'
+    primary_evidence_ids:
+    - ev:7ca39e97fff916f81dc35e52
+    - ev:75e2cfcc3f5b51a85b2adf5a
+    primary_anchor_span_ids:
+    - span:07d590b65597ac93e26e45d8
+    - span:974793ac15d9d4a98be76702
+    - span:f5d15420e699374c51f19c1a
+    - span:c2a923b80b4c84813c0b60d1
+    source_table_ids:
+    - ev:37cb524983bc45d87c9f97ec
+    continuation_binding_ids: []
+    complete_table_grid_verified: false
+    semantic_diagram_bridge: null
+    semantic_diagram_bridge_id: null
+    coverage_obligation_ids:
+    - v25-text-source-obligation:c91866d172edd81617b73240
+    source_projection_id: v25-canonical-projection:6e1a36e8420e7080b6f99588
+    source_step2a_request_id: step2a-request:79f6595d22d5d835c1984b42978c63289e0dc72721856941e4d5ce4709955258
+    source_step2a_response_sha256: 90f3936d070b2c54de0c160175272a5154137b79993a84ee1a9fd53d4a25d592
+    model_label_sha256: d61a94e3ce19be1a652511cf187b518cc48eb28945be56e640cc5635c999583a
+    review_state: reviewed
+    reviewer: codex_operator_phase2r16_final_manual_audit
+    reviewed_at_utc: '2026-07-29T19:00:00Z'
+    review_basis: 人工逐条复核 canonical title、类型、完整 assertion、Evidence 与 primary anchor；formula 的 Teaching Gate 与 Learning Golden
+      本地对账均通过。
+  - fact_id: fact:b62e1c50f05c43aff86771d5
+    sample_id: gonglu_62_cost_flow_incident
+    fact_key: cost.control-enumeration
+    canonical_title: 成本控制内容
+    fact_type: enumeration
+    assertion_summary: '① 人工费的控制
+
+      ⑤ 现场管理费的控制'
+    primary_evidence_ids:
+    - ev:a82c5133fd8f743fecd7fb2c
+    primary_anchor_span_ids:
+    - span:47ef1c7bf963572ae826c331
+    - span:77466f71ed57eca96222a3a0
+    source_table_ids:
+    - ev:c8ba0bbf6fada428f5efecc0
+    continuation_binding_ids: []
+    complete_table_grid_verified: false
+    semantic_diagram_bridge: null
+    semantic_diagram_bridge_id: null
+    coverage_obligation_ids:
+    - v25-list-source-obligation:65409895cd62bd36c821b4cc
+    source_projection_id: v25-canonical-projection:4083f8f1fcf12e5721f90a22
+    source_step2a_request_id: step2a-request:79f6595d22d5d835c1984b42978c63289e0dc72721856941e4d5ce4709955258
+    source_step2a_response_sha256: 90f3936d070b2c54de0c160175272a5154137b79993a84ee1a9fd53d4a25d592
+    model_label_sha256: b8fa3bf4baf46bcb6ba6a2b9c29d30f65564632fa3d3e85a2b675bc6ff0cd4df
+    review_state: reviewed
+    reviewer: codex_operator_phase2r16_final_manual_audit
+    reviewed_at_utc: '2026-07-29T19:00:00Z'
+    review_basis: 人工逐条复核 canonical title、类型、完整 assertion、Evidence 与 primary anchor；enumeration 的 Teaching Gate 与 Learning
+      Golden 本地对账均通过。
+  - fact_id: fact:157c07ea911ab2c62b98cbc5
+    sample_id: gonglu_62_cost_flow_incident
+    fact_key: cost.plan-variance-formula
+    canonical_title: 计划成本偏差公式
+    fact_type: formula
+    assertion_summary: 计划成本偏差=施工预算成本-责任目标成本
+    primary_evidence_ids:
+    - ev:79d57ad76e118cdae6a54d02
+    primary_anchor_span_ids:
+    - span:f9afccc3ea2654b009aef3a6
+    source_table_ids: []
+    continuation_binding_ids: []
+    complete_table_grid_verified: false
+    semantic_diagram_bridge: null
+    semantic_diagram_bridge_id: null
+    coverage_obligation_ids:
+    - v25-text-source-obligation:336714053ee9b6b4af7c4b39
+    source_projection_id: v25-canonical-projection:511b3f13dcd88a793350f12d
+    source_step2a_request_id: step2a-request:79f6595d22d5d835c1984b42978c63289e0dc72721856941e4d5ce4709955258
+    source_step2a_response_sha256: 90f3936d070b2c54de0c160175272a5154137b79993a84ee1a9fd53d4a25d592
+    model_label_sha256: 9b96b916f612795485088bd99c188f087ea01048c268703b5361063866502935
+    review_state: reviewed
+    reviewer: codex_operator_phase2r16_final_manual_audit
+    reviewed_at_utc: '2026-07-29T19:00:00Z'
+    review_basis: 人工逐条复核 canonical title、类型、完整 assertion、Evidence 与 primary anchor；formula 的 Teaching Gate 与 Learning Golden
+      本地对账均通过。
+  - fact_id: fact:73b218f87155cc55743cb801
+    sample_id: gonglu_62_cost_flow_incident
+    fact_key: cost.budget-cost-structure
+    canonical_title: 标后预算总费用结构
+    fact_type: diagram_relation
+    assertion_summary: Reviewed semantic_v2 diagram bridge preserves the original figure, reviewed nodes, edge Evidence, basis,
+      and confidence without synthetic text anchors.
+    primary_evidence_ids:
+    - ev:4af15b958587bb00fcaac211
+    primary_anchor_span_ids: []
+    source_table_ids: []
+    continuation_binding_ids: []
+    complete_table_grid_verified: false
+    semantic_diagram_bridge:
+      basis: Reviewed semantic_v2 diagram bridge preserves the original figure, reviewed nodes, edge Evidence, basis, and
+        confidence without synthetic text anchors.
+      bridge_id: v25-semantic-diagram-bridge:c5f630eac2bcefcbdcbcdfab
+      edges:
+      - basis: 原始 figure crop 的同层分支线从标后预算总费用连至上缴企业费用；关系由图形层级人工确认。
+        confidence: 0.98
+        evidence_ids:
+        - ev:4af15b958587bb00fcaac211
+        - ev:e0ca23f969789a26726443cb
+        - ev:e1c3c8b2efd9e0e98304a210
+        relation: 包含
+        source_node_id: node-total-cost
+        target_node_id: node-enterprise-cost
+      - basis: 原始 figure crop 的分支线将上缴企业费用与总部管理费连接为从属层级。
+        confidence: 0.98
+        evidence_ids:
+        - ev:4af15b958587bb00fcaac211
+        - ev:e1c3c8b2efd9e0e98304a210
+        - ev:62439e15c5f7735b6233ecbd
+        relation: 包含
+        source_node_id: node-enterprise-cost
+        target_node_id: node-head-office
+      - basis: 原始 figure crop 的分支线将上缴企业费用与利润连接为从属层级。
+        confidence: 0.98
+        evidence_ids:
+        - ev:4af15b958587bb00fcaac211
+        - ev:e1c3c8b2efd9e0e98304a210
+        - ev:e2831626e91dcaefe155896b
+        relation: 包含
+        source_node_id: node-enterprise-cost
+        target_node_id: node-profit
+      - basis: 原始 figure crop 的主分支从标后预算总费用连至项目预算总成本；图中 OCR 尾随短线不改变可见节点名称。
+        confidence: 0.98
+        evidence_ids:
+        - ev:4af15b958587bb00fcaac211
+        - ev:e0ca23f969789a26726443cb
+        - ev:3d8d49dd836996c4b9dbfb25
+        relation: 包含
+        source_node_id: node-total-cost
+        target_node_id: node-project-budget-cost
+      - basis: 原始 figure crop 的分支线将项目预算总成本与直接费连接为从属层级。
+        confidence: 0.98
+        evidence_ids:
+        - ev:4af15b958587bb00fcaac211
+        - ev:3d8d49dd836996c4b9dbfb25
+        - ev:411739cdebcbf2af9143920c
+        relation: 包含
+        source_node_id: node-project-budget-cost
+        target_node_id: node-direct-cost
+      - basis: 原始 figure crop 的分支线将项目预算总成本与设备购置费连接为从属层级。
+        confidence: 0.98
+        evidence_ids:
+        - ev:4af15b958587bb00fcaac211
+        - ev:3d8d49dd836996c4b9dbfb25
+        - ev:323a24a21eeee2a9c219872b
+        relation: 包含
+        source_node_id: node-project-budget-cost
+        target_node_id: node-equipment-cost
+      - basis: 原始 figure crop 的分支线将项目预算总成本与措施费连接为从属层级。
+        confidence: 0.98
+        evidence_ids:
+        - ev:4af15b958587bb00fcaac211
+        - ev:3d8d49dd836996c4b9dbfb25
+        - ev:d4f4403cd667fdd5eef1da83
+        relation: 包含
+        source_node_id: node-project-budget-cost
+        target_node_id: node-measure-cost
+      - basis: 原始 figure crop 的分支线将项目预算总成本与专项费用连接为从属层级。
+        confidence: 0.98
+        evidence_ids:
+        - ev:4af15b958587bb00fcaac211
+        - ev:3d8d49dd836996c4b9dbfb25
+        - ev:d658ba56ff8bc90630f11db8
+        relation: 包含
+        source_node_id: node-project-budget-cost
+        target_node_id: node-special-cost
+      - basis: 原始 figure crop 的分支线将项目预算总成本与现场管理费连接为从属层级。
+        confidence: 0.98
+        evidence_ids:
+        - ev:4af15b958587bb00fcaac211
+        - ev:3d8d49dd836996c4b9dbfb25
+        - ev:baf2ba52e6d6413b39f48cef
+        relation: 包含
+        source_node_id: node-project-budget-cost
+        target_node_id: node-site-management-cost
+      - basis: 原始 figure crop 的独立主分支从标后预算总费用连至规费。
+        confidence: 0.98
+        evidence_ids:
+        - ev:4af15b958587bb00fcaac211
+        - ev:e0ca23f969789a26726443cb
+        - ev:8fd55bc531c7b881f0cb318f
+        relation: 包含
+        source_node_id: node-total-cost
+        target_node_id: node-fees
+      - basis: 原始 figure crop 的独立主分支从标后预算总费用连至税金。
+        confidence: 0.98
+        evidence_ids:
+        - ev:4af15b958587bb00fcaac211
+        - ev:e0ca23f969789a26726443cb
+        - ev:0d31b4729e337491f509d863
+        relation: 包含
+        source_node_id: node-total-cost
+        target_node_id: node-tax
+      figure_evidence_id: ev:4af15b958587bb00fcaac211
+      nodes:
+      - evidence_ids:
+        - ev:4af15b958587bb00fcaac211
+        - ev:e0ca23f969789a26726443cb
+        label: 标后预算总费用
+        node_id: node-total-cost
+      - evidence_ids:
+        - ev:4af15b958587bb00fcaac211
+        - ev:e1c3c8b2efd9e0e98304a210
+        label: 上缴企业费用
+        node_id: node-enterprise-cost
+      - evidence_ids:
+        - ev:4af15b958587bb00fcaac211
+        - ev:62439e15c5f7735b6233ecbd
+        label: 总部管理费
+        node_id: node-head-office
+      - evidence_ids:
+        - ev:4af15b958587bb00fcaac211
+        - ev:e2831626e91dcaefe155896b
+        label: 利润
+        node_id: node-profit
+      - evidence_ids:
+        - ev:4af15b958587bb00fcaac211
+        - ev:3d8d49dd836996c4b9dbfb25
+        label: 项目预算总成本
+        node_id: node-project-budget-cost
+      - evidence_ids:
+        - ev:4af15b958587bb00fcaac211
+        - ev:411739cdebcbf2af9143920c
+        label: 直接费
+        node_id: node-direct-cost
+      - evidence_ids:
+        - ev:4af15b958587bb00fcaac211
+        - ev:323a24a21eeee2a9c219872b
+        label: 设备购置费
+        node_id: node-equipment-cost
+      - evidence_ids:
+        - ev:4af15b958587bb00fcaac211
+        - ev:d4f4403cd667fdd5eef1da83
+        label: 措施费
+        node_id: node-measure-cost
+      - evidence_ids:
+        - ev:4af15b958587bb00fcaac211
+        - ev:d658ba56ff8bc90630f11db8
+        label: 专项费用
+        node_id: node-special-cost
+      - evidence_ids:
+        - ev:4af15b958587bb00fcaac211
+        - ev:baf2ba52e6d6413b39f48cef
+        label: 现场管理费
+        node_id: node-site-management-cost
+      - evidence_ids:
+        - ev:4af15b958587bb00fcaac211
+        - ev:8fd55bc531c7b881f0cb318f
+        label: 规费
+        node_id: node-fees
+      - evidence_ids:
+        - ev:4af15b958587bb00fcaac211
+        - ev:0d31b4729e337491f509d863
+        label: 税金
+        node_id: node-tax
+      review_id: diagram:83c9c0d82088d5fa43c365b4
+      semantic_sidecar_sha256: 0ad43480d3b6957c1bdd14f47e8adf2b0caae04452372d4425a46f01deb8611f
+      semantic_title: 标后预算总费用结构
+      source_manifest_sha256: 550cfd172a096dae42dc423b809ba008e44f0c93254da612a0ad3216bbb8b9ac
+    semantic_diagram_bridge_id: v25-semantic-diagram-bridge:c5f630eac2bcefcbdcbcdfab
+    coverage_obligation_ids: []
+    source_projection_id: v25-canonical-projection:a469452278fa77575138d67f
+    source_step2a_request_id: step2a-request:79f6595d22d5d835c1984b42978c63289e0dc72721856941e4d5ce4709955258
+    source_step2a_response_sha256: 90f3936d070b2c54de0c160175272a5154137b79993a84ee1a9fd53d4a25d592
+    model_label_sha256: null
+    review_state: reviewed
+    reviewer: codex_operator_phase2r16_final_manual_audit
+    reviewed_at_utc: '2026-07-29T19:00:00Z'
+    review_basis: 人工逐条复核 canonical title、类型、完整 assertion、Evidence 与 primary anchor；semantic_v2 figure、节点、关系边、sidecar hash，且未伪造文本
+      anchor；diagram_relation 的 Teaching Gate 与 Learning Golden 本地对账均通过。
+  cards:
+  - card_id: v25-release-card:c16e2fc7671047b24a16a4c1
+    sample_id: gonglu_62_cost_flow_incident
+    canonical_title: 成本预算与偏差公式
+    primary_fact_ids:
+    - fact:677b17fa109b98499fabc81f
+    - fact:87cae4786327dd9895e63f0c
+    - fact:157c07ea911ab2c62b98cbc5
+    presentation: formula
+    short_card_exception: null
+    source_step2b_request_id: step2b-request:b1cc1aa522267cd50ee99d7ef22675fa70aa193bf37a2c379ef1fcebcdc8bf93
+    source_step2b_response_sha256: 109ae3e1c263c0fd0f798f8c57a36d1ca405a41c15e5e31a6963c164fc7b3d05
+    source_title_projection_sha256: 4d563525e7c60a4de7bf9b971ab0e48b03444470d89cf8d8910180d69ce08ada
+    review_state: reviewed
+    reviewer: codex_operator_phase2r16_final_manual_audit
+    reviewed_at_utc: '2026-07-29T19:00:00Z'
+    review_basis: 人工逐卡复核本地 canonical title、Fact 编组、presentation、完整表与原子规则分离及审核依据；formula 表达与 source-derived grouping obligation、exactly-once
+      bridge 一致，未使用模型 Card 标题授权。
+  - card_id: v25-release-card:958c0cd0a8d88fad4e4ffc6d
+    sample_id: gonglu_62_cost_flow_incident
+    canonical_title: 成本控制内容
+    primary_fact_ids:
+    - fact:b62e1c50f05c43aff86771d5
+    presentation: ordered_list
+    short_card_exception: null
+    source_step2b_request_id: step2b-request:b1cc1aa522267cd50ee99d7ef22675fa70aa193bf37a2c379ef1fcebcdc8bf93
+    source_step2b_response_sha256: 109ae3e1c263c0fd0f798f8c57a36d1ca405a41c15e5e31a6963c164fc7b3d05
+    source_title_projection_sha256: 427fbf05165c07085e0539fee92402af080599218e337aa22bb89a400196fee3
+    review_state: reviewed
+    reviewer: codex_operator_phase2r16_final_manual_audit
+    reviewed_at_utc: '2026-07-29T19:00:00Z'
+    review_basis: 人工逐卡复核本地 canonical title、Fact 编组、presentation、完整表与原子规则分离及审核依据；ordered_list 表达与 source-derived grouping obligation、exactly-once
+      bridge 一致，未使用模型 Card 标题授权。
+  - card_id: v25-release-card:e8a6d76882ba889296a6404f
+    sample_id: gonglu_62_cost_flow_incident
+    canonical_title: 标后预算总费用结构
+    primary_fact_ids:
+    - fact:73b218f87155cc55743cb801
+    presentation: diagram
+    short_card_exception: null
+    source_step2b_request_id: step2b-request:b1cc1aa522267cd50ee99d7ef22675fa70aa193bf37a2c379ef1fcebcdc8bf93
+    source_step2b_response_sha256: 109ae3e1c263c0fd0f798f8c57a36d1ca405a41c15e5e31a6963c164fc7b3d05
+    source_title_projection_sha256: 623e697c50208e1b80213b243e801b9c9d469dfe532bbb83d3c0a63795fdd4ee
+    review_state: reviewed
+    reviewer: codex_operator_phase2r16_final_manual_audit
+    reviewed_at_utc: '2026-07-29T19:00:00Z'
+    review_basis: 人工逐卡复核本地 canonical title、Fact 编组、presentation、完整表与原子规则分离及审核依据；diagram 表达与 source-derived grouping obligation、exactly-once
+      bridge 一致，未使用模型 Card 标题授权。
+review_basis: Phase 2R.1.6 仅对 Phase 2R.1.5.2 ready_draft 的持久化真实 V25/V25B 输出做离线人工终审：逐条确认 canonical Fact 的完整 assertion、Evidence/anchor、表格/续接/semantic_v2
+  provenance、Teaching Gate 与 Golden 对账；逐卡确认本地 canonical title、exactly-once 编组与 presentation。历史 fixture、原始 Evidence 和真实 request
+  均保持冻结。

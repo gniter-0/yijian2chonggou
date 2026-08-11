@@ -1,0 +1,28 @@
+schema_version: "2.0"
+backfill_version: table_continuation_card_backfill_v1
+backfill_id: "table-card-backfill:d00c29e2b58b5d63fe7e2e7a"
+sample_id: gonglu_24_continuation_real
+state: reviewed
+reviewer: codex_operator_phase2r089
+reviewed_at_utc: "2026-07-28T02:45:00Z"
+review_basis: "基于第2至3页刚度验算表的 reviewed table-continuation binding，补回原 Card Golden 中仅因跨页未闭合而保持 draft 的整表 Fact、③条阈值 Fact 和两张依赖 Card；原 fixture 的已审核条目与原始 YAML 不改写。"
+source_card_golden_path: "scripts/tests/fixtures/v2/continuation_learning/gonglu_24_continuation_real_step2b_card_draft.yaml"
+source_card_golden_sha256: 2637f981fd2266bf4ed26589fd26e2d140799563a02ed4d6e2ae99b0d75c902b
+table_continuation_binding_id: "table-continuation:7c0923bfb0e6137de786def5"
+table_continuation_binding_sha256: 7c0923bfb0e6137de786def569b10b27dc38e6c9c4a2bb8f48d1158d940f827b
+facts:
+  - source_draft_proposal_key: "proposal:d66695fc22fbae0bfb646a65"
+    expected_fact_type: composition
+    gate_role: complete_table
+  - source_draft_proposal_key: "proposal:b0e1df1700ed965198e861ac"
+    expected_fact_type: threshold
+    gate_role: item_three_threshold
+cards:
+  - card_key: formwork.stiffness-table
+    expected_title: "刚度验算要求"
+    expected_presentation: table
+    required_source_draft_proposal_keys: ["proposal:d66695fc22fbae0bfb646a65"]
+  - card_key: formwork.deflection-limits
+    expected_title: "模板和支架挠度限制"
+    expected_presentation: threshold
+    required_source_draft_proposal_keys: ["proposal:90a2f860741fc594e3e5f3b9", "proposal:d217114151319bd940317f8d", "proposal:b0e1df1700ed965198e861ac"]

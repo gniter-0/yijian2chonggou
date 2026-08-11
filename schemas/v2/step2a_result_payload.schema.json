@@ -1,0 +1,149 @@
+{
+  "$defs": {
+    "CompletenessMode": {
+      "enum": [
+        "atomic",
+        "all_items",
+        "ordered_steps",
+        "complete_formula",
+        "full_table_row",
+        "full_diagram_subgraph"
+      ],
+      "title": "CompletenessMode",
+      "type": "string"
+    },
+    "FactType": {
+      "enum": [
+        "definition",
+        "classification",
+        "enumeration",
+        "procedure",
+        "condition",
+        "threshold",
+        "formula",
+        "comparison",
+        "exception",
+        "composition",
+        "diagram_relation",
+        "visual_reference",
+        "exam_note",
+        "example",
+        "exercise"
+      ],
+      "title": "FactType",
+      "type": "string"
+    },
+    "ModelNumericClaim": {
+      "additionalProperties": false,
+      "description": "Minimal model-owned numeric selection; parent Evidence is local-only.",
+      "properties": {
+        "value": {
+          "description": "Exact quantitative value present in the Fact assertion and the selected anchor span.",
+          "examples": [
+            "65MPa"
+          ],
+          "minLength": 1,
+          "title": "Value",
+          "type": "string"
+        },
+        "anchor_span_id": {
+          "pattern": "^span:[0-9a-f]{24}$",
+          "title": "Anchor Span Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "value",
+        "anchor_span_id"
+      ],
+      "title": "ModelNumericClaim",
+      "type": "object"
+    },
+    "Step2AModelFactProposal": {
+      "additionalProperties": false,
+      "description": "Strict Step 2A model-output shape before local condition derivation.\n\nThe model never owns condition claims. Keeping this type separate from the\ncanonical Fact proposal makes ``condition_claims`` an unknown field at the\nrelay boundary while still allowing the local contract to persist derived\nclaims as part of the audited Fact identity.",
+      "properties": {
+        "proposal_key": {
+          "pattern": "^proposal:[a-z0-9][a-z0-9._-]*$",
+          "title": "Proposal Key",
+          "type": "string"
+        },
+        "source_section_ids": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Source Section Ids",
+          "type": "array"
+        },
+        "fact_type": {
+          "$ref": "#/$defs/FactType"
+        },
+        "label": {
+          "maxLength": 64,
+          "minLength": 2,
+          "title": "Label",
+          "type": "string"
+        },
+        "assertion": {
+          "minLength": 2,
+          "title": "Assertion",
+          "type": "string"
+        },
+        "completeness_mode": {
+          "$ref": "#/$defs/CompletenessMode",
+          "default": "atomic"
+        },
+        "primary_anchor_span_ids": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Primary Anchor Span Ids",
+          "type": "array"
+        },
+        "secondary_anchor_span_ids": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "title": "Secondary Anchor Span Ids",
+          "type": "array"
+        },
+        "numeric_claims": {
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/ModelNumericClaim"
+          },
+          "title": "Numeric Claims",
+          "type": "array"
+        }
+      },
+      "required": [
+        "proposal_key",
+        "source_section_ids",
+        "fact_type",
+        "label",
+        "assertion",
+        "primary_anchor_span_ids"
+      ],
+      "title": "Step2AModelFactProposal",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "description": "The only JSON shape a real Step 2A model may return.",
+  "properties": {
+    "proposals": {
+      "description": "The required non-empty Step 2A Fact proposal array. This is the only permitted top-level field; legacy top-level fields such as sample_id, facts, and fact_proposals are forbidden.",
+      "items": {
+        "$ref": "#/$defs/Step2AModelFactProposal"
+      },
+      "title": "Proposals",
+      "type": "array"
+    }
+  },
+  "required": [
+    "proposals"
+  ],
+  "title": "Step2AResultPayload",
+  "type": "object"
+}

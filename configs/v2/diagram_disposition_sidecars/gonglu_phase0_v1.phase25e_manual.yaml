@@ -1,0 +1,299 @@
+schema_version: '2.0'
+sidecar_id: gonglu_phase0_v1.phase25e_manual_visual_disposition
+registry_id: gonglu_phase0_v1
+material_profile_id: yijian_gonglu_2026
+annotation_revision: 1
+source_diagram_review_sidecar_id: gonglu_phase0_v1.diagram_review_draft.controlled_vision_r2.highres_vision_r3
+source_diagram_review_sidecar_sha256: 541f042f1d7141c30bdb5d3b2cf3bf48969a240aae28b133e9927c28c4e43dc5
+entries:
+- disposition_id: visual:1e2f8c831d4edb33e43dfd80
+  review_id: diagram:1e2f8c831d4edb33e43dfd80
+  sample_id: gonglu_01_text_list
+  pdf_sha256: ace9041ad220a4ebda2bba279900de49ebd83cb4a81fd601a38b37db315d0b4d
+  page_num: 1
+  figure_evidence_id: ev:3a3de856bb37558c7b007d0e
+  figure_crop_path: crops/p0001_image_005.png
+  figure_crop_sha256: f6f1708b00a31067315d489abdb422b405d620148688bd76a31e80a168a7516e
+  disposition: structural_diagram
+  audit:
+    reviewer: phase25e_manual_visual_review
+    reviewed_at_utc: '2026-07-25T12:49:34Z'
+    crop_path: crops/p0001_image_005.png
+    crop_sha256: f6f1708b00a31067315d489abdb422b405d620148688bd76a31e80a168a7516e
+    basis: 人工复核 600 DPI 裁剪；路基填方横断面包含路面宽度 B、边坡、填方高度及 0.8m、至少 1m 等技术标注，属于需保留节点和关系审核的结构图。
+- disposition_id: visual:3f62fa54a3a0a341605b7f65
+  review_id: diagram:3f62fa54a3a0a341605b7f65
+  sample_id: gonglu_01_text_list
+  pdf_sha256: ace9041ad220a4ebda2bba279900de49ebd83cb4a81fd601a38b37db315d0b4d
+  page_num: 1
+  figure_evidence_id: ev:506ca83799bb9f259bee1152
+  figure_crop_path: crops/p0001_image_004.png
+  figure_crop_sha256: 4f002926c1e5b009fa8ffd6c66cbad51fa9ef7ba2a88ac55c708f676c4e3ce73
+  disposition: structural_diagram
+  audit:
+    reviewer: phase25e_manual_visual_review
+    reviewed_at_utc: '2026-07-25T12:49:34Z'
+    crop_path: crops/p0001_image_004.png
+    crop_sha256: 4f002926c1e5b009fa8ffd6c66cbad51fa9ef7ba2a88ac55c708f676c4e3ce73
+    basis: 人工复核 600 DPI 裁剪；路堑边坡图呈现道路宽度、岩石、坡比和截水沟等可学习的构造及尺寸关系，不能按照片豁免。
+- disposition_id: visual:551628b4ce4064138e24ee58
+  review_id: diagram:551628b4ce4064138e24ee58
+  sample_id: gonglu_01_text_list
+  pdf_sha256: ace9041ad220a4ebda2bba279900de49ebd83cb4a81fd601a38b37db315d0b4d
+  page_num: 2
+  figure_evidence_id: ev:ed0182177d21337b1ce706d4
+  figure_crop_path: crops/p0002_image_001.png
+  figure_crop_sha256: 05855eb5f3ae904c4329953085d67df3139d343ce78d3a387e26730b5bbd6923
+  disposition: structural_diagram
+  audit:
+    reviewer: phase25e_manual_visual_review
+    reviewed_at_utc: '2026-07-25T12:49:34Z'
+    crop_path: crops/p0002_image_001.png
+    crop_sha256: 05855eb5f3ae904c4329953085d67df3139d343ce78d3a387e26730b5bbd6923
+    basis: 人工复核 600 DPI 裁剪；整体式路基横断面含路侧边沟、中央分隔带和排水构造标注，属于结构图，继续等待完整节点关系审核。
+- disposition_id: visual:1ab9cd57cf58a47d06b1576e
+  review_id: diagram:1ab9cd57cf58a47d06b1576e
+  sample_id: gonglu_01_text_list
+  pdf_sha256: ace9041ad220a4ebda2bba279900de49ebd83cb4a81fd601a38b37db315d0b4d
+  page_num: 5
+  figure_evidence_id: ev:f6b19a3187df0ab984ba4bc5
+  figure_crop_path: crops/p0005_image_001.png
+  figure_crop_sha256: 98d396e420a1839e0a6fdc84afdd82d7b3176aa084bfc91ac8a21733d630e157
+  disposition: structural_diagram
+  audit:
+    reviewer: phase25e_manual_visual_review
+    reviewed_at_utc: '2026-07-25T12:49:34Z'
+    crop_path: crops/p0005_image_001.png
+    crop_sha256: 98d396e420a1839e0a6fdc84afdd82d7b3176aa084bfc91ac8a21733d630e157
+    basis: 人工复核 600 DPI 裁剪；路面横断面给出 A、B、C、车行道宽度、横坡和多层材料，属于需结构化的技术断面。
+- disposition_id: visual:e465c1249176989867fe4da0
+  review_id: diagram:e465c1249176989867fe4da0
+  sample_id: gonglu_24_table_formula
+  pdf_sha256: 9308dac1b5aa40bd1da44c22d847f22b872bd8025abc3cdc5b5b34c1407e2cf3
+  page_num: 1
+  figure_evidence_id: ev:ef46c363269d2e99c929b38c
+  figure_crop_path: crops/p0001_image_002.png
+  figure_crop_sha256: 87c618c4521b08076f29ff5de8f1fa2181704cf1b84938b1ef4309af1d8a0821
+  disposition: structural_diagram
+  audit:
+    reviewer: phase25e_manual_visual_review
+    reviewed_at_utc: '2026-07-25T12:49:34Z'
+    crop_path: crops/p0001_image_002.png
+    crop_sha256: 87c618c4521b08076f29ff5de8f1fa2181704cf1b84938b1ef4309af1d8a0821
+    basis: 人工复核 600 DPI 裁剪；支架布置及荷载图包含立杆、斜撑、荷载和尺寸标注，技术关系不可由照片分流替代。
+- disposition_id: visual:ed29757d6651363303fa62de
+  review_id: diagram:ed29757d6651363303fa62de
+  sample_id: gonglu_24_table_formula
+  pdf_sha256: 9308dac1b5aa40bd1da44c22d847f22b872bd8025abc3cdc5b5b34c1407e2cf3
+  page_num: 1
+  figure_evidence_id: ev:fbb202669fb26251689d2011
+  figure_crop_path: crops/p0001_image_001.png
+  figure_crop_sha256: 6a7f9eeedf52f57fdb554ba28475819018b1b5115ad3bc8480b4a7ac740ebe5d
+  disposition: photo_example
+  title: 模板与支架施工实景（示例）
+  audit:
+    reviewer: phase25e_manual_visual_review
+    reviewed_at_utc: '2026-07-25T12:49:34Z'
+    crop_path: crops/p0001_image_001.png
+    crop_sha256: 6a7f9eeedf52f57fdb554ba28475819018b1b5115ad3bc8480b4a7ac740ebe5d
+    basis: 人工复核 600 DPI 裁剪；两张均为无可读构件标注和无明确关系箭头的模板、支架施工照片，仅作为本节施工实例保留，不创建结构节点和关系边。
+- disposition_id: visual:b9b8b8c77908716fbe677324
+  review_id: diagram:b9b8b8c77908716fbe677324
+  sample_id: gonglu_24_table_formula
+  pdf_sha256: 9308dac1b5aa40bd1da44c22d847f22b872bd8025abc3cdc5b5b34c1407e2cf3
+  page_num: 5
+  figure_evidence_id: ev:21d2c80d32a260a355b191f9
+  figure_crop_path: crops/p0005_image_002.png
+  figure_crop_sha256: ee0e2ea2062365c28b1a523419c5c736f0e4e52267a3e23cf9026b0446d3c7b1
+  disposition: photo_example
+  title: 支架预压施工实景（示例）
+  audit:
+    reviewer: phase25e_manual_visual_review
+    reviewed_at_utc: '2026-07-25T12:49:34Z'
+    crop_path: crops/p0005_image_002.png
+    crop_sha256: ee0e2ea2062365c28b1a523419c5c736f0e4e52267a3e23cf9026b0446d3c7b1
+    basis: 人工复核 600 DPI 裁剪；图像展示支架和堆载预压施工现场，但没有可逐项锚定的结构标签或关系，按照片实例处理。
+- disposition_id: visual:bbdcf031d82a22f8e0579c64
+  review_id: diagram:bbdcf031d82a22f8e0579c64
+  sample_id: gonglu_24_table_formula
+  pdf_sha256: 9308dac1b5aa40bd1da44c22d847f22b872bd8025abc3cdc5b5b34c1407e2cf3
+  page_num: 5
+  figure_evidence_id: ev:bedf0ac458d9905eff5f4cf4
+  figure_crop_path: crops/p0005_image_001.png
+  figure_crop_sha256: f27bc8ad49bfbaa14ea7a8bf35c0e67b6e29b1f6347535fe96b9cbbead560dd2
+  disposition: structural_diagram
+  audit:
+    reviewer: phase25e_manual_visual_review
+    reviewed_at_utc: '2026-07-25T12:49:34Z'
+    crop_path: crops/p0005_image_001.png
+    crop_sha256: f27bc8ad49bfbaa14ea7a8bf35c0e67b6e29b1f6347535fe96b9cbbead560dd2
+    basis: 人工复核 600 DPI 裁剪；支架立体构造图含水平剪刀撑、竖向剪刀撑和间距尺寸，属于结构图，不能免除结构化审核。
+- disposition_id: visual:79a635606e898dd2c8054d8b
+  review_id: diagram:79a635606e898dd2c8054d8b
+  sample_id: gonglu_24_table_formula
+  pdf_sha256: 9308dac1b5aa40bd1da44c22d847f22b872bd8025abc3cdc5b5b34c1407e2cf3
+  page_num: 8
+  figure_evidence_id: ev:15e219d794955469118009af
+  figure_crop_path: crops/p0008_image_005.png
+  figure_crop_sha256: c0fe889e0c504814dde66173d3f2af5d1fb99f797b5671e0f0eb78558a5b7b4a
+  disposition: photo_example
+  title: 拱桥拱架施工实景（示例）
+  audit:
+    reviewer: phase25e_manual_visual_review
+    reviewed_at_utc: '2026-07-25T12:49:34Z'
+    crop_path: crops/p0008_image_005.png
+    crop_sha256: c0fe889e0c504814dde66173d3f2af5d1fb99f797b5671e0f0eb78558a5b7b4a
+    basis: 人工复核 600 DPI 裁剪；该图是拱桥拱架施工现场照片，无可读结构标签或显式关系，仅作为施工实例保留。
+- disposition_id: visual:3dcb1e7efe8dd3062cce3da2
+  review_id: diagram:3dcb1e7efe8dd3062cce3da2
+  sample_id: gonglu_24_table_formula
+  pdf_sha256: 9308dac1b5aa40bd1da44c22d847f22b872bd8025abc3cdc5b5b34c1407e2cf3
+  page_num: 8
+  figure_evidence_id: ev:334ba7ed08b0869cdcb8cbbd
+  figure_crop_path: crops/p0008_image_004.png
+  figure_crop_sha256: 4d9618b4f080e415ada260e496c7c2deb9d1ca416d68a8475f980bf3844a239d
+  disposition: structural_diagram
+  audit:
+    reviewer: phase25e_manual_visual_review
+    reviewed_at_utc: '2026-07-25T12:49:34Z'
+    crop_path: crops/p0008_image_004.png
+    crop_sha256: 4d9618b4f080e415ada260e496c7c2deb9d1ca416d68a8475f980bf3844a239d
+    basis: 人工复核 600 DPI 裁剪；拱形模板支架图直接标注斜撑、模板、立柱和卸落设备，属于待补全结构关系的技术图。
+- disposition_id: visual:396dc40c301a19c4ec5f4fe5
+  review_id: diagram:396dc40c301a19c4ec5f4fe5
+  sample_id: gonglu_24_table_formula
+  pdf_sha256: 9308dac1b5aa40bd1da44c22d847f22b872bd8025abc3cdc5b5b34c1407e2cf3
+  page_num: 8
+  figure_evidence_id: ev:619d0a69534104405d8df586
+  figure_crop_path: crops/p0008_image_003.png
+  figure_crop_sha256: 512ab5004c0702719ae2751c2de5f34157e037d96d94f38068ea56dd4d17e7e0
+  disposition: photo_example
+  title: 拱桥支架预压实景（示例）
+  audit:
+    reviewer: phase25e_manual_visual_review
+    reviewed_at_utc: '2026-07-25T12:49:34Z'
+    crop_path: crops/p0008_image_003.png
+    crop_sha256: 512ab5004c0702719ae2751c2de5f34157e037d96d94f38068ea56dd4d17e7e0
+    basis: 人工复核 600 DPI 裁剪；图像展示拱桥上部堆载预压现场，但无可读构件标签、尺寸或关系边，仅作为实例照片保留。
+- disposition_id: visual:74c5db4bf1a228814763f381
+  review_id: diagram:74c5db4bf1a228814763f381
+  sample_id: gonglu_24_table_formula
+  pdf_sha256: 9308dac1b5aa40bd1da44c22d847f22b872bd8025abc3cdc5b5b34c1407e2cf3
+  page_num: 8
+  figure_evidence_id: ev:d62b687a0c6868d813aef69c
+  figure_crop_path: crops/p0008_image_001.png
+  figure_crop_sha256: ab3064c1d8804415c7566b4eb76f2de364bb69bd42597df6ad28a02304960d77
+  disposition: structural_diagram
+  audit:
+    reviewer: phase25e_manual_visual_review
+    reviewed_at_utc: '2026-07-25T12:49:34Z'
+    crop_path: crops/p0008_image_001.png
+    crop_sha256: ab3064c1d8804415c7566b4eb76f2de364bb69bd42597df6ad28a02304960d77
+    basis: 人工复核 600 DPI 裁剪；拱形模板支架图直接标注斜撑、模板、立柱和卸落设备，仍需按构件关系完成结构审核。
+- disposition_id: visual:5a449a7a443f885d90936488
+  review_id: diagram:5a449a7a443f885d90936488
+  sample_id: gonglu_24_table_formula
+  pdf_sha256: 9308dac1b5aa40bd1da44c22d847f22b872bd8025abc3cdc5b5b34c1407e2cf3
+  page_num: 8
+  figure_evidence_id: ev:e9e49a77afad9fc24066fe8d
+  figure_crop_path: crops/p0008_image_002.png
+  figure_crop_sha256: ba12e70f24415fd4273f51170a37ba316e6aa4ca74410ae52922f10f4f02dfdb
+  disposition: photo_example
+  title: 桥梁支架预压实景（示例）
+  audit:
+    reviewer: phase25e_manual_visual_review
+    reviewed_at_utc: '2026-07-25T12:49:34Z'
+    crop_path: crops/p0008_image_002.png
+    crop_sha256: ba12e70f24415fd4273f51170a37ba316e6aa4ca74410ae52922f10f4f02dfdb
+    basis: 人工复核 600 DPI 裁剪；图像为桥梁支架堆载预压现场，无逐项结构标注或可验证关系，按照片实例保留。
+- disposition_id: visual:4f94e9436f680395aff43e61
+  review_id: diagram:4f94e9436f680395aff43e61
+  sample_id: gonglu_41_diagram_mixed
+  pdf_sha256: 5c46177e092ad0f154a4ed87fd275c9443c665cd1fdd2d6f38821707546a0d56
+  page_num: 2
+  figure_evidence_id: ev:a2104e17b0e3b9748fdb89f4
+  figure_crop_path: crops/p0002_image_002.png
+  figure_crop_sha256: dfba82233da477c77b9e85fc26f812979619489d290969bb6b0c24e42b5b3f4f
+  disposition: structural_diagram
+  audit:
+    reviewer: phase25e_manual_visual_review
+    reviewed_at_utc: '2026-07-25T12:49:34Z'
+    crop_path: crops/p0002_image_002.png
+    crop_sha256: dfba82233da477c77b9e85fc26f812979619489d290969bb6b0c24e42b5b3f4f
+    basis: 人工复核 600 DPI 裁剪；隧道断面明确标有围岩、防水层、初期支护、二次衬砌、排水构造等，必须继续结构化审核。
+- disposition_id: visual:42184d082a0b0faa4f5cb65c
+  review_id: diagram:42184d082a0b0faa4f5cb65c
+  sample_id: gonglu_41_diagram_mixed
+  pdf_sha256: 5c46177e092ad0f154a4ed87fd275c9443c665cd1fdd2d6f38821707546a0d56
+  page_num: 2
+  figure_evidence_id: ev:dc884fee211aaa58db43e3a7
+  figure_crop_path: crops/p0002_image_001.png
+  figure_crop_sha256: 9277f14370c011b7ca4d06c60a5e37c6abd6f3a942a264723b958d74120fb82e
+  disposition: photo_example
+  title: 隧道洞口与洞内施工实景（示例）
+  audit:
+    reviewer: phase25e_manual_visual_review
+    reviewed_at_utc: '2026-07-25T12:49:34Z'
+    crop_path: crops/p0002_image_001.png
+    crop_sha256: 9277f14370c011b7ca4d06c60a5e37c6abd6f3a942a264723b958d74120fb82e
+    basis: 人工复核 600 DPI 裁剪；图中为洞口和洞内支护实景照片，只有洞名牌可读，无法构成完整的构件关系图，按实例照片处理。
+- disposition_id: visual:70d916a81cc5090c13c0bc14
+  review_id: diagram:70d916a81cc5090c13c0bc14
+  sample_id: gonglu_41_diagram_mixed
+  pdf_sha256: 5c46177e092ad0f154a4ed87fd275c9443c665cd1fdd2d6f38821707546a0d56
+  page_num: 4
+  figure_evidence_id: ev:2eabb1999a9bf1ddee037187
+  figure_crop_path: crops/p0004_image_001.png
+  figure_crop_sha256: 0dd062570fa5de7ee16381b49cd424c3d12e937c7d5168e0ad424a08b0f07949
+  disposition: structural_diagram
+  audit:
+    reviewer: phase25e_manual_visual_review
+    reviewed_at_utc: '2026-07-25T12:49:34Z'
+    crop_path: crops/p0004_image_001.png
+    crop_sha256: 0dd062570fa5de7ee16381b49cd424c3d12e937c7d5168e0ad424a08b0f07949
+    basis: 人工复核 600 DPI 裁剪；左侧洞门构造及尺寸示意含地面线、排水沟、拱顶外围和尺寸关系，右侧照片不改变其作为结构图的性质。
+- disposition_id: visual:2a2d7bcf0b6cced748e0b9bb
+  review_id: diagram:2a2d7bcf0b6cced748e0b9bb
+  sample_id: gonglu_41_diagram_mixed
+  pdf_sha256: 5c46177e092ad0f154a4ed87fd275c9443c665cd1fdd2d6f38821707546a0d56
+  page_num: 4
+  figure_evidence_id: ev:386ce39bb5314317108ef8e9
+  figure_crop_path: crops/p0004_image_002.png
+  figure_crop_sha256: a6f87cf41243f974862b84c70c00157c2043e60cebc55a5478666f39547b6faa
+  disposition: structural_diagram
+  audit:
+    reviewer: phase25e_manual_visual_review
+    reviewed_at_utc: '2026-07-25T12:49:34Z'
+    crop_path: crops/p0004_image_002.png
+    crop_sha256: a6f87cf41243f974862b84c70c00157c2043e60cebc55a5478666f39547b6faa
+    basis: 人工复核 600 DPI 裁剪；隧道明洞横断面和排水构造示意含坡率、尺寸和构件位置关系，继续按结构图门禁处理。
+- disposition_id: visual:5218447664fb7ad55ff8ffd9
+  review_id: diagram:5218447664fb7ad55ff8ffd9
+  sample_id: gonglu_41_diagram_mixed
+  pdf_sha256: 5c46177e092ad0f154a4ed87fd275c9443c665cd1fdd2d6f38821707546a0d56
+  page_num: 4
+  figure_evidence_id: ev:cd779574d5400341a2f5b56b
+  figure_crop_path: crops/p0004_image_003.png
+  figure_crop_sha256: be1c37b1c0fac6ede07a594741def0c7f414122badeac2c003e1c1eb6afb5cdd
+  disposition: structural_diagram
+  audit:
+    reviewer: phase25e_manual_visual_review
+    reviewed_at_utc: '2026-07-25T12:49:34Z'
+    crop_path: crops/p0004_image_003.png
+    crop_sha256: be1c37b1c0fac6ede07a594741def0c7f414122badeac2c003e1c1eb6afb5cdd
+    basis: 人工复核 600 DPI 裁剪；路堑式拱形明洞图包含明洞、回填土和结构断面，属于待结构化的技术构造图。
+- disposition_id: visual:be3108b2c66810ac5ee8e646
+  review_id: diagram:be3108b2c66810ac5ee8e646
+  sample_id: gonglu_55_standard_constraints
+  pdf_sha256: c13e1bb19a0bd5f3ba37ac57160d8ee1c62f19fcbb4e4415870d4e4d78a675ce
+  page_num: 5
+  figure_evidence_id: ev:4f63c03e1ee994ad80c45fdb
+  figure_crop_path: crops/p0005_image_001.png
+  figure_crop_sha256: eb5e25637f70ac67ecc4b3a7ea54a928ddb8f562e8d96c640f100c98562e7e99
+  disposition: structural_diagram
+  audit:
+    reviewer: phase25e_manual_visual_review
+    reviewed_at_utc: '2026-07-25T12:49:34Z'
+    crop_path: crops/p0005_image_001.png
+    crop_sha256: eb5e25637f70ac67ecc4b3a7ea54a928ddb8f562e8d96c640f100c98562e7e99
+    basis: 人工复核 600 DPI 裁剪；事故等级阈值图以死亡、重伤和经济损失对应一般至特别重大等级，属于必须保留数值关系的结构图。

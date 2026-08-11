@@ -1,0 +1,12 @@
+{
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "content": "{\"draft_cards\":[{\"presentation\":\"table\"},{\"presentation\":\"ordered_list\"},{\"presentation\":\"formula\"}]}",
+        "role": "assistant"
+      }
+    }
+  ],
+  "provider_note": "extra sibling"
+}

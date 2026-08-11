@@ -1,0 +1,476 @@
+{
+  "$defs": {
+    "BBox": {
+      "additionalProperties": false,
+      "properties": {
+        "x0": {
+          "minimum": 0,
+          "title": "X0",
+          "type": "number"
+        },
+        "y0": {
+          "minimum": 0,
+          "title": "Y0",
+          "type": "number"
+        },
+        "x1": {
+          "exclusiveMinimum": 0,
+          "title": "X1",
+          "type": "number"
+        },
+        "y1": {
+          "exclusiveMinimum": 0,
+          "title": "Y1",
+          "type": "number"
+        }
+      },
+      "required": [
+        "x0",
+        "y0",
+        "x1",
+        "y1"
+      ],
+      "title": "BBox",
+      "type": "object"
+    },
+    "DiagramCandidate": {
+      "additionalProperties": false,
+      "description": "Untrusted OCR candidate retained to make human review faster.",
+      "properties": {
+        "evidence_id": {
+          "title": "Evidence Id",
+          "type": "string"
+        },
+        "text": {
+          "title": "Text",
+          "type": "string"
+        },
+        "bbox": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/BBox"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        }
+      },
+      "required": [
+        "evidence_id",
+        "text"
+      ],
+      "title": "DiagramCandidate",
+      "type": "object"
+    },
+    "DiagramEdge": {
+      "additionalProperties": false,
+      "properties": {
+        "source_node_id": {
+          "pattern": "^node-[a-z0-9][a-z0-9._-]*$",
+          "title": "Source Node Id",
+          "type": "string"
+        },
+        "target_node_id": {
+          "pattern": "^node-[a-z0-9][a-z0-9._-]*$",
+          "title": "Target Node Id",
+          "type": "string"
+        },
+        "relation": {
+          "minLength": 1,
+          "title": "Relation",
+          "type": "string"
+        },
+        "evidence_ids": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "title": "Evidence Ids",
+          "type": "array"
+        },
+        "basis": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Basis"
+        },
+        "confidence": {
+          "anyOf": [
+            {
+              "maximum": 1,
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Confidence"
+        }
+      },
+      "required": [
+        "source_node_id",
+        "target_node_id",
+        "relation"
+      ],
+      "title": "DiagramEdge",
+      "type": "object"
+    },
+    "DiagramNode": {
+      "additionalProperties": false,
+      "properties": {
+        "node_id": {
+          "pattern": "^node-[a-z0-9][a-z0-9._-]*$",
+          "title": "Node Id",
+          "type": "string"
+        },
+        "label": {
+          "minLength": 1,
+          "title": "Label",
+          "type": "string"
+        },
+        "evidence_ids": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Evidence Ids",
+          "type": "array"
+        }
+      },
+      "required": [
+        "node_id",
+        "label",
+        "evidence_ids"
+      ],
+      "title": "DiagramNode",
+      "type": "object"
+    },
+    "DiagramReviewAudit": {
+      "additionalProperties": false,
+      "properties": {
+        "reviewer": {
+          "minLength": 1,
+          "title": "Reviewer",
+          "type": "string"
+        },
+        "reviewed_at_utc": {
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}Z$",
+          "title": "Reviewed At Utc",
+          "type": "string"
+        },
+        "crop_path": {
+          "minLength": 1,
+          "title": "Crop Path",
+          "type": "string"
+        },
+        "crop_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Crop Sha256",
+          "type": "string"
+        },
+        "basis": {
+          "minLength": 1,
+          "title": "Basis",
+          "type": "string"
+        },
+        "review_crop_manifest": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/DiagramReviewCropManifest"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "review_asset": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/HighResReviewAsset"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        }
+      },
+      "required": [
+        "reviewer",
+        "reviewed_at_utc",
+        "crop_path",
+        "crop_sha256",
+        "basis"
+      ],
+      "title": "DiagramReviewAudit",
+      "type": "object"
+    },
+    "DiagramReviewCropManifest": {
+      "additionalProperties": false,
+      "properties": {
+        "manifest_path": {
+          "minLength": 1,
+          "title": "Manifest Path",
+          "type": "string"
+        },
+        "manifest_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Manifest Sha256",
+          "type": "string"
+        }
+      },
+      "required": [
+        "manifest_path",
+        "manifest_sha256"
+      ],
+      "title": "DiagramReviewCropManifest",
+      "type": "object"
+    },
+    "DiagramReviewEntry": {
+      "additionalProperties": false,
+      "properties": {
+        "review_id": {
+          "pattern": "^diagram:[0-9a-f]{24}$",
+          "title": "Review Id",
+          "type": "string"
+        },
+        "sample_id": {
+          "pattern": "^[a-z0-9][a-z0-9._-]*$",
+          "title": "Sample Id",
+          "type": "string"
+        },
+        "pdf_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Pdf Sha256",
+          "type": "string"
+        },
+        "page_num": {
+          "minimum": 1,
+          "title": "Page Num",
+          "type": "integer"
+        },
+        "figure_evidence_id": {
+          "title": "Figure Evidence Id",
+          "type": "string"
+        },
+        "figure_crop_path": {
+          "minLength": 1,
+          "title": "Figure Crop Path",
+          "type": "string"
+        },
+        "figure_crop_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Figure Crop Sha256",
+          "type": "string"
+        },
+        "state": {
+          "$ref": "#/$defs/DiagramReviewState",
+          "default": "draft"
+        },
+        "semantic_contract_version": {
+          "$ref": "#/$defs/DiagramSemanticContractVersion",
+          "default": "legacy_v1"
+        },
+        "title": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Title"
+        },
+        "diagram_type": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/DiagramType"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "nodes": {
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/DiagramNode"
+          },
+          "title": "Nodes",
+          "type": "array"
+        },
+        "edges": {
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/DiagramEdge"
+          },
+          "title": "Edges",
+          "type": "array"
+        },
+        "candidate_nodes": {
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/DiagramCandidate"
+          },
+          "title": "Candidate Nodes",
+          "type": "array"
+        },
+        "candidate_edge_texts": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "title": "Candidate Edge Texts",
+          "type": "array"
+        },
+        "audit": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/DiagramReviewAudit"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        }
+      },
+      "required": [
+        "review_id",
+        "sample_id",
+        "pdf_sha256",
+        "page_num",
+        "figure_evidence_id",
+        "figure_crop_path",
+        "figure_crop_sha256"
+      ],
+      "title": "DiagramReviewEntry",
+      "type": "object"
+    },
+    "DiagramReviewState": {
+      "enum": [
+        "draft",
+        "reviewed"
+      ],
+      "title": "DiagramReviewState",
+      "type": "string"
+    },
+    "DiagramSemanticContractVersion": {
+      "description": "Schema level for reviewed edge semantics.\n\nExisting manually reviewed sidecars predate per-edge evidence metadata and\nremain readable as ``legacy_v1``. New semantic reviews must opt in to the\nstricter ``semantic_v2`` contract instead of silently claiming provenance.",
+      "enum": [
+        "legacy_v1",
+        "semantic_v2"
+      ],
+      "title": "DiagramSemanticContractVersion",
+      "type": "string"
+    },
+    "DiagramType": {
+      "enum": [
+        "hierarchy",
+        "cross_section",
+        "scale",
+        "load_distribution",
+        "structural",
+        "process",
+        "flow",
+        "comparison",
+        "table",
+        "layout"
+      ],
+      "title": "DiagramType",
+      "type": "string"
+    },
+    "HighResReviewAsset": {
+      "additionalProperties": false,
+      "properties": {
+        "review_crop_path": {
+          "minLength": 1,
+          "title": "Review Crop Path",
+          "type": "string"
+        },
+        "review_crop_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Review Crop Sha256",
+          "type": "string"
+        },
+        "render_dpi": {
+          "minimum": 300,
+          "title": "Render Dpi",
+          "type": "integer"
+        },
+        "margin_pt": {
+          "minimum": 0,
+          "title": "Margin Pt",
+          "type": "number"
+        },
+        "figure_bbox": {
+          "$ref": "#/$defs/BBox"
+        }
+      },
+      "required": [
+        "review_crop_path",
+        "review_crop_sha256",
+        "render_dpi",
+        "margin_pt",
+        "figure_bbox"
+      ],
+      "title": "HighResReviewAsset",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "default": "2.0",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "sidecar_id": {
+      "pattern": "^[a-z0-9][a-z0-9._-]*$",
+      "title": "Sidecar Id",
+      "type": "string"
+    },
+    "registry_id": {
+      "title": "Registry Id",
+      "type": "string"
+    },
+    "material_profile_id": {
+      "title": "Material Profile Id",
+      "type": "string"
+    },
+    "annotation_revision": {
+      "minimum": 1,
+      "title": "Annotation Revision",
+      "type": "integer"
+    },
+    "entries": {
+      "items": {
+        "$ref": "#/$defs/DiagramReviewEntry"
+      },
+      "title": "Entries",
+      "type": "array"
+    }
+  },
+  "required": [
+    "sidecar_id",
+    "registry_id",
+    "material_profile_id",
+    "annotation_revision",
+    "entries"
+  ],
+  "title": "DiagramReviewSidecar",
+  "type": "object"
+}

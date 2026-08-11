@@ -1,0 +1,174 @@
+schema_version: '2.0'
+sidecar_version: table_repair_review_v1
+repair_id: table-repair:f08289697f10ceb230b35ef3
+sample_id: gonglu_24_table_formula
+page_num: 8
+state: reviewed
+reviewer: codex_operator_phase2r13_source_reconciliation
+reviewed_at_utc: '2026-07-29T18:00:00Z'
+review_basis: Visible merged cells close the 5x3 arch-removal grid; source text, rows,
+  cells, bboxes, and crop remain immutable.
+source_manifest_path: data/evidence_v2/golden/gonglu_phase0_v1/gonglu_24_table_formula/pages/page_0008.json
+source_manifest_sha256: e1bbfd521749af8a2e948c5e94beb932daa49b4444c4b18e7638c6848208665c
+table_evidence_id: ev:6a3d7510fca1e3542931b397
+table_bbox:
+  x0: 90.232
+  y0: 393.21
+  x1: 501.6775
+  y1: 533.91
+crop_path: data/evidence_v2/golden/gonglu_phase0_v1/gonglu_24_table_formula/crops/p0008_table_002.png
+crop_sha256: 059c250147e51d9ad0c6afbe363390c9a1610ba437fb97fdcebfe8a78f45ed86
+declared_row_count: 5
+declared_column_count: 3
+rows:
+- evidence_id: ev:9fb560b1d7ef0abcde27be3f
+  row_index: 0
+- evidence_id: ev:1bca4be0396b5addd7ee78e7
+  row_index: 1
+- evidence_id: ev:1fdfc9c10d12398015906113
+  row_index: 2
+- evidence_id: ev:eb02b558d5b4226e1346ac9f
+  row_index: 3
+- evidence_id: ev:17d5c46701383e10cc614f60
+  row_index: 4
+cells:
+- evidence_id: ev:e3af25ad2896d84ec833b0e8
+  row_evidence_id: ev:9fb560b1d7ef0abcde27be3f
+  row_index: 0
+  column_index: 0
+  source_row_span: 1
+  source_col_span: 1
+  reviewed_row_span: 1
+  reviewed_col_span: 1
+  canonical_text_sha256: f31fe7387677aebb1b97dcd35fb741924fde9512fede68a8939d56fa7a5e02e5
+  bbox:
+    x0: 90.232
+    y0: 393.21
+    x1: 172.46
+    y1: 430.37
+- evidence_id: ev:7be568e3f143b4eddefdc1c3
+  row_evidence_id: ev:9fb560b1d7ef0abcde27be3f
+  row_index: 0
+  column_index: 1
+  source_row_span: 1
+  source_col_span: 1
+  reviewed_row_span: 1
+  reviewed_col_span: 2
+  canonical_text_sha256: 6902ec1b63bb75c2d7d367db652a63e263aecc6475198ce72b4a86839cbdde24
+  bbox:
+    x0: 172.46
+    y0: 393.21
+    x1: 501.6775
+    y1: 430.37
+- evidence_id: ev:fd153eadc009615fb92f4310
+  row_evidence_id: ev:1bca4be0396b5addd7ee78e7
+  row_index: 1
+  column_index: 0
+  source_row_span: 1
+  source_col_span: 1
+  reviewed_row_span: 3
+  reviewed_col_span: 1
+  canonical_text_sha256: adf7d82812378fa78db13f0b76b456f209cd567704cb076e9b8974a966186c71
+  bbox:
+    x0: 90.232
+    y0: 430.37
+    x1: 172.46
+    y1: 494.95
+- evidence_id: ev:adc489cd1b9555145191417f
+  row_evidence_id: ev:1bca4be0396b5addd7ee78e7
+  row_index: 1
+  column_index: 1
+  source_row_span: 1
+  source_col_span: 1
+  reviewed_row_span: 1
+  reviewed_col_span: 2
+  canonical_text_sha256: 8bc36e46eb14c6a99bdc2db511e6addbf3fbafd54aebf686d3616f01ae2dc2ff
+  bbox:
+    x0: 172.46
+    y0: 430.37
+    x1: 501.6775
+    y1: 451.87
+- evidence_id: ev:a7665c08b939c0f17040e087
+  row_evidence_id: ev:1fdfc9c10d12398015906113
+  row_index: 2
+  column_index: 1
+  source_row_span: 1
+  source_col_span: 1
+  reviewed_row_span: 1
+  reviewed_col_span: 1
+  canonical_text_sha256: e16ca99901315bbcb63d2de2cbff388a87c86c6c01eab839d6f869f4c01491f4
+  bbox:
+    x0: 172.46
+    y0: 451.87
+    x1: 300.81
+    y1: 473.35
+- evidence_id: ev:5787e1c42bd76941983aec42
+  row_evidence_id: ev:1fdfc9c10d12398015906113
+  row_index: 2
+  column_index: 2
+  source_row_span: 1
+  source_col_span: 1
+  reviewed_row_span: 1
+  reviewed_col_span: 1
+  canonical_text_sha256: eed4c15577c52139e4fece9dfc9b54fcf01cadb275bdb176de1357d5bc85b51d
+  bbox:
+    x0: 300.81
+    y0: 451.87
+    x1: 501.6775
+    y1: 473.35
+- evidence_id: ev:fa5c344a51449b7b2c96a37c
+  row_evidence_id: ev:eb02b558d5b4226e1346ac9f
+  row_index: 3
+  column_index: 1
+  source_row_span: 1
+  source_col_span: 1
+  reviewed_row_span: 1
+  reviewed_col_span: 1
+  canonical_text_sha256: add5fb78373167f89145a5d86f110d5fc81cacb1cc1b82bb32205a167543ee3a
+  bbox:
+    x0: 172.46
+    y0: 473.35
+    x1: 300.81
+    y1: 494.95
+- evidence_id: ev:f9900a58bd6a29cec463d2cd
+  row_evidence_id: ev:eb02b558d5b4226e1346ac9f
+  row_index: 3
+  column_index: 2
+  source_row_span: 1
+  source_col_span: 1
+  reviewed_row_span: 1
+  reviewed_col_span: 1
+  canonical_text_sha256: d40efe9ef22bb9b468453d07ad9f2f92d2cc38c747a93a86ffebd2c29bff5866
+  bbox:
+    x0: 300.81
+    y0: 473.35
+    x1: 501.6775
+    y1: 494.95
+- evidence_id: ev:e655270303c462a8e279f35f
+  row_evidence_id: ev:17d5c46701383e10cc614f60
+  row_index: 4
+  column_index: 0
+  source_row_span: 1
+  source_col_span: 1
+  reviewed_row_span: 1
+  reviewed_col_span: 1
+  canonical_text_sha256: fab4077d0be37fc63378b403327d8f24863e65cdee283a74f97fb25ac4868f9c
+  bbox:
+    x0: 90.232
+    y0: 494.95
+    x1: 172.46
+    y1: 533.91
+- evidence_id: ev:fad8a9662295265ec28129a4
+  row_evidence_id: ev:17d5c46701383e10cc614f60
+  row_index: 4
+  column_index: 1
+  source_row_span: 1
+  source_col_span: 1
+  reviewed_row_span: 1
+  reviewed_col_span: 2
+  canonical_text_sha256: 1fec84c841236bb99372937ce5499ca827f192a1f57a379bc5082364e13b492b
+  bbox:
+    x0: 172.46
+    y0: 494.95
+    x1: 501.6775
+    y1: 533.91

@@ -1,0 +1,213 @@
+schema_version: step4_card6_reviewed_image_fixture_v1
+fixture_id: step4-reviewed-image-card6:735e54608b97b7435913c3f5
+card_index: 6
+source_card_id: v25-release-card:f06d575da299041aae98895c
+sample_id: gonglu_24_table_formula
+fact_ids:
+- fact:80ab4525cacc0aa1a10c9fcc
+presentation: table
+source_step3_fixture_path: scripts/tests/fixtures/v2/release_fixtures/gonglu_phase2r2242_step3_reviewed_release.yaml
+source_step3_fixture_sha256: 8a6226e4a7f1cdece711a770566b2401a91e43428b85897d9ded7c778cda5ab3
+source_card_binding_sha256: ae5447569793a374306c153d8ee841bf8edfca8c128aa809a735897da232a6d8
+source_r311_request_sha256: 3f3a86d6c5a953df3553831f3aa598751d5cb59361325736c4465236a09959f2
+source_r311_model_input_sha256: 1cb16cc96af1a7e5981119da093852ff9782c8c96cd1e02360735ccfe4e19e38
+source_r311_prompt_sha256: ac1af617d1b989499719ab51ac16a69f07e9d0c16eaed65194b60b20643190d8
+source_r311_gate_sha256: 8754fba97f5425a1c9b35141fa5151a770a942b2b91f462006f7a36775b90c18
+source_r311_report_sha256: 9be4e221b8d81ac930847596118567d30c1872f4f4b667b66e8f927ded3d8886
+source_r311_contract_sha256: b8415bf97fe38e92619c687965ad49399e3065f740db3fabe82df26086dbaa5d
+source_grid_contract_sha256: b68fc6a35fd7bb9a4f37605d0e33148bb23c6af31e3bc9d34ad77131c3e6d44d
+source_display_contract_sha256: d7b70f93e0cf10dba58d2278309e32e41ab7024021a08f8622308b10fdd7003b
+source_r312_diagnostic_identity: step4-card6-r312-diagnostic:c05b7ed8a600fb02e901cd7d9fd1ddd325224048dd64a9c7324d4b05d92b93e4
+source_r312_business_identity: step4-card6-r312-request:1479fac39f73f836ba0d77b7d8e32c19772a753ebf39c7798182175ca67361a3
+source_r312_request_file_sha256: 05be6f1d4cc2bc01e970b43fbf904301aa1e0c0433b6a257e4c88e511bb2dc5d
+source_r312_response_sha256: aaeda7940288dadae3fa5067d8ba53c726cd0eced1af2d8a4c28fe2fab9af87e
+source_r312_image_record_sha256: bb30b9d5c85049f3cdf54fde67a5f5074bfeb77e7e118074f80b732c56bf2173
+source_r312_machine_report_sha256: 64be705e9449a2f9262adc24556f5ad45e0918b4bdb92f09af0844c2c8dee523
+source_r312_visual_audit_sha256: 619f9d2f7c08f5d1f65713b5b7b012708255eb6ee992464e6dfa378ff53f5351
+source_r312_final_report_sha256: a17db5320c2b140f904ae5aa9d4cfb1433bc8aa971c3734c6ab56aeac0b22450
+provider_request_id: d358e4d97fb543ed976079020bd86c3f
+image_path: data/semantic_llm_v2/phase2r312_step4_card6_table_border_live_smoke_run1/gonglu-step4-card-06-f06d575d.png
+image_sha256: 72970e31f8647e31e37fd7062da19349902b5021f2d0f2f7fc0f84f7005db3bd
+image_mime: image/png
+image_width: 1536
+image_height: 1024
+response_format_b64_only: true
+row_count: 6
+column_count: 3
+coordinate_count: 18
+source_cell_count: 14
+unoccupied_coordinate_count: 4
+merged_cell_count: 0
+required_vertical_segment_count: 24
+required_horizontal_segment_count: 21
+cells:
+- row: 0
+  column: 0
+  row_span: 1
+  column_span: 1
+  text: 表3.1-2 模板、支架和拱架设计计算的荷载组合
+  evidence_id: ev:fc09e3c8e912db4b82494820
+  source_cell_contract_sha256: 25fecbd59c14d5de1ad9bbc2884c43add5e53c95e266163d9b3d08a1e634a02e
+  visually_confirmed: true
+- row: 1
+  column: 0
+  row_span: 1
+  column_span: 1
+  text: 模板、支架结构类别
+  evidence_id: ev:782cd39ec20a92a9bbdb35a5
+  source_cell_contract_sha256: c263afc1a0da355f540b6329aac8a79d3d865d5517e09bb4366f1e4794b54ca3
+  visually_confirmed: true
+- row: 1
+  column: 1
+  row_span: 1
+  column_span: 1
+  text: 荷载组合
+  evidence_id: ev:c9f32bad3bc0f45ac748a27f
+  source_cell_contract_sha256: dca61e074293d3c7f7b1e1a4878e24140cf0e7ddd9057d6bc2dccd2c9f3831d6
+  visually_confirmed: true
+- row: 2
+  column: 1
+  row_span: 1
+  column_span: 1
+  text: 计算强度用
+  evidence_id: ev:0a4bdb2a1294c10ca268145f
+  source_cell_contract_sha256: 473f1ff27fc844e90e6b30badec9410c95da14b72c40298b6351efbf0b022e08
+  visually_confirmed: true
+- row: 2
+  column: 2
+  row_span: 1
+  column_span: 1
+  text: 验算刚度用
+  evidence_id: ev:898a584c53fff2df714568e4
+  source_cell_contract_sha256: f74a5cfa35e18e7ba1f437b50e098643a16aadf9f983a3947f22b1d39114b88a
+  visually_confirmed: true
+- row: 3
+  column: 0
+  row_span: 1
+  column_span: 1
+  text: 梁、板和拱的底模板以及支承板、支架及拱等
+  evidence_id: ev:4ba08a871a0e6320aed32719
+  source_cell_contract_sha256: 97dc34b855b0e76e94fa36e302ef317662f58b5283bff402147d740524bb0454
+  visually_confirmed: true
+- row: 3
+  column: 1
+  row_span: 1
+  column_span: 1
+  text: ①+②+③+④+⑦+⑧
+  evidence_id: ev:a4cb0c0301ee508a6bcd72ef
+  source_cell_contract_sha256: 81686b2eae0088384bcf4b85cd8bded9cd454819cca76bfdb659647d131cb6d7
+  visually_confirmed: true
+- row: 3
+  column: 2
+  row_span: 1
+  column_span: 1
+  text: ①+②+⑦+⑧
+  evidence_id: ev:74c97e0576279463bd9fddf8
+  source_cell_contract_sha256: f07ba5002b5b1b9a6cc975f9bd4db7417c48da26dea0f959b05b2ed9c092c7f9
+  visually_confirmed: true
+- row: 4
+  column: 0
+  row_span: 1
+  column_span: 1
+  text: 缘石、人行道、栏杆、柱、梁、板、拱等的侧模板
+  evidence_id: ev:855848b7ef01057437956aa8
+  source_cell_contract_sha256: d78421b77e709687d267256992834fdde50f59b3156a6e160a7c009878bb0e2b
+  visually_confirmed: true
+- row: 4
+  column: 1
+  row_span: 1
+  column_span: 1
+  text: ④+⑤
+  evidence_id: ev:a87bb1d19e822d734c5e90c7
+  source_cell_contract_sha256: aee2b3bfd5c085fa98c668ec57eec2057c9a19b81ce430f5dfaf0c5ffbf47f10
+  visually_confirmed: true
+- row: 4
+  column: 2
+  row_span: 1
+  column_span: 1
+  text: ⑤
+  evidence_id: ev:2a146b0db6e4ac56f13f8c2b
+  source_cell_contract_sha256: b5aebabd61a074f41bdd9d9d9b6e18d12ab3b8213f29cea808d63f8e7ed6ee27
+  visually_confirmed: true
+- row: 5
+  column: 0
+  row_span: 1
+  column_span: 1
+  text: 基础、墩台等厚大建筑物的侧模板
+  evidence_id: ev:53fde0b771369de62de1ef72
+  source_cell_contract_sha256: 908d9ffe49ce290d7e920fd968e9f0cded6b59e95b545276e8793742c2fa6273
+  visually_confirmed: true
+- row: 5
+  column: 1
+  row_span: 1
+  column_span: 1
+  text: ⑤+⑥
+  evidence_id: ev:f4b6133f569d4ff2e7d5c840
+  source_cell_contract_sha256: 2ded293f02b5c59587c2f4df54d8602ee757a5bf835c07a95fd4f23acc282c63
+  visually_confirmed: true
+- row: 5
+  column: 2
+  row_span: 1
+  column_span: 1
+  text: ⑤
+  evidence_id: ev:b8068b13cccda738d504600f
+  source_cell_contract_sha256: e3fa7a6f9e89060c0c8bac79ea26dcb9229f6c509c79cbdbaba3ca338a81eef5
+  visually_confirmed: true
+unoccupied_coordinates:
+- row: 0
+  column: 1
+- row: 0
+  column: 2
+- row: 1
+  column: 2
+- row: 2
+  column: 0
+reading_order_cell_sha256s:
+- 25fecbd59c14d5de1ad9bbc2884c43add5e53c95e266163d9b3d08a1e634a02e
+- c263afc1a0da355f540b6329aac8a79d3d865d5517e09bb4366f1e4794b54ca3
+- dca61e074293d3c7f7b1e1a4878e24140cf0e7ddd9057d6bc2dccd2c9f3831d6
+- 473f1ff27fc844e90e6b30badec9410c95da14b72c40298b6351efbf0b022e08
+- f74a5cfa35e18e7ba1f437b50e098643a16aadf9f983a3947f22b1d39114b88a
+- 97dc34b855b0e76e94fa36e302ef317662f58b5283bff402147d740524bb0454
+- 81686b2eae0088384bcf4b85cd8bded9cd454819cca76bfdb659647d131cb6d7
+- f07ba5002b5b1b9a6cc975f9bd4db7417c48da26dea0f959b05b2ed9c092c7f9
+- d78421b77e709687d267256992834fdde50f59b3156a6e160a7c009878bb0e2b
+- aee2b3bfd5c085fa98c668ec57eec2057c9a19b81ce430f5dfaf0c5ffbf47f10
+- b5aebabd61a074f41bdd9d9d9b6e18d12ab3b8213f29cea808d63f8e7ed6ee27
+- 908d9ffe49ce290d7e920fd968e9f0cded6b59e95b545276e8793742c2fa6273
+- 2ded293f02b5c59587c2f4df54d8602ee757a5bf835c07a95fd4f23acc282c63
+- e3fa7a6f9e89060c0c8bac79ea26dcb9229f6c509c79cbdbaba3ca338a81eef5
+table_evidence_id: ev:ddbc36b6a00a72e55fd6eb45
+source_table_ids:
+- ev:ddbc36b6a00a72e55fd6eb45
+anchor_span_ids:
+- span:dd50e787b31340b8bf5d0075
+- span:1f3254bf7ceaad67171d63d3
+- span:d2c94b531772c57b8efdcdce
+- span:b361953e7a389cf40f86c903
+- span:e31be928b3d781c9ca55c9f4
+- span:469078d625890d26ea269a77
+- span:73be2f8a8683d73c2b32f26b
+- span:9f8b62083b6a037d697fd384
+- span:76a05f991f3a3772c750b54b
+- span:f88ee3b3e2ac36d4ade4b830
+- span:7f460e3fe706de3b39a69761
+- span:269debb72ae8da2c0df939b6
+- span:7f35a1503bcd1ab27ae58f26
+- span:8498c111fe2d6b8023250524
+- span:c4d108ddf923832902c35d22
+source_manifest_sha256s:
+- d61a6721c1aba3edbb9a650a4826e92a4d2cef027e98f0765b4c7a78cadbfd54
+crop_sha256s:
+- 48f6ec8c0b8930f4508044d973b9964a6d70dcdd821d93fe889ed4f0e8a7993a
+final_review_audit_sha256: 91630dead56541ef424e6a3a8542458b8ed4e23d1bca23d58ee66afb98375b0f
+review_state: reviewed
+reviewer: codex_operator_phase2r313_card6_image_final_review
+reviewed_at_utc: '2026-07-31T12:05:54Z'
+review_basis: Independent Phase 2R.3.13 inspection of the frozen R3.12 PNG confirmed
+  the complete 6x3 grid, 18 independent coordinates, all 14 source-owned cell texts
+  and formula symbols in exact row-major order, four bordered text-free coordinates,
+  zero merges, continuous grid rules, exact Evidence and provenance bindings, and
+  no truncation, OCR pollution, branding, watermark, or excluded content.
+image_copy_created: false
+generation_authorized: false

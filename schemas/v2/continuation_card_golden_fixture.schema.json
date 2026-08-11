@@ -1,0 +1,291 @@
+{
+  "$defs": {
+    "CardGoldenReview": {
+      "additionalProperties": false,
+      "properties": {
+        "state": {
+          "$ref": "#/$defs/CardGoldenReviewState",
+          "default": "draft"
+        },
+        "reviewer": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Reviewer"
+        },
+        "reviewed_at_utc": {
+          "anyOf": [
+            {
+              "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}Z$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Reviewed At Utc"
+        },
+        "basis": {
+          "default": "待人工复核",
+          "title": "Basis",
+          "type": "string"
+        }
+      },
+      "title": "CardGoldenReview",
+      "type": "object"
+    },
+    "CardGoldenReviewState": {
+      "enum": [
+        "draft",
+        "reviewed"
+      ],
+      "title": "CardGoldenReviewState",
+      "type": "string"
+    },
+    "CardPresentation": {
+      "enum": [
+        "text",
+        "ordered_list",
+        "table",
+        "diagram",
+        "formula",
+        "constraint",
+        "threshold",
+        "visual_reference"
+      ],
+      "title": "CardPresentation",
+      "type": "string"
+    },
+    "ContinuationCardGoldenFact": {
+      "additionalProperties": false,
+      "properties": {
+        "proposal_key": {
+          "pattern": "^proposal:[a-z0-9][a-z0-9._-]*$",
+          "title": "Proposal Key",
+          "type": "string"
+        },
+        "title": {
+          "maxLength": 64,
+          "minLength": 2,
+          "title": "Title",
+          "type": "string"
+        },
+        "fact_type": {
+          "$ref": "#/$defs/FactType"
+        },
+        "review": {
+          "$ref": "#/$defs/CardGoldenReview",
+          "default": {
+            "state": "draft",
+            "reviewer": null,
+            "reviewed_at_utc": null,
+            "basis": "待人工复核"
+          }
+        }
+      },
+      "required": [
+        "proposal_key",
+        "title",
+        "fact_type"
+      ],
+      "title": "ContinuationCardGoldenFact",
+      "type": "object"
+    },
+    "ContinuationCardGoldenTarget": {
+      "additionalProperties": false,
+      "properties": {
+        "card_key": {
+          "pattern": "^[a-z0-9][a-z0-9._-]*$",
+          "title": "Card Key",
+          "type": "string"
+        },
+        "title": {
+          "maxLength": 64,
+          "minLength": 2,
+          "title": "Title",
+          "type": "string"
+        },
+        "primary_proposal_keys": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Primary Proposal Keys",
+          "type": "array"
+        },
+        "presentation": {
+          "$ref": "#/$defs/CardPresentation"
+        },
+        "split_reason": {
+          "maxLength": 240,
+          "minLength": 6,
+          "title": "Split Reason",
+          "type": "string"
+        },
+        "short_card_exception": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ShortCardException"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "review": {
+          "$ref": "#/$defs/CardGoldenReview",
+          "default": {
+            "state": "draft",
+            "reviewer": null,
+            "reviewed_at_utc": null,
+            "basis": "待人工复核"
+          }
+        }
+      },
+      "required": [
+        "card_key",
+        "title",
+        "primary_proposal_keys",
+        "presentation",
+        "split_reason"
+      ],
+      "title": "ContinuationCardGoldenTarget",
+      "type": "object"
+    },
+    "FactType": {
+      "enum": [
+        "definition",
+        "classification",
+        "enumeration",
+        "procedure",
+        "condition",
+        "threshold",
+        "formula",
+        "comparison",
+        "exception",
+        "composition",
+        "diagram_relation",
+        "visual_reference",
+        "exam_note",
+        "example",
+        "exercise"
+      ],
+      "title": "FactType",
+      "type": "string"
+    },
+    "ShortCardException": {
+      "description": "Explicitly reviewed reasons why a compact learning card is acceptable.",
+      "enum": [
+        "atomic_formula",
+        "diagram_summary",
+        "compact_enumeration",
+        "identifier_only"
+      ],
+      "title": "ShortCardException",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "default": "2.0",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "fixture_version": {
+      "default": "continuation_card_golden_draft_v1",
+      "title": "Fixture Version",
+      "type": "string"
+    },
+    "fixture_id": {
+      "pattern": "^[a-z0-9][a-z0-9._-]*$",
+      "title": "Fixture Id",
+      "type": "string"
+    },
+    "sample_id": {
+      "pattern": "^[a-z0-9][a-z0-9._-]*$",
+      "title": "Sample Id",
+      "type": "string"
+    },
+    "material_profile_id": {
+      "minLength": 1,
+      "title": "Material Profile Id",
+      "type": "string"
+    },
+    "source_request_id": {
+      "pattern": "^step2a-request:[0-9a-f]{64}$",
+      "title": "Source Request Id",
+      "type": "string"
+    },
+    "source_request_version": {
+      "minLength": 1,
+      "title": "Source Request Version",
+      "type": "string"
+    },
+    "source_response_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Source Response Sha256",
+      "type": "string"
+    },
+    "source_execution_record_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Source Execution Record Sha256",
+      "type": "string"
+    },
+    "continuation_title_projection_id": {
+      "pattern": "^continuation-title-projection:[0-9a-f]{24}$",
+      "title": "Continuation Title Projection Id",
+      "type": "string"
+    },
+    "continuation_title_projection_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Continuation Title Projection Sha256",
+      "type": "string"
+    },
+    "facts": {
+      "items": {
+        "$ref": "#/$defs/ContinuationCardGoldenFact"
+      },
+      "title": "Facts",
+      "type": "array"
+    },
+    "cards": {
+      "items": {
+        "$ref": "#/$defs/ContinuationCardGoldenTarget"
+      },
+      "title": "Cards",
+      "type": "array"
+    },
+    "review": {
+      "$ref": "#/$defs/CardGoldenReview",
+      "default": {
+        "state": "draft",
+        "reviewer": null,
+        "reviewed_at_utc": null,
+        "basis": "待人工复核"
+      }
+    }
+  },
+  "required": [
+    "fixture_id",
+    "sample_id",
+    "material_profile_id",
+    "source_request_id",
+    "source_request_version",
+    "source_response_sha256",
+    "source_execution_record_sha256",
+    "continuation_title_projection_id",
+    "continuation_title_projection_sha256",
+    "facts",
+    "cards"
+  ],
+  "title": "ContinuationCardGoldenFixture",
+  "type": "object"
+}

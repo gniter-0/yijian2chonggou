@@ -1,0 +1,63 @@
+{
+  "$defs": {
+    "ContinuationState": {
+      "description": "Page-local continuation state; page-only input never closes a chain.",
+      "enum": [
+        "partial_continuation"
+      ],
+      "title": "ContinuationState",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "description": "A deterministic page-end marker that blocks an all-items enumeration.",
+  "properties": {
+    "continuation_id": {
+      "pattern": "^continuation:[0-9a-f]{24}$",
+      "title": "Continuation Id",
+      "type": "string"
+    },
+    "state": {
+      "$ref": "#/$defs/ContinuationState",
+      "default": "partial_continuation"
+    },
+    "page_num": {
+      "minimum": 1,
+      "title": "Page Num",
+      "type": "integer"
+    },
+    "source_manifest_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Source Manifest Sha256",
+      "type": "string"
+    },
+    "anchor_span_ids": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Anchor Span Ids",
+      "type": "array"
+    },
+    "required_adjacent_page_num": {
+      "minimum": 1,
+      "title": "Required Adjacent Page Num",
+      "type": "integer"
+    },
+    "basis": {
+      "maxLength": 500,
+      "minLength": 8,
+      "title": "Basis",
+      "type": "string"
+    }
+  },
+  "required": [
+    "continuation_id",
+    "page_num",
+    "source_manifest_sha256",
+    "anchor_span_ids",
+    "required_adjacent_page_num",
+    "basis"
+  ],
+  "title": "ContinuationRecord",
+  "type": "object"
+}

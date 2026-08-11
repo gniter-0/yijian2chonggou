@@ -1,0 +1,131 @@
+schema_version: '2.0'
+sidecar_id: gonglu_phase2r1413_v25_cost_flow_semantic_reviewed
+registry_id: gonglu_phase0_v1
+material_profile_id: yijian_gonglu_2026
+annotation_revision: 1
+entries:
+- review_id: diagram:83c9c0d82088d5fa43c365b4
+  sample_id: gonglu_62_cost_flow_incident
+  pdf_sha256: 4c60afd99478136289b2de9721f1dcd22ea63ad3b6f612877088e502ca6cb7b8
+  page_num: 1
+  figure_evidence_id: ev:4af15b958587bb00fcaac211
+  figure_crop_path: crops/p0001_image_001.png
+  figure_crop_sha256: ce10c04191ee9e26cb7dcb98e2bf21115c59cc33adc2bc5e04df1e1bafa64b32
+  state: reviewed
+  semantic_contract_version: semantic_v2
+  title: 标后预算总费用结构
+  diagram_type: hierarchy
+  nodes:
+  - node_id: node-total-cost
+    label: 标后预算总费用
+    evidence_ids: [ev:4af15b958587bb00fcaac211, ev:e0ca23f969789a26726443cb]
+  - node_id: node-enterprise-cost
+    label: 上缴企业费用
+    evidence_ids: [ev:4af15b958587bb00fcaac211, ev:e1c3c8b2efd9e0e98304a210]
+  - node_id: node-head-office
+    label: 总部管理费
+    evidence_ids: [ev:4af15b958587bb00fcaac211, ev:62439e15c5f7735b6233ecbd]
+  - node_id: node-profit
+    label: 利润
+    evidence_ids: [ev:4af15b958587bb00fcaac211, ev:e2831626e91dcaefe155896b]
+  - node_id: node-project-budget-cost
+    label: 项目预算总成本
+    evidence_ids: [ev:4af15b958587bb00fcaac211, ev:3d8d49dd836996c4b9dbfb25]
+  - node_id: node-direct-cost
+    label: 直接费
+    evidence_ids: [ev:4af15b958587bb00fcaac211, ev:411739cdebcbf2af9143920c]
+  - node_id: node-equipment-cost
+    label: 设备购置费
+    evidence_ids: [ev:4af15b958587bb00fcaac211, ev:323a24a21eeee2a9c219872b]
+  - node_id: node-measure-cost
+    label: 措施费
+    evidence_ids: [ev:4af15b958587bb00fcaac211, ev:d4f4403cd667fdd5eef1da83]
+  - node_id: node-special-cost
+    label: 专项费用
+    evidence_ids: [ev:4af15b958587bb00fcaac211, ev:d658ba56ff8bc90630f11db8]
+  - node_id: node-site-management-cost
+    label: 现场管理费
+    evidence_ids: [ev:4af15b958587bb00fcaac211, ev:baf2ba52e6d6413b39f48cef]
+  - node_id: node-fees
+    label: 规费
+    evidence_ids: [ev:4af15b958587bb00fcaac211, ev:8fd55bc531c7b881f0cb318f]
+  - node_id: node-tax
+    label: 税金
+    evidence_ids: [ev:4af15b958587bb00fcaac211, ev:0d31b4729e337491f509d863]
+  edges:
+  - source_node_id: node-total-cost
+    target_node_id: node-enterprise-cost
+    relation: 包含
+    evidence_ids: [ev:4af15b958587bb00fcaac211, ev:e0ca23f969789a26726443cb, ev:e1c3c8b2efd9e0e98304a210]
+    basis: 原始 figure crop 的同层分支线从标后预算总费用连至上缴企业费用；关系由图形层级人工确认。
+    confidence: 0.98
+  - source_node_id: node-enterprise-cost
+    target_node_id: node-head-office
+    relation: 包含
+    evidence_ids: [ev:4af15b958587bb00fcaac211, ev:e1c3c8b2efd9e0e98304a210, ev:62439e15c5f7735b6233ecbd]
+    basis: 原始 figure crop 的分支线将上缴企业费用与总部管理费连接为从属层级。
+    confidence: 0.98
+  - source_node_id: node-enterprise-cost
+    target_node_id: node-profit
+    relation: 包含
+    evidence_ids: [ev:4af15b958587bb00fcaac211, ev:e1c3c8b2efd9e0e98304a210, ev:e2831626e91dcaefe155896b]
+    basis: 原始 figure crop 的分支线将上缴企业费用与利润连接为从属层级。
+    confidence: 0.98
+  - source_node_id: node-total-cost
+    target_node_id: node-project-budget-cost
+    relation: 包含
+    evidence_ids: [ev:4af15b958587bb00fcaac211, ev:e0ca23f969789a26726443cb, ev:3d8d49dd836996c4b9dbfb25]
+    basis: 原始 figure crop 的主分支从标后预算总费用连至项目预算总成本；图中 OCR 尾随短线不改变可见节点名称。
+    confidence: 0.98
+  - source_node_id: node-project-budget-cost
+    target_node_id: node-direct-cost
+    relation: 包含
+    evidence_ids: [ev:4af15b958587bb00fcaac211, ev:3d8d49dd836996c4b9dbfb25, ev:411739cdebcbf2af9143920c]
+    basis: 原始 figure crop 的分支线将项目预算总成本与直接费连接为从属层级。
+    confidence: 0.98
+  - source_node_id: node-project-budget-cost
+    target_node_id: node-equipment-cost
+    relation: 包含
+    evidence_ids: [ev:4af15b958587bb00fcaac211, ev:3d8d49dd836996c4b9dbfb25, ev:323a24a21eeee2a9c219872b]
+    basis: 原始 figure crop 的分支线将项目预算总成本与设备购置费连接为从属层级。
+    confidence: 0.98
+  - source_node_id: node-project-budget-cost
+    target_node_id: node-measure-cost
+    relation: 包含
+    evidence_ids: [ev:4af15b958587bb00fcaac211, ev:3d8d49dd836996c4b9dbfb25, ev:d4f4403cd667fdd5eef1da83]
+    basis: 原始 figure crop 的分支线将项目预算总成本与措施费连接为从属层级。
+    confidence: 0.98
+  - source_node_id: node-project-budget-cost
+    target_node_id: node-special-cost
+    relation: 包含
+    evidence_ids: [ev:4af15b958587bb00fcaac211, ev:3d8d49dd836996c4b9dbfb25, ev:d658ba56ff8bc90630f11db8]
+    basis: 原始 figure crop 的分支线将项目预算总成本与专项费用连接为从属层级。
+    confidence: 0.98
+  - source_node_id: node-project-budget-cost
+    target_node_id: node-site-management-cost
+    relation: 包含
+    evidence_ids: [ev:4af15b958587bb00fcaac211, ev:3d8d49dd836996c4b9dbfb25, ev:baf2ba52e6d6413b39f48cef]
+    basis: 原始 figure crop 的分支线将项目预算总成本与现场管理费连接为从属层级。
+    confidence: 0.98
+  - source_node_id: node-total-cost
+    target_node_id: node-fees
+    relation: 包含
+    evidence_ids: [ev:4af15b958587bb00fcaac211, ev:e0ca23f969789a26726443cb, ev:8fd55bc531c7b881f0cb318f]
+    basis: 原始 figure crop 的独立主分支从标后预算总费用连至规费。
+    confidence: 0.98
+  - source_node_id: node-total-cost
+    target_node_id: node-tax
+    relation: 包含
+    evidence_ids: [ev:4af15b958587bb00fcaac211, ev:e0ca23f969789a26726443cb, ev:0d31b4729e337491f509d863]
+    basis: 原始 figure crop 的独立主分支从标后预算总费用连至税金。
+    confidence: 0.98
+  candidate_nodes: []
+  candidate_edge_texts: []
+  audit:
+    reviewer: codex_operator_phase2r1413_manual_audit
+    reviewed_at_utc: '2026-07-29T15:20:00Z'
+    crop_path: crops/p0001_image_001.png
+    crop_sha256: ce10c04191ee9e26cb7dcb98e2bf21115c59cc33adc2bc5e04df1e1bafa64b32
+    basis: 基于原始 V2 第1页 figure crop 的人工复核；仅记录可由方框、分支线及相对位置直接确认的费用层级关系，不把 OCR 文本当作关系推断。
+    review_crop_manifest: null
+    review_asset: null

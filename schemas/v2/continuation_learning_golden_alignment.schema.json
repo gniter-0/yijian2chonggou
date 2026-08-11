@@ -1,0 +1,245 @@
+{
+  "$defs": {
+    "ContinuationCanonicalTitleProjection": {
+      "additionalProperties": false,
+      "description": "Auditable local title authority for one exact continuation Golden match.\n\nThe model label is evidence about the response only. It never becomes a\ncanonical title by fuzzy matching or an implicit alias; projection is\ngranted solely by the reviewed fixture's exact source constraints.",
+      "properties": {
+        "schema_version": {
+          "default": "continuation_title_projection_v1",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "projection_id": {
+          "pattern": "^continuation-title-projection:[0-9a-f]{24}$",
+          "title": "Projection Id",
+          "type": "string"
+        },
+        "projection_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Projection Sha256",
+          "type": "string"
+        },
+        "state": {
+          "$ref": "#/$defs/ContinuationCanonicalTitleProjectionState"
+        },
+        "fixture_id": {
+          "title": "Fixture Id",
+          "type": "string"
+        },
+        "fixture_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Fixture Sha256",
+          "type": "string"
+        },
+        "fact_key": {
+          "pattern": "^[a-z0-9][a-z0-9._-]*$",
+          "title": "Fact Key",
+          "type": "string"
+        },
+        "request_id": {
+          "title": "Request Id",
+          "type": "string"
+        },
+        "request_version": {
+          "title": "Request Version",
+          "type": "string"
+        },
+        "source_response_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Source Response Sha256",
+          "type": "string"
+        },
+        "proposal_key": {
+          "anyOf": [
+            {
+              "pattern": "^proposal:[a-z0-9][a-z0-9._-]*$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Proposal Key"
+        },
+        "model_label": {
+          "anyOf": [
+            {
+              "maxLength": 64,
+              "minLength": 2,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Model Label"
+        },
+        "model_label_sha256": {
+          "anyOf": [
+            {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Model Label Sha256"
+        },
+        "canonical_title": {
+          "anyOf": [
+            {
+              "maxLength": 64,
+              "minLength": 2,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Canonical Title"
+        },
+        "matched_evidence_ids": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "title": "Matched Evidence Ids",
+          "type": "array"
+        },
+        "matched_anchor_span_ids": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "title": "Matched Anchor Span Ids",
+          "type": "array"
+        },
+        "continuation_binding_ids": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "title": "Continuation Binding Ids",
+          "type": "array"
+        },
+        "failure_codes": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "title": "Failure Codes",
+          "type": "array"
+        },
+        "basis": {
+          "maxLength": 1000,
+          "minLength": 1,
+          "title": "Basis",
+          "type": "string"
+        }
+      },
+      "required": [
+        "projection_id",
+        "projection_sha256",
+        "state",
+        "fixture_id",
+        "fixture_sha256",
+        "fact_key",
+        "request_id",
+        "request_version",
+        "source_response_sha256",
+        "basis"
+      ],
+      "title": "ContinuationCanonicalTitleProjection",
+      "type": "object"
+    },
+    "ContinuationCanonicalTitleProjectionState": {
+      "description": "Terminal disposition for a reviewed continuation-title projection.",
+      "enum": [
+        "projected",
+        "out_of_scope",
+        "fail_closed"
+      ],
+      "title": "ContinuationCanonicalTitleProjectionState",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "fixture_id": {
+      "title": "Fixture Id",
+      "type": "string"
+    },
+    "sample_id": {
+      "title": "Sample Id",
+      "type": "string"
+    },
+    "proposal_key": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Proposal Key"
+    },
+    "valid": {
+      "title": "Valid",
+      "type": "boolean"
+    },
+    "failure_codes": {
+      "default": [],
+      "items": {
+        "type": "string"
+      },
+      "title": "Failure Codes",
+      "type": "array"
+    },
+    "matched_evidence_ids": {
+      "default": [],
+      "items": {
+        "type": "string"
+      },
+      "title": "Matched Evidence Ids",
+      "type": "array"
+    },
+    "matched_anchor_span_ids": {
+      "default": [],
+      "items": {
+        "type": "string"
+      },
+      "title": "Matched Anchor Span Ids",
+      "type": "array"
+    },
+    "title_projection": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/ContinuationCanonicalTitleProjection"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "basis": {
+      "title": "Basis",
+      "type": "string"
+    }
+  },
+  "required": [
+    "fixture_id",
+    "sample_id",
+    "valid",
+    "basis"
+  ],
+  "title": "ContinuationLearningGoldenAlignment",
+  "type": "object"
+}

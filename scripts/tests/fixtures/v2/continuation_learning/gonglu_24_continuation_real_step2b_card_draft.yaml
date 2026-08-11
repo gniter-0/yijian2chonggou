@@ -1,0 +1,95 @@
+schema_version: "2.0"
+fixture_version: continuation_card_golden_draft_v1
+fixture_id: gonglu_24_continuation_real_step2b_cards_v1
+sample_id: gonglu_24_continuation_real
+material_profile_id: yijian_gonglu_2026
+source_request_id: "step2a-request:b6871b9d79635f3649714a29e7abe08ce3d6d71891ca3576a319dc7e9e6cca53"
+source_request_version: step2a_contract_v16_deterministic_numeric_claims
+source_response_sha256: a16f49a33844fe3e896da85232394c6d2bd3fa0eeb636d9494369c51c1396470
+source_execution_record_sha256: 2d12bddeedf941c718bdf28309b35d94839db9bdb1c488e80c28c3e41af07881
+continuation_title_projection_id: "continuation-title-projection:190ebc4f58751cfed6822fc7"
+continuation_title_projection_sha256: 190ebc4f58751cfed6822fc70ad4e18f424de07386dbae0e2921f3dc9356b56d
+facts:
+  - proposal_key: "proposal:76ec87eeac170022fbf3afa9"
+    title: "模板、支架和拱架设计荷载"
+    fact_type: enumeration
+    review: {state: reviewed, reviewer: codex_operator_phase2r088, reviewed_at_utc: "2026-07-28T01:33:42Z", basis: "人工核验原 PDF 第1页①②与第2页③至⑧及已审 continuation binding；八项枚举闭合，canonical title 与 reviewed title projection 一致。"}
+  - proposal_key: "proposal:ade120c598793914601f202b"
+    title: "模板和支架要求表"
+    fact_type: composition
+    review: {state: reviewed, reviewer: codex_operator_phase2r088, reviewed_at_utc: "2026-07-28T01:33:42Z", basis: "人工核验原 PDF 第1页“一般规定”两行表格；模板、支架及对应要求均在同页完整呈现，完整表 Fact 必须独立保留。"}
+  - proposal_key: "proposal:e89e32951dc2860d9eccd910"
+    title: "模板和支架强度刚度稳定性要求"
+    fact_type: condition
+    review: {state: reviewed, reviewer: codex_operator_phase2r088, reviewed_at_utc: "2026-07-28T01:33:42Z", basis: "人工核验原 PDF 第1页表格（2）条；完整条件位于模板行，适合作为施工限制原子 Fact。"}
+  - proposal_key: "proposal:cb1e01faf9d3e151371260ca"
+    title: "模板接触面隔离剂要求"
+    fact_type: condition
+    review: {state: reviewed, reviewer: codex_operator_phase2r088, reviewed_at_utc: "2026-07-28T01:33:42Z", basis: "人工核验原 PDF 第1页表格（4）条；“应涂刷隔离剂，但不得采用废机油等油料”条件完整。"}
+  - proposal_key: "proposal:cd7ff3c2fd2d83186d2e48a3"
+    title: "模板吊环钢筋要求"
+    fact_type: condition
+    review: {state: reviewed, reviewer: codex_operator_phase2r088, reviewed_at_utc: "2026-07-28T01:33:42Z", basis: "人工核验原 PDF 第1页表格（5）条前半句；HPB300与严禁冷加工钢筋制作规则完整。"}
+  - proposal_key: "proposal:6bb7e01414d61d13662ce346"
+    title: "模板吊环拉应力限值"
+    fact_type: threshold
+    review: {state: reviewed, reviewer: codex_operator_phase2r088, reviewed_at_utc: "2026-07-28T01:33:42Z", basis: "人工核验原 PDF 第1页表格（5）条后半句；模板自重标准值条件与65MPa上限完整。"}
+  - proposal_key: "proposal:fe7af55e19bffc585cdc9bfd"
+    title: "支架与应急安全通道连接限制"
+    fact_type: condition
+    review: {state: reviewed, reviewer: codex_operator_phase2r088, reviewed_at_utc: "2026-07-28T01:33:42Z", basis: "人工核验原 PDF 第1页支架行（6）条；禁止与应急安全通道连接的条件完整。"}
+  - proposal_key: "proposal:d66695fc22fbae0bfb646a65"
+    title: "刚度验算要求表"
+    fact_type: composition
+    review: {state: draft, basis: "人工核验原 PDF：第2页表格在③“弹性挠度不超过相应结构跨度的”处跨页，第3页续为1/400并含④⑤条；当前两页V16 Evidence未形成完整表，保持draft。"}
+  - proposal_key: "proposal:90a2f860741fc594e3e5f3b9"
+    title: "外露模板挠度限值"
+    fact_type: threshold
+    review: {state: reviewed, reviewer: codex_operator_phase2r088, reviewed_at_utc: "2026-07-28T01:33:42Z", basis: "人工核验原 PDF 第2页刚度验算表①；外露模板与1/400阈值在同页完整呈现。"}
+  - proposal_key: "proposal:d217114151319bd940317f8d"
+    title: "隐蔽模板挠度限值"
+    fact_type: threshold
+    review: {state: reviewed, reviewer: codex_operator_phase2r088, reviewed_at_utc: "2026-07-28T01:33:42Z", basis: "人工核验原 PDF 第2页刚度验算表②；隐蔽模板与1/250阈值在同页完整呈现。"}
+  - proposal_key: "proposal:b0e1df1700ed965198e861ac"
+    title: "支架受荷载后挠曲杆件弹性挠度要求"
+    fact_type: condition
+    review: {state: draft, basis: "人工核验原 PDF：第2页刚度验算表③只到“相应结构跨度的”，第3页才续为1/400；当前断言不完整，保持draft。"}
+cards:
+  - card_key: formwork.design-loads
+    title: "模板、支架和拱架设计荷载"
+    primary_proposal_keys: ["proposal:76ec87eeac170022fbf3afa9"]
+    presentation: ordered_list
+    split_reason: "跨页八项设计荷载必须作为完整有序枚举呈现。"
+    short_card_exception: null
+    review: {state: reviewed, reviewer: codex_operator_phase2r088, reviewed_at_utc: "2026-07-28T01:33:42Z", basis: "人工核验标题、唯一all_items Fact、跨页①至⑧闭合和ordered_list呈现；无短卡例外。"}
+  - card_key: formwork.requirements-table
+    title: "模板和支架要求"
+    primary_proposal_keys: ["proposal:ade120c598793914601f202b"]
+    presentation: table
+    split_reason: "模板和支架要求依赖完整表头、行列与单元格关系。"
+    short_card_exception: null
+    review: {state: reviewed, reviewer: codex_operator_phase2r088, reviewed_at_utc: "2026-07-28T01:33:42Z", basis: "人工核验第1页完整两行表格；标题、单一composition Fact和table呈现匹配，原子规则由独立限制卡承载；无短卡例外。"}
+  - card_key: formwork.requirements-constraints
+    title: "模板和支架施工限制"
+    primary_proposal_keys: ["proposal:e89e32951dc2860d9eccd910", "proposal:cb1e01faf9d3e151371260ca", "proposal:cd7ff3c2fd2d83186d2e48a3", "proposal:6bb7e01414d61d13662ce346", "proposal:fe7af55e19bffc585cdc9bfd"]
+    presentation: constraint
+    split_reason: "强度刚度、隔离剂、吊环和安全通道限制共同构成施工约束组。"
+    short_card_exception: null
+    review: {state: reviewed, reviewer: codex_operator_phase2r088, reviewed_at_utc: "2026-07-28T01:33:42Z", basis: "人工核验第1页表格的5条完整原子规则；65MPa阈值作为吊环限制子项与四条条件同组，constraint呈现可保留全部条件；无短卡例外。"}
+  - card_key: formwork.stiffness-table
+    title: "刚度验算要求"
+    primary_proposal_keys: ["proposal:d66695fc22fbae0bfb646a65"]
+    presentation: table
+    split_reason: "刚度验算要求保留完整表格结构，不能折叠为普通文本。"
+    short_card_exception: null
+    review: {state: draft, basis: "人工核验原 PDF 第2至3页后确认当前composition Fact未覆盖续页③的1/400及④⑤行；不得把不完整页内表升级为reviewed table Card。"}
+  - card_key: formwork.deflection-limits
+    title: "模板和支架挠度限制"
+    primary_proposal_keys: ["proposal:90a2f860741fc594e3e5f3b9", "proposal:d217114151319bd940317f8d", "proposal:b0e1df1700ed965198e861ac"]
+    presentation: threshold
+    split_reason: "外露、隐蔽和支架弹性挠度均为同类限值，适合对照记忆。"
+    short_card_exception: null
+    review: {state: draft, basis: "人工核验第2页后确认第三个成员Fact跨至第3页才闭合为1/400；当前三Fact阈值卡不完整，保持draft，不以两个完整子项替代整体。"}
+review:
+  state: draft
+  basis: "Phase 2R.0.8.8 人工复核：9条Fact和3张Card已reviewed；刚度验算整表、其跨页③子项及两张依赖Card因第2至3页续接未纳入当前V16 Evidence而保持draft。"

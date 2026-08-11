@@ -1,0 +1,208 @@
+[
+  {
+    "case_id": "all_green",
+    "expected_classification": "none",
+    "expected_ready": true,
+    "probes": [
+      {
+        "http_status": 200,
+        "kind": "models",
+        "model_advertised": true,
+        "outcome": "success"
+      },
+      {
+        "http_status": 200,
+        "kind": "chat_json",
+        "outcome": "success",
+        "provider_request_id": "req-2f5c1b7d9e"
+      },
+      {
+        "http_status": 200,
+        "kind": "strict_schema",
+        "outcome": "success",
+        "provider_request_id": "req-2f5c1b7d9e"
+      }
+    ]
+  },
+  {
+    "case_id": "models_404_nonblocking",
+    "expected_classification": "none",
+    "expected_ready": true,
+    "probes": [
+      {
+        "http_status": 404,
+        "kind": "models",
+        "outcome": "failed",
+        "sanitized_detail": "no such route"
+      },
+      {
+        "http_status": 200,
+        "kind": "chat_json",
+        "outcome": "success",
+        "provider_request_id": "req-2f5c1b7d9e"
+      },
+      {
+        "http_status": 200,
+        "kind": "strict_schema",
+        "outcome": "success",
+        "provider_request_id": "req-2f5c1b7d9e"
+      }
+    ]
+  },
+  {
+    "case_id": "authentication_failure",
+    "expected_classification": "authentication_failure",
+    "expected_ready": false,
+    "probes": [
+      {
+        "http_status": 200,
+        "kind": "models",
+        "model_advertised": true,
+        "outcome": "success"
+      },
+      {
+        "http_status": 401,
+        "kind": "chat_json",
+        "outcome": "failed",
+        "sanitized_detail": "unauthorized"
+      }
+    ]
+  },
+  {
+    "case_id": "authentication_disguised_404",
+    "expected_classification": "authentication_disguised_404",
+    "expected_ready": false,
+    "probes": [
+      {
+        "http_status": 200,
+        "kind": "models",
+        "model_advertised": true,
+        "outcome": "success"
+      },
+      {
+        "http_status": 404,
+        "kind": "chat_json",
+        "outcome": "failed",
+        "sanitized_detail": "invalid api key for this route"
+      }
+    ]
+  },
+  {
+    "case_id": "endpoint_not_found",
+    "expected_classification": "endpoint_not_found",
+    "expected_ready": false,
+    "probes": [
+      {
+        "http_status": 200,
+        "kind": "models",
+        "model_advertised": true,
+        "outcome": "success"
+      },
+      {
+        "http_status": 404,
+        "kind": "chat_json",
+        "outcome": "failed",
+        "sanitized_detail": "no route matches"
+      }
+    ]
+  },
+  {
+    "case_id": "model_not_found",
+    "expected_classification": "model_not_found",
+    "expected_ready": false,
+    "probes": [
+      {
+        "http_status": 200,
+        "kind": "models",
+        "model_advertised": false,
+        "outcome": "success"
+      },
+      {
+        "http_status": 400,
+        "kind": "chat_json",
+        "outcome": "failed",
+        "sanitized_detail": "model gpt-5.5 not found"
+      }
+    ]
+  },
+  {
+    "case_id": "chat_completions_incompatible",
+    "expected_classification": "chat_completions_incompatible",
+    "expected_ready": false,
+    "probes": [
+      {
+        "http_status": 200,
+        "kind": "models",
+        "model_advertised": true,
+        "outcome": "success"
+      },
+      {
+        "http_status": 400,
+        "kind": "chat_json",
+        "outcome": "failed",
+        "sanitized_detail": "response_format rejected"
+      }
+    ]
+  },
+  {
+    "case_id": "strict_schema_unsupported",
+    "expected_classification": "strict_json_schema_unsupported",
+    "expected_ready": false,
+    "probes": [
+      {
+        "http_status": 200,
+        "kind": "models",
+        "model_advertised": true,
+        "outcome": "success"
+      },
+      {
+        "http_status": 200,
+        "kind": "chat_json",
+        "outcome": "success",
+        "provider_request_id": "req-2f5c1b7d9e"
+      },
+      {
+        "http_status": 400,
+        "kind": "strict_schema",
+        "outcome": "failed",
+        "sanitized_detail": "json_schema mode unsupported"
+      }
+    ]
+  },
+  {
+    "case_id": "provenance_missing",
+    "expected_classification": "provider_provenance_missing",
+    "expected_ready": false,
+    "probes": [
+      {
+        "http_status": 200,
+        "kind": "models",
+        "model_advertised": true,
+        "outcome": "success"
+      },
+      {
+        "http_status": 200,
+        "kind": "chat_json",
+        "outcome": "success"
+      }
+    ]
+  },
+  {
+    "case_id": "transport_unknown_outcome",
+    "expected_classification": "transport_unknown_outcome",
+    "expected_ready": false,
+    "probes": [
+      {
+        "http_status": 200,
+        "kind": "models",
+        "model_advertised": true,
+        "outcome": "success"
+      },
+      {
+        "kind": "chat_json",
+        "outcome": "unknown_outcome",
+        "sanitized_detail": "socket closed mid-response"
+      }
+    ]
+  }
+]

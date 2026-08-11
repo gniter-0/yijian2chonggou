@@ -1,0 +1,32 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+
+# 虚拟环境（uv sync 重建）
+.venv/
+
+# 测试产物（规范 T3：仓库相对产物统一收口于 .test-tmp/）
+.test-tmp/
+.pytest_cache/
+.coverage
+htmlcov/
+
+# 工具缓存
+.ruff_cache/
+.mypy_cache/
+
+# 密钥与本地配置（规范 T6）
+.env
+.env.*
+
+# 编辑器
+.idea/
+.vscode/
+
+# 金样资产镜像（≈120MB，自 yijian2 只读镜像而来，可按 engineering_skeleton.md §3 重建；不入引擎仓 git）
+/data/
+/input_pdf_公路/
+/docs/v2/baselines/

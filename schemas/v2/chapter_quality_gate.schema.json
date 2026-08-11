@@ -1,0 +1,96 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "must_cover_total": {
+      "minimum": 0,
+      "title": "Must Cover Total",
+      "type": "integer"
+    },
+    "must_cover_primary_assigned": {
+      "minimum": 0,
+      "title": "Must Cover Primary Assigned",
+      "type": "integer"
+    },
+    "unresolved_evidence": {
+      "minimum": 0,
+      "title": "Unresolved Evidence",
+      "type": "integer"
+    },
+    "fallback_content": {
+      "minimum": 0,
+      "title": "Fallback Content",
+      "type": "integer"
+    },
+    "numeric_failures": {
+      "minimum": 0,
+      "title": "Numeric Failures",
+      "type": "integer"
+    },
+    "enumeration_failures": {
+      "minimum": 0,
+      "title": "Enumeration Failures",
+      "type": "integer"
+    },
+    "formula_failures": {
+      "minimum": 0,
+      "title": "Formula Failures",
+      "type": "integer"
+    },
+    "unresolved_visual_only": {
+      "minimum": 0,
+      "title": "Unresolved Visual Only",
+      "type": "integer"
+    },
+    "unresolved_dedup_candidates": {
+      "minimum": 0,
+      "title": "Unresolved Dedup Candidates",
+      "type": "integer"
+    },
+    "known_noise_leaks": {
+      "default": 0,
+      "minimum": 0,
+      "title": "Known Noise Leaks",
+      "type": "integer"
+    },
+    "embedded_example_leaks": {
+      "default": 0,
+      "minimum": 0,
+      "title": "Embedded Example Leaks",
+      "type": "integer"
+    },
+    "unrenderable_diagrams": {
+      "default": 0,
+      "minimum": 0,
+      "title": "Unrenderable Diagrams",
+      "type": "integer"
+    },
+    "schema_valid": {
+      "title": "Schema Valid",
+      "type": "boolean"
+    },
+    "lineage_valid": {
+      "title": "Lineage Valid",
+      "type": "boolean"
+    },
+    "adapter_valid": {
+      "title": "Adapter Valid",
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "must_cover_total",
+    "must_cover_primary_assigned",
+    "unresolved_evidence",
+    "fallback_content",
+    "numeric_failures",
+    "enumeration_failures",
+    "formula_failures",
+    "unresolved_visual_only",
+    "unresolved_dedup_candidates",
+    "schema_valid",
+    "lineage_valid",
+    "adapter_valid"
+  ],
+  "title": "ChapterQualityGate",
+  "type": "object"
+}

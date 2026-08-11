@@ -1,0 +1,569 @@
+{
+  "$defs": {
+    "CardPresentation": {
+      "enum": [
+        "text",
+        "ordered_list",
+        "table",
+        "diagram",
+        "formula",
+        "constraint",
+        "threshold",
+        "visual_reference"
+      ],
+      "title": "CardPresentation",
+      "type": "string"
+    },
+    "DiagramEdgeExpectation": {
+      "additionalProperties": false,
+      "properties": {
+        "source_label": {
+          "minLength": 1,
+          "title": "Source Label",
+          "type": "string"
+        },
+        "relation": {
+          "minLength": 1,
+          "title": "Relation",
+          "type": "string"
+        },
+        "target_label": {
+          "minLength": 1,
+          "title": "Target Label",
+          "type": "string"
+        }
+      },
+      "required": [
+        "source_label",
+        "relation",
+        "target_label"
+      ],
+      "title": "DiagramEdgeExpectation",
+      "type": "object"
+    },
+    "DiagramSemanticExpectation": {
+      "additionalProperties": false,
+      "properties": {
+        "review_id": {
+          "pattern": "^diagram:[0-9a-f]{24}$",
+          "title": "Review Id",
+          "type": "string"
+        },
+        "figure_evidence_id": {
+          "title": "Figure Evidence Id",
+          "type": "string"
+        },
+        "review_title": {
+          "minLength": 2,
+          "title": "Review Title",
+          "type": "string"
+        },
+        "required_nodes": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "title": "Required Nodes",
+          "type": "array"
+        },
+        "required_edges": {
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/DiagramEdgeExpectation"
+          },
+          "title": "Required Edges",
+          "type": "array"
+        },
+        "review": {
+          "$ref": "#/$defs/LearningReview",
+          "default": {
+            "state": "draft",
+            "reviewer": null,
+            "reviewed_at_utc": null,
+            "basis": "待人工复核"
+          }
+        }
+      },
+      "required": [
+        "review_id",
+        "figure_evidence_id",
+        "review_title"
+      ],
+      "title": "DiagramSemanticExpectation",
+      "type": "object"
+    },
+    "EvidenceAnchorSelector": {
+      "additionalProperties": false,
+      "properties": {
+        "text": {
+          "minLength": 1,
+          "title": "Text",
+          "type": "string"
+        },
+        "kind": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/EvidenceKind"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        }
+      },
+      "required": [
+        "text"
+      ],
+      "title": "EvidenceAnchorSelector",
+      "type": "object"
+    },
+    "EvidenceKind": {
+      "enum": [
+        "heading",
+        "paragraph",
+        "list_group",
+        "list_item",
+        "table",
+        "table_row",
+        "table_cell",
+        "formula",
+        "figure",
+        "diagram_node",
+        "diagram_edge",
+        "caption",
+        "example",
+        "exercise",
+        "exam_tag",
+        "header_footer",
+        "watermark",
+        "page_number",
+        "decorative"
+      ],
+      "title": "EvidenceKind",
+      "type": "string"
+    },
+    "FactType": {
+      "enum": [
+        "definition",
+        "classification",
+        "enumeration",
+        "procedure",
+        "condition",
+        "threshold",
+        "formula",
+        "comparison",
+        "exception",
+        "composition",
+        "diagram_relation",
+        "visual_reference",
+        "exam_note",
+        "example",
+        "exercise"
+      ],
+      "title": "FactType",
+      "type": "string"
+    },
+    "LearningCardTarget": {
+      "additionalProperties": false,
+      "properties": {
+        "card_key": {
+          "pattern": "^[a-z0-9][a-z0-9._-]*$",
+          "title": "Card Key",
+          "type": "string"
+        },
+        "title": {
+          "maxLength": 32,
+          "minLength": 2,
+          "title": "Title",
+          "type": "string"
+        },
+        "primary_fact_keys": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Primary Fact Keys",
+          "type": "array"
+        },
+        "presentation": {
+          "$ref": "#/$defs/CardPresentation"
+        },
+        "split_reason": {
+          "minLength": 6,
+          "title": "Split Reason",
+          "type": "string"
+        },
+        "short_card_exception": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ShortCardException"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "review": {
+          "$ref": "#/$defs/LearningReview",
+          "default": {
+            "state": "draft",
+            "reviewer": null,
+            "reviewed_at_utc": null,
+            "basis": "待人工复核"
+          }
+        }
+      },
+      "required": [
+        "card_key",
+        "title",
+        "primary_fact_keys",
+        "presentation",
+        "split_reason"
+      ],
+      "title": "LearningCardTarget",
+      "type": "object"
+    },
+    "LearningFactTarget": {
+      "additionalProperties": false,
+      "properties": {
+        "fact_key": {
+          "pattern": "^[a-z0-9][a-z0-9._-]*$",
+          "title": "Fact Key",
+          "type": "string"
+        },
+        "fact_type": {
+          "$ref": "#/$defs/FactType"
+        },
+        "title": {
+          "maxLength": 32,
+          "minLength": 2,
+          "title": "Title",
+          "type": "string"
+        },
+        "title_aliases": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "title": "Title Aliases",
+          "type": "array"
+        },
+        "primary_anchors": {
+          "items": {
+            "$ref": "#/$defs/EvidenceAnchorSelector"
+          },
+          "title": "Primary Anchors",
+          "type": "array"
+        },
+        "required_terms": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "title": "Required Terms",
+          "type": "array"
+        },
+        "table_structure": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/TableStructureExpectation"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "allow_heading_only": {
+          "default": false,
+          "title": "Allow Heading Only",
+          "type": "boolean"
+        },
+        "review": {
+          "$ref": "#/$defs/LearningReview",
+          "default": {
+            "state": "draft",
+            "reviewer": null,
+            "reviewed_at_utc": null,
+            "basis": "待人工复核"
+          }
+        }
+      },
+      "required": [
+        "fact_key",
+        "fact_type",
+        "title",
+        "primary_anchors"
+      ],
+      "title": "LearningFactTarget",
+      "type": "object"
+    },
+    "LearningProposalAction": {
+      "enum": [
+        "map_expected_fact",
+        "retain_atomic_subfact",
+        "manual_review",
+        "exclude"
+      ],
+      "title": "LearningProposalAction",
+      "type": "string"
+    },
+    "LearningProposalDisposition": {
+      "enum": [
+        "accepted_fact",
+        "partial_continuation",
+        "duplicate_subfact",
+        "excluded"
+      ],
+      "title": "LearningProposalDisposition",
+      "type": "string"
+    },
+    "LearningProposalDispositionReview": {
+      "additionalProperties": false,
+      "properties": {
+        "page_num": {
+          "minimum": 1,
+          "title": "Page Num",
+          "type": "integer"
+        },
+        "source_request_id": {
+          "pattern": "^step2a-request:[0-9a-f]{64}$",
+          "title": "Source Request Id",
+          "type": "string"
+        },
+        "source_response_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Source Response Sha256",
+          "type": "string"
+        },
+        "proposal_key": {
+          "minLength": 1,
+          "title": "Proposal Key",
+          "type": "string"
+        },
+        "proposal_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Proposal Sha256",
+          "type": "string"
+        },
+        "disposition": {
+          "$ref": "#/$defs/LearningProposalDisposition"
+        },
+        "action": {
+          "$ref": "#/$defs/LearningProposalAction"
+        },
+        "canonical_fact_key": {
+          "anyOf": [
+            {
+              "pattern": "^[a-z0-9][a-z0-9._-]*$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Canonical Fact Key"
+        },
+        "basis": {
+          "minLength": 12,
+          "title": "Basis",
+          "type": "string"
+        },
+        "review": {
+          "$ref": "#/$defs/LearningReview"
+        }
+      },
+      "required": [
+        "page_num",
+        "source_request_id",
+        "source_response_sha256",
+        "proposal_key",
+        "proposal_sha256",
+        "disposition",
+        "action",
+        "basis",
+        "review"
+      ],
+      "title": "LearningProposalDispositionReview",
+      "type": "object"
+    },
+    "LearningReview": {
+      "additionalProperties": false,
+      "properties": {
+        "state": {
+          "$ref": "#/$defs/LearningReviewState",
+          "default": "draft"
+        },
+        "reviewer": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Reviewer"
+        },
+        "reviewed_at_utc": {
+          "anyOf": [
+            {
+              "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}Z$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Reviewed At Utc"
+        },
+        "basis": {
+          "default": "待人工复核",
+          "title": "Basis",
+          "type": "string"
+        }
+      },
+      "title": "LearningReview",
+      "type": "object"
+    },
+    "LearningReviewState": {
+      "enum": [
+        "draft",
+        "reviewed"
+      ],
+      "title": "LearningReviewState",
+      "type": "string"
+    },
+    "LearningSampleTarget": {
+      "additionalProperties": false,
+      "properties": {
+        "sample_id": {
+          "pattern": "^[a-z0-9][a-z0-9._-]*$",
+          "title": "Sample Id",
+          "type": "string"
+        },
+        "facts": {
+          "items": {
+            "$ref": "#/$defs/LearningFactTarget"
+          },
+          "title": "Facts",
+          "type": "array"
+        },
+        "cards": {
+          "items": {
+            "$ref": "#/$defs/LearningCardTarget"
+          },
+          "title": "Cards",
+          "type": "array"
+        },
+        "diagrams": {
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/DiagramSemanticExpectation"
+          },
+          "title": "Diagrams",
+          "type": "array"
+        },
+        "proposal_dispositions": {
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/LearningProposalDispositionReview"
+          },
+          "title": "Proposal Dispositions",
+          "type": "array"
+        }
+      },
+      "required": [
+        "sample_id",
+        "facts",
+        "cards"
+      ],
+      "title": "LearningSampleTarget",
+      "type": "object"
+    },
+    "ShortCardException": {
+      "description": "Explicitly reviewed reasons why a compact learning card is acceptable.",
+      "enum": [
+        "atomic_formula",
+        "diagram_summary",
+        "compact_enumeration",
+        "identifier_only"
+      ],
+      "title": "ShortCardException",
+      "type": "string"
+    },
+    "TableStructureExpectation": {
+      "additionalProperties": false,
+      "properties": {
+        "anchor": {
+          "$ref": "#/$defs/EvidenceAnchorSelector"
+        },
+        "min_rows": {
+          "minimum": 1,
+          "title": "Min Rows",
+          "type": "integer"
+        },
+        "min_columns": {
+          "minimum": 1,
+          "title": "Min Columns",
+          "type": "integer"
+        },
+        "required_cell_texts": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "title": "Required Cell Texts",
+          "type": "array"
+        }
+      },
+      "required": [
+        "anchor",
+        "min_rows",
+        "min_columns"
+      ],
+      "title": "TableStructureExpectation",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "default": "2.0",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "fixture_id": {
+      "pattern": "^[a-z0-9][a-z0-9._-]*$",
+      "title": "Fixture Id",
+      "type": "string"
+    },
+    "registry_id": {
+      "title": "Registry Id",
+      "type": "string"
+    },
+    "material_profile_id": {
+      "title": "Material Profile Id",
+      "type": "string"
+    },
+    "samples": {
+      "items": {
+        "$ref": "#/$defs/LearningSampleTarget"
+      },
+      "title": "Samples",
+      "type": "array"
+    }
+  },
+  "required": [
+    "fixture_id",
+    "registry_id",
+    "material_profile_id",
+    "samples"
+  ],
+  "title": "LearningGoldenFixture",
+  "type": "object"
+}

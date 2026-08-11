@@ -1,0 +1,70 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "default": "2.0",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "raw_id": {
+      "pattern": "^kp:[0-9a-f]{24}$",
+      "title": "Raw Id",
+      "type": "string"
+    },
+    "title": {
+      "minLength": 2,
+      "title": "Title",
+      "type": "string"
+    },
+    "kp_type": {
+      "default": "content",
+      "title": "Kp Type",
+      "type": "string"
+    },
+    "primary_fact_ids": {
+      "default": [],
+      "items": {
+        "type": "string"
+      },
+      "title": "Primary Fact Ids",
+      "type": "array"
+    },
+    "secondary_fact_ids": {
+      "default": [],
+      "items": {
+        "type": "string"
+      },
+      "title": "Secondary Fact Ids",
+      "type": "array"
+    },
+    "child_kp_ids": {
+      "default": [],
+      "items": {
+        "type": "string"
+      },
+      "title": "Child Kp Ids",
+      "type": "array"
+    },
+    "presentation": {
+      "title": "Presentation",
+      "type": "string"
+    },
+    "split_reason": {
+      "title": "Split Reason",
+      "type": "string"
+    },
+    "is_overview": {
+      "default": false,
+      "title": "Is Overview",
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "raw_id",
+    "title",
+    "presentation",
+    "split_reason"
+  ],
+  "title": "CardPlan",
+  "type": "object"
+}

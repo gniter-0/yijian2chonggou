@@ -1,0 +1,108 @@
+{
+  "$defs": {
+    "CoverageDisposition": {
+      "enum": [
+        "primary_assigned",
+        "secondary_referenced",
+        "excluded_by_policy",
+        "excluded_by_audit",
+        "ignored_noise",
+        "unresolved",
+        "manual_review"
+      ],
+      "title": "CoverageDisposition",
+      "type": "string"
+    },
+    "CoverageRecord": {
+      "additionalProperties": false,
+      "properties": {
+        "evidence_id": {
+          "title": "Evidence Id",
+          "type": "string"
+        },
+        "disposition": {
+          "$ref": "#/$defs/CoverageDisposition"
+        },
+        "coverage_owner": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Coverage Owner"
+        },
+        "references": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "title": "References",
+          "type": "array"
+        },
+        "policy_decision_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Policy Decision Id"
+        },
+        "reason": {
+          "title": "Reason",
+          "type": "string"
+        }
+      },
+      "required": [
+        "evidence_id",
+        "disposition",
+        "reason"
+      ],
+      "title": "CoverageRecord",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "default": "2.0",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "material_profile_id": {
+      "title": "Material Profile Id",
+      "type": "string"
+    },
+    "content_policy_id": {
+      "title": "Content Policy Id",
+      "type": "string"
+    },
+    "content_policy_revision": {
+      "minimum": 1,
+      "title": "Content Policy Revision",
+      "type": "integer"
+    },
+    "records": {
+      "items": {
+        "$ref": "#/$defs/CoverageRecord"
+      },
+      "title": "Records",
+      "type": "array"
+    }
+  },
+  "required": [
+    "material_profile_id",
+    "content_policy_id",
+    "content_policy_revision",
+    "records"
+  ],
+  "title": "CoverageMap",
+  "type": "object"
+}

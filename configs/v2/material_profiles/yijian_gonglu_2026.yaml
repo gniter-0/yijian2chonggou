@@ -1,0 +1,21 @@
+schema_version: "2.0"
+profile_id: yijian_gonglu_2026
+revision: 1
+display_name: 2026 一级建造师公路实务
+collection_id: yijian/2026/gonglu
+exam_family: 一级建造师
+exam_level: 一级
+subject_id: gonglu
+subject_name: 公路工程管理与实务
+source_kind: lecture_note
+source_language: zh-CN
+edition: "2026"
+jurisdiction: CN
+effective_window: {}
+content_policy_id: core_only_v1
+content_policy_revision: 2
+layout_profile_id: haixue_textbook_cn_v1
+taxonomy_profile_id: yijian_gonglu_v1
+validation_profile_id: construction_cn_v1
+card_profile_id: knowledge_diagram_v1
+dedup_scope: within_collection

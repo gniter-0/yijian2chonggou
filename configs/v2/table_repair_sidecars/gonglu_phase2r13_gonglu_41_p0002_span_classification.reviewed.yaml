@@ -1,0 +1,260 @@
+schema_version: '2.0'
+sidecar_version: table_repair_review_v1
+repair_id: table-repair:1347c39a74d1ad30a1b455e6
+sample_id: gonglu_41_diagram_mixed
+page_num: 2
+state: reviewed
+reviewer: codex_operator_phase2r13_source_reconciliation
+reviewed_at_utc: '2026-07-29T18:00:00Z'
+review_basis: The visible title cell spans the three columns of the 6x3 tunnel-span
+  table; no source text or geometry is changed.
+source_manifest_path: data/evidence_v2/golden/gonglu_phase0_v1/gonglu_41_diagram_mixed/pages/page_0002.json
+source_manifest_sha256: 68f4bb0d97b9b59f4a7c6bb9acc451dc765a61b6e838e8520571674d3fe4e4e3
+table_evidence_id: ev:b1e1478b0d3f4e33b6d26f90
+table_bbox:
+  x0: 90.24
+  y0: 480.91
+  x1: 499.3185
+  y1: 613.33
+crop_path: data/evidence_v2/golden/gonglu_phase0_v1/gonglu_41_diagram_mixed/crops/p0002_table_002.png
+crop_sha256: c8d1ebec9e42351d12bf6b82e09889673590aa25467240028058116004e812d8
+declared_row_count: 6
+declared_column_count: 3
+rows:
+- evidence_id: ev:2b0b0b574a8ca7da4110d83c
+  row_index: 0
+- evidence_id: ev:059f51a0520b1dae8ba2e2d1
+  row_index: 1
+- evidence_id: ev:60c514f2d9b3707b7b4864c6
+  row_index: 2
+- evidence_id: ev:a5afb96c6aa2e7496985804e
+  row_index: 3
+- evidence_id: ev:2bd6700eb1a4ecb8c28d7246
+  row_index: 4
+- evidence_id: ev:4aa151158ff05f91f7a75981
+  row_index: 5
+cells:
+- evidence_id: ev:0ad87d513acdda57d6ac1771
+  row_evidence_id: ev:2b0b0b574a8ca7da4110d83c
+  row_index: 0
+  column_index: 0
+  source_row_span: 1
+  source_col_span: 1
+  reviewed_row_span: 1
+  reviewed_col_span: 3
+  canonical_text_sha256: 2b9f1cba9113df0103ec1a6108d7b570e3524cbbdffb16e83b62327bda96ed9f
+  bbox:
+    x0: 90.24
+    y0: 480.91
+    x1: 499.3185
+    y1: 497.83
+- evidence_id: ev:68f4dfa7b4c9edf0b4bfc707
+  row_evidence_id: ev:059f51a0520b1dae8ba2e2d1
+  row_index: 1
+  column_index: 0
+  source_row_span: 1
+  source_col_span: 1
+  reviewed_row_span: 1
+  reviewed_col_span: 1
+  canonical_text_sha256: 0654317a6d42bcb7d7d0b0dca275435e894a0ecf2ca412750bff59a0d547ddc0
+  bbox:
+    x0: 90.24
+    y0: 497.83
+    x1: 173.18
+    y1: 514.75
+- evidence_id: ev:b7c02e7ba903600c401b59d9
+  row_evidence_id: ev:059f51a0520b1dae8ba2e2d1
+  row_index: 1
+  column_index: 1
+  source_row_span: 1
+  source_col_span: 1
+  reviewed_row_span: 1
+  reviewed_col_span: 1
+  canonical_text_sha256: 5763ddd3880917ea7c1fee8cf6b420578927bb1bdc035cb052c0eaf348c4e725
+  bbox:
+    x0: 173.18
+    y0: 497.83
+    x1: 274.73
+    y1: 514.75
+- evidence_id: ev:ccdfea6b96dda3f6c0370a56
+  row_evidence_id: ev:059f51a0520b1dae8ba2e2d1
+  row_index: 1
+  column_index: 2
+  source_row_span: 1
+  source_col_span: 1
+  reviewed_row_span: 1
+  reviewed_col_span: 1
+  canonical_text_sha256: 4262c45dc797bb0cd5008331ef25b684413859f55b73c71fb4e2c01b645dbbb7
+  bbox:
+    x0: 274.73
+    y0: 497.83
+    x1: 499.3185
+    y1: 514.75
+- evidence_id: ev:54355ba1394d463879f49e6c
+  row_evidence_id: ev:60c514f2d9b3707b7b4864c6
+  row_index: 2
+  column_index: 0
+  source_row_span: 1
+  source_col_span: 1
+  reviewed_row_span: 1
+  reviewed_col_span: 1
+  canonical_text_sha256: d4762c74cb92f9a7436bd4549a0fe7043ffe82b61e9498526a787479c4bedf03
+  bbox:
+    x0: 90.24
+    y0: 514.75
+    x1: 173.18
+    y1: 547.15
+- evidence_id: ev:ae663c437ee7eba6e4bc8315
+  row_evidence_id: ev:60c514f2d9b3707b7b4864c6
+  row_index: 2
+  column_index: 1
+  source_row_span: 1
+  source_col_span: 1
+  reviewed_row_span: 1
+  reviewed_col_span: 1
+  canonical_text_sha256: 82547db78b9d1b15da5c8fd29e876a514ede22827170c1e397769961292076f8
+  bbox:
+    x0: 173.18
+    y0: 514.75
+    x1: 274.73
+    y1: 547.15
+- evidence_id: ev:7b59e50e5601b91dc9f2b8ac
+  row_evidence_id: ev:60c514f2d9b3707b7b4864c6
+  row_index: 2
+  column_index: 2
+  source_row_span: 1
+  source_col_span: 1
+  reviewed_row_span: 1
+  reviewed_col_span: 1
+  canonical_text_sha256: bdfa9ce93826152569cc2ccfa465a93b7c9ebe91eb681756545b1165a8af419c
+  bbox:
+    x0: 274.73
+    y0: 514.75
+    x1: 499.3185
+    y1: 547.15
+- evidence_id: ev:95752e9c81381a2a7a9861ab
+  row_evidence_id: ev:a5afb96c6aa2e7496985804e
+  row_index: 3
+  column_index: 0
+  source_row_span: 1
+  source_col_span: 1
+  reviewed_row_span: 1
+  reviewed_col_span: 1
+  canonical_text_sha256: 97f17e275974b88bb5681d61ab9266ed8a5ec18d9f9dd41f21a646810254a83e
+  bbox:
+    x0: 90.24
+    y0: 547.15
+    x1: 173.18
+    y1: 563.95
+- evidence_id: ev:063b56a6a894ea05d7564089
+  row_evidence_id: ev:a5afb96c6aa2e7496985804e
+  row_index: 3
+  column_index: 1
+  source_row_span: 1
+  source_col_span: 1
+  reviewed_row_span: 1
+  reviewed_col_span: 1
+  canonical_text_sha256: 83a5fd0cf74307c1eaf44b2b619ade47be76924e4fa5069a0583ed9d30858d7b
+  bbox:
+    x0: 173.18
+    y0: 547.15
+    x1: 274.73
+    y1: 563.95
+- evidence_id: ev:d54e040b37fbd84c00338cf1
+  row_evidence_id: ev:a5afb96c6aa2e7496985804e
+  row_index: 3
+  column_index: 2
+  source_row_span: 1
+  source_col_span: 1
+  reviewed_row_span: 1
+  reviewed_col_span: 1
+  canonical_text_sha256: 4901e8a0487703d57afaafa3a3c5ff78b4accc75adde951a19dafc7e981585d4
+  bbox:
+    x0: 274.73
+    y0: 547.15
+    x1: 499.3185
+    y1: 563.95
+- evidence_id: ev:f0f2fd3e299e8b6178eaad21
+  row_evidence_id: ev:2bd6700eb1a4ecb8c28d7246
+  row_index: 4
+  column_index: 0
+  source_row_span: 1
+  source_col_span: 1
+  reviewed_row_span: 1
+  reviewed_col_span: 1
+  canonical_text_sha256: 7b4466c034347d1bd8ab03bab30e6eba106cbc5e19716dc6869a880dc832d41d
+  bbox:
+    x0: 90.24
+    y0: 563.95
+    x1: 173.18
+    y1: 580.87
+- evidence_id: ev:d03d85072fc4e57dad4a2460
+  row_evidence_id: ev:2bd6700eb1a4ecb8c28d7246
+  row_index: 4
+  column_index: 1
+  source_row_span: 1
+  source_col_span: 1
+  reviewed_row_span: 1
+  reviewed_col_span: 1
+  canonical_text_sha256: 7a19306d62af131f46cebefc4ac476c440c1e2c074c71e58e944eda6f273e66b
+  bbox:
+    x0: 173.18
+    y0: 563.95
+    x1: 274.73
+    y1: 580.87
+- evidence_id: ev:90118b97b3d4f3428f779a1a
+  row_evidence_id: ev:2bd6700eb1a4ecb8c28d7246
+  row_index: 4
+  column_index: 2
+  source_row_span: 1
+  source_col_span: 1
+  reviewed_row_span: 1
+  reviewed_col_span: 1
+  canonical_text_sha256: 5b21e07ed9c77e9cef41bdf906b901004ce5b93b50e901065467f569c4e4640a
+  bbox:
+    x0: 274.73
+    y0: 563.95
+    x1: 499.3185
+    y1: 580.87
+- evidence_id: ev:04f0ef41eee0ec041274d323
+  row_evidence_id: ev:4aa151158ff05f91f7a75981
+  row_index: 5
+  column_index: 0
+  source_row_span: 1
+  source_col_span: 1
+  reviewed_row_span: 1
+  reviewed_col_span: 1
+  canonical_text_sha256: 13cf76a8e65f3558cfd697ac598d2222c57283686e081b2a3fae60a5a016418f
+  bbox:
+    x0: 90.24
+    y0: 580.87
+    x1: 173.18
+    y1: 613.33
+- evidence_id: ev:026905e66203a727468495b8
+  row_evidence_id: ev:4aa151158ff05f91f7a75981
+  row_index: 5
+  column_index: 1
+  source_row_span: 1
+  source_col_span: 1
+  reviewed_row_span: 1
+  reviewed_col_span: 1
+  canonical_text_sha256: e34af76fd7513f091002f5fb9fbf5660ce33bfb7222331ecb3338c7da4601440
+  bbox:
+    x0: 173.18
+    y0: 580.87
+    x1: 274.73
+    y1: 613.33
+- evidence_id: ev:ec879c502be6adae3992f5c3
+  row_evidence_id: ev:4aa151158ff05f91f7a75981
+  row_index: 5
+  column_index: 2
+  source_row_span: 1
+  source_col_span: 1
+  reviewed_row_span: 1
+  reviewed_col_span: 1
+  canonical_text_sha256: 006bf453a3f0069cfc734c3f669e7ffbfa1b4b1fa495e4b0a17bd19e3daddfcb
+  bbox:
+    x0: 274.73
+    y0: 580.87
+    x1: 499.3185
+    y1: 613.33

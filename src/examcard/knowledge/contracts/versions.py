@@ -1,0 +1,160 @@
+"""Frozen Step 2A/2B contract version strings (byte-exact; never edit)."""
+from __future__ import annotations
+
+
+LEGACY_STEP2A_REQUEST_VERSION = "step2a_contract_v8_complete_table_semantics"
+
+
+PREVIOUS_STEP2A_REQUEST_VERSION = "step2a_contract_v9_manual_reissue_audit"
+
+
+STEP2A_REQUEST_VERSION = "step2a_contract_v10_table_atomic_continuation"
+
+
+MULTIPAGE_STEP2A_REQUEST_VERSION = "step2a_contract_v11_multipage_continuation_binding"
+
+
+REVIEWED_MULTIPAGE_STEP2A_REQUEST_VERSION = "step2a_contract_v12_reviewed_continuation_binding"
+
+
+MINIMAL_REVIEWED_MULTIPAGE_STEP2A_REQUEST_VERSION = "step2a_contract_v13_minimal_model_proposal"
+
+
+NUMERIC_EXPRESSION_GROUNDING_STEP2A_REQUEST_VERSION = "step2a_contract_v14_numeric_expression_grounding"
+
+
+SINGLE_ROLE_ANCHOR_STEP2A_REQUEST_VERSION = "step2a_contract_v15_single_role_anchor"
+
+
+DETERMINISTIC_NUMERIC_CLAIM_STEP2A_REQUEST_VERSION = "step2a_contract_v16_deterministic_numeric_claims"
+
+
+TABLE_CONTINUATION_STEP2A_REQUEST_VERSION = "step2a_contract_v17_table_continuation_integration"
+
+
+TABLE_COVERAGE_OBLIGATION_STEP2A_REQUEST_VERSION = "step2a_contract_v18_table_coverage_obligations"
+
+
+TABLE_COVERAGE_OBLIGATION_CONTEXT_STEP2A_REQUEST_VERSION = "step2a_contract_v19_coverage_obligation_context"
+
+
+TABLE_STIFFNESS_ATOMIC_THRESHOLD_COVERAGE_STEP2A_REQUEST_VERSION = "step2a_contract_v20_stiffness_atomic_threshold_coverage"
+
+
+COMPOSITION_NUMERIC_OCCURRENCE_STEP2A_REQUEST_VERSION = "step2a_contract_v21_composition_numeric_occurrence"
+
+
+COMPOSITION_NUMERIC_OCCURRENCE_STEP2A_PROMPT_VERSION = "step2a_prompt_v21_composition_numeric_occurrence"
+
+
+STRUCTURAL_INDEX_OCCURRENCE_STEP2A_REQUEST_VERSION = "step2a_contract_v22_structural_index_occurrence"
+
+
+STRUCTURAL_INDEX_OCCURRENCE_STEP2A_PROMPT_VERSION = "step2a_prompt_v22_structural_index_occurrence"
+
+
+SOURCE_OWNED_STRUCTURAL_PROJECTION_STEP2A_REQUEST_VERSION = "step2a_contract_v23_source_owned_structural_projection"
+
+
+SOURCE_OWNED_STRUCTURAL_PROJECTION_STEP2A_PROMPT_VERSION = "step2a_prompt_v23_source_owned_structural_projection"
+
+
+PREVIOUS_STEP2B_REQUEST_VERSION = "step2b_contract_v3_complete_table_grouping"
+
+
+STEP2B_REQUEST_VERSION = "step2b_contract_v4_reviewed_canonical_title"
+
+
+CONTINUATION_TITLE_PROJECTION_STEP2B_REQUEST_VERSION = "step2b_contract_v5_continuation_title_projection"
+
+
+LEGACY_STEP2A_SEMANTIC_PROJECTION_VERSION = "step2a_semantic_projection_v4_complete_table_semantics"
+
+
+STEP2A_SEMANTIC_PROJECTION_VERSION = "step2a_semantic_projection_v5_table_atomic_continuation"
+
+
+EVIDENCE_ANCHOR_SPAN_VERSION = "evidence_anchor_span_v1"
+
+
+LEGACY_STEP2A_MODEL_INPUT_VERSION = "step2a_model_input_v4_anchor_complete_table_required"
+
+
+STEP2A_MODEL_INPUT_VERSION = "step2a_model_input_v5_table_atomic_continuation"
+
+
+MULTIPAGE_STEP2A_MODEL_INPUT_VERSION = "step2a_model_input_v6_multipage_continuation_binding"
+
+
+REVIEWED_MULTIPAGE_STEP2A_MODEL_INPUT_VERSION = "step2a_model_input_v7_reviewed_continuation_binding"
+
+
+MINIMAL_REVIEWED_MULTIPAGE_STEP2A_MODEL_INPUT_VERSION = "step2a_model_input_v8_minimal_model_proposal"
+
+
+NUMERIC_EXPRESSION_GROUNDING_STEP2A_MODEL_INPUT_VERSION = "step2a_model_input_v9_numeric_expression_grounding"
+
+
+SINGLE_ROLE_ANCHOR_STEP2A_MODEL_INPUT_VERSION = "step2a_model_input_v10_single_role_anchor"
+
+
+DETERMINISTIC_NUMERIC_CLAIM_STEP2A_MODEL_INPUT_VERSION = "step2a_model_input_v11_deterministic_numeric_claims"
+
+
+TABLE_CONTINUATION_STEP2A_MODEL_INPUT_VERSION = "step2a_model_input_v12_table_continuation_integration"
+
+
+TABLE_COVERAGE_OBLIGATION_STEP2A_MODEL_INPUT_VERSION = "step2a_model_input_v13_table_coverage_obligations"
+
+
+TABLE_COVERAGE_OBLIGATION_CONTEXT_STEP2A_MODEL_INPUT_VERSION = "step2a_model_input_v14_coverage_obligation_context"
+
+
+TABLE_STIFFNESS_ATOMIC_THRESHOLD_COVERAGE_STEP2A_MODEL_INPUT_VERSION = "step2a_model_input_v15_stiffness_atomic_threshold_coverage"
+
+
+COMPOSITION_NUMERIC_OCCURRENCE_STEP2A_MODEL_INPUT_VERSION = "step2a_model_input_v16_composition_numeric_occurrence"
+
+
+STRUCTURAL_INDEX_OCCURRENCE_STEP2A_MODEL_INPUT_VERSION = "step2a_model_input_v17_structural_index_occurrence"
+
+
+SOURCE_OWNED_STRUCTURAL_PROJECTION_STEP2A_MODEL_INPUT_VERSION = "step2a_model_input_v18_source_owned_structural_projection"
+
+
+_REVIEWED_MULTIPAGE_STEP2A_REQUEST_VERSIONS = frozenset(
+    {
+        REVIEWED_MULTIPAGE_STEP2A_REQUEST_VERSION,
+        MINIMAL_REVIEWED_MULTIPAGE_STEP2A_REQUEST_VERSION,
+        NUMERIC_EXPRESSION_GROUNDING_STEP2A_REQUEST_VERSION,
+        SINGLE_ROLE_ANCHOR_STEP2A_REQUEST_VERSION,
+        DETERMINISTIC_NUMERIC_CLAIM_STEP2A_REQUEST_VERSION,
+        TABLE_CONTINUATION_STEP2A_REQUEST_VERSION,
+        TABLE_COVERAGE_OBLIGATION_STEP2A_REQUEST_VERSION,
+        TABLE_COVERAGE_OBLIGATION_CONTEXT_STEP2A_REQUEST_VERSION,
+        TABLE_STIFFNESS_ATOMIC_THRESHOLD_COVERAGE_STEP2A_REQUEST_VERSION,
+        COMPOSITION_NUMERIC_OCCURRENCE_STEP2A_REQUEST_VERSION,
+        STRUCTURAL_INDEX_OCCURRENCE_STEP2A_REQUEST_VERSION,
+        SOURCE_OWNED_STRUCTURAL_PROJECTION_STEP2A_REQUEST_VERSION,
+    }
+)
+
+
+_MULTIPAGE_STEP2A_REQUEST_VERSIONS = frozenset(
+    {
+        MULTIPAGE_STEP2A_REQUEST_VERSION,
+        *_REVIEWED_MULTIPAGE_STEP2A_REQUEST_VERSIONS,
+    }
+)
+
+
+TABLE_CONTINUATION_REQUEST_INPUT_VERSION = "step2a_table_continuation_input_v1"
+
+
+STIFFNESS_ATOMIC_THRESHOLD_TABLE_CONTINUATION_REQUEST_INPUT_VERSION = "step2a_table_continuation_input_v2"
+
+
+STEP2A_COVERAGE_OBLIGATION_INPUT_VERSION = "step2a_coverage_obligation_input_v1"
+
+
+STEP2A_COVERAGE_OBLIGATION_CONTEXT_INPUT_VERSION = "step2a_coverage_obligation_context_input_v1"

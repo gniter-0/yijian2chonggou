@@ -1,0 +1,221 @@
+{
+  "$defs": {
+    "CompletenessMode": {
+      "enum": [
+        "atomic",
+        "all_items",
+        "ordered_steps",
+        "complete_formula",
+        "full_table_row",
+        "full_diagram_subgraph"
+      ],
+      "title": "CompletenessMode",
+      "type": "string"
+    },
+    "ContinuationAllItemsGoldenTarget": {
+      "additionalProperties": false,
+      "properties": {
+        "fact_key": {
+          "pattern": "^[a-z0-9][a-z0-9._-]*$",
+          "title": "Fact Key",
+          "type": "string"
+        },
+        "canonical_title": {
+          "maxLength": 64,
+          "minLength": 2,
+          "title": "Canonical Title",
+          "type": "string"
+        },
+        "fact_type": {
+          "$ref": "#/$defs/FactType",
+          "default": "enumeration"
+        },
+        "completeness_mode": {
+          "$ref": "#/$defs/CompletenessMode",
+          "default": "all_items"
+        },
+        "required_evidence_ids": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Required Evidence Ids",
+          "type": "array"
+        },
+        "required_anchor_span_ids": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Required Anchor Span Ids",
+          "type": "array"
+        },
+        "required_assertion_terms": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Required Assertion Terms",
+          "type": "array"
+        }
+      },
+      "required": [
+        "fact_key",
+        "canonical_title",
+        "required_evidence_ids",
+        "required_anchor_span_ids",
+        "required_assertion_terms"
+      ],
+      "title": "ContinuationAllItemsGoldenTarget",
+      "type": "object"
+    },
+    "ContinuationGoldenPageBinding": {
+      "additionalProperties": false,
+      "properties": {
+        "page_num": {
+          "minimum": 1,
+          "title": "Page Num",
+          "type": "integer"
+        },
+        "source_manifest_path": {
+          "minLength": 1,
+          "title": "Source Manifest Path",
+          "type": "string"
+        },
+        "source_manifest_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Source Manifest Sha256",
+          "type": "string"
+        }
+      },
+      "required": [
+        "page_num",
+        "source_manifest_path",
+        "source_manifest_sha256"
+      ],
+      "title": "ContinuationGoldenPageBinding",
+      "type": "object"
+    },
+    "ContinuationReviewState": {
+      "enum": [
+        "draft",
+        "reviewed"
+      ],
+      "title": "ContinuationReviewState",
+      "type": "string"
+    },
+    "FactType": {
+      "enum": [
+        "definition",
+        "classification",
+        "enumeration",
+        "procedure",
+        "condition",
+        "threshold",
+        "formula",
+        "comparison",
+        "exception",
+        "composition",
+        "diagram_relation",
+        "visual_reference",
+        "exam_note",
+        "example",
+        "exercise"
+      ],
+      "title": "FactType",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "default": "2.0",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "fixture_version": {
+      "default": "continuation_learning_golden_v1",
+      "title": "Fixture Version",
+      "type": "string"
+    },
+    "fixture_id": {
+      "pattern": "^[a-z0-9][a-z0-9._-]*$",
+      "title": "Fixture Id",
+      "type": "string"
+    },
+    "sample_id": {
+      "pattern": "^[a-z0-9][a-z0-9._-]*$",
+      "title": "Sample Id",
+      "type": "string"
+    },
+    "source_document_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Source Document Sha256",
+      "type": "string"
+    },
+    "continuation_review_sidecar_id": {
+      "pattern": "^continuation-sidecar:[0-9a-f]{24}$",
+      "title": "Continuation Review Sidecar Id",
+      "type": "string"
+    },
+    "continuation_review_sidecar_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Continuation Review Sidecar Sha256",
+      "type": "string"
+    },
+    "pages": {
+      "items": {
+        "$ref": "#/$defs/ContinuationGoldenPageBinding"
+      },
+      "title": "Pages",
+      "type": "array"
+    },
+    "target": {
+      "$ref": "#/$defs/ContinuationAllItemsGoldenTarget"
+    },
+    "state": {
+      "$ref": "#/$defs/ContinuationReviewState"
+    },
+    "reviewer": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Reviewer"
+    },
+    "reviewed_at_utc": {
+      "anyOf": [
+        {
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}Z$",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Reviewed At Utc"
+    },
+    "review_basis": {
+      "maxLength": 1000,
+      "minLength": 16,
+      "title": "Review Basis",
+      "type": "string"
+    }
+  },
+  "required": [
+    "fixture_id",
+    "sample_id",
+    "source_document_sha256",
+    "continuation_review_sidecar_id",
+    "continuation_review_sidecar_sha256",
+    "pages",
+    "target",
+    "state",
+    "review_basis"
+  ],
+  "title": "ContinuationLearningGoldenFixture",
+  "type": "object"
+}

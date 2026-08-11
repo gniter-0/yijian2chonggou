@@ -1,0 +1,305 @@
+{
+  "$defs": {
+    "AnnotationStatus": {
+      "enum": [
+        "selected",
+        "seeded",
+        "reviewed"
+      ],
+      "title": "AnnotationStatus",
+      "type": "string"
+    },
+    "EvidenceKind": {
+      "enum": [
+        "heading",
+        "paragraph",
+        "list_group",
+        "list_item",
+        "table",
+        "table_row",
+        "table_cell",
+        "formula",
+        "figure",
+        "diagram_node",
+        "diagram_edge",
+        "caption",
+        "example",
+        "exercise",
+        "exam_tag",
+        "header_footer",
+        "watermark",
+        "page_number",
+        "decorative"
+      ],
+      "title": "EvidenceKind",
+      "type": "string"
+    },
+    "ExpectedEvidenceMatch": {
+      "additionalProperties": false,
+      "description": "A text anchor together with the properties that make it meaningful.",
+      "properties": {
+        "text": {
+          "minLength": 1,
+          "title": "Text",
+          "type": "string"
+        },
+        "kind": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/EvidenceKind"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "semantic_role": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/SemanticRole"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "source_quality": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/SourceQuality"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "must_cover": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Must Cover"
+        }
+      },
+      "required": [
+        "text"
+      ],
+      "title": "ExpectedEvidenceMatch",
+      "type": "object"
+    },
+    "GoldenAssertion": {
+      "additionalProperties": false,
+      "properties": {
+        "assertion_id": {
+          "title": "Assertion Id",
+          "type": "string"
+        },
+        "description": {
+          "title": "Description",
+          "type": "string"
+        },
+        "expected_evidence_kinds": {
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/EvidenceKind"
+          },
+          "title": "Expected Evidence Kinds",
+          "type": "array"
+        },
+        "expected_texts": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "title": "Expected Texts",
+          "type": "array"
+        },
+        "expected_conflicts": {
+          "default": [],
+          "items": {
+            "maxItems": 2,
+            "minItems": 2,
+            "prefixItems": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "type": "array"
+          },
+          "title": "Expected Conflicts",
+          "type": "array"
+        },
+        "must_cover": {
+          "default": false,
+          "title": "Must Cover",
+          "type": "boolean"
+        },
+        "expected_matches": {
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/ExpectedEvidenceMatch"
+          },
+          "title": "Expected Matches",
+          "type": "array"
+        }
+      },
+      "required": [
+        "assertion_id",
+        "description"
+      ],
+      "title": "GoldenAssertion",
+      "type": "object"
+    },
+    "GoldenSample": {
+      "additionalProperties": false,
+      "properties": {
+        "sample_id": {
+          "pattern": "^[a-z0-9][a-z0-9._-]*$",
+          "title": "Sample Id",
+          "type": "string"
+        },
+        "pdf_relative_path": {
+          "title": "Pdf Relative Path",
+          "type": "string"
+        },
+        "pdf_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Pdf Sha256",
+          "type": "string"
+        },
+        "selected_pages": {
+          "items": {
+            "type": "integer"
+          },
+          "title": "Selected Pages",
+          "type": "array"
+        },
+        "focus": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Focus",
+          "type": "array"
+        },
+        "annotation_status": {
+          "$ref": "#/$defs/AnnotationStatus"
+        },
+        "assertions": {
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/GoldenAssertion"
+          },
+          "title": "Assertions",
+          "type": "array"
+        },
+        "reviewer": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Reviewer"
+        },
+        "reviewed_at_utc": {
+          "anyOf": [
+            {
+              "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}Z$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Reviewed At Utc"
+        }
+      },
+      "required": [
+        "sample_id",
+        "pdf_relative_path",
+        "pdf_sha256",
+        "selected_pages",
+        "focus",
+        "annotation_status"
+      ],
+      "title": "GoldenSample",
+      "type": "object"
+    },
+    "SemanticRole": {
+      "enum": [
+        "core",
+        "worked_example",
+        "exercise_question",
+        "exercise_option",
+        "exercise_answer",
+        "exercise_explanation",
+        "exam_tag",
+        "heading",
+        "caption",
+        "header_footer",
+        "watermark",
+        "page_number",
+        "decorative",
+        "unknown"
+      ],
+      "title": "SemanticRole",
+      "type": "string"
+    },
+    "SourceQuality": {
+      "enum": [
+        "verified_agreement",
+        "native_only",
+        "visual_only",
+        "conflict",
+        "unresolved"
+      ],
+      "title": "SourceQuality",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "default": "2.0",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "registry_id": {
+      "title": "Registry Id",
+      "type": "string"
+    },
+    "material_profile_id": {
+      "title": "Material Profile Id",
+      "type": "string"
+    },
+    "samples": {
+      "items": {
+        "$ref": "#/$defs/GoldenSample"
+      },
+      "title": "Samples",
+      "type": "array"
+    }
+  },
+  "required": [
+    "registry_id",
+    "material_profile_id",
+    "samples"
+  ],
+  "title": "GoldenSampleRegistry",
+  "type": "object"
+}

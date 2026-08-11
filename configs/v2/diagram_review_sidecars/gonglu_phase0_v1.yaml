@@ -1,0 +1,1432 @@
+schema_version: '2.0'
+sidecar_id: gonglu_phase0_v1.diagram_review_draft
+registry_id: gonglu_phase0_v1
+material_profile_id: yijian_gonglu_2026
+annotation_revision: 1
+entries:
+- review_id: diagram:f5c9b51e3bfc5a804b9067b0
+  sample_id: gonglu_01_text_list
+  pdf_sha256: ace9041ad220a4ebda2bba279900de49ebd83cb4a81fd601a38b37db315d0b4d
+  page_num: 1
+  figure_evidence_id: ev:19bd4da19213e2873346b8a3
+  figure_crop_path: crops/p0001_image_003.png
+  figure_crop_sha256: ec95e2405d9cab6dcc320fd4cd9d5b3b2fe00a4616bb377c0368ab7e84cfdf54
+  state: draft
+  nodes: []
+  edges: []
+  candidate_nodes:
+  - evidence_id: ev:2ce855d6a2e6a58394b07e78
+    text: 原地面线
+    bbox:
+      x0: 172.9652
+      y0: 595.0303
+      x1: 199.6077
+      y1: 606.4895
+  candidate_edge_texts: []
+- review_id: diagram:1e2f8c831d4edb33e43dfd80
+  sample_id: gonglu_01_text_list
+  pdf_sha256: ace9041ad220a4ebda2bba279900de49ebd83cb4a81fd601a38b37db315d0b4d
+  page_num: 1
+  figure_evidence_id: ev:3a3de856bb37558c7b007d0e
+  figure_crop_path: crops/p0001_image_005.png
+  figure_crop_sha256: f6f1708b00a31067315d489abdb422b405d620148688bd76a31e80a168a7516e
+  state: draft
+  nodes: []
+  edges: []
+  candidate_nodes: []
+  candidate_edge_texts: []
+- review_id: diagram:6cc5cb0eaa78968e9845f2c4
+  sample_id: gonglu_01_text_list
+  pdf_sha256: ace9041ad220a4ebda2bba279900de49ebd83cb4a81fd601a38b37db315d0b4d
+  page_num: 1
+  figure_evidence_id: ev:4c6f14ab03fc9e6fd071e947
+  figure_crop_path: crops/p0001_image_001.png
+  figure_crop_sha256: 7ab931ff8d5083adf5eced796b52bb975fbb851985738d7f924a188f8ee02651
+  state: draft
+  nodes: []
+  edges: []
+  candidate_nodes:
+  - evidence_id: ev:14362c037cf8d3df1c921208
+    text: 路基工程
+    bbox:
+      x0: 241.4746
+      y0: 107.3771
+      x1: 284.1873
+      y1: 119.2607
+  - evidence_id: ev:cc97c1da8a6e14991953df93
+    text: '01'
+    bbox:
+      x0: 179.3086
+      y0: 113.3189
+      x1: 197.9161
+      y1: 127.3246
+  - evidence_id: ev:8e7761d288658191d8da33dc
+    text: '02'
+    bbox:
+      x0: 164.9301
+      y0: 135.8129
+      x1: 186.075
+      y1: 150.6674
+  - evidence_id: ev:56f09fa358cc85a19efd2364
+    text: 回
+    bbox:
+      x0: 205.1054
+      y0: 135.8129
+      x1: 215.2549
+      y1: 145.15
+  - evidence_id: ev:73312997d4c9febbc4364254
+    text: 路面工程
+    bbox:
+      x0: 256.276
+      y0: 132.842
+      x1: 299.4116
+      y1: 144.7256
+  - evidence_id: ev:24bcef461865f2bae92001a5
+    text: '03'
+    bbox:
+      x0: 150.9745
+      y0: 157.8825
+      x1: 172.5423
+      y1: 174.4347
+  - evidence_id: ev:0da1e54a8bf724365784d690
+    text: 桥梁工程
+    bbox:
+      x0: 269.3858
+      y0: 157.0337
+      x1: 314.6359
+      y1: 171.0394
+  - evidence_id: ev:5d1fae5547f333d10c14a6e4
+    text: '04'
+    bbox:
+      x0: 138.7104
+      y0: 182.0742
+      x1: 158.5866
+      y1: 197.7775
+  - evidence_id: ev:167fa5029acfbcf6cc1d0224
+    text: 隧道工程
+    bbox:
+      x0: 287.5705
+      y0: 183.7718
+      x1: 329.4373
+      y1: 195.231
+  - evidence_id: ev:b5f8068896de8c4e8034939a
+    text: '05'
+    bbox:
+      x0: 124.7548
+      y0: 206.2658
+      x1: 144.631
+      y1: 221.5448
+  candidate_edge_texts: []
+- review_id: diagram:3f62fa54a3a0a341605b7f65
+  sample_id: gonglu_01_text_list
+  pdf_sha256: ace9041ad220a4ebda2bba279900de49ebd83cb4a81fd601a38b37db315d0b4d
+  page_num: 1
+  figure_evidence_id: ev:506ca83799bb9f259bee1152
+  figure_crop_path: crops/p0001_image_004.png
+  figure_crop_sha256: 4f002926c1e5b009fa8ffd6c66cbad51fa9ef7ba2a88ac55c708f676c4e3ce73
+  state: draft
+  nodes: []
+  edges: []
+  candidate_nodes:
+  - evidence_id: ev:99ed2e63ad23f669d2590661
+    text: 裁水沟
+    bbox:
+      x0: 462.6501
+      y0: 546.2225
+      x1: 470.2623
+      y1: 563.1991
+  - evidence_id: ev:63efb296f08876d35ccdfdbd
+    text: 沟
+    bbox:
+      x0: 463.4959
+      y0: 560.6527
+      x1: 468.5707
+      y1: 567.4433
+  candidate_edge_texts: []
+- review_id: diagram:2cee9ed35704fbf51447f6b5
+  sample_id: gonglu_01_text_list
+  pdf_sha256: ace9041ad220a4ebda2bba279900de49ebd83cb4a81fd601a38b37db315d0b4d
+  page_num: 1
+  figure_evidence_id: ev:eec4ac4100aa875b738f480f
+  figure_crop_path: crops/p0001_image_002.png
+  figure_crop_sha256: 3e1f54cf91241b97be2786706994ecfae60e92747702fc66567a6056dda75521
+  state: draft
+  nodes: []
+  edges: []
+  candidate_nodes:
+  - evidence_id: ev:4a9ad3e058de0089acca6e98
+    text: 路基横断面
+    bbox:
+      x0: 96.4207
+      y0: 298.7884
+      x1: 164.9301
+      y1: 313.2185
+  - evidence_id: ev:e689248ff31b086ddaabb269
+    text: 路堤（填方）
+    bbox:
+      x0: 142.9394
+      y0: 384.0959
+      x1: 200.4535
+      y1: 394.2818
+  - evidence_id: ev:20c09202eb026dcad544e380
+    text: 路堑（挖方）
+    bbox:
+      x0: 257.5447
+      y0: 383.6715
+      x1: 316.3275
+      y1: 395.1307
+  - evidence_id: ev:f4108db6dc541c9710bf16f8
+    text: 零填零挖（不填不挖）
+    bbox:
+      x0: 238.0914
+      y0: 449.0314
+      x1: 334.5121
+      y1: 461.3395
+  - evidence_id: ev:1dbb1e2e04b1ea8e024b97e7
+    text: 填挖结合（半填半挖）
+    bbox:
+      x0: 125.1777
+      y0: 468.9789
+      x1: 218.2152
+      y1: 478.7405
+  candidate_edge_texts: []
+- review_id: diagram:551628b4ce4064138e24ee58
+  sample_id: gonglu_01_text_list
+  pdf_sha256: ace9041ad220a4ebda2bba279900de49ebd83cb4a81fd601a38b37db315d0b4d
+  page_num: 2
+  figure_evidence_id: ev:ed0182177d21337b1ce706d4
+  figure_crop_path: crops/p0002_image_001.png
+  figure_crop_sha256: 05855eb5f3ae904c4329953085d67df3139d343ce78d3a387e26730b5bbd6923
+  state: draft
+  nodes: []
+  edges: []
+  candidate_nodes:
+  - evidence_id: ev:c6e780607cd25228e275f0f4
+    text: 2600/2
+    bbox:
+      x0: 232.5938
+      y0: 391.3109
+      x1: 257.5447
+      y1: 400.2237
+  - evidence_id: ev:b83b19fba9047abf874904cc
+    text: 2600/2
+    bbox:
+      x0: 305.3321
+      y0: 391.3109
+      x1: 329.8602
+      y1: 400.2237
+  - evidence_id: ev:0c7ce77abbcebc911f205585
+    text: 隔离榭
+    bbox:
+      x0: 468.5707
+      y0: 390.0377
+      x1: 496.9048
+      y1: 402.7702
+  - evidence_id: ev:4c6af5ca15a0dcb5df10fe6c
+    text: '75'
+    bbox:
+      x0: 203.4138
+      y0: 403.619
+      x1: 211.4488
+      y1: 410.834
+  - evidence_id: ev:910b9acd616f121470c0c9e9
+    text: '300'
+    bbox:
+      x0: 211.4488
+      y0: 402.3457
+      x1: 234.2853
+      y1: 411.2585
+  - evidence_id: ev:fabd7b78897e73fac8b70b91
+    text: 2X375
+    bbox:
+      x0: 241.0517
+      y0: 401.9213
+      x1: 259.6592
+      y1: 410.834
+  - evidence_id: ev:ba3d3af6bc4c3a7332056f6f
+    text: 350/2
+    bbox:
+      x0: 265.1569
+      y0: 401.9213
+      x1: 281.6499
+      y1: 409.5608
+  - evidence_id: ev:824ef598524d6192013866e9
+    text: 350/2
+    bbox:
+      x0: 279.9583
+      y0: 401.0725
+      x1: 298.1429
+      y1: 409.9852
+  - evidence_id: ev:7ff3f711385ef98563c1fcac
+    text: 2X375
+    bbox:
+      x0: 305.3321
+      y0: 402.3457
+      x1: 322.671
+      y1: 409.9852
+  - evidence_id: ev:98c8f48f0913db2a379d5998
+    text: '300'
+    bbox:
+      x0: 330.706
+      y0: 401.4969
+      x1: 347.6219
+      y1: 410.834
+  - evidence_id: ev:60a5428ba17086e6213837c5
+    text: '75'
+    bbox:
+      x0: 351.8509
+      y0: 403.1946
+      x1: 359.0402
+      y1: 410.4096
+  - evidence_id: ev:714afb7cfeef1983b8529ab0
+    text: 用地界碑
+    bbox:
+      x0: 470.6851
+      y0: 403.1946
+      x1: 506.6314
+      y1: 415.0782
+  - evidence_id: ev:08e47c7ec1e0f1528c8295de
+    text: '7200'
+    bbox:
+      x0: 262.6195
+      y0: 410.4096
+      x1: 289.262
+      y1: 422.2933
+  - evidence_id: ev:fa135247769a4beb22a2d9cc
+    text: '75'
+    bbox:
+      x0: 288.8391
+      y0: 411.2585
+      x1: 298.1429
+      y1: 421.8688
+  - evidence_id: ev:da1a90054c1ae196cf9b1229
+    text: '20'
+    bbox:
+      x0: 329.0144
+      y0: 409.5608
+      x1: 342.97
+      y1: 422.7177
+  - evidence_id: ev:f7a55f8dabfa8e3fef989502
+    text: 1>500
+    bbox:
+      x0: 434.316
+      y0: 408.2875
+      x1: 456.3066
+      y1: 421.8688
+  - evidence_id: ev:8436d2fb7540b29d3048ede3
+    text: 路缘带
+    bbox:
+      x0: 268.54
+      y0: 422.2933
+      x1: 278.6896
+      y1: 448.1826
+  - evidence_id: ev:438d36d30d82895590f9208f
+    text: 中央分隔带
+    bbox:
+      x0: 276.1522
+      y0: 418.4735
+      x1: 287.5705
+      y1: 456.6709
+  - evidence_id: ev:f40f1a480026bcd3a132d7ee
+    text: 行车道
+    bbox:
+      x0: 309.5611
+      y0: 422.2933
+      x1: 320.1336
+      y1: 447.7582
+  - evidence_id: ev:742ef27a1f539c10767580f8
+    text: 路缘
+    bbox:
+      x0: 329.4373
+      y0: 422.2933
+      x1: 339.164
+      y1: 439.6943
+  - evidence_id: ev:3199182439c08435acfe2362
+    text: 行车道
+    bbox:
+      x0: 247.3952
+      y0: 426.5374
+      x1: 257.5447
+      y1: 452.0023
+  - evidence_id: ev:cc5a140cef627cf4f8d9344b
+    text: 硬
+    bbox:
+      x0: 340.0098
+      y0: 423.1421
+      x1: 348.0448
+      y1: 431.206
+  - evidence_id: ev:df7b5ab91083353d7333d9bd
+    text: 碎落台
+    bbox:
+      x0: 365.8065
+      y0: 422.7177
+      x1: 375.9561
+      y1: 447.7582
+  - evidence_id: ev:2e3003877840d820b1664c1b
+    text: 截水沟
+    bbox:
+      x0: 470.2623
+      y0: 424.4153
+      x1: 497.3277
+      y1: 436.299
+  - evidence_id: ev:3085c2336dded70949cc0782
+    text: 土
+    bbox:
+      x0: 206.797
+      y0: 429.0839
+      x1: 215.2549
+      y1: 438.8454
+  - evidence_id: ev:66a003755b7a66a7e2fae7d2
+    text: 硬
+    bbox:
+      x0: 216.1007
+      y0: 429.0839
+      x1: 225.4045
+      y1: 437.9966
+  - evidence_id: ev:e7d8f903458af6530397bca3
+    text: 路
+    bbox:
+      x0: 225.8274
+      y0: 429.5083
+      x1: 233.4395
+      y1: 437.5722
+  - evidence_id: ev:c1e974c088082ed899a1a36f
+    text: 路
+    bbox:
+      x0: 339.5869
+      y0: 429.9327
+      x1: 348.4677
+      y1: 439.2699
+  - evidence_id: ev:40592d2e5be7709fd22974c7
+    text: 路
+    bbox:
+      x0: 348.0448
+      y0: 429.5083
+      x1: 356.5028
+      y1: 439.6943
+  - evidence_id: ev:a6650418b952adcdabb3950d
+    text: 路
+    bbox:
+      x0: 206.3741
+      y0: 435.8745
+      x1: 214.832
+      y1: 446.0605
+  - evidence_id: ev:d53f7c895e42b84c73eefbb0
+    text: 路
+    bbox:
+      x0: 216.1007
+      y0: 436.299
+      x1: 225.4045
+      y1: 445.6361
+  - evidence_id: ev:cb961d07a1bd807484b9767f
+    text: 缘
+    bbox:
+      x0: 226.2503
+      y0: 436.299
+      x1: 233.4395
+      y1: 445.2117
+  - evidence_id: ev:7bb52a5ff84de7f0b9ef4a16
+    text: 带
+    bbox:
+      x0: 287.5705
+      y0: 437.5722
+      x1: 295.1826
+      y1: 446.0605
+  - evidence_id: ev:b106f8f8756a3be43d8e25d1
+    text: 带
+    bbox:
+      x0: 330.706
+      y0: 437.5722
+      x1: 338.3182
+      y1: 445.6361
+  - evidence_id: ev:a09b46bac7e83e5d1c21853d
+    text: 肩
+    bbox:
+      x0: 339.164
+      y0: 437.1478
+      x1: 348.8906
+      y1: 446.0605
+  - evidence_id: ev:b3c5d584682fdffa3870012f
+    text: 肩
+    bbox:
+      x0: 348.4677
+      y0: 437.1478
+      x1: 356.0799
+      y1: 445.6361
+  - evidence_id: ev:e64e6ee03aa02e62c7873789
+    text: 肩
+    bbox:
+      x0: 207.2199
+      y0: 444.3629
+      x1: 214.832
+      y1: 452.0023
+  - evidence_id: ev:6de69e451f0290fcab435710
+    text: 肩带
+    bbox:
+      x0: 215.2549
+      y0: 443.514
+      x1: 234.2853
+      y1: 452.8512
+  - evidence_id: ev:99094475aff7a639a70a2821
+    text: 波形梁护栏
+    bbox:
+      x0: 216.1007
+      y0: 452.0023
+      x1: 248.241
+      y1: 460.915
+  - evidence_id: ev:c41391656b710ed2963c9d8f
+    text: 预埋通信管线波形巢护栏
+    bbox:
+      x0: 280.3812
+      y0: 449.8802
+      x1: 351.428
+      y1: 464.3104
+  - evidence_id: ev:8bbcbb0b07f6f63f571d3920
+    text: 砼护栏
+    bbox:
+      x0: 255.8531
+      y0: 456.6709
+      x1: 276.998
+      y1: 468.1301
+  - evidence_id: ev:e4e4b4855edb66b8ed74e53e
+    text: '260'
+    bbox:
+      x0: 350.1593
+      y0: 454.9732
+      x1: 368.3439
+      y1: 466.4324
+  - evidence_id: ev:6cc385a242b1e71796efaa67
+    text: 设计高程
+    bbox:
+      x0: 282.9186
+      y0: 459.6418
+      x1: 310.4069
+      y1: 471.101
+  - evidence_id: ev:1186dba24f035ce581db6455
+    text: 平台排水沟
+    bbox:
+      x0: 408.9421
+      y0: 457.9441
+      x1: 442.351
+      y1: 468.1301
+  - evidence_id: ev:b00a56815e86ffbbf4f01bba
+    text: 护坡道
+    bbox:
+      x0: 124.7548
+      y0: 466.8569
+      x1: 134.9044
+      y1: 492.3218
+  - evidence_id: ev:675b918b4cb37ad6c5e6e61a
+    text: L人边沟
+    bbox:
+      x0: 352.6967
+      y0: 470.2522
+      x1: 386.1056
+      y1: 485.9556
+  - evidence_id: ev:68c25bc81146c6a6f7dfe8e8
+    text: '800'
+    bbox:
+      x0: 155.6264
+      y0: 479.1649
+      x1: 160.2782
+      y1: 491.4729
+  - evidence_id: ev:f7b3543e85f0f94e5b6e7d9f
+    text: '50'
+    bbox:
+      x0: 114.1824
+      y0: 483.4091
+      x1: 122.6403
+      y1: 491.0485
+  - evidence_id: ev:331730c48727172f2d4625fb
+    text: 路线设计中心线
+    bbox:
+      x0: 230.9022
+      y0: 482.1358
+      x1: 276.998
+      y1: 491.8974
+  - evidence_id: ev:b6d0af5776fc5397cd2442e3
+    text: 3%
+    bbox:
+      x0: 170.0049
+      y0: 486.38
+      x1: 177.617
+      y1: 494.4439
+  - evidence_id: ev:cc9d898d97ba100e9785e9f6
+    text: 碎石渗沟
+    bbox:
+      x0: 360.7318
+      y0: 483.8335
+      x1: 389.4888
+      y1: 494.0194
+  - evidence_id: ev:d8585656acd605879eb95532
+    text: 隔高栅
+    bbox:
+      x0: 91.3459
+      y0: 490.6241
+      x1: 112.4908
+      y1: 499.9613
+  - evidence_id: ev:fba959878874348bdd3556f7
+    text: 护坡道
+    bbox:
+      x0: 121.3716
+      y0: 489.3509
+      x1: 145.4768
+      y1: 502.0833
+  - evidence_id: ev:f5a04034a874041c1d94832d
+    text: '200'
+    bbox:
+      x0: 168.7362
+      y0: 495.2927
+      x1: 183.5376
+      y1: 505.4787
+  - evidence_id: ev:a9fa58376287e4d88a2006e1
+    text: 台排水沟
+    bbox:
+      x0: 186.9208
+      y0: 496.1415
+      x1: 213.9863
+      y1: 504.6298
+  - evidence_id: ev:7dc8c487017a1bb85c37d63a
+    text: 用地界碟
+    bbox:
+      x0: 88.3856
+      y0: 497.4148
+      x1: 120.9488
+      y1: 513.5425
+  - evidence_id: ev:59327441c434bf9dd83f481d
+    text: 4%
+    bbox:
+      x0: 256.6989
+      y0: 499.1124
+      x1: 265.5798
+      y1: 506.3275
+  - evidence_id: ev:9a1e944df70a5f3e326b4239
+    text: 200,200
+    bbox:
+      x0: 262.6195
+      y0: 502.5077
+      x1: 288.4162
+      y1: 512.6937
+  - evidence_id: ev:1fa39e7b8d03238f02fb18b7
+    text: 3%
+    bbox:
+      x0: 124.7548
+      y0: 508.4496
+      x1: 135.7502
+      y1: 516.9379
+  - evidence_id: ev:668f30fa696ee94465bb2615
+    text: 整体式路基横断面
+    bbox:
+      x0: 367.921
+      y0: 507.6007
+      x1: 466.4562
+      y1: 520.3332
+  - evidence_id: ev:9ad95876f962a765f72d2bad
+    text: 排水沟
+    bbox:
+      x0: 87.9627
+      y0: 517.3623
+      x1: 112.0679
+      y1: 528.8215
+  - evidence_id: ev:f059b8ae4b7ddbd9808824ab
+    text: 公路用地范围
+    bbox:
+      x0: 261.3508
+      y0: 523.7285
+      x1: 299.8345
+      y1: 532.6412
+  candidate_edge_texts:
+  - 753002X375350/2350/22X3753007572007520 -> 公路用地范围
+  - 1>500路缘带中央分隔带行车道路缘行车道硬碎落台截水沟土硬路路路路路缘带带肩肩肩肩带波形梁护栏预埋通信管线波形巢护栏砼护栏260设计高程平台排水沟L人边沟800路线设计中心线3%碎石渗沟200台排水沟4%200,200 -> 公路用地范围
+- review_id: diagram:1ab9cd57cf58a47d06b1576e
+  sample_id: gonglu_01_text_list
+  pdf_sha256: ace9041ad220a4ebda2bba279900de49ebd83cb4a81fd601a38b37db315d0b4d
+  page_num: 5
+  figure_evidence_id: ev:f6b19a3187df0ab984ba4bc5
+  figure_crop_path: crops/p0005_image_001.png
+  figure_crop_sha256: 98d396e420a1839e0a6fdc84afdd82d7b3176aa084bfc91ac8a21733d630e157
+  state: draft
+  nodes: []
+  edges: []
+  candidate_nodes:
+  - evidence_id: ev:37692da53dbabe032cb2d215
+    text: 行车道
+    bbox:
+      x0: 215.6778
+      y0: 594.6059
+      x1: 248.241
+      y1: 607.7627
+  - evidence_id: ev:624b17ec6556a4853178fa1d
+    text: '50'
+    bbox:
+      x0: 317.5962
+      y0: 590.7861
+      x1: 327.7457
+      y1: 599.6989
+  - evidence_id: ev:969736aac7486068b17a529e
+    text: B
+    bbox:
+      x0: 164.5072
+      y0: 598.4256
+      x1: 171.6965
+      y1: 606.4895
+  - evidence_id: ev:156a7fb862ff29157cbe9754
+    text: 2X375
+    bbox:
+      x0: 351.0051
+      y0: 596.3035
+      x1: 383.5682
+      y1: 606.9139
+  - evidence_id: ev:d9eb8a720e5e0f9e3d0023ee
+    text: '250'
+    bbox:
+      x0: 427.5496
+      y0: 596.7279
+      x1: 444.8884
+      y1: 606.4895
+  - evidence_id: ev:208d360db548bbbb58ac0d63
+    text: 2%
+    bbox:
+      x0: 246.5494
+      y0: 630.2568
+      x1: 256.276
+      y1: 638.7451
+  - evidence_id: ev:d0bf0e9e866638aa2e6298d9
+    text: 2%
+    bbox:
+      x0: 338.7411
+      y0: 629.4079
+      x1: 349.3135
+      y1: 638.7451
+  - evidence_id: ev:ab45f49854750704d96dbe8f
+    text: 4cm细粒式改性沥青混凝土表面层
+    bbox:
+      x0: 160.2782
+      y0: 668.0297
+      x1: 284.6102
+      y1: 679.0645
+  - evidence_id: ev:0a0eb9e67bf79b98a2dea8cf
+    text: 6cm中粒式沥青混凝土中面层
+    bbox:
+      x0: 160.7011
+      y0: 679.0645
+      x1: 267.6943
+      y1: 688.8261
+  - evidence_id: ev:75967134dc7329085454d55b
+    text: 7cm粗粒式沥青混凝土下面层
+    bbox:
+      x0: 160.2782
+      y0: 690.0993
+      x1: 268.1171
+      y1: 701.1341
+  - evidence_id: ev:8fefad0b2b845847d198fef3
+    text: 石油沥青封层
+    bbox:
+      x0: 160.7011
+      y0: 701.5585
+      x1: 211.4488
+      y1: 711.3201
+  - evidence_id: ev:d9bede0985ec255517d19677
+    text: 嗨学
+    bbox:
+      x0: 376.3789
+      y0: 700.7097
+      x1: 486.7553
+      y1: 732.9653
+  - evidence_id: ev:1ba05d4871effeb2482872e8
+    text: 36cm水泥稳定碎石基层（5%）
+    bbox:
+      x0: 159.8553
+      y0: 711.3201
+      x1: 267.6943
+      y1: 721.0816
+  - evidence_id: ev:ff20b4fd2a772f6a1487a2ee
+    text: 18cm水泥稳定碎石底基层（5%）
+    bbox:
+      x0: 159.8553
+      y0: 722.7793
+      x1: 275.3064
+      y1: 732.5408
+  candidate_edge_texts: []
+- review_id: diagram:e465c1249176989867fe4da0
+  sample_id: gonglu_24_table_formula
+  pdf_sha256: 9308dac1b5aa40bd1da44c22d847f22b872bd8025abc3cdc5b5b34c1407e2cf3
+  page_num: 1
+  figure_evidence_id: ev:ef46c363269d2e99c929b38c
+  figure_crop_path: crops/p0001_image_002.png
+  figure_crop_sha256: 87c618c4521b08076f29ff5de8f1fa2181704cf1b84938b1ef4309af1d8a0821
+  state: draft
+  nodes: []
+  edges: []
+  candidate_nodes:
+  - evidence_id: ev:c78e8d67f8aeeb042b3f3e42
+    text: sOKN/m
+    bbox:
+      x0: 229.2106
+      y0: 536.8854
+      x1: 251.6241
+      y1: 542.8272
+  - evidence_id: ev:cca4bb0429fb1268ec77faad
+    text: 4ak/m
+    bbox:
+      x0: 297.72
+      y0: 535.6121
+      x1: 323.9396
+      y1: 544.1004
+  - evidence_id: ev:1fa976f8f40636b625ecb2e5
+    text: 1@KN/m2
+    bbox:
+      x0: 119.2572
+      y0: 543.676
+      x1: 147.5913
+      y1: 550.8911
+  - evidence_id: ev:bfee3581c69c00094470eac9
+    text: 10K/n2
+    bbox:
+      x0: 307.8695
+      y0: 544.1004
+      x1: 334.935
+      y1: 550.0423
+  candidate_edge_texts: []
+- review_id: diagram:ed29757d6651363303fa62de
+  sample_id: gonglu_24_table_formula
+  pdf_sha256: 9308dac1b5aa40bd1da44c22d847f22b872bd8025abc3cdc5b5b34c1407e2cf3
+  page_num: 1
+  figure_evidence_id: ev:fbb202669fb26251689d2011
+  figure_crop_path: crops/p0001_image_001.png
+  figure_crop_sha256: 6a7f9eeedf52f57fdb554ba28475819018b1b5115ad3bc8480b4a7ac740ebe5d
+  state: draft
+  nodes: []
+  edges: []
+  candidate_nodes: []
+  candidate_edge_texts: []
+- review_id: diagram:b9b8b8c77908716fbe677324
+  sample_id: gonglu_24_table_formula
+  pdf_sha256: 9308dac1b5aa40bd1da44c22d847f22b872bd8025abc3cdc5b5b34c1407e2cf3
+  page_num: 5
+  figure_evidence_id: ev:21d2c80d32a260a355b191f9
+  figure_crop_path: crops/p0005_image_002.png
+  figure_crop_sha256: ee0e2ea2062365c28b1a523419c5c736f0e4e52267a3e23cf9026b0446d3c7b1
+  state: draft
+  nodes: []
+  edges: []
+  candidate_nodes: []
+  candidate_edge_texts: []
+- review_id: diagram:bbdcf031d82a22f8e0579c64
+  sample_id: gonglu_24_table_formula
+  pdf_sha256: 9308dac1b5aa40bd1da44c22d847f22b872bd8025abc3cdc5b5b34c1407e2cf3
+  page_num: 5
+  figure_evidence_id: ev:bedf0ac458d9905eff5f4cf4
+  figure_crop_path: crops/p0005_image_001.png
+  figure_crop_sha256: f27bc8ad49bfbaa14ea7a8bf35c0e67b6e29b1f6347535fe96b9cbbead560dd2
+  state: draft
+  nodes: []
+  edges: []
+  candidate_nodes: []
+  candidate_edge_texts: []
+- review_id: diagram:79a635606e898dd2c8054d8b
+  sample_id: gonglu_24_table_formula
+  pdf_sha256: 9308dac1b5aa40bd1da44c22d847f22b872bd8025abc3cdc5b5b34c1407e2cf3
+  page_num: 8
+  figure_evidence_id: ev:15e219d794955469118009af
+  figure_crop_path: crops/p0008_image_005.png
+  figure_crop_sha256: c0fe889e0c504814dde66173d3f2af5d1fb99f797b5671e0f0eb78558a5b7b4a
+  state: draft
+  nodes: []
+  edges: []
+  candidate_nodes: []
+  candidate_edge_texts: []
+- review_id: diagram:3dcb1e7efe8dd3062cce3da2
+  sample_id: gonglu_24_table_formula
+  pdf_sha256: 9308dac1b5aa40bd1da44c22d847f22b872bd8025abc3cdc5b5b34c1407e2cf3
+  page_num: 8
+  figure_evidence_id: ev:334ba7ed08b0869cdcb8cbbd
+  figure_crop_path: crops/p0008_image_004.png
+  figure_crop_sha256: 4d9618b4f080e415ada260e496c7c2deb9d1ca416d68a8475f980bf3844a239d
+  state: draft
+  nodes: []
+  edges: []
+  candidate_nodes:
+  - evidence_id: ev:37061a6dba1e015f70f541a8
+    text: 蕊
+    bbox:
+      x0: 119.68
+      y0: 539.8563
+      x1: 134.4815
+      y1: 549.1934
+  - evidence_id: ev:1b76577a7987eff7fc77acd6
+    text: 模板立柱
+    bbox:
+      x0: 144.2081
+      y0: 539.0075
+      x1: 180.5773
+      y1: 549.1934
+  - evidence_id: ev:d209b1dec2a74d7fd6b34734
+    text: 卸落设备
+    bbox:
+      x0: 192.8413
+      y0: 543.2516
+      x1: 218.6381
+      y1: 551.7399
+  - evidence_id: ev:e5c040d100941dc013f4c952
+    text: 斜撑
+    bbox:
+      x0: 95.152
+      y0: 568.7165
+      x1: 108.6847
+      y1: 576.7804
+  candidate_edge_texts: []
+- review_id: diagram:396dc40c301a19c4ec5f4fe5
+  sample_id: gonglu_24_table_formula
+  pdf_sha256: 9308dac1b5aa40bd1da44c22d847f22b872bd8025abc3cdc5b5b34c1407e2cf3
+  page_num: 8
+  figure_evidence_id: ev:619d0a69534104405d8df586
+  figure_crop_path: crops/p0008_image_003.png
+  figure_crop_sha256: 512ab5004c0702719ae2751c2de5f34157e037d96d94f38068ea56dd4d17e7e0
+  state: draft
+  nodes: []
+  edges: []
+  candidate_nodes: []
+  candidate_edge_texts: []
+- review_id: diagram:74c5db4bf1a228814763f381
+  sample_id: gonglu_24_table_formula
+  pdf_sha256: 9308dac1b5aa40bd1da44c22d847f22b872bd8025abc3cdc5b5b34c1407e2cf3
+  page_num: 8
+  figure_evidence_id: ev:d62b687a0c6868d813aef69c
+  figure_crop_path: crops/p0008_image_001.png
+  figure_crop_sha256: ab3064c1d8804415c7566b4eb76f2de364bb69bd42597df6ad28a02304960d77
+  state: draft
+  nodes: []
+  edges: []
+  candidate_nodes:
+  - evidence_id: ev:b288cba0df68c1eaa6423b98
+    text: 斜撑
+    bbox:
+      x0: 120.103
+      y0: 119.6851
+      x1: 135.3273
+      y1: 129.0223
+  - evidence_id: ev:ba7965c298abeabe1e2ed9f5
+    text: 模板立柱
+    bbox:
+      x0: 144.631
+      y0: 119.6851
+      x1: 181.846
+      y1: 128.5978
+  - evidence_id: ev:db4fffe19bb12428dfd9bdd4
+    text: 卸落设备
+    bbox:
+      x0: 194.11
+      y0: 122.656
+      x1: 221.1755
+      y1: 132.842
+  - evidence_id: ev:b09cc3bd337e2911e2d78339
+    text: 斜撑
+    bbox:
+      x0: 95.152
+      y0: 149.3942
+      x1: 109.1076
+      y1: 157.4581
+  candidate_edge_texts: []
+- review_id: diagram:5a449a7a443f885d90936488
+  sample_id: gonglu_24_table_formula
+  pdf_sha256: 9308dac1b5aa40bd1da44c22d847f22b872bd8025abc3cdc5b5b34c1407e2cf3
+  page_num: 8
+  figure_evidence_id: ev:e9e49a77afad9fc24066fe8d
+  figure_crop_path: crops/p0008_image_002.png
+  figure_crop_sha256: ba12e70f24415fd4273f51170a37ba316e6aa4ca74410ae52922f10f4f02dfdb
+  state: draft
+  nodes: []
+  edges: []
+  candidate_nodes: []
+  candidate_edge_texts: []
+- review_id: diagram:4f94e9436f680395aff43e61
+  sample_id: gonglu_41_diagram_mixed
+  pdf_sha256: 5c46177e092ad0f154a4ed87fd275c9443c665cd1fdd2d6f38821707546a0d56
+  page_num: 2
+  figure_evidence_id: ev:a2104e17b0e3b9748fdb89f4
+  figure_crop_path: crops/p0002_image_002.png
+  figure_crop_sha256: dfba82233da477c77b9e85fc26f812979619489d290969bb6b0c24e42b5b3f4f
+  state: draft
+  nodes: []
+  edges: []
+  candidate_nodes:
+  - evidence_id: ev:8b8244ff57b18cd199bf6589
+    text: 围岩
+    bbox:
+      x0: 115.0282
+      y0: 648.0822
+      x1: 128.138
+      y1: 656.5705
+  - evidence_id: ev:89ae9fb8301cf9afebb95762
+    text: 围岩
+    bbox:
+      x0: 285.456
+      y0: 646.809
+      x1: 297.72
+      y1: 655.2973
+  - evidence_id: ev:01440fda0b8bb599c100ad14
+    text: 防水层
+    bbox:
+      x0: 126.4464
+      y0: 659.117
+      x1: 145.0539
+      y1: 668.0297
+  - evidence_id: ev:4905aed0b625894eaa3ab075
+    text: 隧道轴线
+    bbox:
+      x0: 197.0703
+      y0: 667.1809
+      x1: 208.9115
+      y1: 705.8027
+  - evidence_id: ev:28fa704c37f6d0a34a7e4cce
+    text: 初期支护
+    bbox:
+      x0: 106.5702
+      y0: 680.3378
+      x1: 130.2525
+      y1: 687.9773
+  - evidence_id: ev:f69df926630d2177f0221b08
+    text: 二次衬砌
+    bbox:
+      x0: 226.2503
+      y0: 678.2157
+      x1: 251.2013
+      y1: 687.1284
+  - evidence_id: ev:30b420aa077cd6b13def4e86
+    text: 锚杆
+    bbox:
+      x0: 283.7644
+      y0: 678.2157
+      x1: 298.1429
+      y1: 686.2796
+  - evidence_id: ev:95edd0848fdd7a18eab5f1cd
+    text: 电缆沟
+    bbox:
+      x0: 155.6264
+      y0: 715.1398
+      x1: 174.6568
+      y1: 724.9014
+  - evidence_id: ev:8a295c3292cf0f718c1981c5
+    text: 路面
+    bbox:
+      x0: 190.304
+      y0: 718.5352
+      x1: 205.1054
+      y1: 727.8723
+  - evidence_id: ev:0501145d5eef8357e85e54a4
+    text: 路侧边沟
+    bbox:
+      x0: 217.7923
+      y0: 716.8375
+      x1: 241.8975
+      y1: 725.7502
+  - evidence_id: ev:630718fb3389ed5d9353e587
+    text: 2%
+    bbox:
+      x0: 221.5984
+      y0: 726.599
+      x1: 230.0563
+      y1: 732.9653
+  - evidence_id: ev:86eef796c7ccbf4b9de6b09b
+    text: 排水盲管p100
+    bbox:
+      x0: 93.4604
+      y0: 737.2094
+      x1: 131.0983
+      y1: 746.971
+  - evidence_id: ev:e9a52c964d2041fa60393359
+    text: 横向导水管p100
+    bbox:
+      x0: 103.6099
+      y0: 745.6977
+      x1: 147.5913
+      y1: 755.4593
+  - evidence_id: ev:80fade0d6bd12a1efe6266ef
+    text: 垫层
+    bbox:
+      x0: 170.8507
+      y0: 743.1513
+      x1: 186.4979
+      y1: 752.4884
+  - evidence_id: ev:9bd83bf49fade6510f27e7c6
+    text: 仰拱填充
+    bbox:
+      x0: 252.4699
+      y0: 750.3663
+      x1: 276.998
+      y1: 758.0058
+  - evidence_id: ev:fecc0aaee14f4452d9eb9437
+    text: 排水沟
+    bbox:
+      x0: 169.1591
+      y0: 754.6104
+      x1: 190.7269
+      y1: 763.5232
+  - evidence_id: ev:0c99836f1e1183cfa3f8a4ed
+    text: 仰拱
+    bbox:
+      x0: 219.061
+      y0: 754.6104
+      x1: 236.3998
+      y1: 763.9476
+  candidate_edge_texts: []
+- review_id: diagram:42184d082a0b0faa4f5cb65c
+  sample_id: gonglu_41_diagram_mixed
+  pdf_sha256: 5c46177e092ad0f154a4ed87fd275c9443c665cd1fdd2d6f38821707546a0d56
+  page_num: 2
+  figure_evidence_id: ev:dc884fee211aaa58db43e3a7
+  figure_crop_path: crops/p0002_image_001.png
+  figure_crop_sha256: 9277f14370c011b7ca4d06c60a5e37c6abd6f3a942a264723b958d74120fb82e
+  state: draft
+  nodes: []
+  edges: []
+  candidate_nodes:
+  - evidence_id: ev:2f26bf82436a57de5a9a7c70
+    text: 鹉桃山随道
+    bbox:
+      x0: 123.0632
+      y0: 376.8808
+      x1: 149.7058
+      y1: 385.3691
+  candidate_edge_texts: []
+- review_id: diagram:70d916a81cc5090c13c0bc14
+  sample_id: gonglu_41_diagram_mixed
+  pdf_sha256: 5c46177e092ad0f154a4ed87fd275c9443c665cd1fdd2d6f38821707546a0d56
+  page_num: 4
+  figure_evidence_id: ev:2eabb1999a9bf1ddee037187
+  figure_crop_path: crops/p0004_image_001.png
+  figure_crop_sha256: 0dd062570fa5de7ee16381b49cd424c3d12e937c7d5168e0ad424a08b0f07949
+  state: draft
+  nodes: []
+  edges: []
+  candidate_nodes:
+  - evidence_id: ev:70a44414de750d794b39623e
+    text: 地面线
+    bbox:
+      x0: 112.9137
+      y0: 215.1786
+      x1: 128.9838
+      y1: 222.818
+  - evidence_id: ev:536399eddd77500ff9fc3a4e
+    text: 隧道洞门构造及尺寸示意图
+    bbox:
+      x0: 182.2689
+      y0: 216.4518
+      x1: 264.3111
+      y1: 223.6669
+  - evidence_id: ev:9696f3a1919b42139c574a4b
+    text: 土体或岩体
+    bbox:
+      x0: 123.0632
+      y0: 238.097
+      x1: 147.5913
+      y1: 245.3121
+  - evidence_id: ev:1d9dbefc2d23e4fcf1b356f5
+    text: 手1.5m
+    bbox:
+      x0: 186.4979
+      y0: 239.3702
+      x1: 201.7222
+      y1: 243.6144
+  - evidence_id: ev:cf586820d0146d85a72fd270
+    text: 排水沟
+    bbox:
+      x0: 183.1147
+      y0: 256.7713
+      x1: 194.533
+      y1: 261.4398
+  - evidence_id: ev:b79d5bd482ba9b435e4fcd96
+    text: 高出0.5m以上
+    bbox:
+      x0: 216.9465
+      y0: 256.7713
+      x1: 245.7036
+      y1: 262.2887
+  - evidence_id: ev:7bd4291784312db60af03fba
+    text: 衬砌拱顶外围
+    bbox:
+      x0: 97.2665
+      y0: 264.8352
+      x1: 125.1777
+      y1: 270.3526
+  - evidence_id: ev:6b8d0f05554488746b754da7
+    text: 大于1.0m
+    bbox:
+      x0: 150.1287
+      y0: 265.2596
+      x1: 171.2736
+      y1: 272.4746
+  - evidence_id: ev:2376afe6183a58528a2d005d
+    text: 门
+    bbox:
+      x0: 200.0306
+      y0: 290.7245
+      x1: 205.1054
+      y1: 298.7884
+  - evidence_id: ev:1878f04aaba92a3c63acca7d
+    text: 遗
+    bbox:
+      x0: 200.4535
+      y0: 297.9396
+      x1: 203.8367
+      y1: 302.6081
+  - evidence_id: ev:18d9babdedb608cd363793c1
+    text: 行车方向
+    bbox:
+      x0: 226.6732
+      y0: 301.3349
+      x1: 245.2807
+      y1: 307.2767
+  candidate_edge_texts: []
+- review_id: diagram:2a2d7bcf0b6cced748e0b9bb
+  sample_id: gonglu_41_diagram_mixed
+  pdf_sha256: 5c46177e092ad0f154a4ed87fd275c9443c665cd1fdd2d6f38821707546a0d56
+  page_num: 4
+  figure_evidence_id: ev:386ce39bb5314317108ef8e9
+  figure_crop_path: crops/p0004_image_002.png
+  figure_crop_sha256: a6f87cf41243f974862b84c70c00157c2043e60cebc55a5478666f39547b6faa
+  state: draft
+  nodes: []
+  edges: []
+  candidate_nodes: []
+  candidate_edge_texts: []
+- review_id: diagram:5218447664fb7ad55ff8ffd9
+  sample_id: gonglu_41_diagram_mixed
+  pdf_sha256: 5c46177e092ad0f154a4ed87fd275c9443c665cd1fdd2d6f38821707546a0d56
+  page_num: 4
+  figure_evidence_id: ev:cd779574d5400341a2f5b56b
+  figure_crop_path: crops/p0004_image_003.png
+  figure_crop_sha256: be1c37b1c0fac6ede07a594741def0c7f414122badeac2c003e1c1eb6afb5cdd
+  state: draft
+  nodes: []
+  edges: []
+  candidate_nodes:
+  - evidence_id: ev:6156e1b96c94a1758c12f4cd
+    text: 路堑式拱形明洞
+    bbox:
+      x0: 187.3437
+      y0: 733.8141
+      x1: 259.2363
+      y1: 745.2733
+  candidate_edge_texts: []
+- review_id: diagram:be3108b2c66810ac5ee8e646
+  sample_id: gonglu_55_standard_constraints
+  pdf_sha256: c13e1bb19a0bd5f3ba37ac57160d8ee1c62f19fcbb4e4415870d4e4d78a675ce
+  page_num: 5
+  figure_evidence_id: ev:4f63c03e1ee994ad80c45fdb
+  figure_crop_path: crops/p0005_image_001.png
+  figure_crop_sha256: eb5e25637f70ac67ecc4b3a7ea54a928ddb8f562e8d96c640f100c98562e7e99
+  state: draft
+  nodes: []
+  edges: []
+  candidate_nodes:
+  - evidence_id: ev:2ddd7068f81283862614cd6d
+    text: 一般
+    bbox:
+      x0: 141.2478
+      y0: 382.3982
+      x1: 167.4675
+      y1: 396.4039
+  - evidence_id: ev:c5d56ac29270228e980143c7
+    text: 较大
+    bbox:
+      x0: 193.6872
+      y0: 381.5494
+      x1: 219.9068
+      y1: 395.5551
+  - evidence_id: ev:4f9da8d06591422276597fc6
+    text: 重大
+    bbox:
+      x0: 248.241
+      y0: 381.5494
+      x1: 273.1919
+      y1: 394.2818
+  - evidence_id: ev:42124b51891dc235f79e179a
+    text: 特别重大
+    bbox:
+      x0: 309.1382
+      y0: 381.9738
+      x1: 357.3486
+      y1: 395.1307
+  - evidence_id: ev:135e3823c3feed401d05c2c5
+    text: 死亡
+    bbox:
+      x0: 95.5749
+      y0: 404.8922
+      x1: 120.9488
+      y1: 417.6247
+  - evidence_id: ev:6c5e4f4dd529a85654a4bb00
+    text: '3'
+    bbox:
+      x0: 167.0446
+      y0: 415.5026
+      x1: 175.9254
+      y1: 426.113
+  - evidence_id: ev:85b7c52d3f9ba5f0d5d4035c
+    text: '10'
+    bbox:
+      x0: 228.7877
+      y0: 417.2003
+      x1: 244.8578
+      y1: 429.0839
+  - evidence_id: ev:aa02b6c9415b7bf19a892a05
+    text: '30'
+    bbox:
+      x0: 292.2223
+      y0: 417.2003
+      x1: 307.8695
+      y1: 429.5083
+  - evidence_id: ev:c2e1998eb15d1fb5536f5a4d
+    text: 重伤
+    bbox:
+      x0: 95.5749
+      y0: 457.9441
+      x1: 120.9488
+      y1: 470.6766
+  - evidence_id: ev:43c3a1145cc84d252fbedb3d
+    text: '10'
+    bbox:
+      x0: 160.2782
+      y0: 477.8917
+      x1: 175.9254
+      y1: 489.7753
+  - evidence_id: ev:4f0856644fb886b00a088d53
+    text: '50'
+    bbox:
+      x0: 233.0166
+      y0: 477.8917
+      x1: 248.6638
+      y1: 489.7753
+  - evidence_id: ev:146c5dec8e56447c23eeb8cb
+    text: '100'
+    bbox:
+      x0: 289.262
+      y0: 478.3161
+      x1: 312.5214
+      y1: 490.6241
+  - evidence_id: ev:1b6b198540357ee564872921
+    text: 经济损失
+    bbox:
+      x0: 88.8085
+      y0: 507.1763
+      x1: 136.596
+      y1: 519.9088
+  - evidence_id: ev:fcc72d7b8b51185325a9147b
+    text: '1000'
+    bbox:
+      x0: 153.5119
+      y0: 530.5192
+      x1: 182.6918
+      y1: 542.4028
+  - evidence_id: ev:12679e215873e2ab06eb1109
+    text: '5000'
+    bbox:
+      x0: 226.2503
+      y0: 531.368
+      x1: 255.4302
+      y1: 543.2516
+  - evidence_id: ev:dcb37decac2de62ab0c8df8e
+    text: 1亿
+    bbox:
+      x0: 288.8391
+      y0: 529.2459
+      x1: 309.5611
+      y1: 541.9784
+  candidate_edge_texts: []
+- review_id: diagram:83c9c0d82088d5fa43c365b4
+  sample_id: gonglu_62_cost_flow_incident
+  pdf_sha256: 4c60afd99478136289b2de9721f1dcd22ea63ad3b6f612877088e502ca6cb7b8
+  page_num: 1
+  figure_evidence_id: ev:4af15b958587bb00fcaac211
+  figure_crop_path: crops/p0001_image_001.png
+  figure_crop_sha256: ce10c04191ee9e26cb7dcb98e2bf21115c59cc33adc2bc5e04df1e1bafa64b32
+  state: draft
+  nodes: []
+  edges: []
+  candidate_nodes:
+  - evidence_id: ev:62439e15c5f7735b6233ecbd
+    text: 总部管理费
+    bbox:
+      x0: 304.4863
+      y0: 308.9744
+      x1: 355.657
+      y1: 321.7068
+  - evidence_id: ev:e1c3c8b2efd9e0e98304a210
+    text: 上缴企业费用
+    bbox:
+      x0: 206.797
+      y0: 317.8871
+      x1: 266.8485
+      y1: 329.3463
+  - evidence_id: ev:e2831626e91dcaefe155896b
+    text: 利润
+    bbox:
+      x0: 303.2177
+      y0: 325.951
+      x1: 326.477
+      y1: 338.6834
+  - evidence_id: ev:e0ca23f969789a26726443cb
+    text: 标后预算总费用
+    bbox:
+      x0: 116.2969
+      y0: 343.352
+      x1: 186.9208
+      y1: 354.3868
+  - evidence_id: ev:411739cdebcbf2af9143920c
+    text: 直接费
+    bbox:
+      x0: 303.6406
+      y0: 346.7473
+      x1: 335.7808
+      y1: 358.6309
+  - evidence_id: ev:3d8d49dd836996c4b9dbfb25
+    text: 项目预算总成本-
+    bbox:
+      x0: 205.9512
+      y0: 364.1483
+      x1: 279.5354
+      y1: 375.1831
+  - evidence_id: ev:323a24a21eeee2a9c219872b
+    text: 设备购置费
+    bbox:
+      x0: 303.2177
+      y0: 362.8751
+      x1: 355.657
+      y1: 376.4564
+  - evidence_id: ev:d4f4403cd667fdd5eef1da83
+    text: 措施费
+    bbox:
+      x0: 301.949
+      y0: 379.8517
+      x1: 336.6266
+      y1: 393.0086
+  - evidence_id: ev:8fd55bc531c7b881f0cb318f
+    text: 规费
+    bbox:
+      x0: 205.9512
+      y0: 388.34
+      x1: 228.7877
+      y1: 401.0725
+  - evidence_id: ev:d658ba56ff8bc90630f11db8
+    text: 专项费用
+    bbox:
+      x0: 304.0635
+      y0: 397.2527
+      x1: 345.5074
+      y1: 409.1364
+  - evidence_id: ev:0d31b4729e337491f509d863
+    text: 税金
+    bbox:
+      x0: 205.5283
+      y0: 408.2875
+      x1: 228.7877
+      y1: 422.2933
+  - evidence_id: ev:baf2ba52e6d6413b39f48cef
+    text: 现场管理费
+    bbox:
+      x0: 303.6406
+      y0: 414.2294
+      x1: 355.2341
+      y1: 425.6886
+  candidate_edge_texts: []

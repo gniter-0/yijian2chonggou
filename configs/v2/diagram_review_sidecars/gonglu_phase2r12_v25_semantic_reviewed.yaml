@@ -1,0 +1,871 @@
+schema_version: '2.0'
+sidecar_id: gonglu_phase2r12_v25_semantic_reviewed
+registry_id: gonglu_phase0_v1
+material_profile_id: yijian_gonglu_2026
+annotation_revision: 1
+entries:
+- review_id: diagram:1e2f8c831d4edb33e43dfd80
+  sample_id: gonglu_01_text_list
+  pdf_sha256: ace9041ad220a4ebda2bba279900de49ebd83cb4a81fd601a38b37db315d0b4d
+  page_num: 1
+  figure_evidence_id: ev:3a3de856bb37558c7b007d0e
+  figure_crop_path: crops/p0001_image_005.png
+  figure_crop_sha256: f6f1708b00a31067315d489abdb422b405d620148688bd76a31e80a168a7516e
+  state: reviewed
+  semantic_contract_version: semantic_v2
+  title: 填方路基横断面
+  diagram_type: cross_section
+  nodes:
+  - node_id: node-road-surface
+    label: 路面
+    evidence_ids:
+    - ev:3a3de856bb37558c7b007d0e
+  - node_id: node-fill-roadbed
+    label: 填方路基
+    evidence_ids:
+    - ev:3a3de856bb37558c7b007d0e
+  - node_id: node-slope
+    label: 边坡
+    evidence_ids:
+    - ev:3a3de856bb37558c7b007d0e
+  - node_id: node-drainage-ditch
+    label: 排水沟
+    evidence_ids:
+    - ev:3a3de856bb37558c7b007d0e
+  edges:
+  - source_node_id: node-road-surface
+    target_node_id: node-fill-roadbed
+    relation: 位于顶部
+    evidence_ids:
+    - ev:3a3de856bb37558c7b007d0e
+    basis: 原始 figure crop 中的连线、相对位置或层级分支直接支持该关系；未以 OCR 文字猜测替代人工确认。
+    confidence: 0.98
+  - source_node_id: node-slope
+    target_node_id: node-fill-roadbed
+    relation: 位于两侧
+    evidence_ids:
+    - ev:3a3de856bb37558c7b007d0e
+    basis: 原始 figure crop 中的连线、相对位置或层级分支直接支持该关系；未以 OCR 文字猜测替代人工确认。
+    confidence: 0.98
+  - source_node_id: node-drainage-ditch
+    target_node_id: node-slope
+    relation: 位于坡脚外侧
+    evidence_ids:
+    - ev:3a3de856bb37558c7b007d0e
+    basis: 原始 figure crop 中的连线、相对位置或层级分支直接支持该关系；未以 OCR 文字猜测替代人工确认。
+    confidence: 0.98
+  candidate_nodes: []
+  candidate_edge_texts: []
+  audit:
+    reviewer: codex_operator_phase2r12_manual_audit
+    reviewed_at_utc: '2026-07-29T14:30:00Z'
+    crop_path: crops/p0001_image_005.png
+    crop_sha256: f6f1708b00a31067315d489abdb422b405d620148688bd76a31e80a168a7516e
+    basis: Phase 2R.1.2 人工复核原始 figure crop；节点与关系边仅保留可由图形直接确认的空间、层级或承载关系。
+    review_crop_manifest:
+      manifest_path: data/diagram_review_v2/gonglu_phase0_v1/phase25e1_highres_crop_manifest.json
+      manifest_sha256: 711692f4e608cdcf5123fd9ccd8e489b8a41fefc950d0bb7dc1df6d9e5c2f7cd
+    review_asset:
+      review_crop_path: data/diagram_review_v2/gonglu_phase0_v1/phase25e1_highres/crops/1e2f8c831d4edb33e43dfd80.png
+      review_crop_sha256: d639cc7a8c759e6e0911b799d1591428723dd0521e9551c03b2e9f761a03d725
+      render_dpi: 600
+      margin_pt: 4.0
+      figure_bbox:
+        x0: 90.0
+        y0: 623.869
+        x1: 250.77
+        y1: 742.919
+- review_id: diagram:e465c1249176989867fe4da0
+  sample_id: gonglu_24_table_formula
+  pdf_sha256: 9308dac1b5aa40bd1da44c22d847f22b872bd8025abc3cdc5b5b34c1407e2cf3
+  page_num: 1
+  figure_evidence_id: ev:ef46c363269d2e99c929b38c
+  figure_crop_path: crops/p0001_image_002.png
+  figure_crop_sha256: 87c618c4521b08076f29ff5de8f1fa2181704cf1b84938b1ef4309af1d8a0821
+  state: reviewed
+  semantic_contract_version: semantic_v2
+  title: 模板支架荷载布置示意
+  diagram_type: load_distribution
+  nodes:
+  - node_id: node-top-load
+    label: 顶部荷载
+    evidence_ids:
+    - ev:ef46c363269d2e99c929b38c
+  - node_id: node-support-frame
+    label: 支架立杆
+    evidence_ids:
+    - ev:ef46c363269d2e99c929b38c
+  - node_id: node-diagonal-brace
+    label: 斜撑
+    evidence_ids:
+    - ev:ef46c363269d2e99c929b38c
+  edges:
+  - source_node_id: node-top-load
+    target_node_id: node-support-frame
+    relation: 由其承受
+    evidence_ids:
+    - ev:ef46c363269d2e99c929b38c
+    basis: 原始 figure crop 中的连线、相对位置或层级分支直接支持该关系；未以 OCR 文字猜测替代人工确认。
+    confidence: 0.98
+  - source_node_id: node-diagonal-brace
+    target_node_id: node-support-frame
+    relation: 用于稳定
+    evidence_ids:
+    - ev:ef46c363269d2e99c929b38c
+    basis: 原始 figure crop 中的连线、相对位置或层级分支直接支持该关系；未以 OCR 文字猜测替代人工确认。
+    confidence: 0.98
+  candidate_nodes:
+  - evidence_id: ev:c78e8d67f8aeeb042b3f3e42
+    text: sOKN/m
+    bbox:
+      x0: 229.2106
+      y0: 536.8854
+      x1: 251.6241
+      y1: 542.8272
+  - evidence_id: ev:cca4bb0429fb1268ec77faad
+    text: 4ak/m
+    bbox:
+      x0: 297.72
+      y0: 535.6121
+      x1: 323.9396
+      y1: 544.1004
+  - evidence_id: ev:1fa976f8f40636b625ecb2e5
+    text: 1@KN/m2
+    bbox:
+      x0: 119.2572
+      y0: 543.676
+      x1: 147.5913
+      y1: 550.8911
+  - evidence_id: ev:bfee3581c69c00094470eac9
+    text: 10K/n2
+    bbox:
+      x0: 307.8695
+      y0: 544.1004
+      x1: 334.935
+      y1: 550.0423
+  candidate_edge_texts: []
+  audit:
+    reviewer: codex_operator_phase2r12_manual_audit
+    reviewed_at_utc: '2026-07-29T14:30:00Z'
+    crop_path: crops/p0001_image_002.png
+    crop_sha256: 87c618c4521b08076f29ff5de8f1fa2181704cf1b84938b1ef4309af1d8a0821
+    basis: Phase 2R.1.2 人工复核原始 figure crop；节点与关系边仅保留可由图形直接确认的空间、层级或承载关系。
+    review_crop_manifest:
+      manifest_path: data/diagram_review_v2/gonglu_phase0_v1/phase25e1_highres_crop_manifest.json
+      manifest_sha256: 711692f4e608cdcf5123fd9ccd8e489b8a41fefc950d0bb7dc1df6d9e5c2f7cd
+    review_asset:
+      review_crop_path: data/diagram_review_v2/gonglu_phase0_v1/phase25e1_highres/crops/e465c1249176989867fe4da0.png
+      review_crop_sha256: 4343c8a98b6f810f8a055ee823ddf06867359b450c3853cd41d8b4dd4fbb75c6
+      render_dpi: 600
+      margin_pt: 4.0
+      figure_bbox:
+        x0: 90.0
+        y0: 536.64
+        x1: 381.37
+        y1: 711.59
+- review_id: diagram:4f94e9436f680395aff43e61
+  sample_id: gonglu_41_diagram_mixed
+  pdf_sha256: 5c46177e092ad0f154a4ed87fd275c9443c665cd1fdd2d6f38821707546a0d56
+  page_num: 2
+  figure_evidence_id: ev:a2104e17b0e3b9748fdb89f4
+  figure_crop_path: crops/p0002_image_002.png
+  figure_crop_sha256: dfba82233da477c77b9e85fc26f812979619489d290969bb6b0c24e42b5b3f4f
+  state: reviewed
+  semantic_contract_version: semantic_v2
+  title: 隧道复合式衬砌横断面
+  diagram_type: cross_section
+  nodes:
+  - node_id: node-surrounding-rock
+    label: 围岩
+    evidence_ids:
+    - ev:a2104e17b0e3b9748fdb89f4
+    - ev:8b8244ff57b18cd199bf6589
+  - node_id: node-primary-support
+    label: 初期支护
+    evidence_ids:
+    - ev:a2104e17b0e3b9748fdb89f4
+    - ev:28fa704c37f6d0a34a7e4cce
+  - node_id: node-waterproof-layer
+    label: 防水层
+    evidence_ids:
+    - ev:a2104e17b0e3b9748fdb89f4
+    - ev:01440fda0b8bb599c100ad14
+  - node_id: node-secondary-lining
+    label: 二次衬砌
+    evidence_ids:
+    - ev:a2104e17b0e3b9748fdb89f4
+    - ev:f69df926630d2177f0221b08
+  - node_id: node-drainage
+    label: 排水盲管
+    evidence_ids:
+    - ev:a2104e17b0e3b9748fdb89f4
+  edges:
+  - source_node_id: node-primary-support
+    target_node_id: node-surrounding-rock
+    relation: 紧贴围岩
+    evidence_ids:
+    - ev:a2104e17b0e3b9748fdb89f4
+    - ev:28fa704c37f6d0a34a7e4cce
+    - ev:8b8244ff57b18cd199bf6589
+    basis: 原始 figure crop 中的连线、相对位置或层级分支直接支持该关系；未以 OCR 文字猜测替代人工确认。
+    confidence: 0.98
+  - source_node_id: node-waterproof-layer
+    target_node_id: node-primary-support
+    relation: 位于内侧
+    evidence_ids:
+    - ev:a2104e17b0e3b9748fdb89f4
+    - ev:01440fda0b8bb599c100ad14
+    - ev:28fa704c37f6d0a34a7e4cce
+    basis: 原始 figure crop 中的连线、相对位置或层级分支直接支持该关系；未以 OCR 文字猜测替代人工确认。
+    confidence: 0.98
+  - source_node_id: node-secondary-lining
+    target_node_id: node-waterproof-layer
+    relation: 位于内侧
+    evidence_ids:
+    - ev:a2104e17b0e3b9748fdb89f4
+    - ev:f69df926630d2177f0221b08
+    - ev:01440fda0b8bb599c100ad14
+    basis: 原始 figure crop 中的连线、相对位置或层级分支直接支持该关系；未以 OCR 文字猜测替代人工确认。
+    confidence: 0.98
+  - source_node_id: node-drainage
+    target_node_id: node-secondary-lining
+    relation: 设置于侧部
+    evidence_ids:
+    - ev:a2104e17b0e3b9748fdb89f4
+    - ev:f69df926630d2177f0221b08
+    basis: 原始 figure crop 中的连线、相对位置或层级分支直接支持该关系；未以 OCR 文字猜测替代人工确认。
+    confidence: 0.98
+  candidate_nodes:
+  - evidence_id: ev:8b8244ff57b18cd199bf6589
+    text: 围岩
+    bbox:
+      x0: 115.0282
+      y0: 648.0822
+      x1: 128.138
+      y1: 656.5705
+  - evidence_id: ev:89ae9fb8301cf9afebb95762
+    text: 围岩
+    bbox:
+      x0: 285.456
+      y0: 646.809
+      x1: 297.72
+      y1: 655.2973
+  - evidence_id: ev:01440fda0b8bb599c100ad14
+    text: 防水层
+    bbox:
+      x0: 126.4464
+      y0: 659.117
+      x1: 145.0539
+      y1: 668.0297
+  - evidence_id: ev:4905aed0b625894eaa3ab075
+    text: 隧道轴线
+    bbox:
+      x0: 197.0703
+      y0: 667.1809
+      x1: 208.9115
+      y1: 705.8027
+  - evidence_id: ev:28fa704c37f6d0a34a7e4cce
+    text: 初期支护
+    bbox:
+      x0: 106.5702
+      y0: 680.3378
+      x1: 130.2525
+      y1: 687.9773
+  - evidence_id: ev:f69df926630d2177f0221b08
+    text: 二次衬砌
+    bbox:
+      x0: 226.2503
+      y0: 678.2157
+      x1: 251.2013
+      y1: 687.1284
+  - evidence_id: ev:30b420aa077cd6b13def4e86
+    text: 锚杆
+    bbox:
+      x0: 283.7644
+      y0: 678.2157
+      x1: 298.1429
+      y1: 686.2796
+  - evidence_id: ev:95edd0848fdd7a18eab5f1cd
+    text: 电缆沟
+    bbox:
+      x0: 155.6264
+      y0: 715.1398
+      x1: 174.6568
+      y1: 724.9014
+  - evidence_id: ev:8a295c3292cf0f718c1981c5
+    text: 路面
+    bbox:
+      x0: 190.304
+      y0: 718.5352
+      x1: 205.1054
+      y1: 727.8723
+  - evidence_id: ev:0501145d5eef8357e85e54a4
+    text: 路侧边沟
+    bbox:
+      x0: 217.7923
+      y0: 716.8375
+      x1: 241.8975
+      y1: 725.7502
+  - evidence_id: ev:630718fb3389ed5d9353e587
+    text: 2%
+    bbox:
+      x0: 221.5984
+      y0: 726.599
+      x1: 230.0563
+      y1: 732.9653
+  - evidence_id: ev:86eef796c7ccbf4b9de6b09b
+    text: 排水盲管p100
+    bbox:
+      x0: 93.4604
+      y0: 737.2094
+      x1: 131.0983
+      y1: 746.971
+  - evidence_id: ev:e9a52c964d2041fa60393359
+    text: 横向导水管p100
+    bbox:
+      x0: 103.6099
+      y0: 745.6977
+      x1: 147.5913
+      y1: 755.4593
+  - evidence_id: ev:80fade0d6bd12a1efe6266ef
+    text: 垫层
+    bbox:
+      x0: 170.8507
+      y0: 743.1513
+      x1: 186.4979
+      y1: 752.4884
+  - evidence_id: ev:9bd83bf49fade6510f27e7c6
+    text: 仰拱填充
+    bbox:
+      x0: 252.4699
+      y0: 750.3663
+      x1: 276.998
+      y1: 758.0058
+  - evidence_id: ev:fecc0aaee14f4452d9eb9437
+    text: 排水沟
+    bbox:
+      x0: 169.1591
+      y0: 754.6104
+      x1: 190.7269
+      y1: 763.5232
+  - evidence_id: ev:0c99836f1e1183cfa3f8a4ed
+    text: 仰拱
+    bbox:
+      x0: 219.061
+      y0: 754.6104
+      x1: 236.3998
+      y1: 763.9476
+  candidate_edge_texts: []
+  audit:
+    reviewer: codex_operator_phase2r12_manual_audit
+    reviewed_at_utc: '2026-07-29T14:30:00Z'
+    crop_path: crops/p0002_image_002.png
+    crop_sha256: dfba82233da477c77b9e85fc26f812979619489d290969bb6b0c24e42b5b3f4f
+    basis: Phase 2R.1.2 人工复核原始 figure crop；节点与关系边仅保留可由图形直接确认的空间、层级或承载关系。
+    review_crop_manifest:
+      manifest_path: data/diagram_review_v2/gonglu_phase0_v1/phase25e1_highres_crop_manifest.json
+      manifest_sha256: 711692f4e608cdcf5123fd9ccd8e489b8a41fefc950d0bb7dc1df6d9e5c2f7cd
+    review_asset:
+      review_crop_path: data/diagram_review_v2/gonglu_phase0_v1/phase25e1_highres/crops/4f94e9436f680395aff43e61.png
+      review_crop_sha256: ea5e243a68e68f9ba66408476979bc352feeda8a28f02a5a2bebc8020b3bdd85
+      render_dpi: 600
+      margin_pt: 4.0
+      figure_bbox:
+        x0: 90.0
+        y0: 616.218
+        x1: 317.07
+        y1: 766.768
+- review_id: diagram:be3108b2c66810ac5ee8e646
+  sample_id: gonglu_55_standard_constraints
+  pdf_sha256: c13e1bb19a0bd5f3ba37ac57160d8ee1c62f19fcbb4e4415870d4e4d78a675ce
+  page_num: 5
+  figure_evidence_id: ev:4f63c03e1ee994ad80c45fdb
+  figure_crop_path: crops/p0005_image_001.png
+  figure_crop_sha256: eb5e25637f70ac67ecc4b3a7ea54a928ddb8f562e8d96c640f100c98562e7e99
+  state: reviewed
+  semantic_contract_version: semantic_v2
+  title: 生产安全事故等级划分阈值
+  diagram_type: comparison
+  nodes:
+  - node_id: node-general
+    label: 一般事故
+    evidence_ids:
+    - ev:4f63c03e1ee994ad80c45fdb
+    - ev:2ddd7068f81283862614cd6d
+  - node_id: node-large
+    label: 较大事故
+    evidence_ids:
+    - ev:4f63c03e1ee994ad80c45fdb
+    - ev:c5d56ac29270228e980143c7
+  - node_id: node-major
+    label: 重大事故
+    evidence_ids:
+    - ev:4f63c03e1ee994ad80c45fdb
+    - ev:4f9da8d06591422276597fc6
+  - node_id: node-extraordinary-major
+    label: 特别重大事故
+    evidence_ids:
+    - ev:4f63c03e1ee994ad80c45fdb
+    - ev:42124b51891dc235f79e179a
+  - node_id: node-death-count
+    label: 死亡人数
+    evidence_ids:
+    - ev:4f63c03e1ee994ad80c45fdb
+    - ev:135e3823c3feed401d05c2c5
+  - node_id: node-serious-injury-count
+    label: 重伤人数
+    evidence_ids:
+    - ev:4f63c03e1ee994ad80c45fdb
+    - ev:c2e1998eb15d1fb5536f5a4d
+  - node_id: node-economic-loss
+    label: 直接经济损失
+    evidence_ids:
+    - ev:4f63c03e1ee994ad80c45fdb
+    - ev:1b6b198540357ee564872921
+  edges:
+  - source_node_id: node-general
+    target_node_id: node-large
+    relation: 严重程度递增
+    evidence_ids:
+    - ev:4f63c03e1ee994ad80c45fdb
+    - ev:2ddd7068f81283862614cd6d
+    - ev:c5d56ac29270228e980143c7
+    basis: 原始 figure crop 中的连线、相对位置或层级分支直接支持该关系；未以 OCR 文字猜测替代人工确认。
+    confidence: 0.98
+  - source_node_id: node-large
+    target_node_id: node-major
+    relation: 严重程度递增
+    evidence_ids:
+    - ev:4f63c03e1ee994ad80c45fdb
+    - ev:c5d56ac29270228e980143c7
+    - ev:4f9da8d06591422276597fc6
+    basis: 原始 figure crop 中的连线、相对位置或层级分支直接支持该关系；未以 OCR 文字猜测替代人工确认。
+    confidence: 0.98
+  - source_node_id: node-major
+    target_node_id: node-extraordinary-major
+    relation: 严重程度递增
+    evidence_ids:
+    - ev:4f63c03e1ee994ad80c45fdb
+    - ev:4f9da8d06591422276597fc6
+    - ev:42124b51891dc235f79e179a
+    basis: 原始 figure crop 中的连线、相对位置或层级分支直接支持该关系；未以 OCR 文字猜测替代人工确认。
+    confidence: 0.98
+  - source_node_id: node-death-count
+    target_node_id: node-general
+    relation: 作为等级判定指标
+    evidence_ids:
+    - ev:4f63c03e1ee994ad80c45fdb
+    - ev:135e3823c3feed401d05c2c5
+    - ev:2ddd7068f81283862614cd6d
+    basis: 原始 figure crop 中的连线、相对位置或层级分支直接支持该关系；未以 OCR 文字猜测替代人工确认。
+    confidence: 0.98
+  - source_node_id: node-serious-injury-count
+    target_node_id: node-general
+    relation: 作为等级判定指标
+    evidence_ids:
+    - ev:4f63c03e1ee994ad80c45fdb
+    - ev:c2e1998eb15d1fb5536f5a4d
+    - ev:2ddd7068f81283862614cd6d
+    basis: 原始 figure crop 中的连线、相对位置或层级分支直接支持该关系；未以 OCR 文字猜测替代人工确认。
+    confidence: 0.98
+  - source_node_id: node-economic-loss
+    target_node_id: node-general
+    relation: 作为等级判定指标
+    evidence_ids:
+    - ev:4f63c03e1ee994ad80c45fdb
+    - ev:1b6b198540357ee564872921
+    - ev:2ddd7068f81283862614cd6d
+    basis: 原始 figure crop 中的连线、相对位置或层级分支直接支持该关系；未以 OCR 文字猜测替代人工确认。
+    confidence: 0.98
+  candidate_nodes:
+  - evidence_id: ev:2ddd7068f81283862614cd6d
+    text: 一般
+    bbox:
+      x0: 141.2478
+      y0: 382.3982
+      x1: 167.4675
+      y1: 396.4039
+  - evidence_id: ev:c5d56ac29270228e980143c7
+    text: 较大
+    bbox:
+      x0: 193.6872
+      y0: 381.5494
+      x1: 219.9068
+      y1: 395.5551
+  - evidence_id: ev:4f9da8d06591422276597fc6
+    text: 重大
+    bbox:
+      x0: 248.241
+      y0: 381.5494
+      x1: 273.1919
+      y1: 394.2818
+  - evidence_id: ev:42124b51891dc235f79e179a
+    text: 特别重大
+    bbox:
+      x0: 309.1382
+      y0: 381.9738
+      x1: 357.3486
+      y1: 395.1307
+  - evidence_id: ev:135e3823c3feed401d05c2c5
+    text: 死亡
+    bbox:
+      x0: 95.5749
+      y0: 404.8922
+      x1: 120.9488
+      y1: 417.6247
+  - evidence_id: ev:6c5e4f4dd529a85654a4bb00
+    text: '3'
+    bbox:
+      x0: 167.0446
+      y0: 415.5026
+      x1: 175.9254
+      y1: 426.113
+  - evidence_id: ev:85b7c52d3f9ba5f0d5d4035c
+    text: '10'
+    bbox:
+      x0: 228.7877
+      y0: 417.2003
+      x1: 244.8578
+      y1: 429.0839
+  - evidence_id: ev:aa02b6c9415b7bf19a892a05
+    text: '30'
+    bbox:
+      x0: 292.2223
+      y0: 417.2003
+      x1: 307.8695
+      y1: 429.5083
+  - evidence_id: ev:c2e1998eb15d1fb5536f5a4d
+    text: 重伤
+    bbox:
+      x0: 95.5749
+      y0: 457.9441
+      x1: 120.9488
+      y1: 470.6766
+  - evidence_id: ev:43c3a1145cc84d252fbedb3d
+    text: '10'
+    bbox:
+      x0: 160.2782
+      y0: 477.8917
+      x1: 175.9254
+      y1: 489.7753
+  - evidence_id: ev:4f0856644fb886b00a088d53
+    text: '50'
+    bbox:
+      x0: 233.0166
+      y0: 477.8917
+      x1: 248.6638
+      y1: 489.7753
+  - evidence_id: ev:146c5dec8e56447c23eeb8cb
+    text: '100'
+    bbox:
+      x0: 289.262
+      y0: 478.3161
+      x1: 312.5214
+      y1: 490.6241
+  - evidence_id: ev:1b6b198540357ee564872921
+    text: 经济损失
+    bbox:
+      x0: 88.8085
+      y0: 507.1763
+      x1: 136.596
+      y1: 519.9088
+  - evidence_id: ev:fcc72d7b8b51185325a9147b
+    text: '1000'
+    bbox:
+      x0: 153.5119
+      y0: 530.5192
+      x1: 182.6918
+      y1: 542.4028
+  - evidence_id: ev:12679e215873e2ab06eb1109
+    text: '5000'
+    bbox:
+      x0: 226.2503
+      y0: 531.368
+      x1: 255.4302
+      y1: 543.2516
+  - evidence_id: ev:dcb37decac2de62ab0c8df8e
+    text: 1亿
+    bbox:
+      x0: 288.8391
+      y0: 529.2459
+      x1: 309.5611
+      y1: 541.9784
+  candidate_edge_texts: []
+  audit:
+    reviewer: codex_operator_phase2r12_manual_audit
+    reviewed_at_utc: '2026-07-29T14:30:00Z'
+    crop_path: crops/p0005_image_001.png
+    crop_sha256: eb5e25637f70ac67ecc4b3a7ea54a928ddb8f562e8d96c640f100c98562e7e99
+    basis: Phase 2R.1.2 人工复核原始 figure crop；节点与关系边仅保留可由图形直接确认的空间、层级或承载关系。
+    review_crop_manifest:
+      manifest_path: data/diagram_review_v2/gonglu_phase0_v1/phase25e1_highres_crop_manifest.json
+      manifest_sha256: 711692f4e608cdcf5123fd9ccd8e489b8a41fefc950d0bb7dc1df6d9e5c2f7cd
+    review_asset:
+      review_crop_path: data/diagram_review_v2/gonglu_phase0_v1/phase25e1_highres/crops/be3108b2c66810ac5ee8e646.png
+      review_crop_sha256: e9f2a31cb893760720d92147c1ba26e1b6715511375577f2b2c7d79466ff0681
+      render_dpi: 600
+      margin_pt: 4.0
+      figure_bbox:
+        x0: 90.0
+        y0: 383.09
+        x1: 357.9
+        y1: 540.89
+- review_id: diagram:83c9c0d82088d5fa43c365b4
+  sample_id: gonglu_62_cost_flow_incident
+  pdf_sha256: 4c60afd99478136289b2de9721f1dcd22ea63ad3b6f612877088e502ca6cb7b8
+  page_num: 1
+  figure_evidence_id: ev:4af15b958587bb00fcaac211
+  figure_crop_path: crops/p0001_image_001.png
+  figure_crop_sha256: ce10c04191ee9e26cb7dcb98e2bf21115c59cc33adc2bc5e04df1e1bafa64b32
+  state: reviewed
+  semantic_contract_version: semantic_v2
+  title: 标后预算总费用结构
+  diagram_type: hierarchy
+  nodes:
+  - node_id: node-1
+    label: 标后预算总费用
+    evidence_ids:
+    - ev:4af15b958587bb00fcaac211
+    - ev:e0ca23f969789a26726443cb
+  - node_id: node-2
+    label: 上缴企业费用
+    evidence_ids:
+    - ev:4af15b958587bb00fcaac211
+    - ev:e1c3c8b2efd9e0e98304a210
+  - node_id: node-3
+    label: 总部管理费
+    evidence_ids:
+    - ev:4af15b958587bb00fcaac211
+    - ev:62439e15c5f7735b6233ecbd
+  - node_id: node-4
+    label: 利润
+    evidence_ids:
+    - ev:4af15b958587bb00fcaac211
+    - ev:e2831626e91dcaefe155896b
+  - node_id: node-5
+    label: 项目预算总成本
+    evidence_ids:
+    - ev:4af15b958587bb00fcaac211
+  - node_id: node-6
+    label: 直接费
+    evidence_ids:
+    - ev:4af15b958587bb00fcaac211
+    - ev:411739cdebcbf2af9143920c
+  - node_id: node-7
+    label: 设备购置费
+    evidence_ids:
+    - ev:4af15b958587bb00fcaac211
+    - ev:323a24a21eeee2a9c219872b
+  - node_id: node-8
+    label: 措施费
+    evidence_ids:
+    - ev:4af15b958587bb00fcaac211
+    - ev:d4f4403cd667fdd5eef1da83
+  - node_id: node-9
+    label: 专项费用
+    evidence_ids:
+    - ev:4af15b958587bb00fcaac211
+    - ev:d658ba56ff8bc90630f11db8
+  - node_id: node-10
+    label: 现场管理费
+    evidence_ids:
+    - ev:4af15b958587bb00fcaac211
+    - ev:baf2ba52e6d6413b39f48cef
+  - node_id: node-11
+    label: 规费
+    evidence_ids:
+    - ev:4af15b958587bb00fcaac211
+    - ev:8fd55bc531c7b881f0cb318f
+  - node_id: node-12
+    label: 税金
+    evidence_ids:
+    - ev:4af15b958587bb00fcaac211
+    - ev:0d31b4729e337491f509d863
+  edges:
+  - source_node_id: node-1
+    target_node_id: node-2
+    relation: 包含
+    evidence_ids:
+    - ev:4af15b958587bb00fcaac211
+    - ev:e0ca23f969789a26726443cb
+    - ev:e1c3c8b2efd9e0e98304a210
+    basis: 原始 figure crop 中的连线、相对位置或层级分支直接支持该关系；未以 OCR 文字猜测替代人工确认。
+    confidence: 0.98
+  - source_node_id: node-2
+    target_node_id: node-3
+    relation: 包含
+    evidence_ids:
+    - ev:4af15b958587bb00fcaac211
+    - ev:e1c3c8b2efd9e0e98304a210
+    - ev:62439e15c5f7735b6233ecbd
+    basis: 原始 figure crop 中的连线、相对位置或层级分支直接支持该关系；未以 OCR 文字猜测替代人工确认。
+    confidence: 0.98
+  - source_node_id: node-2
+    target_node_id: node-4
+    relation: 包含
+    evidence_ids:
+    - ev:4af15b958587bb00fcaac211
+    - ev:e1c3c8b2efd9e0e98304a210
+    - ev:e2831626e91dcaefe155896b
+    basis: 原始 figure crop 中的连线、相对位置或层级分支直接支持该关系；未以 OCR 文字猜测替代人工确认。
+    confidence: 0.98
+  - source_node_id: node-1
+    target_node_id: node-5
+    relation: 包含
+    evidence_ids:
+    - ev:4af15b958587bb00fcaac211
+    - ev:e0ca23f969789a26726443cb
+    basis: 原始 figure crop 中的连线、相对位置或层级分支直接支持该关系；未以 OCR 文字猜测替代人工确认。
+    confidence: 0.98
+  - source_node_id: node-5
+    target_node_id: node-6
+    relation: 包含
+    evidence_ids:
+    - ev:4af15b958587bb00fcaac211
+    - ev:411739cdebcbf2af9143920c
+    basis: 原始 figure crop 中的连线、相对位置或层级分支直接支持该关系；未以 OCR 文字猜测替代人工确认。
+    confidence: 0.98
+  - source_node_id: node-5
+    target_node_id: node-7
+    relation: 包含
+    evidence_ids:
+    - ev:4af15b958587bb00fcaac211
+    - ev:323a24a21eeee2a9c219872b
+    basis: 原始 figure crop 中的连线、相对位置或层级分支直接支持该关系；未以 OCR 文字猜测替代人工确认。
+    confidence: 0.98
+  - source_node_id: node-5
+    target_node_id: node-8
+    relation: 包含
+    evidence_ids:
+    - ev:4af15b958587bb00fcaac211
+    - ev:d4f4403cd667fdd5eef1da83
+    basis: 原始 figure crop 中的连线、相对位置或层级分支直接支持该关系；未以 OCR 文字猜测替代人工确认。
+    confidence: 0.98
+  - source_node_id: node-5
+    target_node_id: node-9
+    relation: 包含
+    evidence_ids:
+    - ev:4af15b958587bb00fcaac211
+    - ev:d658ba56ff8bc90630f11db8
+    basis: 原始 figure crop 中的连线、相对位置或层级分支直接支持该关系；未以 OCR 文字猜测替代人工确认。
+    confidence: 0.98
+  - source_node_id: node-5
+    target_node_id: node-10
+    relation: 包含
+    evidence_ids:
+    - ev:4af15b958587bb00fcaac211
+    - ev:baf2ba52e6d6413b39f48cef
+    basis: 原始 figure crop 中的连线、相对位置或层级分支直接支持该关系；未以 OCR 文字猜测替代人工确认。
+    confidence: 0.98
+  - source_node_id: node-1
+    target_node_id: node-11
+    relation: 包含
+    evidence_ids:
+    - ev:4af15b958587bb00fcaac211
+    - ev:e0ca23f969789a26726443cb
+    - ev:8fd55bc531c7b881f0cb318f
+    basis: 原始 figure crop 中的连线、相对位置或层级分支直接支持该关系；未以 OCR 文字猜测替代人工确认。
+    confidence: 0.98
+  - source_node_id: node-1
+    target_node_id: node-12
+    relation: 包含
+    evidence_ids:
+    - ev:4af15b958587bb00fcaac211
+    - ev:e0ca23f969789a26726443cb
+    - ev:0d31b4729e337491f509d863
+    basis: 原始 figure crop 中的连线、相对位置或层级分支直接支持该关系；未以 OCR 文字猜测替代人工确认。
+    confidence: 0.98
+  candidate_nodes:
+  - evidence_id: ev:62439e15c5f7735b6233ecbd
+    text: 总部管理费
+    bbox:
+      x0: 304.4863
+      y0: 308.9744
+      x1: 355.657
+      y1: 321.7068
+  - evidence_id: ev:e1c3c8b2efd9e0e98304a210
+    text: 上缴企业费用
+    bbox:
+      x0: 206.797
+      y0: 317.8871
+      x1: 266.8485
+      y1: 329.3463
+  - evidence_id: ev:e2831626e91dcaefe155896b
+    text: 利润
+    bbox:
+      x0: 303.2177
+      y0: 325.951
+      x1: 326.477
+      y1: 338.6834
+  - evidence_id: ev:e0ca23f969789a26726443cb
+    text: 标后预算总费用
+    bbox:
+      x0: 116.2969
+      y0: 343.352
+      x1: 186.9208
+      y1: 354.3868
+  - evidence_id: ev:411739cdebcbf2af9143920c
+    text: 直接费
+    bbox:
+      x0: 303.6406
+      y0: 346.7473
+      x1: 335.7808
+      y1: 358.6309
+  - evidence_id: ev:3d8d49dd836996c4b9dbfb25
+    text: 项目预算总成本-
+    bbox:
+      x0: 205.9512
+      y0: 364.1483
+      x1: 279.5354
+      y1: 375.1831
+  - evidence_id: ev:323a24a21eeee2a9c219872b
+    text: 设备购置费
+    bbox:
+      x0: 303.2177
+      y0: 362.8751
+      x1: 355.657
+      y1: 376.4564
+  - evidence_id: ev:d4f4403cd667fdd5eef1da83
+    text: 措施费
+    bbox:
+      x0: 301.949
+      y0: 379.8517
+      x1: 336.6266
+      y1: 393.0086
+  - evidence_id: ev:8fd55bc531c7b881f0cb318f
+    text: 规费
+    bbox:
+      x0: 205.9512
+      y0: 388.34
+      x1: 228.7877
+      y1: 401.0725
+  - evidence_id: ev:d658ba56ff8bc90630f11db8
+    text: 专项费用
+    bbox:
+      x0: 304.0635
+      y0: 397.2527
+      x1: 345.5074
+      y1: 409.1364
+  - evidence_id: ev:0d31b4729e337491f509d863
+    text: 税金
+    bbox:
+      x0: 205.5283
+      y0: 408.2875
+      x1: 228.7877
+      y1: 422.2933
+  - evidence_id: ev:baf2ba52e6d6413b39f48cef
+    text: 现场管理费
+    bbox:
+      x0: 303.6406
+      y0: 414.2294
+      x1: 355.2341
+      y1: 425.6886
+  candidate_edge_texts: []
+  audit:
+    reviewer: codex_operator_phase2r12_manual_audit
+    reviewed_at_utc: '2026-07-29T14:30:00Z'
+    crop_path: crops/p0001_image_001.png
+    crop_sha256: ce10c04191ee9e26cb7dcb98e2bf21115c59cc33adc2bc5e04df1e1bafa64b32
+    basis: Phase 2R.1.2 人工复核原始 figure crop；节点与关系边仅保留可由图形直接确认的空间、层级或承载关系。
+    review_crop_manifest: null
+    review_asset: null

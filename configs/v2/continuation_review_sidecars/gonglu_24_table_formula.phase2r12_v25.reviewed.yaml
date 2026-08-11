@@ -1,0 +1,54 @@
+schema_version: '2.0'
+sidecar_version: continuation_review_v1
+sidecar_id: continuation-sidecar:b752a88b1036394654eed5f8
+sample_id: gonglu_24_table_formula
+source_document_sha256: 9308dac1b5aa40bd1da44c22d847f22b872bd8025abc3cdc5b5b34c1407e2cf3
+source_pdf_path: input_pdf_公路/24 第3章（24）常用模板、支架和拱架设计与施工.pdf
+source_pdf_sha256: 9308dac1b5aa40bd1da44c22d847f22b872bd8025abc3cdc5b5b34c1407e2cf3
+state: reviewed
+reviewer: codex_operator_phase2r12_manual_audit
+reviewed_at_utc: '2026-07-29T14:30:00Z'
+review_basis: Phase 2R.1.2 V25 独立复核：原始 V2 第1页 marker 与同 PDF 的已冻结 V2 shadow 第2页相邻 manifest 同源，且source/closure anchor均可复算。
+marker_reviews:
+- continuation_id: continuation:b26c0f7f443ace516620640d
+  disposition: page_continuation
+  projection_id: step2a-projection:7b89cfb262df4c3c37596d9d
+  source_manifest_sha256: d61a6721c1aba3edbb9a650a4826e92a4d2cef027e98f0765b4c7a78cadbfd54
+  page_num: 1
+  section_id: section:227d3c75d3e04105601bd99d
+  anchor_span_ids:
+  - span:125de8b8b421545af70a0d0b
+  - span:9f726114a54d61be758c7a29
+  - span:365a91714c1d6be30c72052a
+  - span:a69e7c5fc4dd45907af280de
+  marker_token_span_ids:
+  - span:9f726114a54d61be758c7a29
+  - span:a69e7c5fc4dd45907af280de
+  source_evidence_ids:
+  - ev:e789956d35379833b90c05bf
+  - ev:7eec74cb91094ab1443a0f88
+  basis: 人工核对原始 PDF 第 1 页：编号①、②后的↓位于页尾；相邻第2页以③至⑧连续闭合同一荷载枚举。
+closure_reviews:
+- review_id: continuation-review:106fe496d7c9cdbccec133ee
+  continuation_id: continuation:b26c0f7f443ace516620640d
+  source_projection_id: step2a-projection:7b89cfb262df4c3c37596d9d
+  source_manifest_sha256: d61a6721c1aba3edbb9a650a4826e92a4d2cef027e98f0765b4c7a78cadbfd54
+  source_page_num: 1
+  source_section_id: section:227d3c75d3e04105601bd99d
+  source_anchor_span_ids:
+  - span:125de8b8b421545af70a0d0b
+  - span:9f726114a54d61be758c7a29
+  - span:365a91714c1d6be30c72052a
+  - span:a69e7c5fc4dd45907af280de
+  adjacent_projection_id: step2a-projection:a92d5ef674805085555bd406
+  adjacent_manifest_sha256: 9d28a7c603478cf6024f8eb083db36b94daf784aace710daa507349606a173aa
+  adjacent_page_num: 2
+  adjacent_section_id: section:0293f1c8ceee4ae2af08a4b6
+  closure_anchor_span_ids:
+  - span:2c796fa64b63ca67d6eae4a5
+  - span:9fa1963ec8e8550b1192cbee
+  - span:267ce7a9b632f1a1bdc5f20f
+  - span:590551ea7dc2068a9c0e1cb4
+  - span:898df627d76ee86d34977d70
+  - span:44c778bbaa62168eabd5d9a3
+  basis: 人工核对相邻源页：第2页编号③、④、⑤、⑥、⑦、⑧连续完成第1页①、②发起的八项荷载枚举；页内箭头未作为跨页闭合依据。

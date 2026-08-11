@@ -1,0 +1,344 @@
+{
+  "$defs": {
+    "CardPresentation": {
+      "enum": [
+        "text",
+        "ordered_list",
+        "table",
+        "diagram",
+        "formula",
+        "constraint",
+        "threshold",
+        "visual_reference"
+      ],
+      "title": "CardPresentation",
+      "type": "string"
+    },
+    "ShortCardException": {
+      "description": "Explicitly reviewed reasons why a compact learning card is acceptable.",
+      "enum": [
+        "atomic_formula",
+        "diagram_summary",
+        "compact_enumeration",
+        "identifier_only"
+      ],
+      "title": "ShortCardException",
+      "type": "string"
+    },
+    "Step2AFailure": {
+      "additionalProperties": false,
+      "properties": {
+        "state": {
+          "$ref": "#/$defs/Step2FailureState"
+        },
+        "message": {
+          "minLength": 1,
+          "title": "Message",
+          "type": "string"
+        },
+        "retryable": {
+          "default": false,
+          "title": "Retryable",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "state",
+        "message"
+      ],
+      "title": "Step2AFailure",
+      "type": "object"
+    },
+    "Step2BCardProposal": {
+      "additionalProperties": false,
+      "properties": {
+        "proposal_key": {
+          "pattern": "^card-proposal:[a-z0-9][a-z0-9._-]*$",
+          "title": "Proposal Key",
+          "type": "string"
+        },
+        "title": {
+          "maxLength": 64,
+          "minLength": 2,
+          "title": "Title",
+          "type": "string"
+        },
+        "primary_fact_ids": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Primary Fact Ids",
+          "type": "array"
+        },
+        "secondary_fact_ids": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "title": "Secondary Fact Ids",
+          "type": "array"
+        },
+        "presentation": {
+          "$ref": "#/$defs/CardPresentation"
+        },
+        "split_reason": {
+          "maxLength": 240,
+          "minLength": 6,
+          "title": "Split Reason",
+          "type": "string"
+        },
+        "short_card_exception": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ShortCardException"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        }
+      },
+      "required": [
+        "proposal_key",
+        "title",
+        "primary_fact_ids",
+        "presentation",
+        "split_reason"
+      ],
+      "title": "Step2BCardProposal",
+      "type": "object"
+    },
+    "Step2DecoderConfig": {
+      "additionalProperties": false,
+      "description": "All output-affecting generation controls must participate in cache identity.",
+      "properties": {
+        "temperature": {
+          "default": 0,
+          "maximum": 2,
+          "minimum": 0,
+          "title": "Temperature",
+          "type": "number"
+        },
+        "max_tokens": {
+          "default": 1400,
+          "maximum": 4000,
+          "minimum": 64,
+          "title": "Max Tokens",
+          "type": "integer"
+        },
+        "response_format": {
+          "$ref": "#/$defs/Step2ResponseFormat",
+          "default": "json_schema_strict"
+        }
+      },
+      "title": "Step2DecoderConfig",
+      "type": "object"
+    },
+    "Step2FailureState": {
+      "enum": [
+        "validation_failed",
+        "source_missing",
+        "grounding_failed",
+        "invalid_response",
+        "upstream_unavailable",
+        "unknown_outcome"
+      ],
+      "title": "Step2FailureState",
+      "type": "string"
+    },
+    "Step2RequestIdentity": {
+      "additionalProperties": false,
+      "properties": {
+        "stage": {
+          "$ref": "#/$defs/Step2Stage"
+        },
+        "request_version": {
+          "minLength": 1,
+          "title": "Request Version",
+          "type": "string"
+        },
+        "model": {
+          "minLength": 1,
+          "title": "Model",
+          "type": "string"
+        },
+        "payload_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Payload Sha256",
+          "type": "string"
+        },
+        "relay_fingerprint_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Relay Fingerprint Sha256",
+          "type": "string"
+        },
+        "prompt_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Prompt Sha256",
+          "type": "string"
+        },
+        "response_schema_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Response Schema Sha256",
+          "type": "string"
+        },
+        "decoder": {
+          "$ref": "#/$defs/Step2DecoderConfig"
+        },
+        "projection_id": {
+          "anyOf": [
+            {
+              "pattern": "^step2a-projection:[0-9a-f]{24}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Projection Id"
+        },
+        "projection_sha256": {
+          "anyOf": [
+            {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Projection Sha256"
+        },
+        "source_manifest_sha256": {
+          "anyOf": [
+            {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Source Manifest Sha256"
+        },
+        "content_policy_fingerprint_sha256": {
+          "anyOf": [
+            {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Content Policy Fingerprint Sha256"
+        },
+        "manual_reissue_reason": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Manual Reissue Reason"
+        },
+        "request_id": {
+          "pattern": "^step2[ab]-request:[0-9a-f]{64}$",
+          "title": "Request Id",
+          "type": "string"
+        },
+        "cache_key": {
+          "pattern": "^step2-cache:[0-9a-f]{64}$",
+          "title": "Cache Key",
+          "type": "string"
+        },
+        "idempotency_key": {
+          "pattern": "^step2-[0-9a-f]{64}$",
+          "title": "Idempotency Key",
+          "type": "string"
+        }
+      },
+      "required": [
+        "stage",
+        "request_version",
+        "model",
+        "payload_sha256",
+        "relay_fingerprint_sha256",
+        "prompt_sha256",
+        "response_schema_sha256",
+        "decoder",
+        "request_id",
+        "cache_key",
+        "idempotency_key"
+      ],
+      "title": "Step2RequestIdentity",
+      "type": "object"
+    },
+    "Step2ResponseFormat": {
+      "enum": [
+        "json_schema_strict",
+        "json_object"
+      ],
+      "title": "Step2ResponseFormat",
+      "type": "string"
+    },
+    "Step2ResultState": {
+      "enum": [
+        "succeeded",
+        "failed"
+      ],
+      "title": "Step2ResultState",
+      "type": "string"
+    },
+    "Step2Stage": {
+      "enum": [
+        "step2a",
+        "step2b"
+      ],
+      "title": "Step2Stage",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "request": {
+      "$ref": "#/$defs/Step2RequestIdentity"
+    },
+    "state": {
+      "$ref": "#/$defs/Step2ResultState"
+    },
+    "proposals": {
+      "default": [],
+      "items": {
+        "$ref": "#/$defs/Step2BCardProposal"
+      },
+      "title": "Proposals",
+      "type": "array"
+    },
+    "failure": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/Step2AFailure"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    }
+  },
+  "required": [
+    "request",
+    "state"
+  ],
+  "title": "Step2BResponse",
+  "type": "object"
+}

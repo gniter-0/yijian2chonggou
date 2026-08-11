@@ -1,0 +1,25 @@
+{
+  "anchor_ids": [
+    "anchor-0001"
+  ],
+  "business_identity": "step4-business-0001",
+  "evidence_ids": [
+    "ev-0001"
+  ],
+  "fact_ids": [
+    "fact-0001"
+  ],
+  "geometry_sha256": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+  "model": "gpt-image-2",
+  "n": 1,
+  "prompt": "Render exam card 2: four labelled roadbed layers, exact source text, no invented wording.",
+  "provenance_sha256": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+  "request_id": "step4-request-0001",
+  "response_format": "b64_json",
+  "schema_version": "step4_image_request_v1",
+  "size": "1536x1024",
+  "source_candidate_id": "candidate-table-01",
+  "source_card_id": "step3-card-contract:0123456789abcdef01234567",
+  "source_contract_sha256": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+  "typed_contract_sha256": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
+}

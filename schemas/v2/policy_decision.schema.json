@@ -1,0 +1,118 @@
+{
+  "$defs": {
+    "CoverageRequirement": {
+      "enum": [
+        "required",
+        "optional",
+        "not_required"
+      ],
+      "title": "CoverageRequirement",
+      "type": "string"
+    },
+    "PolicyDecisionState": {
+      "enum": [
+        "unclassified",
+        "auto_classified",
+        "needs_manual_review",
+        "manually_resolved"
+      ],
+      "title": "PolicyDecisionState",
+      "type": "string"
+    },
+    "PolicyDisposition": {
+      "enum": [
+        "included",
+        "excluded_by_policy",
+        "archived",
+        "manual_review",
+        "ignored_noise"
+      ],
+      "title": "PolicyDisposition",
+      "type": "string"
+    },
+    "SemanticRole": {
+      "enum": [
+        "core",
+        "worked_example",
+        "exercise_question",
+        "exercise_option",
+        "exercise_answer",
+        "exercise_explanation",
+        "exam_tag",
+        "heading",
+        "caption",
+        "header_footer",
+        "watermark",
+        "page_number",
+        "decorative",
+        "unknown"
+      ],
+      "title": "SemanticRole",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "default": "2.0",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "evidence_id": {
+      "minLength": 8,
+      "title": "Evidence Id",
+      "type": "string"
+    },
+    "semantic_role": {
+      "$ref": "#/$defs/SemanticRole"
+    },
+    "disposition": {
+      "$ref": "#/$defs/PolicyDisposition"
+    },
+    "coverage_requirement": {
+      "$ref": "#/$defs/CoverageRequirement"
+    },
+    "decision_state": {
+      "$ref": "#/$defs/PolicyDecisionState",
+      "default": "auto_classified"
+    },
+    "policy_id": {
+      "pattern": "^[a-z0-9][a-z0-9._-]*$",
+      "title": "Policy Id",
+      "type": "string"
+    },
+    "policy_revision": {
+      "minimum": 1,
+      "title": "Policy Revision",
+      "type": "integer"
+    },
+    "reason": {
+      "minLength": 3,
+      "title": "Reason",
+      "type": "string"
+    },
+    "reviewer": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Reviewer"
+    }
+  },
+  "required": [
+    "evidence_id",
+    "semantic_role",
+    "disposition",
+    "coverage_requirement",
+    "policy_id",
+    "policy_revision",
+    "reason"
+  ],
+  "title": "PolicyDecision",
+  "type": "object"
+}

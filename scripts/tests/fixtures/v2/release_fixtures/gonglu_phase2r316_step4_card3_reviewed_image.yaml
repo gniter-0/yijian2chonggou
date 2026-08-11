@@ -1,0 +1,157 @@
+schema_version: step4_card3_reviewed_image_fixture_v1
+fixture_id: step4-reviewed-image-card3:3be757945691bded483b28e7
+card_index: 3
+source_card_id: v25-release-card:e6a90dfe9d5240ead407b7ef
+sample_id: gonglu_01_text_list
+fact_ids:
+- fact:2448270c7cee6e945b529767
+presentation: ordered_list
+render_contract_kind: ordered_list_exact_eight_rows
+source_step3_fixture_path: scripts/tests/fixtures/v2/release_fixtures/gonglu_phase2r2242_step3_reviewed_release.yaml
+source_step3_fixture_sha256: 8a6226e4a7f1cdece711a770566b2401a91e43428b85897d9ded7c778cda5ab3
+source_card_binding_sha256: b910deca772affa8d8cd0b30403e88e1d5128575d448d8cb96c3c77be8c1d16e
+source_r314_request_sha256: d33a3fc618c6fc9e53de0cbb8adf69b86151cae1f738ec5703455d6c185e36e2
+source_r314_model_input_sha256: d9b88c664543f6e3b87b909334a32c7e093dbe04ce0382ecf86f7425533f88f4
+source_r314_prompt_sha256: 3efbb464858beaf5b550862a33c383ed56018806f39b14cba584e7dcd497ca15
+source_r314_gate_sha256: 6b86cbad6f858f886dde78a7e02ba383afd588d2e2b152de54a523fd82644f84
+source_r314_report_sha256: a52aedae9fccb59822dad838340ad9beb6206d97fbfcfaf2600bd119591dc46a
+source_r314_fake_artifact_sha256: b4d878049db7cdae703c04ec6719849f0a36b33eaea37701cf348cbfdc7627fb
+source_r314_contract_sha256: b901bd6e58a568f6daf14257944b6ec384f4e8e3f96afd213323136ce7326017
+source_r315_diagnostic_identity: step4-card3-r315-diagnostic:6102af7a9a1074520e1ad835ca209f682766f1b7b303b60ff2219f717137a51c
+source_r315_business_identity: step4-card3-r315-request:b3919115a5501e05ef0151bf6f5de21d2bd09c6d2bde8ee7cbfe173c49a55182
+source_r315_request_file_sha256: 7e0dc9ac85ea2eae451008e7d5b6969b73ade64467185e2fc1015bd63936a67d
+source_r315_response_sha256: 1713690ca96298f746c4b83325a9afd335f5755e7c0d6dbe58a2b199788033a7
+source_r315_image_record_sha256: a972f9def866b62b00984f2298960bddf42c5e57694bf5fe8831a85353f6d6fb
+source_r315_machine_report_sha256: d69e40299337009890401104929a0eb694153f033dd47dee868f6c51157b3936
+source_r315_visual_audit_sha256: 781711a75faa3f6b41450fc5e7a8cd6045c177f03d7d359c37c025e558f5cdda
+source_r315_final_gate_sha256: b5244ce5d268e3329bd36f1759266674786dbd9d658cb0185395375af887509c
+source_r315_final_report_sha256: 6b1290cb2a88265321f8099083f5ecaadf1106dd02fc5f05a5f27b595f33e7bb
+provider_request_id: 4e9487e4fecc40438c1a43f18aebcd12
+image_path: data/semantic_llm_v2/phase2r315_step4_card3_ordered_list_live_smoke_run1/gonglu-step4-card-03-e6a90dfe.png
+image_sha256: 7577a43b3e7e92f9387c8b86114701a24ebafea3239334f73a8abddc0271b53d
+image_mime: image/png
+image_width: 1536
+image_height: 1024
+response_format_b64_only: true
+item_count: 8
+row_count: 8
+items:
+- item_index: 1
+  marker: ①
+  text: ① 路基施工准备
+  anchor_span_id: span:fc0c5f0d70d99faef445ced4
+  evidence_id: ev:596fc2468bbd859f889aade6
+  source_item_contract_sha256: 8963338543560e5b984e7850a4e3ecb9e61793bdd5d234a04a56cf3e9dde1533
+  parent_display_block_sha256: a56bdaa52db3e5c4f79a869275376d6a2bf902eb9e63139a1bbbc2b24deae870
+  source_manifest_sha256: 4cfdb64bfe460692bfe768f849c66a365564b012048c479843fc3dc510932e3b
+  crop_sha256: e689a9d4f2c1657277ac79494bb2ec30d2bcee5d363e7c93efa360b037b0a2df
+  visually_confirmed: true
+- item_index: 2
+  marker: ②
+  text: ② 原地基处理要求
+  anchor_span_id: span:0da8da89badb497d893f7680
+  evidence_id: ev:596fc2468bbd859f889aade6
+  source_item_contract_sha256: c713a8b26f11cbcce46be040ae215ff335706adab1c77f79261046cf92bbe574
+  parent_display_block_sha256: a56bdaa52db3e5c4f79a869275376d6a2bf902eb9e63139a1bbbc2b24deae870
+  source_manifest_sha256: 4cfdb64bfe460692bfe768f849c66a365564b012048c479843fc3dc510932e3b
+  crop_sha256: e689a9d4f2c1657277ac79494bb2ec30d2bcee5d363e7c93efa360b037b0a2df
+  visually_confirmed: true
+- item_index: 3
+  marker: ③
+  text: ③ 挖方路基施工
+  anchor_span_id: span:55dd9f6ddaef62b08b4a70f1
+  evidence_id: ev:596fc2468bbd859f889aade6
+  source_item_contract_sha256: d6d7707fe45fc7cdc13b9b23cef31e05195e0672ca00f10476fcb0164a68e774
+  parent_display_block_sha256: a56bdaa52db3e5c4f79a869275376d6a2bf902eb9e63139a1bbbc2b24deae870
+  source_manifest_sha256: 4cfdb64bfe460692bfe768f849c66a365564b012048c479843fc3dc510932e3b
+  crop_sha256: e689a9d4f2c1657277ac79494bb2ec30d2bcee5d363e7c93efa360b037b0a2df
+  visually_confirmed: true
+- item_index: 4
+  marker: ④
+  text: ④ 填方路基施工
+  anchor_span_id: span:fa1c19723a871b0893d80a83
+  evidence_id: ev:596fc2468bbd859f889aade6
+  source_item_contract_sha256: a72baacaaf4aafac7f56f956cc67f13e9a777b835f144b66ebd28ad181524da2
+  parent_display_block_sha256: a56bdaa52db3e5c4f79a869275376d6a2bf902eb9e63139a1bbbc2b24deae870
+  source_manifest_sha256: 4cfdb64bfe460692bfe768f849c66a365564b012048c479843fc3dc510932e3b
+  crop_sha256: e689a9d4f2c1657277ac79494bb2ec30d2bcee5d363e7c93efa360b037b0a2df
+  visually_confirmed: true
+- item_index: 5
+  marker: ⑤
+  text: ⑤ 路基季节性施工
+  anchor_span_id: span:077c1e5d88105781985c9b55
+  evidence_id: ev:596fc2468bbd859f889aade6
+  source_item_contract_sha256: 41c7d093b87b96a3fd1956d0584d2431d96038e5816abf55aee252c9a56d58d9
+  parent_display_block_sha256: a56bdaa52db3e5c4f79a869275376d6a2bf902eb9e63139a1bbbc2b24deae870
+  source_manifest_sha256: 4cfdb64bfe460692bfe768f849c66a365564b012048c479843fc3dc510932e3b
+  crop_sha256: e689a9d4f2c1657277ac79494bb2ec30d2bcee5d363e7c93efa360b037b0a2df
+  visually_confirmed: true
+- item_index: 6
+  marker: ⑥
+  text: ⑥ 路基改（扩）建施工
+  anchor_span_id: span:7e34b1deb5150a7547e17fcc
+  evidence_id: ev:596fc2468bbd859f889aade6
+  source_item_contract_sha256: e46df29f255e060c7674d3083b28b1fb632fbc21d355299fd51e696426da2a11
+  parent_display_block_sha256: a56bdaa52db3e5c4f79a869275376d6a2bf902eb9e63139a1bbbc2b24deae870
+  source_manifest_sha256: 4cfdb64bfe460692bfe768f849c66a365564b012048c479843fc3dc510932e3b
+  crop_sha256: e689a9d4f2c1657277ac79494bb2ec30d2bcee5d363e7c93efa360b037b0a2df
+  visually_confirmed: true
+- item_index: 7
+  marker: ⑦
+  text: ⑦ 特殊路基施工
+  anchor_span_id: span:be4ea334e2c28bf19d56c6c2
+  evidence_id: ev:596fc2468bbd859f889aade6
+  source_item_contract_sha256: aae32ccbad0a47d6162abb9c059769bc6212bb68aa955ef8a9e6cb2b4ca8a0fd
+  parent_display_block_sha256: a56bdaa52db3e5c4f79a869275376d6a2bf902eb9e63139a1bbbc2b24deae870
+  source_manifest_sha256: 4cfdb64bfe460692bfe768f849c66a365564b012048c479843fc3dc510932e3b
+  crop_sha256: e689a9d4f2c1657277ac79494bb2ec30d2bcee5d363e7c93efa360b037b0a2df
+  visually_confirmed: true
+- item_index: 8
+  marker: ⑧
+  text: ⑧ 路基施工测量
+  anchor_span_id: span:63cd5b413602a06826583b9c
+  evidence_id: ev:596fc2468bbd859f889aade6
+  source_item_contract_sha256: c4ab5df03b3a170e6555d7fd1a160f7f81ad9204f3a0bc1e3ee27cb12d785ca8
+  parent_display_block_sha256: a56bdaa52db3e5c4f79a869275376d6a2bf902eb9e63139a1bbbc2b24deae870
+  source_manifest_sha256: 4cfdb64bfe460692bfe768f849c66a365564b012048c479843fc3dc510932e3b
+  crop_sha256: e689a9d4f2c1657277ac79494bb2ec30d2bcee5d363e7c93efa360b037b0a2df
+  visually_confirmed: true
+reading_order_item_sha256s:
+- 8963338543560e5b984e7850a4e3ecb9e61793bdd5d234a04a56cf3e9dde1533
+- c713a8b26f11cbcce46be040ae215ff335706adab1c77f79261046cf92bbe574
+- d6d7707fe45fc7cdc13b9b23cef31e05195e0672ca00f10476fcb0164a68e774
+- a72baacaaf4aafac7f56f956cc67f13e9a777b835f144b66ebd28ad181524da2
+- 41c7d093b87b96a3fd1956d0584d2431d96038e5816abf55aee252c9a56d58d9
+- e46df29f255e060c7674d3083b28b1fb632fbc21d355299fd51e696426da2a11
+- aae32ccbad0a47d6162abb9c059769bc6212bb68aa955ef8a9e6cb2b4ca8a0fd
+- c4ab5df03b3a170e6555d7fd1a160f7f81ad9204f3a0bc1e3ee27cb12d785ca8
+source_evidence_id: ev:596fc2468bbd859f889aade6
+source_table_ids:
+- ev:748251cbeadcf68c15efbd87
+anchor_span_ids:
+- span:fc0c5f0d70d99faef445ced4
+- span:0da8da89badb497d893f7680
+- span:55dd9f6ddaef62b08b4a70f1
+- span:fa1c19723a871b0893d80a83
+- span:077c1e5d88105781985c9b55
+- span:7e34b1deb5150a7547e17fcc
+- span:be4ea334e2c28bf19d56c6c2
+- span:63cd5b413602a06826583b9c
+source_manifest_sha256s:
+- 4cfdb64bfe460692bfe768f849c66a365564b012048c479843fc3dc510932e3b
+crop_sha256s:
+- e689a9d4f2c1657277ac79494bb2ec30d2bcee5d363e7c93efa360b037b0a2df
+parent_display_block_sha256: a56bdaa52db3e5c4f79a869275376d6a2bf902eb9e63139a1bbbc2b24deae870
+continuation_state: not_applicable
+continuation_binding_ids: []
+final_review_audit_sha256: 9a10d61bb7c082776e7ca5de2b8850c13bd96b8be2df0dbdd7e4bb4796526c6f
+review_state: reviewed
+reviewer: codex_operator_phase2r316_card3_image_final_review
+reviewed_at_utc: '2026-08-01T08:00:00Z'
+review_basis: Independent Phase 2R.3.16 original-resolution inspection of the frozen
+  R3.15 PNG confirmed all eight source-owned items verbatim and exactly once, exact
+  circled markers and punctuation, strict source order across eight independent rows,
+  no overflow or cross-row mixing, continuation remaining not_applicable, and no truncation,
+  OCR pollution, extra text, branding, watermark, or excluded content.
+image_copy_created: false
+generation_authorized: false

@@ -1,0 +1,76 @@
+schema_version: "2.0"
+sidecar_version: continuation_review_v1
+sidecar_id: "continuation-sidecar:46e3afa0309c7b2126ee38f5"
+sample_id: gonglu_24_continuation_real
+source_document_sha256: 9308dac1b5aa40bd1da44c22d847f22b872bd8025abc3cdc5b5b34c1407e2cf3
+source_pdf_path: "input_pdf_公路/24 第3章（24）常用模板、支架和拱架设计与施工.pdf"
+source_pdf_sha256: 9308dac1b5aa40bd1da44c22d847f22b872bd8025abc3cdc5b5b34c1407e2cf3
+state: reviewed
+reviewer: codex_operator_phase2r07
+reviewed_at_utc: "2026-07-27T13:20:00Z"
+review_basis: "核对原始 PDF 相邻页：第 1 页条目 ①、② 末尾的 ↓ 表示该编号荷载枚举续至第 2 页；第 2 页条目 ③、④ 周边的 ↓/→ 是同页荷载组合图示方向，不表示该枚举继续到第 3 页。"
+marker_reviews:
+  - continuation_id: "continuation:571b01edd57d998a5045b74e"
+    disposition: page_continuation
+    projection_id: "step2a-projection:5b134c0dc61dd836d6365cf9"
+    source_manifest_sha256: 7e1a2b4d9e9a1eb55669f559ae46e7a48e7ff1c8257ffdbfd9c05b4168b3c2d3
+    page_num: 1
+    section_id: "section:277d234025bad5d5d797879e"
+    anchor_span_ids:
+      - "span:cea2035ddacabc721b271e21"
+      - "span:a1dfa1f665ec21bdb3b97075"
+      - "span:9d62f96bafdb8f9472a44f23"
+      - "span:bb66d05868e704c34e0c6369"
+    marker_token_span_ids:
+      - "span:a1dfa1f665ec21bdb3b97075"
+      - "span:bb66d05868e704c34e0c6369"
+    source_evidence_ids:
+      - "ev:e789956d35379833b90c05bf"
+      - "ev:7eec74cb91094ab1443a0f88"
+    basis: "原始 PDF 第 1 页底部编号 ①、② 的 ↓ 位于页面末端，紧邻第 2 页以编号 ③ 继续同一荷载枚举。"
+  - continuation_id: "continuation:e1f5b2410b87f6d797850b88"
+    disposition: inline_direction_marker
+    projection_id: "step2a-projection:2855a30268e70e939351ddbd"
+    source_manifest_sha256: 9d28a7c603478cf6024f8eb083db36b94daf784aace710daa507349606a173aa
+    page_num: 2
+    section_id: "section:0293f1c8ceee4ae2af08a4b6"
+    anchor_span_ids:
+      - "span:2c796fa64b63ca67d6eae4a5"
+      - "span:82018b60699459ef22613315"
+      - "span:9fa1963ec8e8550b1192cbee"
+      - "span:13ae8ebf3ed18d1fb4b3c0a7"
+    marker_token_span_ids:
+      - "span:82018b60699459ef22613315"
+      - "span:13ae8ebf3ed18d1fb4b3c0a7"
+    source_evidence_ids:
+      - "ev:fc4bd5ba41898224aff48c53"
+      - "ev:5918fbde22878a50a73f3541"
+    basis: "原始 PDF 第 2 页完整呈现编号 ③ 至 ⑧；③、④ 附近的 ↓/→ 与同页组合图相连，不构成跨页续接。"
+closure_reviews:
+  - review_id: "continuation-review:5315bb536c8eb1e3705ab9ff"
+    continuation_id: "continuation:571b01edd57d998a5045b74e"
+    source_projection_id: "step2a-projection:5b134c0dc61dd836d6365cf9"
+    source_manifest_sha256: 7e1a2b4d9e9a1eb55669f559ae46e7a48e7ff1c8257ffdbfd9c05b4168b3c2d3
+    source_page_num: 1
+    source_section_id: "section:277d234025bad5d5d797879e"
+    source_anchor_span_ids:
+      - "span:cea2035ddacabc721b271e21"
+      - "span:a1dfa1f665ec21bdb3b97075"
+      - "span:9d62f96bafdb8f9472a44f23"
+      - "span:bb66d05868e704c34e0c6369"
+    adjacent_projection_id: "step2a-projection:2855a30268e70e939351ddbd"
+    adjacent_manifest_sha256: 9d28a7c603478cf6024f8eb083db36b94daf784aace710daa507349606a173aa
+    adjacent_page_num: 2
+    adjacent_section_id: "section:0293f1c8ceee4ae2af08a4b6"
+    closure_anchor_span_ids:
+      - "span:2c796fa64b63ca67d6eae4a5"
+      - "span:82018b60699459ef22613315"
+      - "span:9fa1963ec8e8550b1192cbee"
+      - "span:13ae8ebf3ed18d1fb4b3c0a7"
+      - "span:267ce7a9b632f1a1bdc5f20f"
+      - "span:014f65f569ffe6811eac35fa"
+      - "span:590551ea7dc2068a9c0e1cb4"
+      - "span:3fe62f2d39d3c4fb615b190d"
+      - "span:898df627d76ee86d34977d70"
+      - "span:44c778bbaa62168eabd5d9a3"
+    basis: "第 2 页的编号 ③、④、⑤、⑥、⑦、⑧ 闭合第 1 页编号 ①、② 的同一八项模板、支架和拱架设计荷载枚举；页内方向箭头已由同一 sidecar 单独标为 inline_direction_marker。"

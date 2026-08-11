@@ -1,0 +1,83 @@
+schema_version: step4_card2_reviewed_image_fixture_v1
+fixture_id: step4-reviewed-image-card2:cc29b6d3823765a6ea54ecbb
+card_index: 2
+source_card_id: v25-release-card:c2712f4fcfbb9407a3140d57
+sample_id: gonglu_01_text_list
+fact_ids:
+- fact:bdc644b1c6bf1a0a84f2db4c
+presentation: diagram
+source_step3_fixture_path: scripts/tests/fixtures/v2/release_fixtures/gonglu_phase2r2242_step3_reviewed_release.yaml
+source_step3_fixture_sha256: 8a6226e4a7f1cdece711a770566b2401a91e43428b85897d9ded7c778cda5ab3
+source_card_binding_sha256: 27ad592276b9d49401f042723df5a1a4964e23b1b92b0c3759ab259c3d782303
+source_r36_request_sha256: 1a8fbaa1b5e770df58cae6576511248f27bcb453401517213a53828d524df8c4
+source_r36_model_input_sha256: 292a3193e10deec0e80840f4ec911c28a5c3d74206796a8a1e97d93683cced5a
+source_r36_gate_sha256: 1487347d43bfc7e51b689f92b20d63ae645435133fcc0d0ef58fb304675c8d86
+source_r37_diagnostic_identity: step4-card2-r37-diagnostic:cedf56f41954dc9bd9a183c3d6bfc81e02d96473e41b3b2147d2c43902c83f69
+source_r37_business_identity: step4-card2-r37-request:6afb4fb3984542f5ae902a090cc5f5f7d57442ac927e747af4052ef0d4e4c8d3
+source_r37_request_file_sha256: 695571c386125b8f028f51b12389f8aaf16da82694d5ae88efa14f4058452e17
+source_r37_response_sha256: f14446c59e4185f5c22af65dcd0927efffc3fb38f47257b138284872842e7561
+source_r37_image_record_sha256: 52630ad3b70d11e75df1f04c1c17e0eb6f682da4c1e75dad88f648f29e600d3d
+source_r37_final_report_sha256: 9390d918ab0cb7fbb749370ef1ccfea62991413a203c5c1f5470637b23008d8e
+provider_request_id: 26c4603d4240463a93168511206b556d
+image_path: data/semantic_llm_v2/phase2r37_step4_card2_connector_topology_live_smoke_run1/gonglu-step4-card-02-exact-connector-topology-smoke.png
+image_sha256: ffa290f81844c9a9cfa0faa690caf015fe9cfd704ba35e2b649348bf589772e3
+image_mime: image/png
+image_width: 1536
+image_height: 1024
+response_format_b64_only: true
+visible_texts:
+- 路面
+- 填方路基
+- 边坡
+- 排水沟
+direct_placements:
+- source_node_id: node-road-surface
+  source_visible_text: 路面
+  target_region_id: road-surface
+  leader_count: 0
+  visually_confirmed: true
+- source_node_id: node-fill-roadbed
+  source_visible_text: 填方路基
+  target_region_id: fill-roadbed
+  leader_count: 0
+  visually_confirmed: true
+connector_bindings:
+- connector_id: slope-to-left-slope
+  source_node_id: node-slope
+  source_visible_text: 边坡
+  target_region_id: left-slope
+  source_connector_contract_sha256: ffdf061d0865ac13d882f9005656d2b84ed545f5b36b77114cab3e5671702422
+  path_contract_sha256: b1604cd9146285da1b9cb2b00926c8f32006c43e10e19a86f9946a219192ad74
+  visually_confirmed: true
+- connector_id: slope-to-right-slope
+  source_node_id: node-slope
+  source_visible_text: 边坡
+  target_region_id: right-slope
+  source_connector_contract_sha256: 57dcd40473fbff633ab224d066e80a898d0e6a8949b7fbf968f3ded338b7b9b9
+  path_contract_sha256: e5be527aec447ee72f96107156823ba7e0f475a78ded25462a0dabd353e5c750
+  visually_confirmed: true
+- connector_id: drainage-to-left-drainage-ditch
+  source_node_id: node-drainage-ditch
+  source_visible_text: 排水沟
+  target_region_id: left-drainage-ditch
+  source_connector_contract_sha256: d7385ba62bf707c504d774b7833a8e0a8a333b4c23872775a53e8209837d3ae0
+  path_contract_sha256: 9315330896b8a9332dae24c977f4af0ecb58f40ed7ed29c85f8524cb81d5658a
+  visually_confirmed: true
+- connector_id: drainage-to-right-drainage-ditch
+  source_node_id: node-drainage-ditch
+  source_visible_text: 排水沟
+  target_region_id: right-drainage-ditch
+  source_connector_contract_sha256: c62a5d5fa54e97359464755b2e899e7cd30d0fdbbc0555ba2f1eb594441bc234
+  path_contract_sha256: 393ea9051546a98fa4db9636f64e03e88af214aa31c1707d81d608003e502f9b
+  visually_confirmed: true
+relation_display_texts: []
+final_review_audit_sha256: 8fc81e1de7e7acf16d1713aa03945692795eb69d51dee1b89212e744e8250efb
+review_state: reviewed
+reviewer: codex_operator_phase2r38_card2_image_final_review
+reviewed_at_utc: '2026-07-31T07:10:00Z'
+review_basis: Independent Phase 2R.3.8 inspection confirmed the persisted PNG, exact
+  four source-owned labels, zero-leader direct placements, two independent left/right
+  slope connectors, two independent left/right drainage connectors, no text intersection,
+  no relation wording, and no excluded content.
+image_copy_created: false
+generation_authorized: false

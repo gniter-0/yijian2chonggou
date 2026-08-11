@@ -1,0 +1,356 @@
+source_review_sidecar_id: gonglu_phase0_v1.diagram_review_draft.controlled_vision_r2.highres_vision_r3
+source_disposition_sidecar_id: gonglu_phase0_v1.phase25e1_audited_visual_disposition
+reviewer: phase25f_manual_structural_review
+reviewed_at_utc: '2026-07-25T15:30:00Z'
+decisions:
+- review_id: diagram:1e2f8c831d4edb33e43dfd80
+  title: 填方路基横断面
+  diagram_type: cross_section
+  nodes:
+  - node_id: node-road-surface
+    label: 路面
+    evidence_ids: [ev:3a3de856bb37558c7b007d0e]
+  - node_id: node-fill-roadbed
+    label: 填方路基
+    evidence_ids: [ev:3a3de856bb37558c7b007d0e]
+  - node_id: node-slope
+    label: 边坡
+    evidence_ids: [ev:3a3de856bb37558c7b007d0e]
+  - node_id: node-drainage-ditch
+    label: 排水沟
+    evidence_ids: [ev:3a3de856bb37558c7b007d0e]
+  edges:
+  - source_node_id: node-road-surface
+    target_node_id: node-fill-roadbed
+    relation: 位于顶部
+  - source_node_id: node-slope
+    target_node_id: node-fill-roadbed
+    relation: 位于两侧
+  - source_node_id: node-drainage-ditch
+    target_node_id: node-slope
+    relation: 位于坡脚外侧
+  basis: 人工复核 600 DPI 原始 PDF 裁剪；可清晰确认填方路基、路面、边坡和坡脚排水沟的断面位置关系，不采用 OCR 推断。
+- review_id: diagram:3f62fa54a3a0a341605b7f65
+  title: 挖方路基横断面
+  diagram_type: cross_section
+  nodes:
+  - node_id: node-roadway
+    label: 路面及行车道
+    evidence_ids: [ev:506ca83799bb9f259bee1152]
+  - node_id: node-cut-slope
+    label: 路堑边坡
+    evidence_ids: [ev:506ca83799bb9f259bee1152]
+  - node_id: node-intercepting-ditch
+    label: 截水沟
+    evidence_ids: [ev:506ca83799bb9f259bee1152, ev:99ed2e63ad23f669d2590661]
+  edges:
+  - source_node_id: node-roadway
+    target_node_id: node-cut-slope
+    relation: 位于坡脚之间
+  - source_node_id: node-intercepting-ditch
+    target_node_id: node-cut-slope
+    relation: 位于坡顶外侧
+  basis: 人工复核 600 DPI 原始 PDF 裁剪；断面清晰显示路堑边坡、路面及坡顶截水沟，候选文字“截水沟”仅作为辅助锚点。
+- review_id: diagram:551628b4ce4064138e24ee58
+  title: 整体式路基标准横断面
+  diagram_type: cross_section
+  nodes:
+  - node_id: node-central-divider
+    label: 中央分隔带
+    evidence_ids: [ev:ed0182177d21337b1ce706d4, ev:438d36d30d82895590f9208f]
+  - node_id: node-carriageway
+    label: 行车道
+    evidence_ids: [ev:ed0182177d21337b1ce706d4, ev:f40f1a480026bcd3a132d7ee]
+  - node_id: node-road-edge
+    label: 路缘带
+    evidence_ids: [ev:ed0182177d21337b1ce706d4, ev:8436d2fb7540b29d3048ede3]
+  - node_id: node-drainage-ditch
+    label: 截水沟
+    evidence_ids: [ev:ed0182177d21337b1ce706d4, ev:2e3003877840d820b1664c1b]
+  edges:
+  - source_node_id: node-central-divider
+    target_node_id: node-carriageway
+    relation: 位于两侧车道之间
+  - source_node_id: node-road-edge
+    target_node_id: node-carriageway
+    relation: 位于两侧边缘
+  - source_node_id: node-drainage-ditch
+    target_node_id: node-road-edge
+    relation: 位于断面外侧
+  basis: 人工复核 600 DPI 原始 PDF 裁剪；中央分隔带、行车道、路缘带和外侧截水沟均可见，候选文字仅用于核对术语。
+- review_id: diagram:1ab9cd57cf58a47d06b1576e
+  title: 路面横断面结构
+  diagram_type: cross_section
+  nodes:
+  - node_id: node-carriageway
+    label: 车行道
+    evidence_ids: [ev:f6b19a3187df0ab984ba4bc5]
+  - node_id: node-crossfall
+    label: 横坡 2%
+    evidence_ids: [ev:f6b19a3187df0ab984ba4bc5]
+  - node_id: node-pavement-layers
+    label: 路面结构层
+    evidence_ids: [ev:f6b19a3187df0ab984ba4bc5]
+  edges:
+  - source_node_id: node-crossfall
+    target_node_id: node-carriageway
+    relation: 对应横坡
+  - source_node_id: node-carriageway
+    target_node_id: node-pavement-layers
+    relation: 位于结构层顶部
+  basis: 人工复核 600 DPI 原始 PDF 裁剪；图中车行道、2% 横坡及多层路面结构的断面关系可直接确认。
+- review_id: diagram:e465c1249176989867fe4da0
+  title: 模板支架荷载布置示意
+  diagram_type: load_distribution
+  nodes:
+  - node_id: node-top-load
+    label: 顶部荷载
+    evidence_ids: [ev:ef46c363269d2e99c929b38c]
+  - node_id: node-support-frame
+    label: 支架立杆
+    evidence_ids: [ev:ef46c363269d2e99c929b38c]
+  - node_id: node-diagonal-brace
+    label: 斜撑
+    evidence_ids: [ev:ef46c363269d2e99c929b38c]
+  edges:
+  - source_node_id: node-top-load
+    target_node_id: node-support-frame
+    relation: 由其承受
+  - source_node_id: node-diagonal-brace
+    target_node_id: node-support-frame
+    relation: 用于稳定
+  basis: 人工复核 600 DPI 原始 PDF 裁剪；荷载位于支架顶部，立杆和斜撑组成支撑体系，均由图形线条直接确认。
+- review_id: diagram:bbdcf031d82a22f8e0579c64
+  title: 满堂支架剪刀撑布置
+  diagram_type: structural
+  nodes:
+  - node_id: node-vertical-post
+    label: 支架立杆
+    evidence_ids: [ev:bedf0ac458d9905eff5f4cf4]
+  - node_id: node-horizontal-brace
+    label: 水平剪刀撑
+    evidence_ids: [ev:bedf0ac458d9905eff5f4cf4]
+  - node_id: node-vertical-brace
+    label: 竖向剪刀撑
+    evidence_ids: [ev:bedf0ac458d9905eff5f4cf4]
+  edges:
+  - source_node_id: node-horizontal-brace
+    target_node_id: node-vertical-post
+    relation: 连接
+  - source_node_id: node-vertical-brace
+    target_node_id: node-vertical-post
+    relation: 连接
+  basis: 人工复核 600 DPI 原始 PDF 裁剪；三维支架图可直接辨认立杆、水平剪刀撑和竖向剪刀撑的连接布置。
+- review_id: diagram:3dcb1e7efe8dd3062cce3da2
+  title: 拱架模板支撑构造
+  diagram_type: structural
+  nodes:
+  - node_id: node-formwork
+    label: 模板
+    evidence_ids: [ev:334ba7ed08b0869cdcb8cbbd]
+  - node_id: node-upright
+    label: 模板立柱
+    evidence_ids: [ev:334ba7ed08b0869cdcb8cbbd, ev:1b76577a7987eff7fc77acd6]
+  - node_id: node-lowering-equipment
+    label: 卸落设备
+    evidence_ids: [ev:334ba7ed08b0869cdcb8cbbd, ev:d209b1dec2a74d7fd6b34734]
+  - node_id: node-diagonal-brace
+    label: 斜撑
+    evidence_ids: [ev:334ba7ed08b0869cdcb8cbbd, ev:e5c040d100941dc013f4c952]
+  edges:
+  - source_node_id: node-upright
+    target_node_id: node-formwork
+    relation: 支承
+  - source_node_id: node-lowering-equipment
+    target_node_id: node-upright
+    relation: 设置于底部
+  - source_node_id: node-diagonal-brace
+    target_node_id: node-upright
+    relation: 连接并稳定
+  basis: 人工复核 600 DPI 原始 PDF 裁剪；模板、模板立柱、卸落设备和斜撑标签及线条关系清晰，文字节点均另有现有 Evidence 辅助回链。
+- review_id: diagram:74c5db4bf1a228814763f381
+  title: 拱架模板支撑构造
+  diagram_type: structural
+  nodes:
+  - node_id: node-formwork
+    label: 模板
+    evidence_ids: [ev:d62b687a0c6868d813aef69c]
+  - node_id: node-upright
+    label: 模板立柱
+    evidence_ids: [ev:d62b687a0c6868d813aef69c, ev:ba7965c298abeabe1e2ed9f5]
+  - node_id: node-lowering-equipment
+    label: 卸落设备
+    evidence_ids: [ev:d62b687a0c6868d813aef69c, ev:db4fffe19bb12428dfd9bdd4]
+  - node_id: node-diagonal-brace
+    label: 斜撑
+    evidence_ids: [ev:d62b687a0c6868d813aef69c, ev:b288cba0df68c1eaa6423b98]
+  edges:
+  - source_node_id: node-upright
+    target_node_id: node-formwork
+    relation: 支承
+  - source_node_id: node-lowering-equipment
+    target_node_id: node-upright
+    relation: 设置于底部
+  - source_node_id: node-diagonal-brace
+    target_node_id: node-upright
+    relation: 连接并稳定
+  basis: 人工复核 600 DPI 原始 PDF 裁剪；结构标签及构件关系与另一张拱架图一致，节点均以原图和现有文字 Evidence 双重锚定。
+- review_id: diagram:4f94e9436f680395aff43e61
+  title: 隧道复合式衬砌横断面
+  diagram_type: cross_section
+  nodes:
+  - node_id: node-surrounding-rock
+    label: 围岩
+    evidence_ids: [ev:a2104e17b0e3b9748fdb89f4, ev:8b8244ff57b18cd199bf6589]
+  - node_id: node-primary-support
+    label: 初期支护
+    evidence_ids: [ev:a2104e17b0e3b9748fdb89f4, ev:28fa704c37f6d0a34a7e4cce]
+  - node_id: node-waterproof-layer
+    label: 防水层
+    evidence_ids: [ev:a2104e17b0e3b9748fdb89f4, ev:01440fda0b8bb599c100ad14]
+  - node_id: node-secondary-lining
+    label: 二次衬砌
+    evidence_ids: [ev:a2104e17b0e3b9748fdb89f4, ev:f69df926630d2177f0221b08]
+  - node_id: node-drainage
+    label: 排水盲管
+    evidence_ids: [ev:a2104e17b0e3b9748fdb89f4]
+  edges:
+  - source_node_id: node-primary-support
+    target_node_id: node-surrounding-rock
+    relation: 紧贴围岩
+  - source_node_id: node-waterproof-layer
+    target_node_id: node-primary-support
+    relation: 位于内侧
+  - source_node_id: node-secondary-lining
+    target_node_id: node-waterproof-layer
+    relation: 位于内侧
+  - source_node_id: node-drainage
+    target_node_id: node-secondary-lining
+    relation: 设置于侧部
+  basis: 人工复核 600 DPI 原始 PDF 裁剪；围岩、初期支护、防水层、二次衬砌和排水盲管标签及由外至内的断面层次清晰，均有既有文字 Evidence 复核。
+- review_id: diagram:70d916a81cc5090c13c0bc14
+  title: 隧道洞门入口构造
+  diagram_type: cross_section
+  nodes:
+  - node_id: node-ground-line
+    label: 地面线
+    evidence_ids: [ev:2eabb1999a9bf1ddee037187]
+  - node_id: node-portal-lining
+    label: 洞门衬砌
+    evidence_ids: [ev:2eabb1999a9bf1ddee037187]
+  - node_id: node-drainage-ditch
+    label: 排水沟
+    evidence_ids: [ev:2eabb1999a9bf1ddee037187]
+  - node_id: node-travel-direction
+    label: 行车方向
+    evidence_ids: [ev:2eabb1999a9bf1ddee037187]
+  edges:
+  - source_node_id: node-portal-lining
+    target_node_id: node-ground-line
+    relation: 穿过并形成洞口
+  - source_node_id: node-drainage-ditch
+    target_node_id: node-portal-lining
+    relation: 设置于两侧
+  - source_node_id: node-travel-direction
+    target_node_id: node-portal-lining
+    relation: 通过洞口
+  basis: 人工复核 600 DPI 原始 PDF 裁剪；左侧洞门构造中地面线、洞门衬砌、两侧排水沟与行车方向均清晰可见，右侧照片不参与节点确认。
+- review_id: diagram:2a2d7bcf0b6cced748e0b9bb
+  title: 明洞横断面与排水构造
+  diagram_type: cross_section
+  nodes:
+  - node_id: node-open-cut-structure
+    label: 明洞结构
+    evidence_ids: [ev:386ce39bb5314317108ef8e9]
+  - node_id: node-backfill
+    label: 回填土
+    evidence_ids: [ev:386ce39bb5314317108ef8e9]
+  - node_id: node-slope
+    label: 边坡
+    evidence_ids: [ev:386ce39bb5314317108ef8e9]
+  - node_id: node-drainage
+    label: 排水构造
+    evidence_ids: [ev:386ce39bb5314317108ef8e9]
+  edges:
+  - source_node_id: node-backfill
+    target_node_id: node-open-cut-structure
+    relation: 覆盖于顶部
+  - source_node_id: node-slope
+    target_node_id: node-open-cut-structure
+    relation: 位于两侧
+  - source_node_id: node-drainage
+    target_node_id: node-open-cut-structure
+    relation: 设置于侧部
+  basis: 人工复核 600 DPI 原始 PDF 裁剪；图中文字较弱，未采用 OCR 转写；仅定版可由线条和上下文直接确认的明洞、回填、边坡和侧部排水的通用位置关系。
+- review_id: diagram:5218447664fb7ad55ff8ffd9
+  title: 路堑式拱形明洞横断面
+  diagram_type: cross_section
+  nodes:
+  - node_id: node-arch-open-cut
+    label: 拱形明洞
+    evidence_ids: [ev:cd779574d5400341a2f5b56b]
+  - node_id: node-backfill
+    label: 回填土
+    evidence_ids: [ev:cd779574d5400341a2f5b56b]
+  - node_id: node-cut-slope
+    label: 路堑边坡
+    evidence_ids: [ev:cd779574d5400341a2f5b56b]
+  - node_id: node-drainage
+    label: 排水沟
+    evidence_ids: [ev:cd779574d5400341a2f5b56b]
+  edges:
+  - source_node_id: node-backfill
+    target_node_id: node-arch-open-cut
+    relation: 覆盖于顶部
+  - source_node_id: node-cut-slope
+    target_node_id: node-arch-open-cut
+    relation: 位于两侧
+  - source_node_id: node-drainage
+    target_node_id: node-arch-open-cut
+    relation: 设置于侧部
+  basis: 人工复核 600 DPI 原始 PDF 裁剪；拱形明洞、顶部回填、路堑边坡和侧部排水位置均可直接确认。
+- review_id: diagram:be3108b2c66810ac5ee8e646
+  title: 生产安全事故等级划分阈值
+  diagram_type: comparison
+  nodes:
+  - node_id: node-general
+    label: 一般事故
+    evidence_ids: [ev:4f63c03e1ee994ad80c45fdb, ev:2ddd7068f81283862614cd6d]
+  - node_id: node-large
+    label: 较大事故
+    evidence_ids: [ev:4f63c03e1ee994ad80c45fdb, ev:c5d56ac29270228e980143c7]
+  - node_id: node-major
+    label: 重大事故
+    evidence_ids: [ev:4f63c03e1ee994ad80c45fdb, ev:4f9da8d06591422276597fc6]
+  - node_id: node-extraordinary-major
+    label: 特别重大事故
+    evidence_ids: [ev:4f63c03e1ee994ad80c45fdb, ev:42124b51891dc235f79e179a]
+  - node_id: node-death-count
+    label: 死亡人数
+    evidence_ids: [ev:4f63c03e1ee994ad80c45fdb, ev:135e3823c3feed401d05c2c5]
+  - node_id: node-serious-injury-count
+    label: 重伤人数
+    evidence_ids: [ev:4f63c03e1ee994ad80c45fdb, ev:c2e1998eb15d1fb5536f5a4d]
+  - node_id: node-economic-loss
+    label: 直接经济损失
+    evidence_ids: [ev:4f63c03e1ee994ad80c45fdb, ev:1b6b198540357ee564872921]
+  edges:
+  - source_node_id: node-general
+    target_node_id: node-large
+    relation: 严重程度递增
+  - source_node_id: node-large
+    target_node_id: node-major
+    relation: 严重程度递增
+  - source_node_id: node-major
+    target_node_id: node-extraordinary-major
+    relation: 严重程度递增
+  - source_node_id: node-death-count
+    target_node_id: node-general
+    relation: 作为等级判定指标
+  - source_node_id: node-serious-injury-count
+    target_node_id: node-general
+    relation: 作为等级判定指标
+  - source_node_id: node-economic-loss
+    target_node_id: node-general
+    relation: 作为等级判定指标
+  basis: 人工复核 600 DPI 原始 PDF 裁剪；事故等级、死亡人数、重伤人数及直接经济损失的图示标签清晰，保留等级顺序和判定指标关系，不把图中阈值 OCR 重写为未核验文本。

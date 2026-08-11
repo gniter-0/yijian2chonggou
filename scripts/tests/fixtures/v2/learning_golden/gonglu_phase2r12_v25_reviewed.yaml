@@ -1,0 +1,875 @@
+schema_version: '2.0'
+fixture_id: gonglu_phase2r12_v25_reviewed
+registry_id: gonglu_phase0_v1
+material_profile_id: yijian_gonglu_2026
+samples:
+- sample_id: gonglu_01_text_list
+  facts:
+  - fact_key: roadbed.construction-outline
+    fact_type: enumeration
+    title: 路基施工目录
+    title_aliases: []
+    primary_anchors:
+    - text: ①路基施工准备
+      kind: list_item
+    - text: ⑧路基施工测量
+      kind: list_item
+    required_terms:
+    - ①路基施工准备
+    - ⑧路基施工测量
+    table_structure: null
+    allow_heading_only: false
+    review:
+      state: reviewed
+      reviewer: codex_operator_phase2r12_manual_audit
+      reviewed_at_utc: '2026-07-29T14:30:00Z'
+      basis: 人工复核 fact:roadbed.construction-outline 的原始 V2 Evidence、可用 crop 与现有审计依据；标题、类型、锚点和必要术语均与原文一致。
+  - fact_key: roadbed.special-types-table
+    fact_type: composition
+    title: 特殊路基类型
+    title_aliases: []
+    primary_anchors:
+    - text: 风沙地区路基
+      kind: table_cell
+    required_terms:
+    - 风沙地区路基
+    table_structure:
+      anchor:
+        text: 风沙地区路基
+        kind: null
+      min_rows: 3
+      min_columns: 2
+      required_cell_texts:
+      - 风沙地区路基
+    allow_heading_only: false
+    review:
+      state: reviewed
+      reviewer: codex_operator_phase2r12_manual_audit
+      reviewed_at_utc: '2026-07-29T14:30:00Z'
+      basis: 人工复核 fact:roadbed.special-types-table 的原始 V2 Evidence、可用 crop 与现有审计依据；标题、类型、锚点和必要术语均与原文一致。
+  - fact_key: roadbed.fill-cross-section
+    fact_type: diagram_relation
+    title: 填方路基横断面
+    title_aliases: []
+    primary_anchors:
+    - text: 路堤（填方）
+      kind: diagram_node
+    required_terms: []
+    table_structure: null
+    allow_heading_only: false
+    review:
+      state: reviewed
+      reviewer: codex_operator_phase2r12_manual_audit
+      reviewed_at_utc: '2026-07-29T14:30:00Z'
+      basis: 人工复核 fact:roadbed.fill-cross-section 的原始 V2 Evidence、可用 crop 与现有审计依据；标题、类型、锚点和必要术语均与原文一致。
+  cards:
+  - card_key: roadbed.construction-outline-card
+    title: 路基施工目录
+    primary_fact_keys:
+    - roadbed.construction-outline
+    presentation: ordered_list
+    split_reason: 施工准备至施工测量构成同一有序目录。
+    short_card_exception: null
+    review:
+      state: reviewed
+      reviewer: codex_operator_phase2r12_manual_audit
+      reviewed_at_utc: '2026-07-29T14:30:00Z'
+      basis: 人工复核 card:roadbed.construction-outline-card 的已确认 Fact 依赖、教学标题、编组和 presentation；未以模型输出或旧 Card Golden 替代原始 Evidence。
+  - card_key: roadbed.special-types-card
+    title: 特殊路基类型
+    primary_fact_keys:
+    - roadbed.special-types-table
+    presentation: table
+    split_reason: 必须保留二维表的行列和原始单元格关系。
+    short_card_exception: null
+    review:
+      state: reviewed
+      reviewer: codex_operator_phase2r12_manual_audit
+      reviewed_at_utc: '2026-07-29T14:30:00Z'
+      basis: 人工复核 card:roadbed.special-types-card 的已确认 Fact 依赖、教学标题、编组和 presentation；未以模型输出或旧 Card Golden 替代原始 Evidence。
+  - card_key: roadbed.fill-cross-section-card
+    title: 填方路基横断面
+    primary_fact_keys:
+    - roadbed.fill-cross-section
+    presentation: diagram
+    split_reason: 横断面空间关系应单独呈现并绑定图示审核结果。
+    short_card_exception: null
+    review:
+      state: reviewed
+      reviewer: codex_operator_phase2r12_manual_audit
+      reviewed_at_utc: '2026-07-29T14:30:00Z'
+      basis: 人工复核 card:roadbed.fill-cross-section-card 的已确认 Fact 依赖、教学标题、编组和 presentation；未以模型输出或旧 Card Golden 替代原始 Evidence。
+  diagrams:
+  - review_id: diagram:1e2f8c831d4edb33e43dfd80
+    figure_evidence_id: ev:3a3de856bb37558c7b007d0e
+    review_title: 填方路基横断面
+    required_nodes:
+    - 路面
+    - 填方路基
+    - 边坡
+    - 排水沟
+    required_edges:
+    - source_label: 路面
+      relation: 位于顶部
+      target_label: 填方路基
+    - source_label: 排水沟
+      relation: 位于坡脚外侧
+      target_label: 边坡
+    review:
+      state: reviewed
+      reviewer: codex_operator_phase2r12_manual_audit
+      reviewed_at_utc: '2026-07-29T14:30:00Z'
+      basis: 人工复核 diagram:diagram:1e2f8c831d4edb33e43dfd80 的原始 figure crop、节点和关系边；语义仅记录图上可确认的空间或层级关系，并保留 Evidence anchor。
+  proposal_dispositions: []
+- sample_id: gonglu_24_table_formula
+  facts:
+  - fact_key: formwork.load-combination-table
+    fact_type: composition
+    title: 模板、支架和拱架荷载组合
+    title_aliases:
+    - 表3.1-2模板、支架和拱架设计计算的荷载组合
+    primary_anchors:
+    - text: ①+②+⑦+⑧
+      kind: table_cell
+    required_terms:
+    - ①+②+⑦+⑧
+    table_structure:
+      anchor:
+        text: 模板、支架和拱架设计计算的荷载组合
+        kind: null
+      min_rows: 6
+      min_columns: 3
+      required_cell_texts:
+      - ①+②+⑦+⑧
+    allow_heading_only: false
+    review:
+      state: reviewed
+      reviewer: codex_operator_phase2r053
+      reviewed_at_utc: '2026-07-27T09:45:00Z'
+      basis: 原表标题包含模板、支架和拱架；canonical title 去除表号和“设计计算的”冗余，完整表结构必须保留。
+  - fact_key: formwork.general-requirements-table
+    fact_type: composition
+    title: 模板与支架一般要求表
+    title_aliases:
+    - 模板、支架要求表
+    primary_anchors:
+    - text: 模板和支架应具有足够的强度、刚度和稳定性
+      kind: table
+    required_terms:
+    - 不大于65MPa
+    - 支架不得与应急安全通道相连接
+    table_structure:
+      anchor:
+        text: 模板和支架应具有足够的强度、刚度和稳定性
+        kind: table
+      min_rows: 2
+      min_columns: 2
+      required_cell_texts:
+      - 不得采用废机油
+      - HPB300
+      - 不大于65MPa
+      - 支架不得与应急安全通道相连接
+    allow_heading_only: false
+    review:
+      state: reviewed
+      reviewer: codex_operator_phase2r053
+      reviewed_at_utc: '2026-07-27T09:45:00Z'
+      basis: 原始crop确认这是模板与支架两行分类表，composition Fact用于保留类别和表格整体语义。
+  - fact_key: formwork.strength-rigidity-stability
+    fact_type: condition
+    title: 模板与支架强度刚度稳定性要求
+    title_aliases: []
+    primary_anchors:
+    - text: 模板和支架应具有足够的强度、刚度和稳定性
+      kind: table_cell
+    required_terms:
+    - 足够的强度、刚度和稳定性
+    table_structure: null
+    allow_heading_only: false
+    review:
+      state: reviewed
+      reviewer: codex_operator_phase2r053
+      reviewed_at_utc: '2026-07-27T09:45:00Z'
+      basis: 该规范性要求可独立考查，不能仅由完整表composition Fact替代。
+  - fact_key: formwork.release-agent-prohibition
+    fact_type: condition
+    title: 模板隔离剂禁用油料要求
+    title_aliases: []
+    primary_anchors:
+    - text: 不得采用废机油等油料
+      kind: table_cell
+    required_terms:
+    - 不得采用废机油等油料
+    table_structure: null
+    allow_heading_only: false
+    review:
+      state: reviewed
+      reviewer: codex_operator_phase2r053
+      reviewed_at_utc: '2026-07-27T09:45:00Z'
+      basis: “不得采用废机油等油料”是独立禁止性条件，必须形成原子Fact。
+  - fact_key: formwork.lifting-ring-material
+    fact_type: condition
+    title: 模板吊环钢筋材料要求
+    title_aliases: []
+    primary_anchors:
+    - text: 吊环应采用HPB300钢筋
+      kind: table_cell
+    required_terms:
+    - HPB300钢筋
+    - 严禁采用冷加工钢筋
+    table_structure: null
+    allow_heading_only: false
+    review:
+      state: reviewed
+      reviewer: codex_operator_phase2r053
+      reviewed_at_utc: '2026-07-27T09:45:00Z'
+      basis: HPB300材料要求与严禁冷加工构成同一完整条件Fact，需独立于整表保存。
+  - fact_key: formwork.lifting-ring-stress
+    fact_type: threshold
+    title: 模板吊环拉应力限值
+    title_aliases:
+    - 模板吊环拉应力限值65MPa
+    primary_anchors:
+    - text: 吊环的拉应力应不大于65MPa
+      kind: table_cell
+    required_terms:
+    - 不大于65MPa
+    table_structure: null
+    allow_heading_only: false
+    review:
+      state: reviewed
+      reviewer: codex_operator_phase2r053
+      reviewed_at_utc: '2026-07-27T09:45:00Z'
+      basis: 65MPa是独立定量阈值；虽为完整表子事实，仍应保留为原子Fact。
+  - fact_key: formwork.emergency-passage-separation
+    fact_type: condition
+    title: 支架与应急通道隔离要求
+    title_aliases: []
+    primary_anchors:
+    - text: 支架不得与应急安全通道相连接
+      kind: table_cell
+    required_terms:
+    - 支架不得与应急安全通道相连接
+    table_structure: null
+    allow_heading_only: false
+    review:
+      state: reviewed
+      reviewer: codex_operator_phase2r053
+      reviewed_at_utc: '2026-07-27T09:45:00Z'
+      basis: 支架与应急安全通道不得连接是独立禁止性条件，必须形成原子Fact。
+  - fact_key: formwork.anti-overturning
+    fact_type: condition
+    title: 模板防倾覆要求
+    title_aliases: []
+    primary_anchors:
+    - text: 必须设置防倾覆的临时固定设施
+      kind: list_item
+    required_terms:
+    - 必须设置防倾覆的临时固定设施
+    table_structure: null
+    allow_heading_only: false
+    review:
+      state: reviewed
+      reviewer: codex_operator_phase2r12_manual_audit
+      reviewed_at_utc: '2026-07-29T14:30:00Z'
+      basis: 人工复核 fact:formwork.anti-overturning 的原始 V2 Evidence、可用 crop 与现有审计依据；标题、类型、锚点和必要术语均与原文一致。
+  - fact_key: formwork.climb-speed
+    fact_type: threshold
+    title: 模板滑升速度
+    title_aliases: []
+    primary_anchors:
+    - text: 250mm/h
+      kind: formula
+    required_terms:
+    - 250mm/h
+    table_structure: null
+    allow_heading_only: false
+    review:
+      state: reviewed
+      reviewer: codex_operator_phase2r12_manual_audit
+      reviewed_at_utc: '2026-07-29T14:30:00Z'
+      basis: 人工复核 fact:formwork.climb-speed 的原始 V2 Evidence、可用 crop 与现有审计依据；标题、类型、锚点和必要术语均与原文一致。
+  - fact_key: formwork.preload
+    fact_type: threshold
+    title: 支架预压荷载
+    title_aliases: []
+    primary_anchors:
+    - text: 1.05～1.1倍
+      kind: list_item
+    required_terms:
+    - 1.05～1.1倍
+    table_structure: null
+    allow_heading_only: false
+    review:
+      state: reviewed
+      reviewer: codex_operator_phase2r12_manual_audit
+      reviewed_at_utc: '2026-07-29T14:30:00Z'
+      basis: 人工复核 fact:formwork.preload 的原始 V2 Evidence、可用 crop 与现有审计依据；标题、类型、锚点和必要术语均与原文一致。
+  - fact_key: formwork.arch-removal
+    fact_type: condition
+    title: 拱架卸落条件
+    title_aliases: []
+    primary_anchors:
+    - text: 85%后方可卸落
+      kind: list_item
+    required_terms:
+    - 85%后方可卸落
+    table_structure: null
+    allow_heading_only: false
+    review:
+      state: reviewed
+      reviewer: codex_operator_phase2r12_manual_audit
+      reviewed_at_utc: '2026-07-29T14:30:00Z'
+      basis: 人工复核 fact:formwork.arch-removal 的原始 V2 Evidence、可用 crop 与现有审计依据；标题、类型、锚点和必要术语均与原文一致。
+  cards:
+  - card_key: formwork.load-combination-card
+    title: 模板、支架和拱架荷载组合
+    primary_fact_keys:
+    - formwork.load-combination-table
+    presentation: table
+    split_reason: 荷载组合需要整表保留，不能被扁平化为段落。
+    short_card_exception: null
+    review:
+      state: reviewed
+      reviewer: codex_operator_phase2r053
+      reviewed_at_utc: '2026-07-27T09:45:00Z'
+      basis: reviewed canonical table Fact必须独占table Card并保留完整6×3网格。
+  - card_key: formwork.general-requirements-table-card
+    title: 模板与支架一般要求表
+    primary_fact_keys:
+    - formwork.general-requirements-table
+    presentation: table
+    split_reason: 分类表需要保留模板、支架两类及其完整要求，不能被原子规则替代。
+    short_card_exception: null
+    review:
+      state: reviewed
+      reviewer: codex_operator_phase2r053
+      reviewed_at_utc: '2026-07-27T09:45:00Z'
+      basis: 原始2×2分类表结构真实有效，作为整体教学表保留。
+  - card_key: formwork.general-requirements-atomic-card
+    title: 模板与支架一般要求
+    primary_fact_keys:
+    - formwork.strength-rigidity-stability
+    - formwork.release-agent-prohibition
+    - formwork.lifting-ring-material
+    - formwork.lifting-ring-stress
+    - formwork.emergency-passage-separation
+    presentation: constraint
+    split_reason: 五条规范性条件和阈值需要独立回链，同时作为同一一般要求组教学呈现。
+    short_card_exception: null
+    review:
+      state: reviewed
+      reviewer: codex_operator_phase2r053
+      reviewed_at_utc: '2026-07-27T09:45:00Z'
+      basis: 完整表Fact只负责结构保真，原子规则Card负责逐条记忆和考查。
+  - card_key: formwork.installation-constraints-card
+    title: 模板安装与预压约束
+    primary_fact_keys:
+    - formwork.anti-overturning
+    - formwork.climb-speed
+    - formwork.preload
+    - formwork.arch-removal
+    presentation: constraint
+    split_reason: 防倾覆、速度、预压和卸落条件属于同一施工控制组。
+    short_card_exception: null
+    review:
+      state: reviewed
+      reviewer: codex_operator_phase2r12_manual_audit
+      reviewed_at_utc: '2026-07-29T14:30:00Z'
+      basis: 人工复核 card:formwork.installation-constraints-card 的已确认 Fact 依赖、教学标题、编组和 presentation；未以模型输出或旧 Card Golden 替代原始
+        Evidence。
+  diagrams:
+  - review_id: diagram:e465c1249176989867fe4da0
+    figure_evidence_id: ev:ef46c363269d2e99c929b38c
+    review_title: 模板支架荷载布置示意
+    required_nodes:
+    - 顶部荷载
+    - 支架立杆
+    - 斜撑
+    required_edges:
+    - source_label: 顶部荷载
+      relation: 由其承受
+      target_label: 支架立杆
+    - source_label: 斜撑
+      relation: 用于稳定
+      target_label: 支架立杆
+    review:
+      state: reviewed
+      reviewer: codex_operator_phase2r12_manual_audit
+      reviewed_at_utc: '2026-07-29T14:30:00Z'
+      basis: 人工复核 diagram:diagram:e465c1249176989867fe4da0 的原始 figure crop、节点和关系边；语义仅记录图上可确认的空间或层级关系，并保留 Evidence anchor。
+  proposal_dispositions:
+  - page_num: 1
+    source_request_id: step2a-request:e163c47bd18556045a06738a3fb435e88e0b22bed1a50e07c240c5f501f29140
+    source_response_sha256: e4f68e46f4e902eeeaf1c7d61ad37d57a08f61ef35213e1586ccca0641defdcf
+    proposal_key: proposal:table_template_support_requirements_composition
+    proposal_sha256: 2c91f890297c3932df7ca2221e7e5003f2b2de627ecb99b41e9b421a13fa64e8
+    disposition: accepted_fact
+    action: map_expected_fact
+    canonical_fact_key: formwork.general-requirements-table
+    basis: 原始2×2 crop确认完整表语义真实，接受为composition Fact；其存在不得豁免原子规则缺失。
+    review:
+      state: reviewed
+      reviewer: codex_operator_phase2r053
+      reviewed_at_utc: '2026-07-27T09:45:00Z'
+      basis: 已核对原始crop、全部cell anchor和模型assertion。
+  - page_num: 1
+    source_request_id: step2a-request:e163c47bd18556045a06738a3fb435e88e0b22bed1a50e07c240c5f501f29140
+    source_response_sha256: e4f68e46f4e902eeeaf1c7d61ad37d57a08f61ef35213e1586ccca0641defdcf
+    proposal_key: proposal:table_3_1_2_load_combination_composition
+    proposal_sha256: c1fea01d0ca184ecdd89194c5d01220d4c2d50f4cf9a0147f14a9c1eee6c822a
+    disposition: accepted_fact
+    action: map_expected_fact
+    canonical_fact_key: formwork.load-combination-table
+    basis: reviewed table-repair确认6×3网格、14个cell Evidence及全部组合关系，接受为完整表Fact。
+    review:
+      state: reviewed
+      reviewer: codex_operator_phase2r053
+      reviewed_at_utc: '2026-07-27T09:45:00Z'
+      basis: 已核对reviewed repair、完整cell anchor和模型assertion。
+  - page_num: 1
+    source_request_id: step2a-request:e163c47bd18556045a06738a3fb435e88e0b22bed1a50e07c240c5f501f29140
+    source_response_sha256: e4f68e46f4e902eeeaf1c7d61ad37d57a08f61ef35213e1586ccca0641defdcf
+    proposal_key: proposal:template_support_design_loads_enumeration
+    proposal_sha256: 58aca7f10250a2034442b8908a735e3cb9b3f3ec62a3d95d0fae12db61b44282
+    disposition: partial_continuation
+    action: manual_review
+    canonical_fact_key: null
+    basis: 本页仅出现荷载项①和②且页底带向下续接标记，缺少后续项目，禁止作为完整枚举Fact发布。
+    review:
+      state: reviewed
+      reviewer: codex_operator_phase2r053
+      reviewed_at_utc: '2026-07-27T09:45:00Z'
+      basis: 已确认这是跨页未完内容；处置已审核，但知识内容继续保持manual_review。
+  - page_num: 1
+    source_request_id: step2a-request:e163c47bd18556045a06738a3fb435e88e0b22bed1a50e07c240c5f501f29140
+    source_response_sha256: e4f68e46f4e902eeeaf1c7d61ad37d57a08f61ef35213e1586ccca0641defdcf
+    proposal_key: proposal:template_lifting_ring_tensile_stress_threshold
+    proposal_sha256: f317077f4d0cb2b1b88c138c26f818b637e8fa37596de2aff294c52a4187111a
+    disposition: duplicate_subfact
+    action: retain_atomic_subfact
+    canonical_fact_key: formwork.lifting-ring-stress
+    basis: 该阈值已包含在完整表Fact中，但属于高价值定量原子子事实，保留且不视为需删除的重复。
+    review:
+      state: reviewed
+      reviewer: codex_operator_phase2r053
+      reviewed_at_utc: '2026-07-27T09:45:00Z'
+      basis: 已核对65MPa条件span、Evidence ID和数值回链。
+- sample_id: gonglu_41_diagram_mixed
+  facts:
+  - fact_key: tunnel.rock-classification-table
+    fact_type: composition
+    title: 围岩分级表
+    title_aliases: []
+    primary_anchors:
+    - text: 软岩，岩体较破碎
+      kind: table_cell
+    required_terms:
+    - 软岩，岩体较破碎
+    table_structure:
+      anchor:
+        text: 软岩，岩体较破碎
+        kind: null
+      min_rows: 7
+      min_columns: 3
+      required_cell_texts:
+      - 软岩，岩体较破碎
+    allow_heading_only: false
+    review:
+      state: reviewed
+      reviewer: codex_operator_phase2r12_manual_audit
+      reviewed_at_utc: '2026-07-29T14:30:00Z'
+      basis: 人工复核 fact:tunnel.rock-classification-table 的原始 V2 Evidence、可用 crop 与现有审计依据；标题、类型、锚点和必要术语均与原文一致。
+  - fact_key: tunnel.span-classification
+    fact_type: classification
+    title: 隧道跨度分类
+    title_aliases: []
+    primary_anchors:
+    - text: 14≤B<18
+      kind: null
+    required_terms:
+    - 14≤B<18
+    table_structure: null
+    allow_heading_only: false
+    review:
+      state: reviewed
+      reviewer: codex_operator_phase2r12_manual_audit
+      reviewed_at_utc: '2026-07-29T14:30:00Z'
+      basis: 人工复核 fact:tunnel.span-classification 的原始 V2 Evidence、可用 crop 与现有审计依据；标题、类型、锚点和必要术语均与原文一致。
+  - fact_key: tunnel.portal-foundation-depth
+    fact_type: threshold
+    title: 洞门基础深度约束
+    title_aliases: []
+    primary_anchors:
+    - text: 0.25m
+      kind: formula
+    required_terms:
+    - 0.25m
+    table_structure: null
+    allow_heading_only: false
+    review:
+      state: reviewed
+      reviewer: codex_operator_phase2r12_manual_audit
+      reviewed_at_utc: '2026-07-29T14:30:00Z'
+      basis: 人工复核 fact:tunnel.portal-foundation-depth 的原始 V2 Evidence、可用 crop 与现有审计依据；标题、类型、锚点和必要术语均与原文一致。
+  - fact_key: tunnel.composite-lining-section
+    fact_type: diagram_relation
+    title: 复合式衬砌横断面
+    title_aliases: []
+    primary_anchors:
+    - text: 初期支护
+      kind: diagram_node
+    required_terms: []
+    table_structure: null
+    allow_heading_only: false
+    review:
+      state: reviewed
+      reviewer: codex_operator_phase2r12_manual_audit
+      reviewed_at_utc: '2026-07-29T14:30:00Z'
+      basis: 人工复核 fact:tunnel.composite-lining-section 的原始 V2 Evidence、可用 crop 与现有审计依据；标题、类型、锚点和必要术语均与原文一致。
+  cards:
+  - card_key: tunnel.classification-card
+    title: 围岩与隧道跨度分类
+    primary_fact_keys:
+    - tunnel.rock-classification-table
+    - tunnel.span-classification
+    presentation: table
+    split_reason: 围岩表与跨度区间共同服务于隧道分类判断。
+    short_card_exception: null
+    review:
+      state: reviewed
+      reviewer: codex_operator_phase2r12_manual_audit
+      reviewed_at_utc: '2026-07-29T14:30:00Z'
+      basis: 人工复核 card:tunnel.classification-card 的已确认 Fact 依赖、教学标题、编组和 presentation；未以模型输出或旧 Card Golden 替代原始 Evidence。
+  - card_key: tunnel.portal-depth-card
+    title: 洞门基础深度约束
+    primary_fact_keys:
+    - tunnel.portal-foundation-depth
+    presentation: threshold
+    split_reason: 深度数值和约束词必须与其他分类信息分开记忆。
+    short_card_exception: null
+    review:
+      state: reviewed
+      reviewer: codex_operator_phase2r12_manual_audit
+      reviewed_at_utc: '2026-07-29T14:30:00Z'
+      basis: 人工复核 card:tunnel.portal-depth-card 的已确认 Fact 依赖、教学标题、编组和 presentation；未以模型输出或旧 Card Golden 替代原始 Evidence。
+  - card_key: tunnel.composite-lining-card
+    title: 复合式衬砌横断面
+    primary_fact_keys:
+    - tunnel.composite-lining-section
+    presentation: diagram
+    split_reason: 衬砌层次关系必须保留图示节点与边。
+    short_card_exception: null
+    review:
+      state: reviewed
+      reviewer: codex_operator_phase2r12_manual_audit
+      reviewed_at_utc: '2026-07-29T14:30:00Z'
+      basis: 人工复核 card:tunnel.composite-lining-card 的已确认 Fact 依赖、教学标题、编组和 presentation；未以模型输出或旧 Card Golden 替代原始 Evidence。
+  diagrams:
+  - review_id: diagram:4f94e9436f680395aff43e61
+    figure_evidence_id: ev:a2104e17b0e3b9748fdb89f4
+    review_title: 隧道复合式衬砌横断面
+    required_nodes:
+    - 围岩
+    - 初期支护
+    - 防水层
+    - 二次衬砌
+    required_edges:
+    - source_label: 初期支护
+      relation: 紧贴围岩
+      target_label: 围岩
+    - source_label: 二次衬砌
+      relation: 位于内侧
+      target_label: 防水层
+    review:
+      state: reviewed
+      reviewer: codex_operator_phase2r12_manual_audit
+      reviewed_at_utc: '2026-07-29T14:30:00Z'
+      basis: 人工复核 diagram:diagram:4f94e9436f680395aff43e61 的原始 figure crop、节点和关系边；语义仅记录图上可确认的空间或层级关系，并保留 Evidence anchor。
+  proposal_dispositions: []
+- sample_id: gonglu_55_standard_constraints
+  facts:
+  - fact_key: safety.production-duties
+    fact_type: enumeration
+    title: 安全生产职责
+    title_aliases: []
+    primary_anchors:
+    - text: 不得作为竞争性
+      kind: list_item
+    required_terms:
+    - 不得作为竞争性
+    table_structure: null
+    allow_heading_only: false
+    review:
+      state: reviewed
+      reviewer: codex_operator_phase2r12_manual_audit
+      reviewed_at_utc: '2026-07-29T14:30:00Z'
+      basis: 人工复核 fact:safety.production-duties 的原始 V2 Evidence、可用 crop 与现有审计依据；标题、类型、锚点和必要术语均与原文一致。
+  - fact_key: safety.risk-threshold
+    fact_type: threshold
+    title: 风险评估阈值
+    title_aliases: []
+    primary_anchors:
+    - text: 长度3000m及以上
+      kind: list_item
+    required_terms:
+    - 长度3000m及以上
+    table_structure: null
+    allow_heading_only: false
+    review:
+      state: reviewed
+      reviewer: codex_operator_phase2r12_manual_audit
+      reviewed_at_utc: '2026-07-29T14:30:00Z'
+      basis: 人工复核 fact:safety.risk-threshold 的原始 V2 Evidence、可用 crop 与现有审计依据；标题、类型、锚点和必要术语均与原文一致。
+  - fact_key: safety.accident-categories
+    fact_type: enumeration
+    title: 事故类别
+    title_aliases: []
+    primary_anchors:
+    - text: ①物体打击
+      kind: list_item
+    required_terms:
+    - ①物体打击
+    table_structure: null
+    allow_heading_only: false
+    review:
+      state: reviewed
+      reviewer: codex_operator_phase2r12_manual_audit
+      reviewed_at_utc: '2026-07-29T14:30:00Z'
+      basis: 人工复核 fact:safety.accident-categories 的原始 V2 Evidence、可用 crop 与现有审计依据；标题、类型、锚点和必要术语均与原文一致。
+  - fact_key: safety.report-deadline
+    fact_type: threshold
+    title: 质量事故报告时限
+    title_aliases: []
+    primary_anchors:
+    - text: 接报2小时内
+      kind: list_item
+    required_terms:
+    - 接报2小时内
+    table_structure: null
+    allow_heading_only: false
+    review:
+      state: reviewed
+      reviewer: codex_operator_phase2r12_manual_audit
+      reviewed_at_utc: '2026-07-29T14:30:00Z'
+      basis: 人工复核 fact:safety.report-deadline 的原始 V2 Evidence、可用 crop 与现有审计依据；标题、类型、锚点和必要术语均与原文一致。
+  - fact_key: safety.accident-level-diagram
+    fact_type: diagram_relation
+    title: 生产安全事故等级
+    title_aliases: []
+    primary_anchors:
+    - text: 特别重大
+      kind: diagram_node
+    required_terms: []
+    table_structure: null
+    allow_heading_only: false
+    review:
+      state: reviewed
+      reviewer: codex_operator_phase2r12_manual_audit
+      reviewed_at_utc: '2026-07-29T14:30:00Z'
+      basis: 人工复核 fact:safety.accident-level-diagram 的原始 V2 Evidence、可用 crop 与现有审计依据；标题、类型、锚点和必要术语均与原文一致。
+  cards:
+  - card_key: safety.duties-risk-card
+    title: 安全职责与风险评估
+    primary_fact_keys:
+    - safety.production-duties
+    - safety.risk-threshold
+    presentation: constraint
+    split_reason: 标准职责及适用阈值适合在同一规范约束组中呈现。
+    short_card_exception: null
+    review:
+      state: reviewed
+      reviewer: codex_operator_phase2r12_manual_audit
+      reviewed_at_utc: '2026-07-29T14:30:00Z'
+      basis: 人工复核 card:safety.duties-risk-card 的已确认 Fact 依赖、教学标题、编组和 presentation；未以模型输出或旧 Card Golden 替代原始 Evidence。
+  - card_key: safety.accident-report-card
+    title: 事故类别与报告时限
+    primary_fact_keys:
+    - safety.accident-categories
+    - safety.report-deadline
+    presentation: ordered_list
+    split_reason: 事故分类与报告时间均是事故处置的可考核信息。
+    short_card_exception: null
+    review:
+      state: reviewed
+      reviewer: codex_operator_phase2r12_manual_audit
+      reviewed_at_utc: '2026-07-29T14:30:00Z'
+      basis: 人工复核 card:safety.accident-report-card 的已确认 Fact 依赖、教学标题、编组和 presentation；未以模型输出或旧 Card Golden 替代原始 Evidence。
+  - card_key: safety.accident-level-card
+    title: 生产安全事故等级
+    primary_fact_keys:
+    - safety.accident-level-diagram
+    presentation: diagram
+    split_reason: 事故等级阈值的递进关系必须以图示语义呈现。
+    short_card_exception: null
+    review:
+      state: reviewed
+      reviewer: codex_operator_phase2r12_manual_audit
+      reviewed_at_utc: '2026-07-29T14:30:00Z'
+      basis: 人工复核 card:safety.accident-level-card 的已确认 Fact 依赖、教学标题、编组和 presentation；未以模型输出或旧 Card Golden 替代原始 Evidence。
+  diagrams:
+  - review_id: diagram:be3108b2c66810ac5ee8e646
+    figure_evidence_id: ev:4f63c03e1ee994ad80c45fdb
+    review_title: 生产安全事故等级划分阈值
+    required_nodes:
+    - 一般事故
+    - 较大事故
+    - 重大事故
+    - 特别重大事故
+    required_edges:
+    - source_label: 一般事故
+      relation: 严重程度递增
+      target_label: 较大事故
+    - source_label: 重大事故
+      relation: 严重程度递增
+      target_label: 特别重大事故
+    review:
+      state: reviewed
+      reviewer: codex_operator_phase2r12_manual_audit
+      reviewed_at_utc: '2026-07-29T14:30:00Z'
+      basis: 人工复核 diagram:diagram:be3108b2c66810ac5ee8e646 的原始 figure crop、节点和关系边；语义仅记录图上可确认的空间或层级关系，并保留 Evidence anchor。
+  proposal_dispositions: []
+- sample_id: gonglu_62_cost_flow_incident
+  facts:
+  - fact_key: cost.project-budget-formula
+    fact_type: formula
+    title: 项目预算总成本公式
+    title_aliases: []
+    primary_anchors:
+    - text: 项目预算总成本=
+      kind: formula
+    required_terms:
+    - 项目预算总成本=
+    table_structure: null
+    allow_heading_only: false
+    review:
+      state: reviewed
+      reviewer: codex_operator_phase2r12_manual_audit
+      reviewed_at_utc: '2026-07-29T14:30:00Z'
+      basis: 人工复核 fact:cost.project-budget-formula 的原始 V2 Evidence、可用 crop 与现有审计依据；标题、类型、锚点和必要术语均与原文一致。
+  - fact_key: cost.mechanical-rental-formula
+    fact_type: formula
+    title: 机械租赁费公式
+    title_aliases: []
+    primary_anchors:
+    - text: 机械租赁费=
+      kind: formula
+    required_terms:
+    - 机械租赁费=
+    table_structure: null
+    allow_heading_only: false
+    review:
+      state: reviewed
+      reviewer: codex_operator_phase2r12_manual_audit
+      reviewed_at_utc: '2026-07-29T14:30:00Z'
+      basis: 人工复核 fact:cost.mechanical-rental-formula 的原始 V2 Evidence、可用 crop 与现有审计依据；标题、类型、锚点和必要术语均与原文一致。
+  - fact_key: cost.control-enumeration
+    fact_type: enumeration
+    title: 成本控制内容
+    title_aliases: []
+    primary_anchors:
+    - text: ①人工费的控制
+      kind: list_item
+    - text: ⑤现场管理费的控制
+      kind: list_item
+    required_terms:
+    - ①人工费的控制
+    - ⑤现场管理费的控制
+    table_structure: null
+    allow_heading_only: false
+    review:
+      state: reviewed
+      reviewer: codex_operator_phase2r12_manual_audit
+      reviewed_at_utc: '2026-07-29T14:30:00Z'
+      basis: 人工复核 fact:cost.control-enumeration 的原始 V2 Evidence、可用 crop 与现有审计依据；标题、类型、锚点和必要术语均与原文一致。
+  - fact_key: cost.plan-variance-formula
+    fact_type: formula
+    title: 计划成本偏差公式
+    title_aliases: []
+    primary_anchors:
+    - text: 计划成本偏差=施工预算成本-责任目标成本
+      kind: formula
+    required_terms:
+    - 计划成本偏差=施工预算成本-责任目标成本
+    table_structure: null
+    allow_heading_only: false
+    review:
+      state: reviewed
+      reviewer: codex_operator_phase2r12_manual_audit
+      reviewed_at_utc: '2026-07-29T14:30:00Z'
+      basis: 人工复核 fact:cost.plan-variance-formula 的原始 V2 Evidence、可用 crop 与现有审计依据；标题、类型、锚点和必要术语均与原文一致。
+  - fact_key: cost.budget-cost-structure
+    fact_type: diagram_relation
+    title: 标后预算总费用结构
+    title_aliases: []
+    primary_anchors:
+    - text: 项目预算总成本
+      kind: diagram_node
+    required_terms: []
+    table_structure: null
+    allow_heading_only: false
+    review:
+      state: reviewed
+      reviewer: codex_operator_phase2r12_manual_audit
+      reviewed_at_utc: '2026-07-29T14:30:00Z'
+      basis: 人工复核 fact:cost.budget-cost-structure 的原始 V2 Evidence、可用 crop 与现有审计依据；标题、类型、锚点和必要术语均与原文一致。
+  cards:
+  - card_key: cost.formulas-card
+    title: 成本预算与偏差公式
+    primary_fact_keys:
+    - cost.project-budget-formula
+    - cost.mechanical-rental-formula
+    - cost.plan-variance-formula
+    presentation: formula
+    split_reason: 三个公式均属于成本计算，但保留各自的完整符号和变量。
+    short_card_exception: null
+    review:
+      state: reviewed
+      reviewer: codex_operator_phase2r12_manual_audit
+      reviewed_at_utc: '2026-07-29T14:30:00Z'
+      basis: 人工复核 card:cost.formulas-card 的已确认 Fact 依赖、教学标题、编组和 presentation；未以模型输出或旧 Card Golden 替代原始 Evidence。
+  - card_key: cost.control-card
+    title: 成本控制内容
+    primary_fact_keys:
+    - cost.control-enumeration
+    presentation: ordered_list
+    split_reason: 人工费至现场管理费构成完整有序控制项。
+    short_card_exception: null
+    review:
+      state: reviewed
+      reviewer: codex_operator_phase2r12_manual_audit
+      reviewed_at_utc: '2026-07-29T14:30:00Z'
+      basis: 人工复核 card:cost.control-card 的已确认 Fact 依赖、教学标题、编组和 presentation；未以模型输出或旧 Card Golden 替代原始 Evidence。
+  - card_key: cost.structure-card
+    title: 标后预算总费用结构
+    primary_fact_keys:
+    - cost.budget-cost-structure
+    presentation: diagram
+    split_reason: 费用包含关系必须从已审核图示边生成。
+    short_card_exception: null
+    review:
+      state: reviewed
+      reviewer: codex_operator_phase2r12_manual_audit
+      reviewed_at_utc: '2026-07-29T14:30:00Z'
+      basis: 人工复核 card:cost.structure-card 的已确认 Fact 依赖、教学标题、编组和 presentation；未以模型输出或旧 Card Golden 替代原始 Evidence。
+  diagrams:
+  - review_id: diagram:83c9c0d82088d5fa43c365b4
+    figure_evidence_id: ev:4af15b958587bb00fcaac211
+    review_title: 标后预算总费用结构
+    required_nodes:
+    - 标后预算总费用
+    - 上缴企业费用
+    - 项目预算总成本
+    required_edges:
+    - source_label: 标后预算总费用
+      relation: 包含
+      target_label: 上缴企业费用
+    - source_label: 标后预算总费用
+      relation: 包含
+      target_label: 项目预算总成本
+    review:
+      state: reviewed
+      reviewer: codex_operator_phase2r12_manual_audit
+      reviewed_at_utc: '2026-07-29T14:30:00Z'
+      basis: 人工复核 diagram:diagram:83c9c0d82088d5fa43c365b4 的原始 figure crop、节点和关系边；语义仅记录图上可确认的空间或层级关系，并保留 Evidence anchor。
+  proposal_dispositions: []

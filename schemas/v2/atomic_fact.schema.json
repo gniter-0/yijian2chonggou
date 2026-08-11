@@ -1,0 +1,420 @@
+{
+  "$defs": {
+    "BBox": {
+      "additionalProperties": false,
+      "properties": {
+        "x0": {
+          "minimum": 0,
+          "title": "X0",
+          "type": "number"
+        },
+        "y0": {
+          "minimum": 0,
+          "title": "Y0",
+          "type": "number"
+        },
+        "x1": {
+          "exclusiveMinimum": 0,
+          "title": "X1",
+          "type": "number"
+        },
+        "y1": {
+          "exclusiveMinimum": 0,
+          "title": "Y1",
+          "type": "number"
+        }
+      },
+      "required": [
+        "x0",
+        "y0",
+        "x1",
+        "y1"
+      ],
+      "title": "BBox",
+      "type": "object"
+    },
+    "CompletenessMode": {
+      "enum": [
+        "atomic",
+        "all_items",
+        "ordered_steps",
+        "complete_formula",
+        "full_table_row",
+        "full_diagram_subgraph"
+      ],
+      "title": "CompletenessMode",
+      "type": "string"
+    },
+    "ContentQualityFlag": {
+      "enum": [
+        "diagram_missing_structure",
+        "diagram_unreadable_ocr",
+        "known_noise_leak",
+        "embedded_example_leak",
+        "visual_reference_only"
+      ],
+      "title": "ContentQualityFlag",
+      "type": "string"
+    },
+    "DiagramDispositionTrace": {
+      "additionalProperties": false,
+      "properties": {
+        "disposition_id": {
+          "pattern": "^visual:[0-9a-f]{24}$",
+          "title": "Disposition Id",
+          "type": "string"
+        },
+        "disposition": {
+          "minLength": 1,
+          "title": "Disposition",
+          "type": "string"
+        },
+        "source_diagram_review_sidecar_id": {
+          "minLength": 1,
+          "title": "Source Diagram Review Sidecar Id",
+          "type": "string"
+        },
+        "source_diagram_review_sidecar_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Source Diagram Review Sidecar Sha256",
+          "type": "string"
+        },
+        "original_crop_path": {
+          "minLength": 1,
+          "title": "Original Crop Path",
+          "type": "string"
+        },
+        "original_crop_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Original Crop Sha256",
+          "type": "string"
+        },
+        "review_crop_manifest_path": {
+          "minLength": 1,
+          "title": "Review Crop Manifest Path",
+          "type": "string"
+        },
+        "review_crop_manifest_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Review Crop Manifest Sha256",
+          "type": "string"
+        },
+        "review_crop_path": {
+          "minLength": 1,
+          "title": "Review Crop Path",
+          "type": "string"
+        },
+        "review_crop_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Review Crop Sha256",
+          "type": "string"
+        },
+        "review_crop_render_dpi": {
+          "minimum": 300,
+          "title": "Review Crop Render Dpi",
+          "type": "integer"
+        },
+        "review_crop_bbox": {
+          "$ref": "#/$defs/BBox"
+        }
+      },
+      "required": [
+        "disposition_id",
+        "disposition",
+        "source_diagram_review_sidecar_id",
+        "source_diagram_review_sidecar_sha256",
+        "original_crop_path",
+        "original_crop_sha256",
+        "review_crop_manifest_path",
+        "review_crop_manifest_sha256",
+        "review_crop_path",
+        "review_crop_sha256",
+        "review_crop_render_dpi",
+        "review_crop_bbox"
+      ],
+      "title": "DiagramDispositionTrace",
+      "type": "object"
+    },
+    "FactType": {
+      "enum": [
+        "definition",
+        "classification",
+        "enumeration",
+        "procedure",
+        "condition",
+        "threshold",
+        "formula",
+        "comparison",
+        "exception",
+        "composition",
+        "diagram_relation",
+        "visual_reference",
+        "exam_note",
+        "example",
+        "exercise"
+      ],
+      "title": "FactType",
+      "type": "string"
+    },
+    "NumberClaim": {
+      "additionalProperties": false,
+      "properties": {
+        "raw": {
+          "title": "Raw",
+          "type": "string"
+        },
+        "normalized": {
+          "title": "Normalized",
+          "type": "string"
+        },
+        "unit": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Unit"
+        },
+        "comparator": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Comparator"
+        },
+        "evidence_id": {
+          "title": "Evidence Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "raw",
+        "normalized",
+        "evidence_id"
+      ],
+      "title": "NumberClaim",
+      "type": "object"
+    },
+    "PresentationTransform": {
+      "additionalProperties": false,
+      "description": "A source-span-preserving transformation used only in Fact/Card rendering.",
+      "properties": {
+        "evidence_id": {
+          "title": "Evidence Id",
+          "type": "string"
+        },
+        "start": {
+          "minimum": 0,
+          "title": "Start",
+          "type": "integer"
+        },
+        "end": {
+          "exclusiveMinimum": 0,
+          "title": "End",
+          "type": "integer"
+        },
+        "rule_id": {
+          "pattern": "^[a-z0-9][a-z0-9._-]*$",
+          "title": "Rule Id",
+          "type": "string"
+        },
+        "before_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Before Sha256",
+          "type": "string"
+        },
+        "after_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "After Sha256",
+          "type": "string"
+        }
+      },
+      "required": [
+        "evidence_id",
+        "start",
+        "end",
+        "rule_id",
+        "before_sha256",
+        "after_sha256"
+      ],
+      "title": "PresentationTransform",
+      "type": "object"
+    },
+    "Renderability": {
+      "enum": [
+        "publishable",
+        "manual_review"
+      ],
+      "title": "Renderability",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "default": "2.0",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "fact_id": {
+      "pattern": "^fact:[0-9a-f]{24}$",
+      "title": "Fact Id",
+      "type": "string"
+    },
+    "fact_type": {
+      "$ref": "#/$defs/FactType"
+    },
+    "label": {
+      "minLength": 2,
+      "title": "Label",
+      "type": "string"
+    },
+    "assertion": {
+      "minLength": 2,
+      "title": "Assertion",
+      "type": "string"
+    },
+    "completeness_mode": {
+      "$ref": "#/$defs/CompletenessMode",
+      "default": "atomic"
+    },
+    "primary_evidence_ids": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Primary Evidence Ids",
+      "type": "array"
+    },
+    "secondary_evidence_ids": {
+      "default": [],
+      "items": {
+        "type": "string"
+      },
+      "title": "Secondary Evidence Ids",
+      "type": "array"
+    },
+    "conditions": {
+      "default": [],
+      "items": {
+        "type": "string"
+      },
+      "title": "Conditions",
+      "type": "array"
+    },
+    "numbers": {
+      "default": [],
+      "items": {
+        "$ref": "#/$defs/NumberClaim"
+      },
+      "title": "Numbers",
+      "type": "array"
+    },
+    "list_group_id": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "List Group Id"
+    },
+    "ordered_member_ids": {
+      "default": [],
+      "items": {
+        "type": "string"
+      },
+      "title": "Ordered Member Ids",
+      "type": "array"
+    },
+    "must_cover": {
+      "default": false,
+      "title": "Must Cover",
+      "type": "boolean"
+    },
+    "confidence": {
+      "maximum": 1,
+      "minimum": 0,
+      "title": "Confidence",
+      "type": "number"
+    },
+    "renderability": {
+      "$ref": "#/$defs/Renderability",
+      "default": "publishable"
+    },
+    "quality_flags": {
+      "default": [],
+      "items": {
+        "$ref": "#/$defs/ContentQualityFlag"
+      },
+      "title": "Quality Flags",
+      "type": "array"
+    },
+    "presentation_transforms": {
+      "default": [],
+      "items": {
+        "$ref": "#/$defs/PresentationTransform"
+      },
+      "title": "Presentation Transforms",
+      "type": "array"
+    },
+    "diagram_review_id": {
+      "anyOf": [
+        {
+          "pattern": "^diagram:[0-9a-f]{24}$",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Diagram Review Id"
+    },
+    "diagram_disposition_id": {
+      "anyOf": [
+        {
+          "pattern": "^visual:[0-9a-f]{24}$",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Diagram Disposition Id"
+    },
+    "diagram_disposition_trace": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/DiagramDispositionTrace"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    }
+  },
+  "required": [
+    "fact_id",
+    "fact_type",
+    "label",
+    "assertion",
+    "primary_evidence_ids",
+    "confidence"
+  ],
+  "title": "AtomicFact",
+  "type": "object"
+}

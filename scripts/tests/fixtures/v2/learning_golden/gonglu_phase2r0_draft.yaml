@@ -1,0 +1,325 @@
+schema_version: "2.0"
+fixture_id: gonglu_phase2r0_learning_draft
+registry_id: gonglu_phase0_v1
+material_profile_id: yijian_gonglu_2026
+samples:
+  - sample_id: gonglu_01_text_list
+    facts:
+      - fact_key: roadbed.construction-outline
+        fact_type: enumeration
+        title: 路基施工目录
+        primary_anchors:
+          - text: ①路基施工准备
+            kind: list_item
+          - text: ⑧路基施工测量
+            kind: list_item
+        required_terms: [①路基施工准备, ⑧路基施工测量]
+      - fact_key: roadbed.special-types-table
+        fact_type: composition
+        title: 特殊路基类型
+        primary_anchors:
+          - text: 风沙地区路基
+            kind: table_cell
+        required_terms: [风沙地区路基]
+        table_structure:
+          anchor:
+            text: 风沙地区路基
+          min_rows: 3
+          min_columns: 2
+          required_cell_texts: [风沙地区路基]
+      - fact_key: roadbed.fill-cross-section
+        fact_type: diagram_relation
+        title: 填方路基横断面
+        primary_anchors:
+          - text: 路堤（填方）
+            kind: diagram_node
+    cards:
+      - card_key: roadbed.construction-outline-card
+        title: 路基施工目录
+        primary_fact_keys: [roadbed.construction-outline]
+        presentation: ordered_list
+        split_reason: 施工准备至施工测量构成同一有序目录。
+      - card_key: roadbed.special-types-card
+        title: 特殊路基类型
+        primary_fact_keys: [roadbed.special-types-table]
+        presentation: table
+        split_reason: 必须保留二维表的行列和原始单元格关系。
+      - card_key: roadbed.fill-cross-section-card
+        title: 填方路基横断面
+        primary_fact_keys: [roadbed.fill-cross-section]
+        presentation: diagram
+        split_reason: 横断面空间关系应单独呈现并绑定图示审核结果。
+    diagrams:
+      - review_id: diagram:1e2f8c831d4edb33e43dfd80
+        figure_evidence_id: ev:3a3de856bb37558c7b007d0e
+        review_title: 填方路基横断面
+        required_nodes: [路面, 填方路基, 边坡, 排水沟]
+        required_edges:
+          - source_label: 路面
+            relation: 位于顶部
+            target_label: 填方路基
+          - source_label: 排水沟
+            relation: 位于坡脚外侧
+            target_label: 边坡
+
+  - sample_id: gonglu_24_table_formula
+    facts:
+      - fact_key: formwork.load-combination-table
+        fact_type: composition
+        title: 模板支架荷载组合
+        primary_anchors:
+          - text: ①+②+⑦+⑧
+            kind: list_item
+        required_terms: [①+②+⑦+⑧]
+        table_structure:
+          anchor:
+            text: 模板、支架和拱架设计计算的荷载组合
+          min_rows: 6
+          min_columns: 3
+          required_cell_texts: [①+②+⑦+⑧]
+      - fact_key: formwork.anti-overturning
+        fact_type: condition
+        title: 模板防倾覆要求
+        primary_anchors:
+          - text: 必须设置防倾覆的临时固定设施
+            kind: list_item
+        required_terms: [必须设置防倾覆的临时固定设施]
+      - fact_key: formwork.climb-speed
+        fact_type: threshold
+        title: 模板滑升速度
+        primary_anchors:
+          - text: 250mm/h
+            kind: formula
+        required_terms: [250mm/h]
+      - fact_key: formwork.preload
+        fact_type: threshold
+        title: 支架预压荷载
+        primary_anchors:
+          - text: 1.05～1.1倍
+            kind: list_item
+        required_terms: [1.05～1.1倍]
+      - fact_key: formwork.arch-removal
+        fact_type: condition
+        title: 拱架卸落条件
+        primary_anchors:
+          - text: 85%后方可卸落
+            kind: list_item
+        required_terms: [85%后方可卸落]
+    cards:
+      - card_key: formwork.load-combination-card
+        title: 模板支架荷载组合
+        primary_fact_keys: [formwork.load-combination-table]
+        presentation: table
+        split_reason: 荷载组合需要整表保留，不能被扁平化为段落。
+      - card_key: formwork.installation-constraints-card
+        title: 模板安装与预压约束
+        primary_fact_keys: [formwork.anti-overturning, formwork.climb-speed, formwork.preload, formwork.arch-removal]
+        presentation: constraint
+        split_reason: 防倾覆、速度、预压和卸落条件属于同一施工控制组。
+    diagrams:
+      - review_id: diagram:e465c1249176989867fe4da0
+        figure_evidence_id: ev:ef46c363269d2e99c929b38c
+        review_title: 模板支架荷载布置示意
+        required_nodes: [顶部荷载, 支架立杆, 斜撑]
+        required_edges:
+          - source_label: 顶部荷载
+            relation: 由其承受
+            target_label: 支架立杆
+          - source_label: 斜撑
+            relation: 用于稳定
+            target_label: 支架立杆
+
+  - sample_id: gonglu_41_diagram_mixed
+    facts:
+      - fact_key: tunnel.rock-classification-table
+        fact_type: composition
+        title: 围岩分级表
+        primary_anchors:
+          - text: 软岩，岩体较破碎
+            kind: table_cell
+        required_terms: [软岩，岩体较破碎]
+        table_structure:
+          anchor:
+            text: 软岩，岩体较破碎
+          min_rows: 7
+          min_columns: 3
+          required_cell_texts: [软岩，岩体较破碎]
+      - fact_key: tunnel.span-classification
+        fact_type: classification
+        title: 隧道跨度分类
+        primary_anchors:
+          - text: 14≤B<18
+        required_terms: [14≤B<18]
+      - fact_key: tunnel.portal-foundation-depth
+        fact_type: threshold
+        title: 洞门基础深度约束
+        primary_anchors:
+          - text: 0.25m
+            kind: formula
+        required_terms: [0.25m]
+      - fact_key: tunnel.composite-lining-section
+        fact_type: diagram_relation
+        title: 复合式衬砌横断面
+        primary_anchors:
+          - text: 初期支护
+            kind: diagram_node
+    cards:
+      - card_key: tunnel.classification-card
+        title: 围岩与隧道跨度分类
+        primary_fact_keys: [tunnel.rock-classification-table, tunnel.span-classification]
+        presentation: table
+        split_reason: 围岩表与跨度区间共同服务于隧道分类判断。
+      - card_key: tunnel.portal-depth-card
+        title: 洞门基础深度约束
+        primary_fact_keys: [tunnel.portal-foundation-depth]
+        presentation: threshold
+        split_reason: 深度数值和约束词必须与其他分类信息分开记忆。
+      - card_key: tunnel.composite-lining-card
+        title: 复合式衬砌横断面
+        primary_fact_keys: [tunnel.composite-lining-section]
+        presentation: diagram
+        split_reason: 衬砌层次关系必须保留图示节点与边。
+    diagrams:
+      - review_id: diagram:4f94e9436f680395aff43e61
+        figure_evidence_id: ev:a2104e17b0e3b9748fdb89f4
+        review_title: 隧道复合式衬砌横断面
+        required_nodes: [围岩, 初期支护, 防水层, 二次衬砌]
+        required_edges:
+          - source_label: 初期支护
+            relation: 紧贴围岩
+            target_label: 围岩
+          - source_label: 二次衬砌
+            relation: 位于内侧
+            target_label: 防水层
+
+  - sample_id: gonglu_55_standard_constraints
+    facts:
+      - fact_key: safety.production-duties
+        fact_type: enumeration
+        title: 安全生产职责
+        primary_anchors:
+          - text: 不得作为竞争性
+            kind: list_item
+        required_terms: [不得作为竞争性]
+      - fact_key: safety.risk-threshold
+        fact_type: threshold
+        title: 风险评估阈值
+        primary_anchors:
+          - text: 长度3000m及以上
+            kind: list_item
+        required_terms: [长度3000m及以上]
+      - fact_key: safety.accident-categories
+        fact_type: enumeration
+        title: 事故类别
+        primary_anchors:
+          - text: ①物体打击
+            kind: list_item
+        required_terms: [①物体打击]
+      - fact_key: safety.report-deadline
+        fact_type: threshold
+        title: 质量事故报告时限
+        primary_anchors:
+          - text: 接报2小时内
+            kind: list_item
+        required_terms: [接报2小时内]
+      - fact_key: safety.accident-level-diagram
+        fact_type: diagram_relation
+        title: 生产安全事故等级
+        primary_anchors:
+          - text: 特别重大
+            kind: diagram_node
+    cards:
+      - card_key: safety.duties-risk-card
+        title: 安全职责与风险评估
+        primary_fact_keys: [safety.production-duties, safety.risk-threshold]
+        presentation: constraint
+        split_reason: 标准职责及适用阈值适合在同一规范约束组中呈现。
+      - card_key: safety.accident-report-card
+        title: 事故类别与报告时限
+        primary_fact_keys: [safety.accident-categories, safety.report-deadline]
+        presentation: ordered_list
+        split_reason: 事故分类与报告时间均是事故处置的可考核信息。
+      - card_key: safety.accident-level-card
+        title: 生产安全事故等级
+        primary_fact_keys: [safety.accident-level-diagram]
+        presentation: diagram
+        split_reason: 事故等级阈值的递进关系必须以图示语义呈现。
+    diagrams:
+      - review_id: diagram:be3108b2c66810ac5ee8e646
+        figure_evidence_id: ev:4f63c03e1ee994ad80c45fdb
+        review_title: 生产安全事故等级划分阈值
+        required_nodes: [一般事故, 较大事故, 重大事故, 特别重大事故]
+        required_edges:
+          - source_label: 一般事故
+            relation: 严重程度递增
+            target_label: 较大事故
+          - source_label: 重大事故
+            relation: 严重程度递增
+            target_label: 特别重大事故
+
+  - sample_id: gonglu_62_cost_flow_incident
+    facts:
+      - fact_key: cost.project-budget-formula
+        fact_type: formula
+        title: 项目预算总成本公式
+        primary_anchors:
+          - text: 项目预算总成本=
+            kind: formula
+        required_terms: [项目预算总成本=]
+      - fact_key: cost.mechanical-rental-formula
+        fact_type: formula
+        title: 机械租赁费公式
+        primary_anchors:
+          - text: 机械租赁费=
+            kind: formula
+        required_terms: [机械租赁费=]
+      - fact_key: cost.control-enumeration
+        fact_type: enumeration
+        title: 成本控制内容
+        primary_anchors:
+          - text: ①人工费的控制
+            kind: list_item
+          - text: ⑤现场管理费的控制
+            kind: list_item
+        required_terms: [①人工费的控制, ⑤现场管理费的控制]
+      - fact_key: cost.plan-variance-formula
+        fact_type: formula
+        title: 计划成本偏差公式
+        primary_anchors:
+          - text: 计划成本偏差=施工预算成本-责任目标成本
+            kind: formula
+        required_terms: [计划成本偏差=施工预算成本-责任目标成本]
+      - fact_key: cost.budget-cost-structure
+        fact_type: diagram_relation
+        title: 标后预算总费用结构
+        primary_anchors:
+          - text: 项目预算总成本
+            kind: diagram_node
+    cards:
+      - card_key: cost.formulas-card
+        title: 成本预算与偏差公式
+        primary_fact_keys: [cost.project-budget-formula, cost.mechanical-rental-formula, cost.plan-variance-formula]
+        presentation: formula
+        split_reason: 三个公式均属于成本计算，但保留各自的完整符号和变量。
+      - card_key: cost.control-card
+        title: 成本控制内容
+        primary_fact_keys: [cost.control-enumeration]
+        presentation: ordered_list
+        split_reason: 人工费至现场管理费构成完整有序控制项。
+      - card_key: cost.structure-card
+        title: 标后预算总费用结构
+        primary_fact_keys: [cost.budget-cost-structure]
+        presentation: diagram
+        split_reason: 费用包含关系必须从已审核图示边生成。
+    diagrams:
+      - review_id: diagram:83c9c0d82088d5fa43c365b4
+        figure_evidence_id: ev:4af15b958587bb00fcaac211
+        review_title: 标后预算总费用结构
+        required_nodes: [标后预算总费用, 上缴企业费用, 项目预算总成本]
+        required_edges:
+          - source_label: 标后预算总费用
+            relation: 包含
+            target_label: 上缴企业费用
+          - source_label: 标后预算总费用
+            relation: 包含
+            target_label: 项目预算总成本

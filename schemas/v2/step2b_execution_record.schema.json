@@ -1,0 +1,2389 @@
+{
+  "$defs": {
+    "CardGranularityResult": {
+      "additionalProperties": false,
+      "properties": {
+        "status": {
+          "$ref": "#/$defs/QualityStatus"
+        },
+        "content_length": {
+          "minimum": 0,
+          "title": "Content Length",
+          "type": "integer"
+        },
+        "reason": {
+          "title": "Reason",
+          "type": "string"
+        }
+      },
+      "required": [
+        "status",
+        "content_length",
+        "reason"
+      ],
+      "title": "CardGranularityResult",
+      "type": "object"
+    },
+    "CardPresentation": {
+      "enum": [
+        "text",
+        "ordered_list",
+        "table",
+        "diagram",
+        "formula",
+        "constraint",
+        "threshold",
+        "visual_reference"
+      ],
+      "title": "CardPresentation",
+      "type": "string"
+    },
+    "CompleteTableStructuralProjection": {
+      "additionalProperties": false,
+      "description": "Auditable, source-owned table structure for one complete composition Fact.",
+      "properties": {
+        "projection_id": {
+          "pattern": "^complete-table-structural-projection:[0-9a-f]{24}$",
+          "title": "Projection Id",
+          "type": "string"
+        },
+        "proposal_key": {
+          "pattern": "^proposal:[a-z0-9][a-z0-9._-]*$",
+          "title": "Proposal Key",
+          "type": "string"
+        },
+        "table_evidence_id": {
+          "title": "Table Evidence Id",
+          "type": "string"
+        },
+        "grid_metadata": {
+          "$ref": "#/$defs/TableGridMetadataReference"
+        },
+        "cell_occurrences": {
+          "items": {
+            "$ref": "#/$defs/TableStructuralCellOccurrence"
+          },
+          "title": "Cell Occurrences",
+          "type": "array"
+        },
+        "header_cell_occurrence_ids": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Header Cell Occurrence Ids",
+          "type": "array"
+        },
+        "list_index_occurrences": {
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/TableStructuralIndexOccurrenceReference"
+          },
+          "title": "List Index Occurrences",
+          "type": "array"
+        }
+      },
+      "required": [
+        "projection_id",
+        "proposal_key",
+        "table_evidence_id",
+        "grid_metadata",
+        "cell_occurrences",
+        "header_cell_occurrence_ids"
+      ],
+      "title": "CompleteTableStructuralProjection",
+      "type": "object"
+    },
+    "CompleteTableStructuralProjectionState": {
+      "enum": [
+        "derived_source_owned_complete_table_structure"
+      ],
+      "title": "CompleteTableStructuralProjectionState",
+      "type": "string"
+    },
+    "CompletenessMode": {
+      "enum": [
+        "atomic",
+        "all_items",
+        "ordered_steps",
+        "complete_formula",
+        "full_table_row",
+        "full_diagram_subgraph"
+      ],
+      "title": "CompletenessMode",
+      "type": "string"
+    },
+    "ConditionClaimDerivationState": {
+      "description": "Fail-closed states for local assertion/Evidence condition matching.",
+      "enum": [
+        "derived",
+        "isolated_operator",
+        "assertion_without_evidence",
+        "evidence_without_assertion",
+        "ambiguous_evidence",
+        "multiple_candidate_spans"
+      ],
+      "title": "ConditionClaimDerivationState",
+      "type": "string"
+    },
+    "ConditionOperator": {
+      "enum": [
+        "不得",
+        "必须",
+        "不应",
+        "不小于",
+        "不大于",
+        "方可",
+        "及以上",
+        "以下",
+        "以内",
+        "不超过",
+        "至少",
+        "≤",
+        "≥",
+        "<",
+        ">"
+      ],
+      "title": "ConditionOperator",
+      "type": "string"
+    },
+    "ConditionSpanReference": {
+      "additionalProperties": false,
+      "description": "Offset and hash only; rejected model text is never persisted verbatim.",
+      "properties": {
+        "start": {
+          "minimum": 0,
+          "title": "Start",
+          "type": "integer"
+        },
+        "end": {
+          "exclusiveMinimum": 0,
+          "title": "End",
+          "type": "integer"
+        },
+        "sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Sha256",
+          "type": "string"
+        }
+      },
+      "required": [
+        "start",
+        "end",
+        "sha256"
+      ],
+      "title": "ConditionSpanReference",
+      "type": "object"
+    },
+    "ContinuationAllItemsAuditState": {
+      "enum": [
+        "closed",
+        "manual_review",
+        "adjacent_section_missing",
+        "source_anchor_missing",
+        "closure_anchor_missing"
+      ],
+      "title": "ContinuationAllItemsAuditState",
+      "type": "string"
+    },
+    "ContinuationTitleProjectionProvenance": {
+      "additionalProperties": false,
+      "description": "Immutable Phase 2R continuation-title audit carried into Step 2B.",
+      "properties": {
+        "projection_id": {
+          "pattern": "^continuation-title-projection:[0-9a-f]{24}$",
+          "title": "Projection Id",
+          "type": "string"
+        },
+        "projection_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Projection Sha256",
+          "type": "string"
+        },
+        "fixture_id": {
+          "minLength": 1,
+          "title": "Fixture Id",
+          "type": "string"
+        },
+        "fixture_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Fixture Sha256",
+          "type": "string"
+        },
+        "fact_key": {
+          "pattern": "^[a-z0-9][a-z0-9._-]*$",
+          "title": "Fact Key",
+          "type": "string"
+        },
+        "source_request_id": {
+          "pattern": "^step2a-request:[0-9a-f]{64}$",
+          "title": "Source Request Id",
+          "type": "string"
+        },
+        "source_request_version": {
+          "minLength": 1,
+          "title": "Source Request Version",
+          "type": "string"
+        },
+        "source_response_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Source Response Sha256",
+          "type": "string"
+        },
+        "source_proposal_key": {
+          "pattern": "^proposal:[a-z0-9][a-z0-9._-]*$",
+          "title": "Source Proposal Key",
+          "type": "string"
+        },
+        "model_label": {
+          "maxLength": 64,
+          "minLength": 2,
+          "title": "Model Label",
+          "type": "string"
+        },
+        "model_label_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Model Label Sha256",
+          "type": "string"
+        },
+        "canonical_title": {
+          "maxLength": 64,
+          "minLength": 2,
+          "title": "Canonical Title",
+          "type": "string"
+        }
+      },
+      "required": [
+        "projection_id",
+        "projection_sha256",
+        "fixture_id",
+        "fixture_sha256",
+        "fact_key",
+        "source_request_id",
+        "source_request_version",
+        "source_response_sha256",
+        "source_proposal_key",
+        "model_label",
+        "model_label_sha256",
+        "canonical_title"
+      ],
+      "title": "ContinuationTitleProjectionProvenance",
+      "type": "object"
+    },
+    "ContractValidationReport": {
+      "additionalProperties": false,
+      "properties": {
+        "stage": {
+          "$ref": "#/$defs/Step2Stage"
+        },
+        "valid": {
+          "title": "Valid",
+          "type": "boolean"
+        },
+        "errors": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "title": "Errors",
+          "type": "array"
+        },
+        "numeric_token_audit": {
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/ProposalNumericTokenAudit"
+          },
+          "title": "Numeric Token Audit",
+          "type": "array"
+        },
+        "numeric_claim_derivation_audit": {
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/Step2ANumericClaimAudit"
+          },
+          "title": "Numeric Claim Derivation Audit",
+          "type": "array"
+        },
+        "table_numeric_occurrence_audit": {
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/Step2ATableNumericOccurrenceAudit"
+          },
+          "title": "Table Numeric Occurrence Audit",
+          "type": "array"
+        },
+        "table_structural_index_occurrence_audit": {
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/Step2ATableStructuralIndexOccurrenceAudit"
+          },
+          "title": "Table Structural Index Occurrence Audit",
+          "type": "array"
+        },
+        "table_structural_projection_audit": {
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/Step2ACompleteTableStructuralProjectionAudit"
+          },
+          "title": "Table Structural Projection Audit",
+          "type": "array"
+        },
+        "condition_claim_audit": {
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/Step2AConditionClaimAudit"
+          },
+          "title": "Condition Claim Audit",
+          "type": "array"
+        },
+        "table_semantic_coverage_audit": {
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/Step2ATableSemanticCoverageAudit"
+          },
+          "title": "Table Semantic Coverage Audit",
+          "type": "array"
+        },
+        "table_atomic_subfact_audit": {
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/Step2ATableAtomicSubfactAudit"
+          },
+          "title": "Table Atomic Subfact Audit",
+          "type": "array"
+        },
+        "coverage_obligation_audit": {
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/Step2ACoverageObligationAudit"
+          },
+          "title": "Coverage Obligation Audit",
+          "type": "array"
+        },
+        "continuation_audit": {
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/Step2AContinuationAudit"
+          },
+          "title": "Continuation Audit",
+          "type": "array"
+        }
+      },
+      "required": [
+        "stage",
+        "valid"
+      ],
+      "title": "ContractValidationReport",
+      "type": "object"
+    },
+    "CoverageObligationCoverageState": {
+      "enum": [
+        "complete",
+        "missing",
+        "incomplete_anchors",
+        "semantic_mismatch",
+        "ambiguous"
+      ],
+      "title": "CoverageObligationCoverageState",
+      "type": "string"
+    },
+    "FactSummaryInput": {
+      "additionalProperties": false,
+      "properties": {
+        "fact_id": {
+          "pattern": "^fact:[0-9a-f]{24}$",
+          "title": "Fact Id",
+          "type": "string"
+        },
+        "fact_type": {
+          "$ref": "#/$defs/FactType"
+        },
+        "label": {
+          "maxLength": 64,
+          "minLength": 2,
+          "title": "Label",
+          "type": "string"
+        },
+        "assertion_summary": {
+          "maxLength": 500,
+          "minLength": 2,
+          "title": "Assertion Summary",
+          "type": "string"
+        },
+        "completeness_mode": {
+          "$ref": "#/$defs/CompletenessMode"
+        },
+        "must_cover": {
+          "title": "Must Cover",
+          "type": "boolean"
+        },
+        "selected_table_evidence_ids": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "title": "Selected Table Evidence Ids",
+          "type": "array"
+        },
+        "complete_table_evidence_ids": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "title": "Complete Table Evidence Ids",
+          "type": "array"
+        },
+        "reviewed_title_projection": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ReviewedCanonicalTitleProjection"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "source_proposal_key": {
+          "anyOf": [
+            {
+              "pattern": "^proposal:[a-z0-9][a-z0-9._-]*$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Source Proposal Key"
+        }
+      },
+      "required": [
+        "fact_id",
+        "fact_type",
+        "label",
+        "assertion_summary",
+        "completeness_mode",
+        "must_cover"
+      ],
+      "title": "FactSummaryInput",
+      "type": "object"
+    },
+    "FactType": {
+      "enum": [
+        "definition",
+        "classification",
+        "enumeration",
+        "procedure",
+        "condition",
+        "threshold",
+        "formula",
+        "comparison",
+        "exception",
+        "composition",
+        "diagram_relation",
+        "visual_reference",
+        "exam_note",
+        "example",
+        "exercise"
+      ],
+      "title": "FactType",
+      "type": "string"
+    },
+    "GroundedConditionClaim": {
+      "additionalProperties": false,
+      "properties": {
+        "value": {
+          "description": "Complete condition span present in both the Fact assertion and selected source Evidence; never an isolated operator.",
+          "examples": [
+            "不得采用废机油",
+            "吊环的拉应力应不大于65MPa"
+          ],
+          "minLength": 2,
+          "title": "Value",
+          "type": "string"
+        },
+        "evidence_id": {
+          "title": "Evidence Id",
+          "type": "string"
+        },
+        "anchor_span_id": {
+          "pattern": "^span:[0-9a-f]{24}$",
+          "title": "Anchor Span Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "value",
+        "evidence_id",
+        "anchor_span_id"
+      ],
+      "title": "GroundedConditionClaim",
+      "type": "object"
+    },
+    "GroundedNumericClaim": {
+      "additionalProperties": false,
+      "description": "Canonical numeric claim with the locally-derived immutable parent Evidence.",
+      "properties": {
+        "value": {
+          "description": "Exact quantitative value present in the Fact assertion and the selected anchor span.",
+          "examples": [
+            "65MPa"
+          ],
+          "minLength": 1,
+          "title": "Value",
+          "type": "string"
+        },
+        "anchor_span_id": {
+          "pattern": "^span:[0-9a-f]{24}$",
+          "title": "Anchor Span Id",
+          "type": "string"
+        },
+        "evidence_id": {
+          "title": "Evidence Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "value",
+        "anchor_span_id",
+        "evidence_id"
+      ],
+      "title": "GroundedNumericClaim",
+      "type": "object"
+    },
+    "HeadingOnlyFactResult": {
+      "additionalProperties": false,
+      "properties": {
+        "proposal_key": {
+          "title": "Proposal Key",
+          "type": "string"
+        },
+        "status": {
+          "$ref": "#/$defs/QualityStatus"
+        },
+        "selected_anchor_span_ids": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Selected Anchor Span Ids",
+          "type": "array"
+        },
+        "reason": {
+          "title": "Reason",
+          "type": "string"
+        }
+      },
+      "required": [
+        "proposal_key",
+        "status",
+        "selected_anchor_span_ids",
+        "reason"
+      ],
+      "title": "HeadingOnlyFactResult",
+      "type": "object"
+    },
+    "NumericClaimDerivationState": {
+      "description": "Fail-closed states for V16 local numeric assertion/Evidence matching.",
+      "enum": [
+        "derived",
+        "assertion_without_evidence",
+        "evidence_without_assertion",
+        "ambiguous_evidence",
+        "multiple_candidate_spans"
+      ],
+      "title": "NumericClaimDerivationState",
+      "type": "string"
+    },
+    "NumericSpanReference": {
+      "additionalProperties": false,
+      "description": "Offset and hash for one complete quantitative expression.",
+      "properties": {
+        "start": {
+          "minimum": 0,
+          "title": "Start",
+          "type": "integer"
+        },
+        "end": {
+          "exclusiveMinimum": 0,
+          "title": "End",
+          "type": "integer"
+        },
+        "sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Sha256",
+          "type": "string"
+        }
+      },
+      "required": [
+        "start",
+        "end",
+        "sha256"
+      ],
+      "title": "NumericSpanReference",
+      "type": "object"
+    },
+    "NumericTokenClass": {
+      "enum": [
+        "quantitative_value",
+        "section_number",
+        "list_index",
+        "material_grade",
+        "identifier"
+      ],
+      "title": "NumericTokenClass",
+      "type": "string"
+    },
+    "NumericTokenClassificationRecord": {
+      "additionalProperties": false,
+      "properties": {
+        "value": {
+          "minLength": 1,
+          "title": "Value",
+          "type": "string"
+        },
+        "classification": {
+          "$ref": "#/$defs/NumericTokenClass"
+        },
+        "start": {
+          "minimum": 0,
+          "title": "Start",
+          "type": "integer"
+        },
+        "end": {
+          "exclusiveMinimum": 0,
+          "title": "End",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "value",
+        "classification",
+        "start",
+        "end"
+      ],
+      "title": "NumericTokenClassificationRecord",
+      "type": "object"
+    },
+    "ProposalNumericTokenAudit": {
+      "additionalProperties": false,
+      "properties": {
+        "proposal_key": {
+          "pattern": "^proposal:[a-z0-9][a-z0-9._-]*$",
+          "title": "Proposal Key",
+          "type": "string"
+        },
+        "tokens": {
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/NumericTokenClassificationRecord"
+          },
+          "title": "Tokens",
+          "type": "array"
+        }
+      },
+      "required": [
+        "proposal_key"
+      ],
+      "title": "ProposalNumericTokenAudit",
+      "type": "object"
+    },
+    "QualityStatus": {
+      "enum": [
+        "pass",
+        "manual_review",
+        "fail"
+      ],
+      "title": "QualityStatus",
+      "type": "string"
+    },
+    "ReviewedCanonicalTitleProjection": {
+      "additionalProperties": false,
+      "description": "Reviewed title authority carried into the otherwise model-free Step 2B input.",
+      "properties": {
+        "fixture_id": {
+          "minLength": 1,
+          "title": "Fixture Id",
+          "type": "string"
+        },
+        "fact_key": {
+          "pattern": "^[a-z0-9][a-z0-9._-]*$",
+          "title": "Fact Key",
+          "type": "string"
+        },
+        "canonical_title": {
+          "maxLength": 64,
+          "minLength": 2,
+          "title": "Canonical Title",
+          "type": "string"
+        },
+        "source_label": {
+          "maxLength": 64,
+          "minLength": 2,
+          "title": "Source Label",
+          "type": "string"
+        },
+        "source_label_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Source Label Sha256",
+          "type": "string"
+        },
+        "continuation_title_projection": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ContinuationTitleProjectionProvenance"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        }
+      },
+      "required": [
+        "fixture_id",
+        "fact_key",
+        "canonical_title",
+        "source_label",
+        "source_label_sha256"
+      ],
+      "title": "ReviewedCanonicalTitleProjection",
+      "type": "object"
+    },
+    "SemanticReviewState": {
+      "enum": [
+        "draft"
+      ],
+      "title": "SemanticReviewState",
+      "type": "string"
+    },
+    "ShortCardException": {
+      "description": "Explicitly reviewed reasons why a compact learning card is acceptable.",
+      "enum": [
+        "atomic_formula",
+        "diagram_summary",
+        "compact_enumeration",
+        "identifier_only"
+      ],
+      "title": "ShortCardException",
+      "type": "string"
+    },
+    "Step2ACompleteTableStructuralProjectionAudit": {
+      "additionalProperties": false,
+      "description": "Local V23 table structure projection, independent of model assertion wording.",
+      "properties": {
+        "proposal_key": {
+          "pattern": "^proposal:[a-z0-9][a-z0-9._-]*$",
+          "title": "Proposal Key",
+          "type": "string"
+        },
+        "state": {
+          "$ref": "#/$defs/CompleteTableStructuralProjectionState"
+        },
+        "projections": {
+          "items": {
+            "$ref": "#/$defs/CompleteTableStructuralProjection"
+          },
+          "title": "Projections",
+          "type": "array"
+        },
+        "basis": {
+          "maxLength": 500,
+          "minLength": 1,
+          "title": "Basis",
+          "type": "string"
+        }
+      },
+      "required": [
+        "proposal_key",
+        "state",
+        "projections",
+        "basis"
+      ],
+      "title": "Step2ACompleteTableStructuralProjectionAudit",
+      "type": "object"
+    },
+    "Step2AConditionClaimAudit": {
+      "additionalProperties": false,
+      "description": "Audit one local condition derivation attempt without retaining rejected text.",
+      "properties": {
+        "proposal_key": {
+          "pattern": "^proposal:[a-z0-9][a-z0-9._-]*$",
+          "title": "Proposal Key",
+          "type": "string"
+        },
+        "operator": {
+          "$ref": "#/$defs/ConditionOperator"
+        },
+        "state": {
+          "$ref": "#/$defs/ConditionClaimDerivationState"
+        },
+        "assertion_span": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ConditionSpanReference"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "evidence_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Evidence Id"
+        },
+        "anchor_span_id": {
+          "anyOf": [
+            {
+              "pattern": "^span:[0-9a-f]{24}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Anchor Span Id"
+        },
+        "source_span": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ConditionSpanReference"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "derived_claim": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/GroundedConditionClaim"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "candidate_evidence_ids": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "title": "Candidate Evidence Ids",
+          "type": "array"
+        },
+        "candidate_anchor_span_ids": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "title": "Candidate Anchor Span Ids",
+          "type": "array"
+        },
+        "candidate_span_sha256s": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "title": "Candidate Span Sha256S",
+          "type": "array"
+        },
+        "basis": {
+          "maxLength": 500,
+          "minLength": 1,
+          "title": "Basis",
+          "type": "string"
+        }
+      },
+      "required": [
+        "proposal_key",
+        "operator",
+        "state",
+        "basis"
+      ],
+      "title": "Step2AConditionClaimAudit",
+      "type": "object"
+    },
+    "Step2AContinuationAudit": {
+      "additionalProperties": false,
+      "description": "Explain why one all-items Fact may or may not cross a page boundary.",
+      "properties": {
+        "proposal_key": {
+          "pattern": "^proposal:[a-z0-9][a-z0-9._-]*$",
+          "title": "Proposal Key",
+          "type": "string"
+        },
+        "continuation_id": {
+          "pattern": "^continuation:[0-9a-f]{24}$",
+          "title": "Continuation Id",
+          "type": "string"
+        },
+        "state": {
+          "$ref": "#/$defs/ContinuationAllItemsAuditState"
+        },
+        "binding_id": {
+          "anyOf": [
+            {
+              "pattern": "^continuation-binding:[0-9a-f]{24}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Binding Id"
+        },
+        "source_page_num": {
+          "minimum": 1,
+          "title": "Source Page Num",
+          "type": "integer"
+        },
+        "adjacent_page_num": {
+          "minimum": 1,
+          "title": "Adjacent Page Num",
+          "type": "integer"
+        },
+        "basis": {
+          "maxLength": 500,
+          "minLength": 1,
+          "title": "Basis",
+          "type": "string"
+        }
+      },
+      "required": [
+        "proposal_key",
+        "continuation_id",
+        "state",
+        "source_page_num",
+        "adjacent_page_num",
+        "basis"
+      ],
+      "title": "Step2AContinuationAudit",
+      "type": "object"
+    },
+    "Step2ACoverageObligationAudit": {
+      "additionalProperties": false,
+      "description": "Local proof that one V18 request obligation has an eligible Fact owner.",
+      "properties": {
+        "obligation_id": {
+          "pattern": "^coverage-obligation:[0-9a-f]{24}$",
+          "title": "Obligation Id",
+          "type": "string"
+        },
+        "kind": {
+          "$ref": "#/$defs/Step2ACoverageObligationKind"
+        },
+        "state": {
+          "$ref": "#/$defs/CoverageObligationCoverageState"
+        },
+        "expected_fact_type": {
+          "$ref": "#/$defs/FactType"
+        },
+        "required_primary_anchor_span_ids": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Required Primary Anchor Span Ids",
+          "type": "array"
+        },
+        "candidate_proposal_keys": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "title": "Candidate Proposal Keys",
+          "type": "array"
+        },
+        "basis": {
+          "maxLength": 600,
+          "minLength": 1,
+          "title": "Basis",
+          "type": "string"
+        }
+      },
+      "required": [
+        "obligation_id",
+        "kind",
+        "state",
+        "expected_fact_type",
+        "required_primary_anchor_span_ids",
+        "basis"
+      ],
+      "title": "Step2ACoverageObligationAudit",
+      "type": "object"
+    },
+    "Step2ACoverageObligationKind": {
+      "enum": [
+        "complete_table_composition",
+        "atomic_table_rule",
+        "closed_continuation"
+      ],
+      "title": "Step2ACoverageObligationKind",
+      "type": "string"
+    },
+    "Step2AFailure": {
+      "additionalProperties": false,
+      "properties": {
+        "state": {
+          "$ref": "#/$defs/Step2FailureState"
+        },
+        "message": {
+          "minLength": 1,
+          "title": "Message",
+          "type": "string"
+        },
+        "retryable": {
+          "default": false,
+          "title": "Retryable",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "state",
+        "message"
+      ],
+      "title": "Step2AFailure",
+      "type": "object"
+    },
+    "Step2ANumericClaimAudit": {
+      "additionalProperties": false,
+      "description": "Audit one V16 deterministic numeric claim derivation attempt.",
+      "properties": {
+        "proposal_key": {
+          "pattern": "^proposal:[a-z0-9][a-z0-9._-]*$",
+          "title": "Proposal Key",
+          "type": "string"
+        },
+        "classification": {
+          "$ref": "#/$defs/NumericTokenClass"
+        },
+        "state": {
+          "$ref": "#/$defs/NumericClaimDerivationState"
+        },
+        "assertion_span": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/NumericSpanReference"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "evidence_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Evidence Id"
+        },
+        "anchor_span_id": {
+          "anyOf": [
+            {
+              "pattern": "^span:[0-9a-f]{24}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Anchor Span Id"
+        },
+        "source_span": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/NumericSpanReference"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "derived_claim": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/GroundedNumericClaim"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "candidate_evidence_ids": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "title": "Candidate Evidence Ids",
+          "type": "array"
+        },
+        "candidate_anchor_span_ids": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "title": "Candidate Anchor Span Ids",
+          "type": "array"
+        },
+        "candidate_span_sha256s": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "title": "Candidate Span Sha256S",
+          "type": "array"
+        },
+        "basis": {
+          "maxLength": 500,
+          "minLength": 1,
+          "title": "Basis",
+          "type": "string"
+        }
+      },
+      "required": [
+        "proposal_key",
+        "classification",
+        "state",
+        "basis"
+      ],
+      "title": "Step2ANumericClaimAudit",
+      "type": "object"
+    },
+    "Step2ATableAtomicSubfactAudit": {
+      "additionalProperties": false,
+      "description": "Proof that a rule in a complete table also has one atomic Fact owner.",
+      "properties": {
+        "requirement_id": {
+          "pattern": "^table-subfact:[0-9a-f]{24}$",
+          "title": "Requirement Id",
+          "type": "string"
+        },
+        "table_evidence_id": {
+          "title": "Table Evidence Id",
+          "type": "string"
+        },
+        "cell_evidence_id": {
+          "title": "Cell Evidence Id",
+          "type": "string"
+        },
+        "anchor_span_id": {
+          "pattern": "^span:[0-9a-f]{24}$",
+          "title": "Anchor Span Id",
+          "type": "string"
+        },
+        "kind": {
+          "$ref": "#/$defs/TableAtomicSubfactKind"
+        },
+        "expected_fact_type": {
+          "$ref": "#/$defs/FactType"
+        },
+        "state": {
+          "$ref": "#/$defs/TableAtomicSubfactCoverageState"
+        },
+        "candidate_proposal_keys": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "title": "Candidate Proposal Keys",
+          "type": "array"
+        },
+        "basis": {
+          "maxLength": 500,
+          "minLength": 1,
+          "title": "Basis",
+          "type": "string"
+        }
+      },
+      "required": [
+        "requirement_id",
+        "table_evidence_id",
+        "cell_evidence_id",
+        "anchor_span_id",
+        "kind",
+        "expected_fact_type",
+        "state",
+        "basis"
+      ],
+      "title": "Step2ATableAtomicSubfactAudit",
+      "type": "object"
+    },
+    "Step2ATableNumericOccurrenceAudit": {
+      "additionalProperties": false,
+      "description": "Non-claim numeric provenance for a complete-table composition Fact.",
+      "properties": {
+        "proposal_key": {
+          "pattern": "^proposal:[a-z0-9][a-z0-9._-]*$",
+          "title": "Proposal Key",
+          "type": "string"
+        },
+        "state": {
+          "$ref": "#/$defs/TableNumericOccurrenceState"
+        },
+        "assertion_span": {
+          "$ref": "#/$defs/NumericSpanReference"
+        },
+        "occurrences": {
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/TableNumericOccurrenceReference"
+          },
+          "title": "Occurrences",
+          "type": "array"
+        },
+        "grid_metadata": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/TableGridMetadataReference"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "basis": {
+          "maxLength": 500,
+          "minLength": 1,
+          "title": "Basis",
+          "type": "string"
+        }
+      },
+      "required": [
+        "proposal_key",
+        "state",
+        "assertion_span",
+        "basis"
+      ],
+      "title": "Step2ATableNumericOccurrenceAudit",
+      "type": "object"
+    },
+    "Step2ATableSemanticCoverageAudit": {
+      "additionalProperties": false,
+      "description": "Proof that a complete structured table has one canonical Fact owner.",
+      "properties": {
+        "table_evidence_id": {
+          "title": "Table Evidence Id",
+          "type": "string"
+        },
+        "row_evidence_ids": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Row Evidence Ids",
+          "type": "array"
+        },
+        "header_cell_evidence_ids": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Header Cell Evidence Ids",
+          "type": "array"
+        },
+        "cell_evidence_ids": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Cell Evidence Ids",
+          "type": "array"
+        },
+        "cell_anchor_span_ids": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Cell Anchor Span Ids",
+          "type": "array"
+        },
+        "state": {
+          "$ref": "#/$defs/TableSemanticCoverageState"
+        },
+        "candidate_proposal_keys": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "title": "Candidate Proposal Keys",
+          "type": "array"
+        },
+        "canonical_proposal_key": {
+          "anyOf": [
+            {
+              "pattern": "^proposal:[a-z0-9][a-z0-9._-]*$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Canonical Proposal Key"
+        },
+        "basis": {
+          "maxLength": 500,
+          "minLength": 1,
+          "title": "Basis",
+          "type": "string"
+        }
+      },
+      "required": [
+        "table_evidence_id",
+        "row_evidence_ids",
+        "header_cell_evidence_ids",
+        "cell_evidence_ids",
+        "cell_anchor_span_ids",
+        "state",
+        "basis"
+      ],
+      "title": "Step2ATableSemanticCoverageAudit",
+      "type": "object"
+    },
+    "Step2ATableStructuralIndexOccurrenceAudit": {
+      "additionalProperties": false,
+      "description": "Non-numeric provenance for list indexes in a complete-table Fact.",
+      "properties": {
+        "proposal_key": {
+          "pattern": "^proposal:[a-z0-9][a-z0-9._-]*$",
+          "title": "Proposal Key",
+          "type": "string"
+        },
+        "state": {
+          "$ref": "#/$defs/TableStructuralIndexOccurrenceState"
+        },
+        "assertion_span": {
+          "$ref": "#/$defs/NumericSpanReference"
+        },
+        "assertion_classification": {
+          "$ref": "#/$defs/NumericTokenClass"
+        },
+        "occurrences": {
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/TableStructuralIndexOccurrenceReference"
+          },
+          "title": "Occurrences",
+          "type": "array"
+        },
+        "basis": {
+          "maxLength": 500,
+          "minLength": 1,
+          "title": "Basis",
+          "type": "string"
+        }
+      },
+      "required": [
+        "proposal_key",
+        "state",
+        "assertion_span",
+        "assertion_classification",
+        "basis"
+      ],
+      "title": "Step2ATableStructuralIndexOccurrenceAudit",
+      "type": "object"
+    },
+    "Step2BCardProposal": {
+      "additionalProperties": false,
+      "properties": {
+        "proposal_key": {
+          "pattern": "^card-proposal:[a-z0-9][a-z0-9._-]*$",
+          "title": "Proposal Key",
+          "type": "string"
+        },
+        "title": {
+          "maxLength": 64,
+          "minLength": 2,
+          "title": "Title",
+          "type": "string"
+        },
+        "primary_fact_ids": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Primary Fact Ids",
+          "type": "array"
+        },
+        "secondary_fact_ids": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "title": "Secondary Fact Ids",
+          "type": "array"
+        },
+        "presentation": {
+          "$ref": "#/$defs/CardPresentation"
+        },
+        "split_reason": {
+          "maxLength": 240,
+          "minLength": 6,
+          "title": "Split Reason",
+          "type": "string"
+        },
+        "short_card_exception": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ShortCardException"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        }
+      },
+      "required": [
+        "proposal_key",
+        "title",
+        "primary_fact_ids",
+        "presentation",
+        "split_reason"
+      ],
+      "title": "Step2BCardProposal",
+      "type": "object"
+    },
+    "Step2BRequest": {
+      "additionalProperties": false,
+      "properties": {
+        "identity": {
+          "$ref": "#/$defs/Step2RequestIdentity"
+        },
+        "sample_id": {
+          "pattern": "^[a-z0-9][a-z0-9._-]*$",
+          "title": "Sample Id",
+          "type": "string"
+        },
+        "material_profile_id": {
+          "minLength": 1,
+          "title": "Material Profile Id",
+          "type": "string"
+        },
+        "facts": {
+          "items": {
+            "$ref": "#/$defs/FactSummaryInput"
+          },
+          "title": "Facts",
+          "type": "array"
+        }
+      },
+      "required": [
+        "identity",
+        "sample_id",
+        "material_profile_id",
+        "facts"
+      ],
+      "title": "Step2BRequest",
+      "type": "object"
+    },
+    "Step2BResponse": {
+      "additionalProperties": false,
+      "properties": {
+        "request": {
+          "$ref": "#/$defs/Step2RequestIdentity"
+        },
+        "state": {
+          "$ref": "#/$defs/Step2ResultState"
+        },
+        "proposals": {
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/Step2BCardProposal"
+          },
+          "title": "Proposals",
+          "type": "array"
+        },
+        "failure": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Step2AFailure"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        }
+      },
+      "required": [
+        "request",
+        "state"
+      ],
+      "title": "Step2BResponse",
+      "type": "object"
+    },
+    "Step2DecoderConfig": {
+      "additionalProperties": false,
+      "description": "All output-affecting generation controls must participate in cache identity.",
+      "properties": {
+        "temperature": {
+          "default": 0,
+          "maximum": 2,
+          "minimum": 0,
+          "title": "Temperature",
+          "type": "number"
+        },
+        "max_tokens": {
+          "default": 1400,
+          "maximum": 4000,
+          "minimum": 64,
+          "title": "Max Tokens",
+          "type": "integer"
+        },
+        "response_format": {
+          "$ref": "#/$defs/Step2ResponseFormat",
+          "default": "json_schema_strict"
+        }
+      },
+      "title": "Step2DecoderConfig",
+      "type": "object"
+    },
+    "Step2FailureState": {
+      "enum": [
+        "validation_failed",
+        "source_missing",
+        "grounding_failed",
+        "invalid_response",
+        "upstream_unavailable",
+        "unknown_outcome"
+      ],
+      "title": "Step2FailureState",
+      "type": "string"
+    },
+    "Step2RejectedResponseForensics": {
+      "additionalProperties": false,
+      "description": "Safe diagnostics for a model response rejected after it reached this process.\n\nThe original response body is deliberately never persisted. The request\nidentity, content hash, and normalized local error class are enough to\ncorrelate a future review without making raw model text a runtime artifact.",
+      "properties": {
+        "request_id": {
+          "pattern": "^step2[ab]-request:[0-9a-f]{64}$",
+          "title": "Request Id",
+          "type": "string"
+        },
+        "raw_response_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Raw Response Sha256",
+          "type": "string"
+        },
+        "rejection_code": {
+          "pattern": "^[a-z0-9_]+$",
+          "title": "Rejection Code",
+          "type": "string"
+        },
+        "error_types": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "title": "Error Types",
+          "type": "array"
+        },
+        "schema_error_locations": {
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/Step2SchemaErrorLocation"
+          },
+          "title": "Schema Error Locations",
+          "type": "array"
+        },
+        "schema_error_count": {
+          "default": 0,
+          "minimum": 0,
+          "title": "Schema Error Count",
+          "type": "integer"
+        },
+        "missing_field_count": {
+          "default": 0,
+          "minimum": 0,
+          "title": "Missing Field Count",
+          "type": "integer"
+        },
+        "extra_field_count": {
+          "default": 0,
+          "minimum": 0,
+          "title": "Extra Field Count",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "request_id",
+        "raw_response_sha256",
+        "rejection_code"
+      ],
+      "title": "Step2RejectedResponseForensics",
+      "type": "object"
+    },
+    "Step2RequestIdentity": {
+      "additionalProperties": false,
+      "properties": {
+        "stage": {
+          "$ref": "#/$defs/Step2Stage"
+        },
+        "request_version": {
+          "minLength": 1,
+          "title": "Request Version",
+          "type": "string"
+        },
+        "model": {
+          "minLength": 1,
+          "title": "Model",
+          "type": "string"
+        },
+        "payload_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Payload Sha256",
+          "type": "string"
+        },
+        "relay_fingerprint_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Relay Fingerprint Sha256",
+          "type": "string"
+        },
+        "prompt_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Prompt Sha256",
+          "type": "string"
+        },
+        "response_schema_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Response Schema Sha256",
+          "type": "string"
+        },
+        "decoder": {
+          "$ref": "#/$defs/Step2DecoderConfig"
+        },
+        "projection_id": {
+          "anyOf": [
+            {
+              "pattern": "^step2a-projection:[0-9a-f]{24}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Projection Id"
+        },
+        "projection_sha256": {
+          "anyOf": [
+            {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Projection Sha256"
+        },
+        "source_manifest_sha256": {
+          "anyOf": [
+            {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Source Manifest Sha256"
+        },
+        "content_policy_fingerprint_sha256": {
+          "anyOf": [
+            {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Content Policy Fingerprint Sha256"
+        },
+        "manual_reissue_reason": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Manual Reissue Reason"
+        },
+        "request_id": {
+          "pattern": "^step2[ab]-request:[0-9a-f]{64}$",
+          "title": "Request Id",
+          "type": "string"
+        },
+        "cache_key": {
+          "pattern": "^step2-cache:[0-9a-f]{64}$",
+          "title": "Cache Key",
+          "type": "string"
+        },
+        "idempotency_key": {
+          "pattern": "^step2-[0-9a-f]{64}$",
+          "title": "Idempotency Key",
+          "type": "string"
+        }
+      },
+      "required": [
+        "stage",
+        "request_version",
+        "model",
+        "payload_sha256",
+        "relay_fingerprint_sha256",
+        "prompt_sha256",
+        "response_schema_sha256",
+        "decoder",
+        "request_id",
+        "cache_key",
+        "idempotency_key"
+      ],
+      "title": "Step2RequestIdentity",
+      "type": "object"
+    },
+    "Step2ResponseFormat": {
+      "enum": [
+        "json_schema_strict",
+        "json_object"
+      ],
+      "title": "Step2ResponseFormat",
+      "type": "string"
+    },
+    "Step2ResultState": {
+      "enum": [
+        "succeeded",
+        "failed"
+      ],
+      "title": "Step2ResultState",
+      "type": "string"
+    },
+    "Step2SchemaErrorLocation": {
+      "additionalProperties": false,
+      "description": "Sanitized Pydantic location without any rejected input value.",
+      "properties": {
+        "path": {
+          "items": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "integer"
+              }
+            ]
+          },
+          "minItems": 1,
+          "title": "Path",
+          "type": "array"
+        },
+        "error_type": {
+          "maxLength": 96,
+          "minLength": 1,
+          "title": "Error Type",
+          "type": "string"
+        }
+      },
+      "required": [
+        "path",
+        "error_type"
+      ],
+      "title": "Step2SchemaErrorLocation",
+      "type": "object"
+    },
+    "Step2Stage": {
+      "enum": [
+        "step2a",
+        "step2b"
+      ],
+      "title": "Step2Stage",
+      "type": "string"
+    },
+    "Step2TeachingReview": {
+      "additionalProperties": false,
+      "properties": {
+        "state": {
+          "$ref": "#/$defs/SemanticReviewState",
+          "default": "draft"
+        },
+        "gate": {
+          "$ref": "#/$defs/TeachingQualityGate"
+        },
+        "title_results": {
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/TitleQualityResult"
+          },
+          "title": "Title Results",
+          "type": "array"
+        },
+        "granularity_results": {
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/CardGranularityResult"
+          },
+          "title": "Granularity Results",
+          "type": "array"
+        },
+        "heading_only_fact_results": {
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/HeadingOnlyFactResult"
+          },
+          "title": "Heading Only Fact Results",
+          "type": "array"
+        },
+        "basis": {
+          "minLength": 1,
+          "title": "Basis",
+          "type": "string"
+        }
+      },
+      "required": [
+        "gate",
+        "basis"
+      ],
+      "title": "Step2TeachingReview",
+      "type": "object"
+    },
+    "TableAtomicSubfactCoverageState": {
+      "enum": [
+        "complete",
+        "missing",
+        "composition_substitution",
+        "fact_type_mismatch",
+        "assertion_mismatch",
+        "ambiguous"
+      ],
+      "title": "TableAtomicSubfactCoverageState",
+      "type": "string"
+    },
+    "TableAtomicSubfactKind": {
+      "description": "One independently teachable rule detected in a complete table cell.",
+      "enum": [
+        "condition",
+        "threshold",
+        "material_rule"
+      ],
+      "title": "TableAtomicSubfactKind",
+      "type": "string"
+    },
+    "TableGridMetadataReference": {
+      "additionalProperties": false,
+      "description": "Geometry-derived metadata for a fully selected structured table.",
+      "properties": {
+        "metadata_id": {
+          "pattern": "^table-grid-metadata:[0-9a-f]{24}$",
+          "title": "Metadata Id",
+          "type": "string"
+        },
+        "table_evidence_id": {
+          "title": "Table Evidence Id",
+          "type": "string"
+        },
+        "page_nums": {
+          "items": {
+            "type": "integer"
+          },
+          "title": "Page Nums",
+          "type": "array"
+        },
+        "source_manifest_sha256s": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Source Manifest Sha256S",
+          "type": "array"
+        },
+        "row_count": {
+          "minimum": 1,
+          "title": "Row Count",
+          "type": "integer"
+        },
+        "column_count": {
+          "minimum": 1,
+          "title": "Column Count",
+          "type": "integer"
+        },
+        "cell_evidence_ids": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Cell Evidence Ids",
+          "type": "array"
+        },
+        "cell_anchor_span_ids": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Cell Anchor Span Ids",
+          "type": "array"
+        }
+      },
+      "required": [
+        "metadata_id",
+        "table_evidence_id",
+        "page_nums",
+        "source_manifest_sha256s",
+        "row_count",
+        "column_count",
+        "cell_evidence_ids",
+        "cell_anchor_span_ids"
+      ],
+      "title": "TableGridMetadataReference",
+      "type": "object"
+    },
+    "TableNumericOccurrenceReference": {
+      "additionalProperties": false,
+      "description": "One exact numeric occurrence in a selected immutable table cell.",
+      "properties": {
+        "occurrence_id": {
+          "pattern": "^table-numeric-occurrence:[0-9a-f]{24}$",
+          "title": "Occurrence Id",
+          "type": "string"
+        },
+        "table_evidence_id": {
+          "title": "Table Evidence Id",
+          "type": "string"
+        },
+        "cell_evidence_id": {
+          "title": "Cell Evidence Id",
+          "type": "string"
+        },
+        "page_num": {
+          "minimum": 1,
+          "title": "Page Num",
+          "type": "integer"
+        },
+        "row_index": {
+          "minimum": 0,
+          "title": "Row Index",
+          "type": "integer"
+        },
+        "column_index": {
+          "minimum": 0,
+          "title": "Column Index",
+          "type": "integer"
+        },
+        "row_span": {
+          "minimum": 1,
+          "title": "Row Span",
+          "type": "integer"
+        },
+        "col_span": {
+          "minimum": 1,
+          "title": "Col Span",
+          "type": "integer"
+        },
+        "anchor_span_id": {
+          "pattern": "^span:[0-9a-f]{24}$",
+          "title": "Anchor Span Id",
+          "type": "string"
+        },
+        "source_span": {
+          "$ref": "#/$defs/NumericSpanReference"
+        },
+        "source_manifest_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Source Manifest Sha256",
+          "type": "string"
+        }
+      },
+      "required": [
+        "occurrence_id",
+        "table_evidence_id",
+        "cell_evidence_id",
+        "page_num",
+        "row_index",
+        "column_index",
+        "row_span",
+        "col_span",
+        "anchor_span_id",
+        "source_span",
+        "source_manifest_sha256"
+      ],
+      "title": "TableNumericOccurrenceReference",
+      "type": "object"
+    },
+    "TableNumericOccurrenceState": {
+      "description": "Outcomes for numeric text inside a complete-table composition Fact.",
+      "enum": [
+        "derived_table_cell_occurrences",
+        "derived_grid_metadata",
+        "assertion_without_table_occurrence",
+        "ambiguous_grid_metadata"
+      ],
+      "title": "TableNumericOccurrenceState",
+      "type": "string"
+    },
+    "TableSemanticCoverageState": {
+      "description": "Disposition of one complete structured table in a Step 2A response.",
+      "enum": [
+        "complete",
+        "missing_composition",
+        "incomplete_composition",
+        "row_level_substitution",
+        "multiple_composition_facts"
+      ],
+      "title": "TableSemanticCoverageState",
+      "type": "string"
+    },
+    "TableStructuralCellOccurrence": {
+      "additionalProperties": false,
+      "description": "One source-owned cell retained by a selected complete table grid.",
+      "properties": {
+        "occurrence_id": {
+          "pattern": "^table-structural-cell-occurrence:[0-9a-f]{24}$",
+          "title": "Occurrence Id",
+          "type": "string"
+        },
+        "table_evidence_id": {
+          "title": "Table Evidence Id",
+          "type": "string"
+        },
+        "cell_evidence_id": {
+          "title": "Cell Evidence Id",
+          "type": "string"
+        },
+        "page_num": {
+          "minimum": 1,
+          "title": "Page Num",
+          "type": "integer"
+        },
+        "row_index": {
+          "minimum": 0,
+          "title": "Row Index",
+          "type": "integer"
+        },
+        "column_index": {
+          "minimum": 0,
+          "title": "Column Index",
+          "type": "integer"
+        },
+        "row_span": {
+          "minimum": 1,
+          "title": "Row Span",
+          "type": "integer"
+        },
+        "col_span": {
+          "minimum": 1,
+          "title": "Col Span",
+          "type": "integer"
+        },
+        "role": {
+          "$ref": "#/$defs/TableStructuralCellRole"
+        },
+        "cell_text_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Cell Text Sha256",
+          "type": "string"
+        },
+        "anchor_span_ids": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Anchor Span Ids",
+          "type": "array"
+        },
+        "source_manifest_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Source Manifest Sha256",
+          "type": "string"
+        }
+      },
+      "required": [
+        "occurrence_id",
+        "table_evidence_id",
+        "cell_evidence_id",
+        "page_num",
+        "row_index",
+        "column_index",
+        "row_span",
+        "col_span",
+        "role",
+        "cell_text_sha256",
+        "anchor_span_ids",
+        "source_manifest_sha256"
+      ],
+      "title": "TableStructuralCellOccurrence",
+      "type": "object"
+    },
+    "TableStructuralCellRole": {
+      "description": "Geometry-owned role of a cell in a complete selected table grid.",
+      "enum": [
+        "header_row",
+        "body"
+      ],
+      "title": "TableStructuralCellRole",
+      "type": "string"
+    },
+    "TableStructuralIndexOccurrenceReference": {
+      "additionalProperties": false,
+      "description": "One exact list-index occurrence in a selected immutable table cell.",
+      "properties": {
+        "occurrence_id": {
+          "pattern": "^table-structural-index-occurrence:[0-9a-f]{24}$",
+          "title": "Occurrence Id",
+          "type": "string"
+        },
+        "table_evidence_id": {
+          "title": "Table Evidence Id",
+          "type": "string"
+        },
+        "cell_evidence_id": {
+          "title": "Cell Evidence Id",
+          "type": "string"
+        },
+        "page_num": {
+          "minimum": 1,
+          "title": "Page Num",
+          "type": "integer"
+        },
+        "row_index": {
+          "minimum": 0,
+          "title": "Row Index",
+          "type": "integer"
+        },
+        "column_index": {
+          "minimum": 0,
+          "title": "Column Index",
+          "type": "integer"
+        },
+        "row_span": {
+          "minimum": 1,
+          "title": "Row Span",
+          "type": "integer"
+        },
+        "col_span": {
+          "minimum": 1,
+          "title": "Col Span",
+          "type": "integer"
+        },
+        "anchor_span_id": {
+          "pattern": "^span:[0-9a-f]{24}$",
+          "title": "Anchor Span Id",
+          "type": "string"
+        },
+        "source_span": {
+          "$ref": "#/$defs/NumericSpanReference"
+        },
+        "source_classification": {
+          "$ref": "#/$defs/NumericTokenClass",
+          "default": "list_index"
+        },
+        "source_manifest_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Source Manifest Sha256",
+          "type": "string"
+        }
+      },
+      "required": [
+        "occurrence_id",
+        "table_evidence_id",
+        "cell_evidence_id",
+        "page_num",
+        "row_index",
+        "column_index",
+        "row_span",
+        "col_span",
+        "anchor_span_id",
+        "source_span",
+        "source_manifest_sha256"
+      ],
+      "title": "TableStructuralIndexOccurrenceReference",
+      "type": "object"
+    },
+    "TableStructuralIndexOccurrenceState": {
+      "description": "Fail-closed outcomes for table-list indexes in composition assertions.",
+      "enum": [
+        "derived_structural_index_occurrences",
+        "assertion_without_structural_index_occurrence",
+        "quantity_claim_not_structural_index",
+        "ambiguous_structural_numeric_source_role"
+      ],
+      "title": "TableStructuralIndexOccurrenceState",
+      "type": "string"
+    },
+    "TeachingQualityEvaluationState": {
+      "enum": [
+        "evaluated",
+        "not_evaluated"
+      ],
+      "title": "TeachingQualityEvaluationState",
+      "type": "string"
+    },
+    "TeachingQualityGate": {
+      "additionalProperties": false,
+      "properties": {
+        "evaluation_state": {
+          "$ref": "#/$defs/TeachingQualityEvaluationState",
+          "default": "evaluated"
+        },
+        "title_failures": {
+          "minimum": 0,
+          "title": "Title Failures",
+          "type": "integer"
+        },
+        "table_structure_failures": {
+          "minimum": 0,
+          "title": "Table Structure Failures",
+          "type": "integer"
+        },
+        "diagram_semantic_failures": {
+          "minimum": 0,
+          "title": "Diagram Semantic Failures",
+          "type": "integer"
+        },
+        "heading_only_fact_failures": {
+          "minimum": 0,
+          "title": "Heading Only Fact Failures",
+          "type": "integer"
+        },
+        "manual_review_items": {
+          "minimum": 0,
+          "title": "Manual Review Items",
+          "type": "integer"
+        },
+        "spatial_watermark_candidates": {
+          "minimum": 0,
+          "title": "Spatial Watermark Candidates",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "title_failures",
+        "table_structure_failures",
+        "diagram_semantic_failures",
+        "heading_only_fact_failures",
+        "manual_review_items",
+        "spatial_watermark_candidates"
+      ],
+      "title": "TeachingQualityGate",
+      "type": "object"
+    },
+    "TitleQualityResult": {
+      "additionalProperties": false,
+      "properties": {
+        "title": {
+          "title": "Title",
+          "type": "string"
+        },
+        "status": {
+          "$ref": "#/$defs/QualityStatus"
+        },
+        "reason": {
+          "title": "Reason",
+          "type": "string"
+        }
+      },
+      "required": [
+        "title",
+        "status",
+        "reason"
+      ],
+      "title": "TitleQualityResult",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "request": {
+      "$ref": "#/$defs/Step2BRequest"
+    },
+    "response": {
+      "$ref": "#/$defs/Step2BResponse"
+    },
+    "contract_report": {
+      "$ref": "#/$defs/ContractValidationReport"
+    },
+    "teaching_review": {
+      "$ref": "#/$defs/Step2TeachingReview"
+    },
+    "provider_request_id": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Provider Request Id"
+    },
+    "http_status": {
+      "anyOf": [
+        {
+          "maximum": 599,
+          "minimum": 100,
+          "type": "integer"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Http Status"
+    },
+    "raw_response_sha256": {
+      "anyOf": [
+        {
+          "pattern": "^[0-9a-f]{64}$",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Raw Response Sha256"
+    },
+    "rejected_response_forensics": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/Step2RejectedResponseForensics"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "completed_at_utc": {
+      "title": "Completed At Utc",
+      "type": "string"
+    }
+  },
+  "required": [
+    "request",
+    "response",
+    "contract_report",
+    "teaching_review",
+    "completed_at_utc"
+  ],
+  "title": "Step2BExecutionRecord",
+  "type": "object"
+}

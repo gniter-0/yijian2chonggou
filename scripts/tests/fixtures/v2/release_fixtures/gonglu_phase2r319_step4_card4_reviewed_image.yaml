@@ -1,0 +1,171 @@
+schema_version: step4_card4_reviewed_image_fixture_v1
+fixture_id: step4-reviewed-image-card4:9b18e43a16319c9309b266a8
+card_index: 4
+source_card_id: v25-release-card:cd1558d4e5d386183f1a4b31
+sample_id: gonglu_24_table_formula
+fact_ids:
+- fact:2181e5bd6349775b25fd2b82
+- fact:df38ba0d0992399d7acc910a
+- fact:9f65fc117c8497c0185ef163
+- fact:d1d886adf5616ac0a1153072
+- fact:6d1bdf6072180f04f67bc8f4
+presentation: constraint
+render_contract_kind: constraint_exact_five_blocks
+source_step3_fixture_path: scripts/tests/fixtures/v2/release_fixtures/gonglu_phase2r2242_step3_reviewed_release.yaml
+source_step3_fixture_sha256: 8a6226e4a7f1cdece711a770566b2401a91e43428b85897d9ded7c778cda5ab3
+source_card_binding_sha256: 702e64841072024c73800ddcaacd75d4c99ae070e36f5d0f5337b7b900ba88ac
+source_r317_request_sha256: a97ed09f14b6365c78fd932fca392e5895c71b9594da57d6432497140ca907d3
+source_r317_model_input_sha256: 8795c41b01e8bd1ee20d301d8e2714e0ef2b25acefde9ba3b026672c53af2fbd
+source_r317_prompt_sha256: d317fed7d72200d9d7c64da2d6d8ae0c7ffae4eadafe03eac535876b13adb2d3
+source_r317_gate_sha256: c3c068bce41ffe5213e1128fd712445c2807022a4b94d6311f16702eff11fb28
+source_r317_report_sha256: a0e876c3665ee6664b6e855a9504aa937a6e0af8d1789258281b64ac9383a135
+source_r317_fake_artifact_sha256: 6c5a4d474ec653cc885627e506a80370b9c9a309c9f737e11ea1be6f9d74a2e5
+source_r317_contract_sha256: 6d0dc8dadf5b5c093ab9932a319804ed874fd6db45a1dab47a09a32c29750f05
+source_r318_diagnostic_identity: step4-card4-r318-diagnostic:fc364e667a4fa0fce40a6d1a3176df3f9b074421caf656fd6bd4c4fc35f99444
+source_r318_business_identity: step4-card4-r318-request:545d8ec94d1ad22a898ea4820c54ee3261649002437a8e4ed28122e2fa0effa2
+source_r318_request_file_sha256: 0871a4e0c850f31e01268fe27b65741690921d826cb28c11daba355772040d83
+source_r318_response_sha256: ea448a2f6e73550630612c5c0bea0edb425f88479529e726d9f01127035d4577
+source_r318_image_record_sha256: 179a9ee81a415c8537014e6ff8cf23c3539a065d1da5f33d2204300381c7f442
+source_r318_machine_report_sha256: 22d9e7e529e10275abb9ea2205bca1d6cd7a4aaf7bc3380d5833ce3ca4c766b7
+source_r318_visual_audit_sha256: 4932355d441771edd96446c8e57618e6404822940270a67823834682213b264a
+source_r318_final_gate_sha256: 97bbd0fa3f1e6fba363375d4724a8562404d8c47f1cc3e8a505e3dddfe4b5930
+source_r318_final_report_sha256: 6c224ae2cc518c2e9cfafd86140a5f764c52e0b43370a34051da3ac7a8ea58fe
+provider_request_id: 85751b8849e2490ba91d84e69181a2fd
+image_path: data/semantic_llm_v2/phase2r318_step4_card4_constraint_live_smoke_run1/gonglu-step4-card-04-cd1558d4.png
+image_sha256: 5fcc91fc4d86d076961cfa18d2fd4d641132fc646b9ea24f808074da079a9b18
+image_mime: image/png
+image_width: 1536
+image_height: 1024
+response_format_b64_only: true
+block_count: 5
+blocks:
+- block_index: 1
+  fact_id: fact:2181e5bd6349775b25fd2b82
+  fact_type: condition
+  text: （2）模板和支架应具有足够的强度、刚度和稳定性。
+  text_sha256: a2de9aeb37ffe301995ee712f66ff19182d7d33e689376871e6bc99c9cdf6d23
+  evidence_ids:
+  - ev:4b0c10cf94be018459452e14
+  anchor_span_ids:
+  - span:cb28d0ea3b1ebc79c790c295
+  source_table_id: ev:d13b3f653925a49fe84f6da4
+  block_y_min: 64
+  block_y_max: 220
+  line_break_count: 0
+  required_condition_tokens:
+  - 应
+  - 具有
+  required_numeric_tokens: []
+  source_display_contract_sha256: e9050df69dc5b6ae43a650a0661c349b6142fd3bfb58012ba0476755c1579470
+  visually_confirmed: true
+- block_index: 2
+  fact_id: fact:df38ba0d0992399d7acc910a
+  fact_type: condition
+  text: （4）模板与混凝土的接触面应涂刷隔离剂，但不得采用废机油等油料。
+  text_sha256: 8bef6430d08d8a2cc1e30bb1fd72c04c65783cb57895f5d03a364f2e927b3423
+  evidence_ids:
+  - ev:4b0c10cf94be018459452e14
+  anchor_span_ids:
+  - span:39b910d758bb8ea0b172d199
+  source_table_id: ev:d13b3f653925a49fe84f6da4
+  block_y_min: 236
+  block_y_max: 392
+  line_break_count: 0
+  required_condition_tokens:
+  - 应
+  - 不得
+  required_numeric_tokens: []
+  source_display_contract_sha256: 90705999c744ae46c875989bd6a751e8bc5a0e40188244804ad4cbcb0b9740a6
+  visually_confirmed: true
+- block_index: 3
+  fact_id: fact:9f65fc117c8497c0185ef163
+  fact_type: condition
+  text: '（5）在模板上设置的吊环应采用HPB300 钢筋（一级钢），严禁采用冷加工
+
+    钢筋制作。'
+  text_sha256: 9c02770dd945a58f4397408964cf8a860059ad87c8c550b76446554cde635ced
+  evidence_ids:
+  - ev:4b0c10cf94be018459452e14
+  - ev:7fdf390ab8741b110562d87d
+  anchor_span_ids:
+  - span:d4e88f7e635e38b71bc1cd3d
+  - span:9c55ea97526fd7466e1e1b7b
+  source_table_id: ev:d13b3f653925a49fe84f6da4
+  block_y_min: 408
+  block_y_max: 596
+  line_break_count: 1
+  required_condition_tokens:
+  - 应采用
+  - 严禁采用
+  required_numeric_tokens:
+  - HPB300
+  source_display_contract_sha256: cf6e12e27d63bd7400a03dcb6a4329c8361db8f2c1f46420c80a6d85d7283e37
+  visually_confirmed: true
+- block_index: 4
+  fact_id: fact:d1d886adf5616ac0a1153072
+  fact_type: threshold
+  text: 在模板自重标准值作用下，吊环的拉应力应不大于65MPa。
+  text_sha256: da8ee26280146733af007588b2bf8fc820c08fbde401ceec393f07ff69497884
+  evidence_ids:
+  - ev:4b0c10cf94be018459452e14
+  anchor_span_ids:
+  - span:db7d38a6b2042f811e7f0ba8
+  source_table_id: ev:d13b3f653925a49fe84f6da4
+  block_y_min: 612
+  block_y_max: 768
+  line_break_count: 0
+  required_condition_tokens:
+  - 在
+  - 作用下
+  - 应不大于
+  required_numeric_tokens:
+  - 65MPa
+  source_display_contract_sha256: a244b33f226aa6d20c597c8abe2f3a9faa50724b2ebc8b979417611cc8955e22
+  visually_confirmed: true
+- block_index: 5
+  fact_id: fact:6d1bdf6072180f04f67bc8f4
+  fact_type: condition
+  text: （6）支架不得与应急安全通道相连接。
+  text_sha256: 9490fa39376b9263102d62d9fde8de54cdb60ec3b88991bfe42abeb2c613e3e7
+  evidence_ids:
+  - ev:5aeed111f1a65c491bae59c8
+  anchor_span_ids:
+  - span:fb7057c78f8d65c40aa02dc6
+  source_table_id: ev:d13b3f653925a49fe84f6da4
+  block_y_min: 784
+  block_y_max: 960
+  line_break_count: 0
+  required_condition_tokens:
+  - 不得
+  required_numeric_tokens: []
+  source_display_contract_sha256: bebe0747a995b218e976ce1fe84c3880ec433e1c9ec02879429916aba75da30d
+  visually_confirmed: true
+reading_order_block_sha256s:
+- a2de9aeb37ffe301995ee712f66ff19182d7d33e689376871e6bc99c9cdf6d23
+- 8bef6430d08d8a2cc1e30bb1fd72c04c65783cb57895f5d03a364f2e927b3423
+- 9c02770dd945a58f4397408964cf8a860059ad87c8c550b76446554cde635ced
+- da8ee26280146733af007588b2bf8fc820c08fbde401ceec393f07ff69497884
+- 9490fa39376b9263102d62d9fde8de54cdb60ec3b88991bfe42abeb2c613e3e7
+source_evidence_ids:
+- ev:4b0c10cf94be018459452e14
+- ev:7fdf390ab8741b110562d87d
+- ev:5aeed111f1a65c491bae59c8
+source_table_id: ev:d13b3f653925a49fe84f6da4
+anchor_span_ids:
+- span:cb28d0ea3b1ebc79c790c295
+- span:39b910d758bb8ea0b172d199
+- span:d4e88f7e635e38b71bc1cd3d
+- span:db7d38a6b2042f811e7f0ba8
+- span:fb7057c78f8d65c40aa02dc6
+final_review_audit_sha256: aa04a2fcbd78e085331abeec55dea314dcc02fcf1b3ed9506a6af12f7372cf58
+review_state: reviewed
+reviewer: codex_operator_phase2r319_card4_constraint_final_review
+reviewed_at_utc: '2026-08-01T00:00:00Z'
+review_basis: Independent original-resolution review of the frozen R3.18 Card 4 PNG
+  confirmed five source-owned constraint assertions verbatim and exactly once in source
+  order, five independent non-overlapping blocks, the embedded source line break,
+  complete condition and numeric tokens, correct Evidence/anchor provenance, and no
+  truncation, OCR pollution, extra text, branding, watermark, evidence-only content,
+  or other presentation contract.
+image_copy_created: false
+generation_authorized: false

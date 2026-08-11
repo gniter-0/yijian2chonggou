@@ -1,0 +1,752 @@
+{
+  "$defs": {
+    "BBox": {
+      "additionalProperties": false,
+      "properties": {
+        "x0": {
+          "minimum": 0,
+          "title": "X0",
+          "type": "number"
+        },
+        "y0": {
+          "minimum": 0,
+          "title": "Y0",
+          "type": "number"
+        },
+        "x1": {
+          "exclusiveMinimum": 0,
+          "title": "X1",
+          "type": "number"
+        },
+        "y1": {
+          "exclusiveMinimum": 0,
+          "title": "Y1",
+          "type": "number"
+        }
+      },
+      "required": [
+        "x0",
+        "y0",
+        "x1",
+        "y1"
+      ],
+      "title": "BBox",
+      "type": "object"
+    },
+    "CoverageRequirement": {
+      "enum": [
+        "required",
+        "optional",
+        "not_required"
+      ],
+      "title": "CoverageRequirement",
+      "type": "string"
+    },
+    "EvidenceKind": {
+      "enum": [
+        "heading",
+        "paragraph",
+        "list_group",
+        "list_item",
+        "table",
+        "table_row",
+        "table_cell",
+        "formula",
+        "figure",
+        "diagram_node",
+        "diagram_edge",
+        "caption",
+        "example",
+        "exercise",
+        "exam_tag",
+        "header_footer",
+        "watermark",
+        "page_number",
+        "decorative"
+      ],
+      "title": "EvidenceKind",
+      "type": "string"
+    },
+    "EvidenceLineage": {
+      "additionalProperties": false,
+      "properties": {
+        "run_id": {
+          "title": "Run Id",
+          "type": "string"
+        },
+        "stage": {
+          "default": "step1_evidence_v2",
+          "title": "Stage",
+          "type": "string"
+        },
+        "schema_version": {
+          "default": "2.0",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "generated_at_utc": {
+          "title": "Generated At Utc",
+          "type": "string"
+        },
+        "profile_id": {
+          "title": "Profile Id",
+          "type": "string"
+        },
+        "profile_revision": {
+          "minimum": 1,
+          "title": "Profile Revision",
+          "type": "integer"
+        },
+        "config_hash": {
+          "title": "Config Hash",
+          "type": "string"
+        }
+      },
+      "required": [
+        "run_id",
+        "generated_at_utc",
+        "profile_id",
+        "profile_revision",
+        "config_hash"
+      ],
+      "title": "EvidenceLineage",
+      "type": "object"
+    },
+    "EvidenceProvenance": {
+      "additionalProperties": false,
+      "properties": {
+        "crop_path": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Crop Path"
+        },
+        "source_channels": {
+          "items": {
+            "$ref": "#/$defs/SourceChannel"
+          },
+          "title": "Source Channels",
+          "type": "array",
+          "uniqueItems": true
+        },
+        "engine_versions": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "title": "Engine Versions",
+          "type": "object"
+        },
+        "config_hash": {
+          "title": "Config Hash",
+          "type": "string"
+        },
+        "generated_at_utc": {
+          "title": "Generated At Utc",
+          "type": "string"
+        }
+      },
+      "required": [
+        "source_channels",
+        "config_hash",
+        "generated_at_utc"
+      ],
+      "title": "EvidenceProvenance",
+      "type": "object"
+    },
+    "EvidenceUnit": {
+      "additionalProperties": false,
+      "properties": {
+        "schema_version": {
+          "default": "2.0",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "evidence_id": {
+          "pattern": "^ev:[0-9a-f]{24}$",
+          "title": "Evidence Id",
+          "type": "string"
+        },
+        "fingerprint": {
+          "pattern": "^evfp:[0-9a-f]{24}$",
+          "title": "Fingerprint",
+          "type": "string"
+        },
+        "revision_id": {
+          "pattern": "^evrev:[0-9a-f]{24}$",
+          "title": "Revision Id",
+          "type": "string"
+        },
+        "document_id": {
+          "pattern": "^doc:[0-9a-f]{24}$",
+          "title": "Document Id",
+          "type": "string"
+        },
+        "kind": {
+          "$ref": "#/$defs/EvidenceKind"
+        },
+        "locator": {
+          "$ref": "#/$defs/SourceLocator"
+        },
+        "raw_text": {
+          "default": "",
+          "title": "Raw Text",
+          "type": "string"
+        },
+        "canonical_text": {
+          "default": "",
+          "title": "Canonical Text",
+          "type": "string"
+        },
+        "semantic_role": {
+          "$ref": "#/$defs/SemanticRole"
+        },
+        "source_quality": {
+          "$ref": "#/$defs/SourceQuality"
+        },
+        "confidence": {
+          "maximum": 1,
+          "minimum": 0,
+          "title": "Confidence",
+          "type": "number"
+        },
+        "parent_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Parent Id"
+        },
+        "order": {
+          "minimum": 0,
+          "title": "Order",
+          "type": "integer"
+        },
+        "risk_tags": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "title": "Risk Tags",
+          "type": "array",
+          "uniqueItems": true
+        },
+        "must_cover_by_source": {
+          "default": false,
+          "title": "Must Cover By Source",
+          "type": "boolean"
+        },
+        "policy_decision": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PolicyDecision"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "provenance": {
+          "$ref": "#/$defs/EvidenceProvenance"
+        },
+        "metadata": {
+          "additionalProperties": true,
+          "title": "Metadata",
+          "type": "object"
+        }
+      },
+      "required": [
+        "evidence_id",
+        "fingerprint",
+        "revision_id",
+        "document_id",
+        "kind",
+        "locator",
+        "semantic_role",
+        "source_quality",
+        "confidence",
+        "order",
+        "provenance"
+      ],
+      "title": "EvidenceUnit",
+      "type": "object"
+    },
+    "PageEvidence": {
+      "additionalProperties": false,
+      "properties": {
+        "schema_version": {
+          "default": "2.0",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "page_id": {
+          "title": "Page Id",
+          "type": "string"
+        },
+        "page_num": {
+          "minimum": 1,
+          "title": "Page Num",
+          "type": "integer"
+        },
+        "width": {
+          "exclusiveMinimum": 0,
+          "title": "Width",
+          "type": "number"
+        },
+        "height": {
+          "exclusiveMinimum": 0,
+          "title": "Height",
+          "type": "number"
+        },
+        "rotation": {
+          "default": 0,
+          "title": "Rotation",
+          "type": "integer"
+        },
+        "evidence_units": {
+          "items": {
+            "$ref": "#/$defs/EvidenceUnit"
+          },
+          "title": "Evidence Units",
+          "type": "array"
+        },
+        "source_conflicts": {
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/SourceConflict"
+          },
+          "title": "Source Conflicts",
+          "type": "array"
+        },
+        "quality": {
+          "$ref": "#/$defs/PageQuality"
+        }
+      },
+      "required": [
+        "page_id",
+        "page_num",
+        "width",
+        "height",
+        "evidence_units",
+        "quality"
+      ],
+      "title": "PageEvidence",
+      "type": "object"
+    },
+    "PageQuality": {
+      "additionalProperties": false,
+      "properties": {
+        "native_text_coverage": {
+          "maximum": 1,
+          "minimum": 0,
+          "title": "Native Text Coverage",
+          "type": "number"
+        },
+        "ocr_alignment_rate": {
+          "maximum": 1,
+          "minimum": 0,
+          "title": "Ocr Alignment Rate",
+          "type": "number"
+        },
+        "unresolved_regions": {
+          "minimum": 0,
+          "title": "Unresolved Regions",
+          "type": "integer"
+        },
+        "conflict_count": {
+          "minimum": 0,
+          "title": "Conflict Count",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "native_text_coverage",
+        "ocr_alignment_rate",
+        "unresolved_regions",
+        "conflict_count"
+      ],
+      "title": "PageQuality",
+      "type": "object"
+    },
+    "PolicyDecision": {
+      "additionalProperties": false,
+      "properties": {
+        "schema_version": {
+          "default": "2.0",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "evidence_id": {
+          "minLength": 8,
+          "title": "Evidence Id",
+          "type": "string"
+        },
+        "semantic_role": {
+          "$ref": "#/$defs/SemanticRole"
+        },
+        "disposition": {
+          "$ref": "#/$defs/PolicyDisposition"
+        },
+        "coverage_requirement": {
+          "$ref": "#/$defs/CoverageRequirement"
+        },
+        "decision_state": {
+          "$ref": "#/$defs/PolicyDecisionState",
+          "default": "auto_classified"
+        },
+        "policy_id": {
+          "pattern": "^[a-z0-9][a-z0-9._-]*$",
+          "title": "Policy Id",
+          "type": "string"
+        },
+        "policy_revision": {
+          "minimum": 1,
+          "title": "Policy Revision",
+          "type": "integer"
+        },
+        "reason": {
+          "minLength": 3,
+          "title": "Reason",
+          "type": "string"
+        },
+        "reviewer": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Reviewer"
+        }
+      },
+      "required": [
+        "evidence_id",
+        "semantic_role",
+        "disposition",
+        "coverage_requirement",
+        "policy_id",
+        "policy_revision",
+        "reason"
+      ],
+      "title": "PolicyDecision",
+      "type": "object"
+    },
+    "PolicyDecisionState": {
+      "enum": [
+        "unclassified",
+        "auto_classified",
+        "needs_manual_review",
+        "manually_resolved"
+      ],
+      "title": "PolicyDecisionState",
+      "type": "string"
+    },
+    "PolicyDisposition": {
+      "enum": [
+        "included",
+        "excluded_by_policy",
+        "archived",
+        "manual_review",
+        "ignored_noise"
+      ],
+      "title": "PolicyDisposition",
+      "type": "string"
+    },
+    "SemanticRole": {
+      "enum": [
+        "core",
+        "worked_example",
+        "exercise_question",
+        "exercise_option",
+        "exercise_answer",
+        "exercise_explanation",
+        "exam_tag",
+        "heading",
+        "caption",
+        "header_footer",
+        "watermark",
+        "page_number",
+        "decorative",
+        "unknown"
+      ],
+      "title": "SemanticRole",
+      "type": "string"
+    },
+    "SourceChannel": {
+      "enum": [
+        "native_text",
+        "visual_ocr",
+        "layout",
+        "vision_structure",
+        "manual"
+      ],
+      "title": "SourceChannel",
+      "type": "string"
+    },
+    "SourceConflict": {
+      "additionalProperties": false,
+      "properties": {
+        "conflict_id": {
+          "title": "Conflict Id",
+          "type": "string"
+        },
+        "locator": {
+          "$ref": "#/$defs/SourceLocator"
+        },
+        "native_text": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Native Text"
+        },
+        "visual_text": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Visual Text"
+        },
+        "status": {
+          "$ref": "#/$defs/SourceQuality",
+          "default": "conflict"
+        },
+        "resolution": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Resolution"
+        },
+        "reviewer": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Reviewer"
+        }
+      },
+      "required": [
+        "conflict_id",
+        "locator"
+      ],
+      "title": "SourceConflict",
+      "type": "object"
+    },
+    "SourceDocument": {
+      "additionalProperties": false,
+      "properties": {
+        "relative_path": {
+          "title": "Relative Path",
+          "type": "string"
+        },
+        "sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Sha256",
+          "type": "string"
+        },
+        "byte_size": {
+          "exclusiveMinimum": 0,
+          "title": "Byte Size",
+          "type": "integer"
+        },
+        "page_count": {
+          "exclusiveMinimum": 0,
+          "title": "Page Count",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "relative_path",
+        "sha256",
+        "byte_size",
+        "page_count"
+      ],
+      "title": "SourceDocument",
+      "type": "object"
+    },
+    "SourceLocator": {
+      "additionalProperties": false,
+      "properties": {
+        "schema_version": {
+          "default": "2.0",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "document_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Document Sha256",
+          "type": "string"
+        },
+        "page_num": {
+          "minimum": 1,
+          "title": "Page Num",
+          "type": "integer"
+        },
+        "bbox": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/BBox"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "native_block_index": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Native Block Index"
+        },
+        "native_line_index": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Native Line Index"
+        },
+        "native_span_index": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Native Span Index"
+        },
+        "region_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Region Id"
+        }
+      },
+      "required": [
+        "document_sha256",
+        "page_num"
+      ],
+      "title": "SourceLocator",
+      "type": "object"
+    },
+    "SourceQuality": {
+      "enum": [
+        "verified_agreement",
+        "native_only",
+        "visual_only",
+        "conflict",
+        "unresolved"
+      ],
+      "title": "SourceQuality",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "default": "2.0",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "manifest_id": {
+      "title": "Manifest Id",
+      "type": "string"
+    },
+    "document_id": {
+      "pattern": "^doc:[0-9a-f]{24}$",
+      "title": "Document Id",
+      "type": "string"
+    },
+    "material_profile_id": {
+      "title": "Material Profile Id",
+      "type": "string"
+    },
+    "material_profile_revision": {
+      "minimum": 1,
+      "title": "Material Profile Revision",
+      "type": "integer"
+    },
+    "source": {
+      "$ref": "#/$defs/SourceDocument"
+    },
+    "pages": {
+      "items": {
+        "$ref": "#/$defs/PageEvidence"
+      },
+      "title": "Pages",
+      "type": "array"
+    },
+    "lineage": {
+      "$ref": "#/$defs/EvidenceLineage"
+    }
+  },
+  "required": [
+    "manifest_id",
+    "document_id",
+    "material_profile_id",
+    "material_profile_revision",
+    "source",
+    "pages",
+    "lineage"
+  ],
+  "title": "DocumentEvidenceManifest",
+  "type": "object"
+}
