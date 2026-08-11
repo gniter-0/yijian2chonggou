@@ -1,0 +1,77 @@
+# exam-card-engine 文档总索引
+
+更新：2026-08-12（P2·docs 重复件收拾 + 总索引；n11 总报告遗留项 5.4 已清理）。
+
+## 目录分层约定
+
+| 位置 | 职责 | 约束 |
+|---|---|---|
+| `docs/`（顶层） | 全仓级基准文档：工程骨架、迁移清单、阶段总报告、本索引 | 每份唯一，无副本 |
+| `docs/design/` | 施工设计契约（阶段 2 各 distill 桶的执行依据） | 正本唯一位置；旧顶层/migration 指路占位件已清理 |
+| `docs/prework/` | 勘察、清点、映射、验证报告类产物 | 文件名带日期后缀 |
+| `docs/v2/` | 自 yijian2 随迁的历史资产（RC1 运行时闭包与黄金基线的冻结输入） | **只读基准**，受冻结哈希铁律 bc-b8b9aca6 保护，不得改写 |
+| `migration/` | 一次性迁移脚本与平价/审计验证工具 | 非包代码，不参与测试发现（骨架 T1）；对 yijian2 只读 |
+
+## 顶层基准文档
+
+| 文件 | 内容 |
+|---|---|
+| `engineering_skeleton.md` | 工程骨架规范：pyproject/十包布局与依赖方向、测试隔离 T1–T8、布局终裁登记（bc-888c6031 十包 + bc-9d82a196 common 六件扩容） |
+| `extraction_manifest.md` | 迁移清单 v2：142 模块去向对账基准（含 8 条【A案】跨桶契约下沉注解） |
+| `stage2_migration_report.md` | 阶段 2 总集成验收（n11）：pytest 462 全绿、依赖守护、26/26 对账、遗留风险与下一步 |
+| `README.md` | 本索引 |
+
+## docs/design/（施工设计契约，正本）
+
+| 文件 | 桶 | 要点 |
+|---|---|---|
+| `providers_distillation_design.md` | distill:providers（4.2，18 模块） | 12 条传输不变式；common 冻结签名依据（§6.1/§9.1） |
+| `p1_compilers_release_gate_design.md` | distill:compilers（4.1）+ release-gate（4.4） | 复制改造手法、逐符号去向表、§6 哈希稳定性红线、§8.1 A 案契约下沉 |
+| `distill_gates_review_design.md` | distill:gates-review（4.3，27 模块） | 人工准入内核六公理、法定哈希双变体勘察、生产契约保真条款 |
+
+> 迁移备注：`distill_gates_review_design.md` 曾在 `docs/` 顶层、`p1_compilers_release_gate_design.md` 曾在 `migration/`，均已按产出路径纪律（bc-b8b9aca6 ②）归位 design/，旧路径指路占位件已于本次清理删除。历史消息/任务书中的旧路径一律以本表为准。
+
+## docs/prework/（勘察与验证报告）
+
+| 文件 | 内容 |
+|---|---|
+| `semantic_contracts_split_blueprint.md` | semantic_contracts（380KB）拆分蓝图（knowledge/contracts/ 23 子模块 + facade） |
+| `P2_evidence_materials_api_inventory_import_map_20260811.md` | evidence_v2/materials_v2 API 面清点与 import 改写映射表 |
+| `P2_import_scan_result_20260811.json` | 全仓 import 扫描结果（机器可读） |
+| `P2_黄金样本与字节级验收资产清点_20260811.md` | 黄金样本与字节级验收资产清点 |
+| `P2_阶段2引擎抽包搬运_汇总验收_20260812.md` | 阶段 2 引擎抽包搬运汇总验收 |
+| `P3_golden_five_replay_report_20260812.md` | 黄金五章 Step2 全链重放验收（A 字节对拍 6/6、B 谱系登记 7 例、C config_hash、D 学习黄金） |
+
+## docs/v2/（随迁历史资产，只读）
+
+| 文件 | 作用 |
+|---|---|
+| `Phase2R.1.3_V25源锚定完整表格图示桥接对账报告_20260729.md` | RC1 闭包（phase2r13）验收报告冻结输入 |
+| `artifacts/phase2r13_v25_reconciliation_offline_report_20260729.json` | 同上机器报告 |
+| `baselines/gonglu_v1_baseline_20260724.json` | gonglu V1 黄金基线（黄金重放比对基准） |
+
+## migration/（一次性工具）
+
+| 文件 | 作用 | n11 本轮结果 |
+|---|---|---|
+| `gen_extraction_manifest.py` | 清单 v2 生成器（注解写入生成器，重生不丢） | — |
+| `bring_upstream_knowledge_core.py` | core 19+2 模块搬运 | — |
+| `split_semantic_contracts.py` | semantic_contracts 拆分执行 | — |
+| `build_admission_fixtures.py` | admission_fixtures/admission_legacy_hash 构建 | — |
+| `migrate_core_tests.py` | 随核心迁移测试搬运 | — |
+| `verify_manifest_audit.py` / `verify_manifest_audit2.py` | 迁走↔留守依赖对账 | PASS（migrate=21, stay=152） |
+| `verify_contracts_hash_parity.py` | 拆分前后法定哈希/ID/prompt/golden 全等 | HASH PARITY OK |
+| `verify_contracts_schema_parity.py` | 28 模型 JSON Schema 字节平价 | 28/28 OK |
+| `verify_admission_fixtures.py` | 准入 fixture 族真实冻结工件重放 | PARITY OK |
+| `verify_compilers_parity.py` | compilers/gates-release 双跑对照 | 37/37 byte-identical |
+| `golden_five_replay.py` | 黄金五章 Step2 全链重放 | 四验收线全过 |
+
+## 裁决登记速查（现行口径）
+
+| 裁决 | 内容 | 登记处 |
+|---|---|---|
+| bc-888c6031（布局终裁） | 十包：materials/evidence/knowledge/compilers/gates/pipeline/webui/providers/common/utils；common=冻结底座、utils=非冻结杂项 | `engineering_skeleton.md` §3 |
+| bc-9d82a196（扩容终裁） | common 扩为六件 {hashing, gates, io, freeze, junit, schema}，签名落地即冻 | `engineering_skeleton.md` §3 |
+| bc-b8b9aca6（铁律×2） | 旧契约法定哈希逐字节随包搬运、禁入 common/hashing；yijian2 只读、产出路径纪律 | 各设计稿 §哈希条款 |
+| A 案（跨桶契约下沉） | 跨桶持久化数据契约唯一权威定义于 `knowledge/contracts/admission_fixtures.py`（+法定哈希搬运件 admission_legacy_hash.py） | 清单 v2 8 条【A案】注解；gates-review 稿 §4/§5 |
+| R1 | requires-python >= 3.11 | `engineering_skeleton.md` §2 |
