@@ -20,6 +20,12 @@ FACT_ROOT = ROOT / "data" / "facts_v2" / "golden" / "gonglu_phase0_v1" / "core_o
 SAMPLE = FACT_ROOT / "gonglu_01_text_list" / "fact_run.json"
 VISUAL_SAMPLE = FACT_ROOT / "gonglu_24_table_formula" / "fact_run.json"
 
+# T5 金样镜像守护：镜像缺席（冷克隆）时整模块优雅跳过，镜像在场则正常执行。
+pytestmark = pytest.mark.skipif(
+    not SAMPLE.exists(),
+    reason="金样镜像缺席（T5/骨架§3：data/ 等 gitignore 大资产不入库，冷克隆合法跳过）",
+)
+
 
 def _payload() -> dict:
     return json.loads(SAMPLE.read_text(encoding="utf-8"))
