@@ -1,0 +1,9 @@
+# 字节平价防护（P1 行尾治理）：本仓是字节权威仓——golden/fixture/canonical 哈希
+# 全部锚定工作区字节，git 不得做任何行尾/文本转换。
+#
+# `-text` 对所有路径禁用 text 检测与 eol 转换，并覆盖任何 core.autocrlf 设置：
+# checkout/commit 永远字节直通，跨机器重 checkout 不再改写工作区。
+# 治理时点（renormalize）以当时工作区字节为准收入索引；此后索引==工作区恒成立。
+# 新增二进制类型无需登记（-text 已含），也不要为文本文件恢复转换——一字节
+# 行尾差异即作废哈希面（铁律 bc-b8b9aca6 同源纪律）。
+* -text
