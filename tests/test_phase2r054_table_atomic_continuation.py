@@ -33,6 +33,19 @@ from examcard.knowledge.llm import OpenAICompatibleStep2Transport, Step2AExecuti
 from examcard.knowledge.projection import build_step2a_semantic_projection
 from examcard.knowledge.continuation.repair_sidecar import load_table_repair_sidecar
 from examcard.materials.catalog import load_content_policy
+import pytest
+
+# T5 金样镜像守护：镜像缺席（冷克隆）时整模块优雅跳过，镜像在场则正常执行。
+_REPO_ROOT = Path(__file__).resolve().parents[1]
+_GOLDEN_MIRROR_REQUIRED = (
+    _REPO_ROOT / "data/evidence_v2/golden/gonglu_phase0_v1",
+    _REPO_ROOT / "data/semantic_llm_v2/gonglu_phase2r052_manual_reissue_live",
+)
+pytestmark = pytest.mark.skipif(
+    not all(path.exists() for path in _GOLDEN_MIRROR_REQUIRED),
+    reason="金样镜像缺席（T5/骨架§3：data/ 等 gitignore 大资产不入库，冷克隆合法跳过）",
+)
+
 
 
 PAGE_PATH = ROOT / "data/evidence_v2/golden/gonglu_phase0_v1/gonglu_24_table_formula/pages/page_0001.json"

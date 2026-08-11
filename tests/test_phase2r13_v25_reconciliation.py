@@ -18,6 +18,18 @@ from examcard.knowledge.contracts.phase2r13_v25_reconciliation import (
     build_phase2r13_report,
 )
 from examcard.knowledge.continuation.repair_sidecar import load_table_repair_sidecar, verify_reviewed_table_repair
+import pytest
+
+# T5 金样镜像守护：镜像缺席（冷克隆）时整模块优雅跳过，镜像在场则正常执行。
+_REPO_ROOT = Path(__file__).resolve().parents[1]
+_GOLDEN_MIRROR_REQUIRED = (
+    _REPO_ROOT / "data/evidence_v2/golden/gonglu_phase0_v1",
+)
+pytestmark = pytest.mark.skipif(
+    not all(path.exists() for path in _GOLDEN_MIRROR_REQUIRED),
+    reason="金样镜像缺席（T5/骨架§3：data/ 等 gitignore 大资产不入库，冷克隆合法跳过）",
+)
+
 
 
 ROOT = Path(__file__).resolve().parents[1]

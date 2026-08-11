@@ -22,9 +22,16 @@ from examcard.knowledge.schema import FactType
 
 
 ROOT = Path(__file__).resolve().parents[1]
-FROZEN_RECORD = next(
-    (ROOT / "data/semantic_llm_v2/gonglu_phase2r141_v25b_recovery_live_run1/records").glob("*.json")
-)
+# T5 金样镜像守护：模块级 next(glob) 会在收集期执行，镜像缺席时必须先整模块跳过。
+_RECORDS_DIR = ROOT / "data/semantic_llm_v2/gonglu_phase2r141_v25b_recovery_live_run1/records"
+if not _RECORDS_DIR.is_dir() or not any(_RECORDS_DIR.glob("*.json")):
+    import pytest
+
+    pytest.skip(
+        "金样镜像缺席（T5/骨架§3：data/ 等 gitignore 大资产不入库，冷克隆合法跳过）",
+        allow_module_level=True,
+    )
+FROZEN_RECORD = next(_RECORDS_DIR.glob("*.json"))
 FIXTURE_PATH = ROOT / "scripts/tests/fixtures/v2/learning_golden/gonglu_phase2r12_v25_reviewed.yaml"
 REISSUE_REASON = "manual-reissue-phase2r141-v25b-relay-recovery-20260729-run1"
 

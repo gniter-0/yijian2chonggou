@@ -39,6 +39,17 @@ from examcard.knowledge.llm import OpenAICompatibleStep2Transport
 from examcard.knowledge.projection import build_step2a_semantic_projection
 from examcard.materials.catalog import load_content_policy
 
+# T5 金样镜像守护：镜像缺席（冷克隆）时整模块优雅跳过，镜像在场则正常执行。
+_REPO_ROOT = Path(__file__).resolve().parents[1]
+_GOLDEN_MIRROR_REQUIRED = (
+    _REPO_ROOT / "data/shadow_v2/gonglu/phase3b11_smoke_20260726",
+)
+pytestmark = pytest.mark.skipif(
+    not all(path.exists() for path in _GOLDEN_MIRROR_REQUIRED),
+    reason="金样镜像缺席（T5/骨架§3：data/ 等 gitignore 大资产不入库，冷克隆合法跳过）",
+)
+
+
 
 SAMPLE_ID = "gonglu_24_continuation_real"
 PAGE_ROOT = ROOT / "data/shadow_v2/gonglu/phase3b11_smoke_20260726/chapters/24/evidence/pages"
