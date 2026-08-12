@@ -1,0 +1,12 @@
+# live 运行单价表（T4b §6；非冻结面——预算护栏与报告估价用，不进请求 identity）。
+# calibrated_from: docs/prework/P2_pilot_黄金五章全链实测_20260812.md 与
+#   P2_pilot_step2a质量深评_20260812.md 的 20260812 实测均值（2chat gpt-5.6-sol 文本、
+#   chatgpt2api-new gpt-image-2 图像）。数值为保守上估。
+schema_version: live-pricing/1.0
+prices_usd:
+  step2a_call: 0.15      # step2a 一章（补强+流式口径，大输入载荷）
+  step2b_call: 0.05      # step2b 一章（小载荷卡编组）
+  step3_card_call: 0.02  # v2 单卡回显一卡（~1.5K 输出 token）
+  step4_image_call: 0.04 # 一张 1024x1536 出图
+  probe: 0.01            # stage 前置小探针
+  preflight_call: 0.02   # 预检探针均价（体积垫料/strict/图像端点混合）
