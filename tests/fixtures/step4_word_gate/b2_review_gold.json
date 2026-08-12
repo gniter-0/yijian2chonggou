@@ -1,0 +1,509 @@
+{
+  "built_from": {
+    "review_report": "docs/prework/P3_彩排b2_step4十六图人工评审_20260813.md",
+    "reviewer": "yijian2-1",
+    "run": "exams/gonglu_golden5_rehearsal/data/live_runs/20260812-rehearsal-b2-9lhvgu4b",
+    "truth_fixture": "scripts/tests/fixtures/v2/release_fixtures/gonglu_phase2r2242_step3_reviewed_release.yaml"
+  },
+  "cards": [
+    {
+      "canonical_title": "特殊路基类型",
+      "card_index": 1,
+      "disposition": "rejected",
+      "expected_findings": [
+        {
+          "actual_snippet": "滑坡地质路基",
+          "expected_snippet": "滑坡地段路基",
+          "kind": "term_error",
+          "note": "术语级单字符替换（地段→地质），词级比对必拦——本卡 hard_fail 主因"
+        },
+        {
+          "actual_snippet": "盐渍土地区路基。多年冻土地区路基",
+          "expected_snippet": "盐渍土地区路基、多年冻土地区路基",
+          "kind": "punct_sub",
+          "note": "枚举顿号渲为句号（warn 级；本卡档位由 term_error 决定）"
+        }
+      ],
+      "expected_verdict": "hard_fail",
+      "human_grade": "C",
+      "image_path": "exams/gonglu_golden5_rehearsal/data/live_runs/20260812-rehearsal-b2-9lhvgu4b/step4/images/step4-card-01-1011b240.png",
+      "image_sha256": "d461534b962ea04d9810eab86c2aa8628a72f574d7f6cacafd689def57c78d09",
+      "note": "真值单大单元格被重组为三分组行（语义等价 reflow，不计缺陷）。",
+      "presentation": "table",
+      "render": "r1",
+      "source_card_id": "v25-release-card:1011b240d15e12f3f7084096",
+      "transcript": [
+        "不良地质地段：滑坡地质路基、崩塌地段路基、岩堆地段路基、泥石流地段路基、岩溶地区路基；",
+        "特殊土（岩）地段：软土地区路基、红粘土与高液限土地区路基、膨胀土地区路基、黄土地区路基、盐渍土地区路基。多年冻土地区路基；",
+        "受水、气候等自然因素影响：风沙地区路基、雪害地段路基、涎流冰地段路基、采空区路基、滨海路基、水库地区路基、季节性冰冻地区路基。"
+      ],
+      "truth_visible_texts": [
+        "不良地质地段：滑坡地段路基、崩塌地段路基、岩堆地段路基、泥石流地段\n路基、岩溶地区路基；特殊土（岩）地段：软土地区路基、红粘土与高液限土地区路基、膨胀土地区路\n基、黄土地区路基、盐渍土地区路基、多年冻土地区路基；受水、气候等自然因素影响：风沙地区路基、雪害地段路基、涎流冰地段路基、采空区路\n基、滨海路基、水库地区路基、季节性冰冻地区路基。"
+      ]
+    },
+    {
+      "canonical_title": "特殊路基类型",
+      "card_index": 1,
+      "disposition": "approved",
+      "expected_findings": [],
+      "expected_verdict": "pass",
+      "human_grade": "A",
+      "image_path": "exams/gonglu_golden5_rehearsal/data/live_runs/20260812-rehearsal-b2-9lhvgu4b/step4/images/step4-card-01-1011b240-r2.png",
+      "image_sha256": "8f083d44706bd07274da1306a3b9c3048b1c06e99cbd3ff0d8e9dd37b062f83a",
+      "note": "r1 两驳点全修复（滑坡地段√、顿号恢复）；行中折行照抄真值内嵌换行（软分隔）。",
+      "presentation": "table",
+      "render": "r2",
+      "source_card_id": "v25-release-card:1011b240d15e12f3f7084096",
+      "transcript": [
+        "不良地质地段：滑坡地段路基、崩塌地段路基、岩堆地段路基、泥石流地段\n路基、岩溶地区路基；特殊土（岩）地段：软土地区路基、红粘土与高液限土地区路基、膨胀土地区路\n基、黄土地区路基、盐渍土地区路基、多年冻土地区路基；受水、气候等自然因素影响：风沙地区路基、雪害地段路基、涎流冰地段路基、采空区路\n基、滨海路基、水库地区路基、季节性冰冻地区路基。"
+      ],
+      "truth_visible_texts": [
+        "不良地质地段：滑坡地段路基、崩塌地段路基、岩堆地段路基、泥石流地段\n路基、岩溶地区路基；特殊土（岩）地段：软土地区路基、红粘土与高液限土地区路基、膨胀土地区路\n基、黄土地区路基、盐渍土地区路基、多年冻土地区路基；受水、气候等自然因素影响：风沙地区路基、雪害地段路基、涎流冰地段路基、采空区路\n基、滨海路基、水库地区路基、季节性冰冻地区路基。"
+      ]
+    },
+    {
+      "canonical_title": "填方路基横断面",
+      "card_index": 2,
+      "disposition": "manual_review",
+      "expected_findings": [],
+      "expected_verdict": "pass",
+      "human_grade": "B",
+      "image_path": "exams/gonglu_golden5_rehearsal/data/live_runs/20260812-rehearsal-b2-9lhvgu4b/step4/images/step4-card-02-c2712f4f.png",
+      "image_sha256": "445e58aec77ee45d572907567af82d05b3df90d2197d3de8e15f3a42da7b207c",
+      "note": "文本面全对（4 标签+3 边配对）；悬空线与横断面空间展平属结构面缺陷，不在词级门禁范围（人工判 B/manual_review 的原因在结构面）。",
+      "presentation": "diagram",
+      "render": "r1",
+      "source_card_id": "v25-release-card:c2712f4fcfbb9407a3140d57",
+      "transcript": [
+        "路面",
+        "填方路基",
+        "边坡",
+        "排水沟"
+      ],
+      "truth_visible_texts": [
+        "路面",
+        "填方路基",
+        "边坡",
+        "排水沟"
+      ]
+    },
+    {
+      "canonical_title": "路基施工目录",
+      "card_index": 3,
+      "disposition": "approved",
+      "expected_findings": [],
+      "expected_verdict": "pass",
+      "human_grade": "A",
+      "image_path": "exams/gonglu_golden5_rehearsal/data/live_runs/20260812-rehearsal-b2-9lhvgu4b/step4/images/step4-card-03-e6a90dfe.png",
+      "image_sha256": "cd8ff1c15df03baee51f46b7467570e11254dd0d3d0d85c957451c711706f2cd",
+      "note": null,
+      "presentation": "ordered_list",
+      "render": "r1",
+      "source_card_id": "v25-release-card:e6a90dfe9d5240ead407b7ef",
+      "transcript": [
+        "① 路基施工准备\n② 原地基处理要求\n③ 挖方路基施工\n④ 填方路基施工\n⑤ 路基季节性施工\n⑥ 路基改（扩）建施工\n⑦ 特殊路基施工\n⑧ 路基施工测量"
+      ],
+      "truth_visible_texts": [
+        "① 路基施工准备\n② 原地基处理要求\n③ 挖方路基施工\n④ 填方路基施工\n⑤ 路基季节性施工\n⑥ 路基改（扩）建施工\n⑦ 特殊路基施工\n⑧ 路基施工测量"
+      ]
+    },
+    {
+      "canonical_title": "模板与支架一般要求",
+      "card_index": 4,
+      "disposition": "approved",
+      "expected_findings": [],
+      "expected_verdict": "pass",
+      "human_grade": "A",
+      "image_path": "exams/gonglu_golden5_rehearsal/data/live_runs/20260812-rehearsal-b2-9lhvgu4b/step4/images/step4-card-04-cd1558d4.png",
+      "image_sha256": "482168baeff540043e7cf8aeda7a51d7a079c9128d4f0c70be799daeb90ab7b7",
+      "note": null,
+      "presentation": "constraint",
+      "render": "r1",
+      "source_card_id": "v25-release-card:cd1558d4e5d386183f1a4b31",
+      "transcript": [
+        "（2）模板和支架应具有足够的强度、刚度和稳定性。",
+        "（4）模板与混凝土的接触面应涂刷隔离剂，但不得采用废机油等油料。",
+        "（5）在模板上设置的吊环应采用HPB300 钢筋（一级钢），严禁采用冷加工\n钢筋制作。",
+        "在模板自重标准值作用下，吊环的拉应力应不大于65MPa。",
+        "（6）支架不得与应急安全通道相连接。"
+      ],
+      "truth_visible_texts": [
+        "（2）模板和支架应具有足够的强度、刚度和稳定性。",
+        "（4）模板与混凝土的接触面应涂刷隔离剂，但不得采用废机油等油料。",
+        "（5）在模板上设置的吊环应采用HPB300 钢筋（一级钢），严禁采用冷加工\n钢筋制作。",
+        "在模板自重标准值作用下，吊环的拉应力应不大于65MPa。",
+        "（6）支架不得与应急安全通道相连接。"
+      ]
+    },
+    {
+      "canonical_title": "模板安装与预压约束",
+      "card_index": 5,
+      "disposition": "approved",
+      "expected_findings": [],
+      "expected_verdict": "pass",
+      "human_grade": "A",
+      "image_path": "exams/gonglu_golden5_rehearsal/data/live_runs/20260812-rehearsal-b2-9lhvgu4b/step4/images/step4-card-05-b87732d8.png",
+      "image_sha256": "94cf8dc85e22bfa79df21c20511c8672075926565f295815240fe0adb1e48a3c",
+      "note": null,
+      "presentation": "constraint",
+      "render": "r1",
+      "source_card_id": "v25-release-card:b87732d828c76d202372ae90",
+      "transcript": [
+        "③ 模板在安装过程中，必须设置防倾覆的临时固定设施。",
+        "② 模板的滑升速度宜不大于250mm/h，滑升时应检测并控制其位置。",
+        "④ 预压荷载：宜为支架所承受荷载的1.05～1.1 倍。",
+        "① 浆砌石拱桥，应待砂浆强度达到设计强度的85%后方可卸落。"
+      ],
+      "truth_visible_texts": [
+        "③ 模板在安装过程中，必须设置防倾覆的临时固定设施。",
+        "② 模板的滑升速度宜不大于250mm/h，滑升时应检测并控制其位置。",
+        "④ 预压荷载：宜为支架所承受荷载的1.05～1.1 倍。",
+        "① 浆砌石拱桥，应待砂浆强度达到设计强度的85%后方可卸落。"
+      ]
+    },
+    {
+      "canonical_title": "模板、支架和拱架荷载组合",
+      "card_index": 6,
+      "disposition": "approved",
+      "expected_findings": [],
+      "expected_verdict": "pass",
+      "human_grade": "A",
+      "image_path": "exams/gonglu_golden5_rehearsal/data/live_runs/20260812-rehearsal-b2-9lhvgu4b/step4/images/step4-card-06-f06d575d.png",
+      "image_sha256": "08d725ee95ec9dc28ab773ac17247deed7f8981bc6723b0afd5d939e7a057469",
+      "note": "表题以标题行完整呈现；合并表头与带圈数字组合式逐字全对。",
+      "presentation": "table",
+      "render": "r1",
+      "source_card_id": "v25-release-card:f06d575da299041aae98895c",
+      "transcript": [
+        "表3.1-2 模板、支架和拱架设计计算的荷载组合\n模板、支架结构类别 | 荷载组合\n计算强度用 | 验算刚度用\n梁、板和拱的底模板以及支承板、支架及拱等 | ①+②+③+④+⑦+⑧ | ①+②+⑦+⑧\n缘石、人行道、栏杆、柱、梁、板、拱等的侧模板 | ④+⑤ | ⑤\n基础、墩台等厚大建筑物的侧模板 | ⑤+⑥ | ⑤"
+      ],
+      "truth_visible_texts": [
+        "表3.1-2 模板、支架和拱架设计计算的荷载组合\n模板、支架结构类别 | 荷载组合\n计算强度用 | 验算刚度用\n梁、板和拱的底模板以及支承板、支架及拱等 | ①+②+③+④+⑦+⑧ | ①+②+⑦+⑧\n缘石、人行道、栏杆、柱、梁、板、拱等的侧模板 | ④+⑤ | ⑤\n基础、墩台等厚大建筑物的侧模板 | ⑤+⑥ | ⑤"
+      ]
+    },
+    {
+      "canonical_title": "模板与支架一般要求表",
+      "card_index": 7,
+      "disposition": "approved",
+      "expected_findings": [],
+      "expected_verdict": "pass",
+      "human_grade": "A",
+      "image_path": "exams/gonglu_golden5_rehearsal/data/live_runs/20260812-rehearsal-b2-9lhvgu4b/step4/images/step4-card-07-13ac7b62.png",
+      "image_sha256": "9fa83740c9ce4c76419a7ad91bdb9999978f29ed021647d5891c5dbbf7e30069",
+      "note": "三条『模板』行合并为单类别单元格（语义等价重组）：覆盖率须按『每条真值单元恰匹配一次』的单射口径，标签去重后全文比对。",
+      "presentation": "table",
+      "render": "r1",
+      "source_card_id": "v25-release-card:13ac7b620ddf9381a370ef86",
+      "transcript": [
+        "模板 | （2）模板和支架应具有足够的强度、刚度和稳定性。\n（4）模板与混凝土的接触面应涂刷隔离剂，但不得采用废机油等油料。\n（5）在模板上设置的吊环应采用HPB300钢筋（一级钢），严禁采用冷加工钢筋制作。在模板自重标准值作用下，吊环的拉应力应不大于65MPa。",
+        "支架 | （6）支架不得与应急安全通道相连接。"
+      ],
+      "truth_visible_texts": [
+        "模板 | （2）模板和支架应具有足够的强度、刚度和稳定性。\n模板 | （4）模板与混凝土的接触面应涂刷隔离剂，但不得采用废机油等油料。\n模板 | （5）在模板上设置的吊环应采用HPB300钢筋（一级钢），严禁采用冷加工钢筋制作。在模板自重标准值作用下，吊环的拉应力应不大于65MPa。\n支架 | （6）支架不得与应急安全通道相连接。"
+      ]
+    },
+    {
+      "canonical_title": "围岩与隧道跨度分类",
+      "card_index": 8,
+      "disposition": "rejected",
+      "expected_findings": [
+        {
+          "actual_snippet": null,
+          "expected_snippet": "14≤B<18",
+          "kind": "line_missing",
+          "note": "真值第二条可见文本整条漏渲染——visible_texts 覆盖率必拦，本卡 hard_fail 主因"
+        },
+        {
+          "actual_snippet": "坚硬岩，岩体较完整\n较坚硬岩，岩体完整",
+          "expected_snippet": "坚硬岩，岩体较完整；较坚硬岩，岩体完整",
+          "kind": "punct_reflow",
+          "note": "Ⅱ/Ⅲ行分号以换行呈现——软分隔 reflow，归一化后不升档"
+        }
+      ],
+      "expected_verdict": "hard_fail",
+      "human_grade": "C",
+      "image_path": "exams/gonglu_golden5_rehearsal/data/live_runs/20260812-rehearsal-b2-9lhvgu4b/step4/images/step4-card-08-a7f00eb1.png",
+      "image_sha256": "f1b5dc1acf845af3c0a7ba3c727e867f15154f18e515aaa1dc17d7c6f7b16111",
+      "note": "Ⅰ级 BQ 本轮正确渲染为＞550（历史 D2 符号缺陷未复现）。",
+      "presentation": "table",
+      "render": "r1",
+      "source_card_id": "v25-release-card:a7f00eb1d21cbe2249c62dcf",
+      "transcript": [
+        "围岩级别 | 围岩或土体主要定性特征 | 岩体基本质量指标BQ\nⅠ | 坚硬岩，岩体完整 | ＞550\nⅡ | 坚硬岩，岩体较完整\n较坚硬岩，岩体完整 | 550～451\nⅢ | 坚硬岩，岩体较破碎\n较坚硬岩，岩体较完整\n较软岩，岩体完整，整体状或巨厚层状结构 | 450～351\nⅣ | 坚硬岩，岩体破碎；较坚硬岩，岩体较破碎-破碎；较软岩，岩体较完整-较破碎；软岩，岩体完整-较完整 | 350～251\nⅤ | 较软岩，岩体破碎；软岩，岩体较破碎-破碎；全部极软岩和全部极破碎 | ≤250\nⅥ | 软塑状黏性土及潮湿、饱和粉细砂层、软土等 | —"
+      ],
+      "truth_visible_texts": [
+        "围岩级别 | 围岩或土体主要定性特征 | 岩体基本质量指标BQ\nⅠ | 坚硬岩，岩体完整 | ＞550\nⅡ | 坚硬岩，岩体较完整；较坚硬岩，岩体完整 | 550～451\nⅢ | 坚硬岩，岩体较破碎；较坚硬岩，岩体较完整；较软岩，岩体完整，整体状或巨厚层状结构 | 450～351\nⅣ | 坚硬岩，岩体破碎；较坚硬岩，岩体较破碎-破碎；较软岩，岩体较完整-较破碎；软岩，岩体完整-较完整 | 350～251\nⅤ | 较软岩，岩体破碎；软岩，岩体较破碎-破碎；全部极软岩和全部极破碎 | ≤250\nⅥ | 软塑状黏性土及潮湿、饱和粉细砂层、软土等 | —",
+        "14≤B<18"
+      ]
+    },
+    {
+      "canonical_title": "围岩与隧道跨度分类",
+      "card_index": 8,
+      "disposition": "manual_review",
+      "expected_findings": [
+        {
+          "actual_snippet": "坚硬岩，岩体破碎；较坚硬岩；岩体较破碎-破碎",
+          "expected_snippet": "坚硬岩，岩体破碎；较坚硬岩，岩体较破碎-破碎",
+          "kind": "punct_sub",
+          "note": "Ⅳ级行『较坚硬岩』后逗号渲为分号——一处（岩类，完整度）配对边界断开，术语/数值无损：warn（终审已裁按 B 带瑕疵接受）"
+        },
+        {
+          "actual_snippet": "坚硬岩，岩体较完整\n较坚硬岩，岩体完整",
+          "expected_snippet": "坚硬岩，岩体较完整；较坚硬岩，岩体完整",
+          "kind": "punct_reflow",
+          "note": "Ⅱ/Ⅲ行分号以换行呈现（与 r1 同，软分隔不升档）"
+        }
+      ],
+      "expected_verdict": "warn",
+      "human_grade": "B",
+      "image_path": "exams/gonglu_golden5_rehearsal/data/live_runs/20260812-rehearsal-b2-9lhvgu4b/step4/images/step4-card-08-a7f00eb1-r2.png",
+      "image_sha256": "f7477bd2c3606a85122e70c679789b3a53364894c1ad1c5595db2b4d19761c45",
+      "note": "r1 漏渲染行已补齐：『14≤B＜18』以表底跨列行呈现，＜为全角形——全/半角等值形须归一化等同（不计缺陷）。",
+      "presentation": "table",
+      "render": "r2",
+      "source_card_id": "v25-release-card:a7f00eb1d21cbe2249c62dcf",
+      "transcript": [
+        "围岩级别 | 围岩或土体主要定性特征 | 岩体基本质量指标BQ\nⅠ | 坚硬岩，岩体完整 | ＞550\nⅡ | 坚硬岩，岩体较完整\n较坚硬岩，岩体完整 | 550～451\nⅢ | 坚硬岩，岩体较破碎\n较坚硬岩，岩体较完整\n较软岩，岩体完整，整体状或巨厚层状结构 | 450～351\nⅣ | 坚硬岩，岩体破碎；较坚硬岩；岩体较破碎-破碎；较软岩，岩体较完整-较破碎；软岩，岩体完整-较完整 | 350～251\nⅤ | 较软岩，岩体破碎；软岩，岩体较破碎-破碎；全部极软岩和全部极破碎 | ≤250\nⅥ | 软塑状黏性土及潮湿、饱和粉细砂层、软土等 | —",
+        "14≤B＜18"
+      ],
+      "truth_visible_texts": [
+        "围岩级别 | 围岩或土体主要定性特征 | 岩体基本质量指标BQ\nⅠ | 坚硬岩，岩体完整 | ＞550\nⅡ | 坚硬岩，岩体较完整；较坚硬岩，岩体完整 | 550～451\nⅢ | 坚硬岩，岩体较破碎；较坚硬岩，岩体较完整；较软岩，岩体完整，整体状或巨厚层状结构 | 450～351\nⅣ | 坚硬岩，岩体破碎；较坚硬岩，岩体较破碎-破碎；较软岩，岩体较完整-较破碎；软岩，岩体完整-较完整 | 350～251\nⅤ | 较软岩，岩体破碎；软岩，岩体较破碎-破碎；全部极软岩和全部极破碎 | ≤250\nⅥ | 软塑状黏性土及潮湿、饱和粉细砂层、软土等 | —",
+        "14≤B<18"
+      ]
+    },
+    {
+      "canonical_title": "洞门基础深度约束",
+      "card_index": 9,
+      "disposition": "approved",
+      "expected_findings": [
+        {
+          "actual_snippet": "不小于0. 25m。",
+          "expected_snippet": "不小于0.25m。",
+          "kind": "glyph_spacing",
+          "note": "小数点后渲染字距（字形级，非字符）——OCR/vision 转写易读出空格，归一化须容忍数字内空白（先例 D5）"
+        }
+      ],
+      "expected_verdict": "pass",
+      "human_grade": "A",
+      "image_path": "exams/gonglu_golden5_rehearsal/data/live_runs/20260812-rehearsal-b2-9lhvgu4b/step4/images/step4-card-09-40b3629b.png",
+      "image_sha256": "3f228c339de31dc12f1da361e43adf5f61b8da5fce3d58b3a7c8992062f1ebaa",
+      "note": "truth presentation=threshold 与 run 侧 render_presentation=constraint 为管线映射差异、非图面缺陷。",
+      "presentation": "constraint",
+      "render": "r1",
+      "source_card_id": "v25-release-card:40b3629b5e9457052c440c3d",
+      "transcript": [
+        "③地基为冻胀土层时，基底高程应在最大冻结深度以下不小于0.25m。"
+      ],
+      "truth_visible_texts": [
+        "③地基为冻胀土层时，基底高程应在最大冻结深度以下不小于0.25m。"
+      ]
+    },
+    {
+      "canonical_title": "复合式衬砌横断面",
+      "card_index": 10,
+      "disposition": "approved",
+      "expected_findings": [],
+      "expected_verdict": "pass",
+      "human_grade": "A",
+      "image_path": "exams/gonglu_golden5_rehearsal/data/live_runs/20260812-rehearsal-b2-9lhvgu4b/step4/images/step4-card-10-4995459a.png",
+      "image_sha256": "6ec18de51249e50188fad383957b04610a3289215e8bb4bd6a748d0d8e45e607",
+      "note": "同心层序与真值 4 边链全合（结构面信息，词级门禁只见 5 标签全对）。",
+      "presentation": "diagram",
+      "render": "r1",
+      "source_card_id": "v25-release-card:4995459aea0db1350c00cdec",
+      "transcript": [
+        "围岩",
+        "初期支护",
+        "防水层",
+        "二次衬砌",
+        "排水盲管"
+      ],
+      "truth_visible_texts": [
+        "围岩",
+        "初期支护",
+        "防水层",
+        "二次衬砌",
+        "排水盲管"
+      ]
+    },
+    {
+      "canonical_title": "事故类别与报告时限",
+      "card_index": 11,
+      "disposition": "approved",
+      "expected_findings": [],
+      "expected_verdict": "pass",
+      "human_grade": "A",
+      "image_path": "exams/gonglu_golden5_rehearsal/data/live_runs/20260812-rehearsal-b2-9lhvgu4b/step4/images/step4-card-11-10a6290c.png",
+      "image_sha256": "73d586e5a7c1244530afbae6d2a8971e9fc5c6781242452507575c4e0765b1b4",
+      "note": "20 类事故一项一行呈现（软 reflow，分号保留）。",
+      "presentation": "ordered_list",
+      "render": "r1",
+      "source_card_id": "v25-release-card:10a6290cc820d12ac15e36dc",
+      "transcript": [
+        "①物体打击；②车辆伤害；③机械伤害；④起重伤害；⑤触电；⑥淹溺；⑦灼烫；⑧火灾；⑨高处坠落；⑩坍塌；⑪冒顶片帮；⑫透水；⑬放炮；⑭火药爆炸；⑮瓦斯爆炸；⑯锅炉爆炸；⑰容器爆炸；⑱其他爆炸；⑲中毒和窒息；⑳其他伤害。",
+        "（1）事故报告责任单位应在接报2小时内，核实、汇总并向负责项目监管的交通运输主管部门及其工程质量监督机构报告。\n（2）重大及以上质量事故，省级交通运输主管部门应在接报2小时内进一步核实，并按工程质量事故快报统一报交通运输部应急办转部工程质量监督管理部门。"
+      ],
+      "truth_visible_texts": [
+        "①物体打击；②车辆伤害；③机械伤害；④起重伤害；⑤触电；⑥淹溺；⑦灼烫；⑧火灾；⑨高处坠落；⑩坍塌；⑪冒顶片帮；⑫透水；⑬放炮；⑭火药爆炸；⑮瓦斯爆炸；⑯锅炉爆炸；⑰容器爆炸；⑱其他爆炸；⑲中毒和窒息；⑳其他伤害。",
+        "（1）事故报告责任单位应在接报2小时内，核实、汇总并向负责项目监管的交通运输主管部门及其工程质量监督机构报告。\n（2）重大及以上质量事故，省级交通运输主管部门应在接报2小时内进一步核实，并按工程质量事故快报统一报交通运输部应急办转部工程质量监督管理部门。"
+      ]
+    },
+    {
+      "canonical_title": "生产安全事故等级",
+      "card_index": 12,
+      "disposition": "approved",
+      "expected_findings": [],
+      "expected_verdict": "pass",
+      "human_grade": "A",
+      "image_path": "exams/gonglu_golden5_rehearsal/data/live_runs/20260812-rehearsal-b2-9lhvgu4b/step4/images/step4-card-12-365e03a3.png",
+      "image_sha256": "c12e41a7bb47b372011fcb3fc5b009cdb5be90109518eadf3cadd7c8f1aa7471",
+      "note": "6/6 边恰覆盖真值、判定指标边正确锚至一般事故（结构面信息）。",
+      "presentation": "diagram",
+      "render": "r1",
+      "source_card_id": "v25-release-card:365e03a33bb2e9f00935c7f2",
+      "transcript": [
+        "一般事故",
+        "较大事故",
+        "重大事故",
+        "特别重大事故",
+        "死亡人数",
+        "重伤人数",
+        "直接经济损失"
+      ],
+      "truth_visible_texts": [
+        "一般事故",
+        "较大事故",
+        "重大事故",
+        "特别重大事故",
+        "死亡人数",
+        "重伤人数",
+        "直接经济损失"
+      ]
+    },
+    {
+      "canonical_title": "安全职责与风险评估",
+      "card_index": 13,
+      "disposition": "approved",
+      "expected_findings": [],
+      "expected_verdict": "pass",
+      "human_grade": "A",
+      "image_path": "exams/gonglu_golden5_rehearsal/data/live_runs/20260812-rehearsal-b2-9lhvgu4b/step4/images/step4-card-13-1f81dff1.png",
+      "image_sha256": "a6d276bc6fa25bc1ef09f8bcebe17dd2bdbf17331eb4c290833b4810cb53db25",
+      "note": null,
+      "presentation": "constraint",
+      "render": "r1",
+      "source_card_id": "v25-release-card:1f81dff1f9f9801edaee6d75",
+      "transcript": [
+        "（5）施工单位在工程投标报价中应当包含安全生产费用并单独计提，不得作为竞争性报价。",
+        "③长度3000m及以上的隧道工程，V、VI级围岩连续长度超过50m或合计长度占隧道全长的30%及以上的隧道工程。"
+      ],
+      "truth_visible_texts": [
+        "（5）施工单位在工程投标报价中应当包含安全生产费用并单独计提，不得作为竞争性报价。",
+        "③长度3000m及以上的隧道工程，V、VI级围岩连续长度超过50m或合计长度占隧道全长的30%及以上的隧道工程。"
+      ]
+    },
+    {
+      "canonical_title": "成本预算与偏差公式",
+      "card_index": 14,
+      "disposition": "approved",
+      "expected_findings": [],
+      "expected_verdict": "pass",
+      "human_grade": "A",
+      "image_path": "exams/gonglu_golden5_rehearsal/data/live_runs/20260812-rehearsal-b2-9lhvgu4b/step4/images/step4-card-14-c16e2fc7.png",
+      "image_sha256": "19605ab8e6a31ee03c8395b40bb029dc244c31a27e344b865a8df42f84cc2526",
+      "note": null,
+      "presentation": "formula",
+      "render": "r1",
+      "source_card_id": "v25-release-card:c16e2fc7671047b24a16a4c1",
+      "transcript": [
+        "项目预算总成本=∑（标后预算清单单价×清单工程量）",
+        "机械租赁费=Σ［（机械租赁单价+使用费）×\n租赁数量×租赁时间］\n机械租赁费=Σ（机械租赁单价×租赁数量×\n租赁时间）",
+        "计划成本偏差=施工预算成本-责任目标成本"
+      ],
+      "truth_visible_texts": [
+        "项目预算总成本=∑（标后预算清单单价×清单工程量）",
+        "机械租赁费=Σ［（机械租赁单价+使用费）×\n租赁数量×租赁时间］\n机械租赁费=Σ（机械租赁单价×租赁数量×\n租赁时间）",
+        "计划成本偏差=施工预算成本-责任目标成本"
+      ]
+    },
+    {
+      "canonical_title": "成本控制内容",
+      "card_index": 15,
+      "disposition": "approved",
+      "expected_findings": [],
+      "expected_verdict": "pass",
+      "human_grade": "A",
+      "image_path": "exams/gonglu_golden5_rehearsal/data/live_runs/20260812-rehearsal-b2-9lhvgu4b/step4/images/step4-card-15-958c0cd0.png",
+      "image_sha256": "8b4546d886ce7adb3cbfcf48c88a2bbbe11f7ea1039d60aa78969f1408bc4532",
+      "note": null,
+      "presentation": "ordered_list",
+      "render": "r1",
+      "source_card_id": "v25-release-card:958c0cd0a8d88fad4e4ffc6d",
+      "transcript": [
+        "① 人工费的控制\n② 材料费的控制\n③ 周转工具使用费的控制\n④ 施工机械使用费的控制\n⑤ 现场管理费的控制"
+      ],
+      "truth_visible_texts": [
+        "① 人工费的控制\n② 材料费的控制\n③ 周转工具使用费的控制\n④ 施工机械使用费的控制\n⑤ 现场管理费的控制"
+      ]
+    },
+    {
+      "canonical_title": "标后预算总费用结构",
+      "card_index": 16,
+      "disposition": "approved",
+      "expected_findings": [],
+      "expected_verdict": "pass",
+      "human_grade": "A",
+      "image_path": "exams/gonglu_golden5_rehearsal/data/live_runs/20260812-rehearsal-b2-9lhvgu4b/step4/images/step4-card-16-e8a6d768.png",
+      "image_sha256": "a2cfebf9057b3ce7ed0f4c4bb415678bc77f6896b4e25901c453254c587e5468",
+      "note": "12 节点 11 边包含树全对（结构面信息）。",
+      "presentation": "diagram",
+      "render": "r1",
+      "source_card_id": "v25-release-card:e8a6d76882ba889296a6404f",
+      "transcript": [
+        "标后预算总费用",
+        "上缴企业费用",
+        "总部管理费",
+        "利润",
+        "项目预算总成本",
+        "直接费",
+        "设备购置费",
+        "措施费",
+        "专项费用",
+        "现场管理费",
+        "规费",
+        "税金"
+      ],
+      "truth_visible_texts": [
+        "标后预算总费用",
+        "上缴企业费用",
+        "总部管理费",
+        "利润",
+        "项目预算总成本",
+        "直接费",
+        "设备购置费",
+        "措施费",
+        "专项费用",
+        "现场管理费",
+        "规费",
+        "税金"
+      ]
+    }
+  ],
+  "expected_verdict_distribution": {
+    "hard_fail": 2,
+    "pass": 15,
+    "warn": 1
+  },
+  "normalization_rules": [
+    "软换行：分号/顿号处的换行 reflow 与真值内嵌换行均视为软分隔，不计缺陷（punct_reflow 仅作信息性标注）",
+    "全/半角等值形：＜/<、括号与冒号宽度变体等归一化等同",
+    "数字内空白容差：kerning 导致的『0. 25m』类转写空格归一化剔除（glyph_spacing 信息性标注）",
+    "匹配口径：行内顺序严格、行间顺序无关；覆盖为单射——每条真值单元恰匹配一次，重复渲染=warn"
+  ],
+  "schema": "step4-word-gate-gold/1.0",
+  "verdict_tiers": {
+    "hard_fail": "术语/数值级文本错误（term_error/number_error）或整条真值文本缺失（line_missing）",
+    "pass": "归一化后逐词逐标点全对",
+    "warn": "标点级替换/增漏（punct_sub）或真值单元重复渲染（单射覆盖违例）"
+  }
+}
