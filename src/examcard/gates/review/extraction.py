@@ -578,12 +578,29 @@ def build_extraction_queue(
 
 
 def mark_reviewed(item: ExtractionQueueItem, decision: HumanDecision) -> ExtractionQueueItem:
-    """r8 `_mark_reviewed` 蒸馏：显式决策把队列项迁移到 reviewed_candidate 并重封。"""
+    """r8 `_mark_reviewed` 蒸馏：显式决策把队列项迁移到 reviewed_candidate 并重封。
+
+    重封 payload 直接取模型属性（原生 tuple/模型类型）而非 model_dump 的 list 形态，
+    避免 hash_model 经 model_construct 序列化时的 pydantic 类型告警（封印值不受影响，
+    canonical json 对 list/tuple 同形）。
+    """
     if decision.queue_item_id != item.queue_item_id:
         raise ValueError("decision crossed queue item identity")
-    payload = item.model_dump(mode="json", exclude={"schema_version", "entry_sha256"})
-    payload["disposition"] = "reviewed_candidate"
-    payload["last_decision_id"] = decision.decision_id
+    payload = {
+        "queue_item_id": item.queue_item_id,
+        "subject_id": item.subject_id,
+        "record_id": item.record_id,
+        "fact_id": item.fact_id,
+        "evidence_id": item.evidence_id,
+        "presentation": item.presentation,
+        "source_manifest_sha256": item.source_manifest_sha256,
+        "anchor_ids": item.anchor_ids,
+        "pages": item.pages,
+        "source_sha256": item.source_sha256,
+        "disposition": "reviewed_candidate",
+        "typed_contract_authorized": False,
+        "last_decision_id": decision.decision_id,
+    }
     return common_hash_model(ExtractionQueueItem, payload, "entry_sha256")
 
 
