@@ -186,7 +186,7 @@ exams/<exam_id>/data/live_runs/<run_id>/
 |---|---|---|
 | step2a/step2b | 体积上限 ≥300KB（或流式可用 + 体积达样本实测最大 payload） | 拒开（`preflight_step2_unmet`） |
 | step3(v2) | strict 强制解码 + （首字节窗口 ≥150s 或流式可续） | 拒开（`preflight_step3_unmet`） |
-| step4 | 图像端点可用（IMAGE_MODEL 在列） | 拒开（`preflight_step4_unmet`） |
+| step4 | 图像端点可用（IMAGE_MODEL 在列）**且信封形态与门禁兼容**（`--with-image` 实拍判定：严格画像 PASS，或漂移仅为已知良性键 {width,height} 且值=钉扎尺寸——R3，20260812 深夜 3100 实测漂移的处置口径） | 拒开（`preflight_step4_unmet`） |
 
 - `--skip-preflight` 仅在当日同通道已有报告时允许（复用其结论）；无报告硬拒——"2 分钟预检"换"数小时排障"是 T1 的立项理由，不给绕。
 - 预检自身调用计入预算账本（`preflight` 类目）。
@@ -268,6 +268,7 @@ def orchestrate(config: LiveRunConfig) -> LiveRunReport: ...   # 总编排：DAG
 |---|---|---|
 | CLI 薄壳 | `migration/run_exam_pipeline.py` | argparse → `orchestrate()`；≤150 行 |
 | N 图授权清单 v2 模型 | `src/examcard/gates/review/image_admission_batch.py` | §7.2；v1 `image_admission.py` 零改动 |
+| 图像信封良性漂移复检道 | live_run.py 内 step4 门禁包装（编排层，providers v1 零改动） | R3：严格画像 FAIL 且失败项仅 `data_item_exact` 时，剥离 {width,height}（值必须=钉扎尺寸）后复检；两级门禁结果+drift_keys 逐图入审计（20260812 3100 实测漂移；已在 step4 修复轨驱动级验证，2335c4c） |
 | 单价表 | `configs/v2/live_pricing_v1.yaml` | §6；非冻结面，带标定出处 |
 | 报告模型 | live_run.py 内 `LiveRunReport/StageReport`（StrictModel + 自证哈希，谱系对齐 `PipelineRunReport`） | 新版本号 `examcard_live_run_report_v1` |
 | .gitignore 增补 | 仓根 `.gitignore` | §3.2 两行 |
