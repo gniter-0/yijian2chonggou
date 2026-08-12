@@ -105,11 +105,29 @@ def _load_preflight(args: argparse.Namespace, env_path: Path, stages: tuple[str,
     label = relay_preflight.channel_label(_resolve_channel(env_path, args.channel)["base_url"])
     cached = NEW_ROOT / "data" / "relay_preflight" / label / "relay_preflight_report.json"
     if args.skip_preflight:
-        if not cached.is_file():
-            raise SystemExit(f"--skip-preflight requires a cached report for channel {label}: {cached}")
-        if datetime.fromtimestamp(cached.stat().st_mtime, UTC).date() != datetime.now(UTC).date():
-            raise SystemExit(f"--skip-preflight cached report is stale (not today): {cached}")
-        return json.loads(cached.read_text(encoding="utf-8"))
+        # 双通道当日缓存复用（原执行人 WIP 重做，总指挥核准）：文本通道缓存不含图像端点
+        # 结论（其 P4 对文本中继探询 IMAGE_MODEL 恒 fail），step4 在场时必须并入图像通道
+        # 当日缓存的 step4 结论，否则 --skip-preflight + step4 恒被 preflight_step4_unmet 拒开。
+        def _cached_today(path: Path, what: str) -> dict:
+            if not path.is_file():
+                raise SystemExit(f"--skip-preflight requires a cached {what} report: {path}")
+            if datetime.fromtimestamp(path.stat().st_mtime, UTC).date() != datetime.now(UTC).date():
+                raise SystemExit(f"--skip-preflight cached {what} report is stale (not today): {path}")
+            return json.loads(path.read_text(encoding="utf-8"))
+
+        report = _cached_today(cached, f"text-channel ({label})")
+        if "step4" in stages:
+            env_values = relay_preflight.parse_env_channels(env_path.read_text(encoding="utf-8", errors="replace"))
+            image_channel = env_values.get("image_channel")
+            if image_channel is None:
+                raise SystemExit("--skip-preflight with step4 requires explicit IMAGE_API_* keys in .env")
+            image_label = relay_preflight.channel_label(image_channel["base_url"])
+            image_cached = NEW_ROOT / "data" / "relay_preflight" / image_label / "relay_preflight_report.json"
+            image_report = _cached_today(image_cached, f"image-channel ({image_label})")
+            report["requirement_conclusions"]["step4"] = image_report["requirement_conclusions"]["step4"]
+        # 缓存复用零新增外呼：清零 network_calls，避免把历史预检调用重复计入本 run 账本。
+        report["network_calls"] = 0
+        return report
     report = relay_preflight.run_preflight(channel=args.channel, env_file=env_path, skip={"p3"})
     if "step4" in stages:
         image_report = relay_preflight.run_preflight(
