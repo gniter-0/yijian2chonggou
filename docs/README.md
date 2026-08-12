@@ -63,6 +63,7 @@
 | `P3_T2字节级回归守卫_20260812.md` | T2 落地回归守卫：黄金五章重放 A/B 对拍（A 腿 282fd69 前置控制点 / B 腿 cb6c1a2 含 ff3728e），四验收线全过且两腿产物与基线报告**三方字节全等**（六产物 SHA256 逐一相同）；全量 pytest 558 passed/1 skipped（唯一 skip 为 v1_adapter 留守既定项）；双独立验证一致（yijian2-1 执行记录交叉印证）；**结论：T2 无需返工** |
 | `P3_T4b前置_伪新考试工作区预铺_20260813.md` | T4b 前置预铺：`exams/gonglu_golden5_rehearsal/` 伪新考试工作区（设计稿 §3 目录契约落地 + 接入点物料 + 命名空间侧车副本哈希互锁链）；关键决策：material_profile_id 保留 `yijian_gonglu_2026`（config_hash 把 profile 身份编进 ev: 锚，改名=黄金五章评审资产整体失锚）；全链事实底座验证跑通（quality/machine gates 双真）；彩排双道语料核实（r2242 16 卡新仓件与老仓字节一致 / r810 六卡编译+门禁绿）；§7.1 转换器核查结论=r84 半程在库、r89/r810 授权半程缺失（彩排不受阻，新考试 step3 正路暂走 release-bypass） |
 | `P3_彩排b2_step4十六图人工评审_20260813.md` | T4b 彩排 b2 检查点②人工评审（逐张真实读图 × r2242 真值）：首渲 **A13/B1/C2（87.5%）**；C 卡=#01 术语单字符错（滑坡地段→地质）+ #08『14≤B<18』整条漏渲染，#12 上轮残留（指标边错锚）本轮未复现。**r2 重发道微复审追加**：两卡驳点全修复，#01→A、#08→B（Ⅳ行一处『，→；』标点级新缺陷），**合成 A14/B2/C0 = 100% 可接受**（14 approved/2 manual_review）；三轮 C 卡不重合证明缺陷系逐次渲染随机性：每批必须全量评审，且建议把词级/标点级比对与 visible_texts 覆盖率纳入 step4 自动门禁 |
+| `P3_改进A1_step4词级标点覆盖率门禁_20260813.md` | 改进 A1 落地（b2-D1/D2 建议 → standalone 后审计件）：`gates/review/step4_text_gate.py` 三档判定契约（hard=语义 token/覆盖率/空转写；warn=标点级；pass=全对）与匹配口径（行单元/行序无关/行内严格/多物理行真值拆行）；15 离线测试全绿 + 真语料双向 smoke（真值转写 16/16 pass；注入 D1/D2/标点 → 精确 2 hard+1 warn，误伤零）；A2 金标集接口双键兼容；live 视觉道留待 A2 校准 |
 | `P3_T4b彩排_伪新考试全链实测报告_20260813.md` | **T4b 彩排总报告（T4 轨终局）**：一条命令链在 `exams/gonglu_golden5_rehearsal/` 全通至 `completed`——run 谱系（5 dry-run + a/a2/b/b2，护栏两次实弹：b 预检熔断 + 收口期 call-cap 拒付并发双跑）、终版账本 ≈$2.57、检查点①=release-bypass 豁免道（引 f62fd7b 审计）、检查点② 评审→重渲→微复审→两笔终审→二次摄取闭环（终盘 **A14/B2/C0=100% 可接受**，清单 14 approved/2 manual_review 携终审记录）；**彩排正向战果：拓出并修复驱动两处 resume 盲区**（检查点②摄取不可达 e60fbe8 + CLI skip-preflight 图像通道合并重做，均带回归测试与 live 验证），4 项改进项登记（终报归档制/预检先账后线/rejected 重渲道自动化/word-level+覆盖率门禁）；归属三段记（实现+执行=yijian2-5，监护+收口=yijian2-8，评审=yijian2-1，终审=yijian2-ready） |
 | `P3_总指挥交接台账_20260813.md` | 协同工作组「一建2重构」总指挥班次台账（终盘定稿）：十轨全景台账（承接/提交号/终态）、事件簿（前任总指挥僵尸窗口证据链、T4b 叠写裁决、两起租约漂移裁决准则、密钥回显披露、hub 版本坑位）、终盘记录（评分 8.9→9.5、下一轮改进清单五项、用户侧遗留关注项三条）——总指挥接任者第一读物 |
 | `P3_协同机制经验教训_20260813.md` | 协同机制经验教训总结（总指挥班后复盘）：八类失效模式实录 F1-F8（僵尸会话/卡死误报/租约漂移/截止重置/撞名/hub 能力缺失/本机 ACL 病/消息交错，各含实例与根因）、零产物损失的七道防线复盘、可复用打法 P1-P11（实际写手优先/双独立验证默认制/continue-not-redo/哨兵条款/台账入仓/评审人预定/诚实反压等）、hub 平台改进建议 H1-H7 |
@@ -93,6 +94,7 @@
 | `relay_preflight.py` | 中继能力预检（T1：体积阶梯/strict 遵从/首字节窗口/图像端点四合一 + 需求画像结论；吸收 probe_relay_body_limit.py；库入口 `run_preflight() -> report`，`verdict_code` 四值枚举） | 双中继首跑见 `prework/P3_中继预检实测_20260812.md` |
 | `run_pilot_gonglu5_step3_v2.py` | T3 v2 单卡回显独立 live 驱动（SSE 流式 + 逐卡重发四不变式） | r810 六卡 6/6 首发全过（`prework/P3_step3v2实测_20260812.md`） |
 | `prelay_gonglu5_rehearsal_workspace.py` | T4b 前置：伪新考试工作区预铺执行器（幂等：PDF 复制/命名空间侧车副本/哈希链重算/事实底座全链自验证/彩排双道语料核实） | accepted=true（`prework/P3_T4b前置_伪新考试工作区预铺_20260813.md`） |
+| `run_step4_text_gate.py` | 改进 A1：step4 词级/标点/覆盖率门禁 CLI 薄壳（--transcripts-json 零网络道 / --allow-live 视觉道；核心在 `gates/review/step4_text_gate.py`） | 真语料双向 smoke 通过（`prework/P3_改进A1_step4词级标点覆盖率门禁_20260813.md`） |
 
 ## P3 优化期新增引擎件（src/，速查）
 
