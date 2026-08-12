@@ -45,6 +45,7 @@
 | `P2_公路65章shadow与API_pilot费用估算_20260812.md` | shadow ≈$3 / pilot ≈$5 / 全量 ≈$65-72 费用估算 |
 | `P2_交接文档_shadow65实跑中_20260812.md` | shadow65 实跑中断点交接（checkpoint，已被终版报告接续） |
 | `P2_s3_人工冲突清单_20260812.md`（+`.json`） | shadow65 终版 s3 人工冲突清单：Tier-1 161 / Tier-1b 0 / Tier-2 884 / Tier-3 67 |
+| `P2_s3_Tier1裁决建议_20260812.md` | Tier-1 161 条逐条预审：机判排版级 25 + 读图排除 132，仅 4 条真疑点待人工拍板 |
 | `P2_s4_V1V2差异总报告_20260812.md` | shadow65 终版 s4 V1/V2 差异总报告：65/65 章、vision 610 调用 0 失败、482/643（75%）确认原文无误 |
 | `P3_golden_five_replay_report_20260812.md` | 黄金五章 Step2 全链重放验收（A 字节对拍 6/6、B 谱系登记 7 例、C config_hash、D 学习黄金） |
 
