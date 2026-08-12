@@ -113,6 +113,14 @@ uv run pytest -m "not slow"      # 剔除慢用例
 uv add <pkg>@latest && uv sync   # 升级依赖（锁文件随之更新，一并提交）
 ```
 
+> **本机 pytest 环境修复附注（Windows ACL 损伤，20260812 审计 §1.1）**：裸 `uv run pytest` 若出现成批 `tmp_path` 初始化 ERROR（本机曾 84 例，非代码缺陷），病因是 `%TEMP%\pytest-of-<用户名>` 与仓内 `.pytest_cache/` 曾被管理员权限运行创建、ACL 拒绝访问。修复用**管理员 PowerShell 一行**（把 `<用户名>`/`<仓根>` 换成实际值；完整原始命令见 `docs/prework/P3_未来就绪审计与优化路线图_20260812.md` §1.1）：
+>
+> ```powershell
+> takeown /f $env:TEMP\pytest-of-<用户名> /r /d y; icacls $env:TEMP\pytest-of-<用户名> /reset /t /c; rd -r -fo $env:TEMP\pytest-of-<用户名>; takeown /f <仓根>\.pytest_cache /r /d y; icacls <仓根>\.pytest_cache /reset /t /c; rd -r -fo <仓根>\.pytest_cache
+> ```
+>
+> 修复前的替代口径（无需管理员、已验证全绿）：`uv run pytest --basetemp .test-tmp/pytest-base`（写盘落 T3 收口区内）。
+
 ## 6. 迁移执行约定（给后续 P 任务）
 
 0. **两条铁律（总指挥令，组公告 bc-b8b9aca6）**：

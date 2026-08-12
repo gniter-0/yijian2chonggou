@@ -1,6 +1,6 @@
 # exam-card-engine 文档总索引
 
-更新：2026-08-12（P2·docs 重复件收拾 + 总索引；n11 总报告遗留项 5.4 已清理）。
+更新：2026-08-13（T5 文档沉淀：runbook §8 生产配方/中继矩阵/预检/.env 双通道成文 + 漂移核查 N1–N6 并入；engineering_skeleton §5 增 pytest 环境修复附注；新增 P3 引擎件速查）。上一轮：2026-08-12（P2·docs 重复件收拾 + 总索引；n11 总报告遗留项 5.4 已清理）。
 
 ## 目录分层约定
 
@@ -16,10 +16,10 @@
 
 | 文件 | 内容 |
 |---|---|
-| `engineering_skeleton.md` | 工程骨架规范：pyproject/十包布局与依赖方向、测试隔离 T1–T8、布局终裁登记（bc-888c6031 十包 + bc-9d82a196 common 六件扩容） |
+| `engineering_skeleton.md` | 工程骨架规范：pyproject/十包布局与依赖方向、测试隔离 T1–T8、布局终裁登记（bc-888c6031 十包 + bc-9d82a196 common 六件扩容）；§5 附本机 pytest ACL 环境修复指引（管理员一行命令 + `--basetemp` 替代口径） |
 | `extraction_manifest.md` | 迁移清单 v2：142 模块去向对账基准（含 8 条【A案】跨桶契约下沉注解） |
 | `stage2_migration_report.md` | 阶段 2 总集成验收（n11）：pytest 462 全绿、依赖守护、26/26 对账、遗留风险与下一步 |
-| `new_exam_onboarding_runbook.md` | 新考试（造价/消防）接入手册 |
+| `new_exam_onboarding_runbook.md` | 新考试（造价/消防）接入手册；§8 已成文 live 口径：生产配方四件套（5.6-sol/补强/流式/ResendPlan 重发）、两中继能力边界矩阵、`relay_preflight` 前置检查、`.env` 双通道键约定（配置在新仓）；已并入漂移核查 N1–N6 修订 |
 | `README.md` | 本索引 |
 
 ## docs/design/（施工设计契约，正本）
@@ -82,7 +82,16 @@
 | `verify_admission_fixtures.py` | 准入 fixture 族真实冻结工件重放 | PARITY OK |
 | `verify_compilers_parity.py` | compilers/gates-release 双跑对照 | 37/37 byte-identical |
 | `golden_five_replay.py` | 黄金五章 Step2 全链重放 | 四验收线全过 |
-| `relay_preflight.py` | 中继能力预检（T1：体积阶梯/strict 遵从/首字节窗口/图像端点四合一 + 需求画像结论；吸收 probe_relay_body_limit.py） | 双中继首跑见 `prework/P3_中继预检实测_20260812.md` |
+| `relay_preflight.py` | 中继能力预检（T1：体积阶梯/strict 遵从/首字节窗口/图像端点四合一 + 需求画像结论；吸收 probe_relay_body_limit.py；库入口 `run_preflight() -> report`，`verdict_code` 四值枚举） | 双中继首跑见 `prework/P3_中继预检实测_20260812.md` |
+| `run_pilot_gonglu5_step3_v2.py` | T3 v2 单卡回显独立 live 驱动（SSE 流式 + 逐卡重发四不变式） | r810 六卡 6/6 首发全过（`prework/P3_step3v2实测_20260812.md`） |
+
+## P3 优化期新增引擎件（src/，速查）
+
+| 件 | 作用 | 出处 |
+|---|---|---|
+| `compilers/step3_response_v2.py` | step3 **v2 单卡回显契约**：摸平 `SingleCardModelInput`（无嵌套卡、geometry 不进回显）、三层版本号族（input=`step3-response/2.0` / result=`step3-response-result/2.0` / draft 卡=`step3-response-draft-card/2.0`，回显错版即判负）、`make_single_card_inspector` 可直作 `inspect_chat_envelope` 的 inner_inspector | T3（282fd69）；live 实测 `prework/P3_step3v2实测_20260812.md` |
+| `knowledge/reinforcement.py` | step2a 补强常量 `STEP2A_REINFORCEMENT_V1` + `reinforcement_id`（生产配方件；transport 注入、不进 identity） | T2（ff3728e；含 23 个离线测试 + gonglu_01 live 冒烟 4/4 绿） |
+| `pipeline/live_run.py` | live 编排原语：`ResendPlan`（重发=新身份/禁复用/轮上限）、`load_run_env` 与双通道取值（`IMAGE_*` 显式键优先） | T2（ff3728e）；T4b 驱动在此扩展 |
 
 ## 裁决登记速查（现行口径）
 
