@@ -1,0 +1,339 @@
+{
+  "provenance": {
+    "calls": 18,
+    "completion_tokens_total": 3700,
+    "date": "2026-08-13",
+    "gold_set": "tests/fixtures/step4_word_gate/b2_review_gold.json",
+    "gold_set_sha256": "679459b2a25bdbaf0261d98f36188c2715374f05a14df06ed91c4c5d5506e2d6",
+    "model": "gpt-5.6-sol",
+    "prompt_tokens_total": 113506,
+    "transcriber": "live vision via .env text channel (chat+image_url, temperature 0, max_tokens 4000)"
+  },
+  "schema": "step4-word-gate-live-transcripts/1.0",
+  "transcripts": [
+    {
+      "card_index": 1,
+      "elapsed_s": 9.2,
+      "finish_reason": "stop",
+      "image_sha256": "d461534b962ea04d9810eab86c2aa8628a72f574d7f6cacafd689def57c78d09",
+      "provider_id": "resp_0cfcae3e6928cfd3016a7d05a9fca48190a2e2ea1f0101d470",
+      "render": "r1",
+      "transcript": "不良地质地段：\n滑坡地质路基、崩塌地段路基、岩堆地段路基、泥石流地段路基、岩溶地区路基；\n特殊土（岩）地段：\n软土地区路基、红粘土与高液限土地区路基、膨胀土地区路基、黄土地区路基、盐渍土地区路基、多年冻土地区路基；\n受水、气候等自然因素影响：\n风沙地区路基、雪害地段路基、涎流水地段路基、采空区路基、滨海路基、水库地区路基、季节性冰冻地区路基。",
+      "usage": {
+        "completion_tokens": 163,
+        "prompt_tokens": 6273,
+        "prompt_tokens_details": {
+          "cached_tokens": 3840
+        },
+        "total_tokens": 6436
+      }
+    },
+    {
+      "card_index": 1,
+      "elapsed_s": 11.5,
+      "finish_reason": "stop",
+      "image_sha256": "8f083d44706bd07274da1306a3b9c3048b1c06e99cbd3ff0d8e9dd37b062f83a",
+      "provider_id": "resp_0c8fdb3355b545a4016a7d05b0c2c88190a9af50135f664703",
+      "render": "r2",
+      "transcript": "不良地质地段：滑坡地段路基、崩塌地段路基、岩堆地段路基、泥石流地段\n路基、岩溶地区路基；\n特殊土（岩）地段：软土地区路基、红粘土与高液限土地区路基、膨胀土地区路\n基、黄土地区路基、盐渍土地区路基、多年冻土地区路基；\n受水、气候等自然因素影响：风沙地区路基、雪害地段路基、涎流冰地段路\n基、采空区路\n基、滨海路基、水库地区路基、季节性冰冻地区路基。",
+      "usage": {
+        "completion_tokens": 479,
+        "completion_tokens_details": {
+          "reasoning_tokens": 309
+        },
+        "prompt_tokens": 6273,
+        "prompt_tokens_details": {
+          "cached_tokens": 3840
+        },
+        "total_tokens": 6752
+      }
+    },
+    {
+      "card_index": 2,
+      "elapsed_s": 4.2,
+      "finish_reason": "stop",
+      "image_sha256": "445e58aec77ee45d572907567af82d05b3df90d2197d3de8e15f3a42da7b207c",
+      "provider_id": "resp_02dc4e1fbe46c69c016a7d05bcbb948194953253a488dbba34",
+      "render": "r1",
+      "transcript": "路面\n填方路基\n边坡\n排水沟",
+      "usage": {
+        "completion_tokens": 18,
+        "prompt_tokens": 6273,
+        "prompt_tokens_details": {
+          "cached_tokens": 3840
+        },
+        "total_tokens": 6291
+      }
+    },
+    {
+      "card_index": 3,
+      "elapsed_s": 8.7,
+      "finish_reason": "stop",
+      "image_sha256": "cd8ff1c15df03baee51f46b7467570e11254dd0d3d0d85c957451c711706f2cd",
+      "provider_id": "resp_02913fbec75e2333016a7d058e0a148198bd758c3e524bb98e",
+      "render": "r1",
+      "transcript": "① 路基施工准备\n② 原地基处理要求\n③ 挖方路基施工\n④ 填方路基施工\n⑤ 路基季节性施工\n⑥ 路基改（扩）建施工\n⑦ 特殊路基施工\n⑧ 路基施工测量",
+      "usage": {
+        "completion_tokens": 71,
+        "prompt_tokens": 6273,
+        "prompt_tokens_details": {
+          "cached_tokens": 3840
+        },
+        "total_tokens": 6344
+      }
+    },
+    {
+      "card_index": 4,
+      "elapsed_s": 4.8,
+      "finish_reason": "stop",
+      "image_sha256": "482168baeff540043e7cf8aeda7a51d7a079c9128d4f0c70be799daeb90ab7b7",
+      "provider_id": "resp_0c1d89691a9c1ebe016a7d05bfb358819b9e5fd55599cdcdf8",
+      "render": "r1",
+      "transcript": "（2）模板和支架应具有足够的强度、刚度和稳定性。\n（4）模板与混凝土的接触面应涂刷隔离剂，但不得\n采用废机油等油料。\n（5）在模板上设置的吊环应采用HPB300钢筋（一\n级钢），严禁采用冷加工\n钢筋制作。\n在模板自重标准值作用下，吊环的拉应力应不大于65MPa。\n（6）支架不得与应急安全通道相连接。",
+      "usage": {
+        "completion_tokens": 125,
+        "prompt_tokens": 6273,
+        "prompt_tokens_details": {
+          "cached_tokens": 3840
+        },
+        "total_tokens": 6398
+      }
+    },
+    {
+      "card_index": 5,
+      "elapsed_s": 7.5,
+      "finish_reason": "stop",
+      "image_sha256": "94cf8dc85e22bfa79df21c20511c8672075926565f295815240fe0adb1e48a3c",
+      "provider_id": "resp_0c7c7b5c9fcc6d5e016a7d05c4cc34819b89c8182e7126ff87",
+      "render": "r1",
+      "transcript": "③ 模板在安装过程中，必须设置防倾覆的临时固定设施。\n② 模板的滑升速度宜不大于250mm/h，滑升时应检测并控制其位置。\n④ 预压荷载：宜为支架所承受荷载的1.05～1.1倍。\n① 浆砌石拱桥，应待砂浆强度达到设计强度的85%后方可卸落。",
+      "usage": {
+        "completion_tokens": 287,
+        "completion_tokens_details": {
+          "reasoning_tokens": 184
+        },
+        "prompt_tokens": 6569,
+        "prompt_tokens_details": {
+          "cached_tokens": 3840
+        },
+        "total_tokens": 6856
+      }
+    },
+    {
+      "card_index": 6,
+      "elapsed_s": 4.6,
+      "finish_reason": "stop",
+      "image_sha256": "08d725ee95ec9dc28ab773ac17247deed7f8981bc6723b0afd5d939e7a057469",
+      "provider_id": "resp_032ad61261a1b3de016a7d05cbee28819b83083e95526891c6",
+      "render": "r1",
+      "transcript": "表3.1-2 模板、支架和拱架设计计算的荷载组合\n模板、支架结构类别\n荷载组合\n计算强度用\n验算刚度用\n梁、板和拱的底\n模板以及支承板、\n支架及拱等\n①+②+③+④+⑦+⑧\n①+②+⑦+⑧\n缘石、人行道、栏杆、\n柱、梁、板、拱等的\n侧模板\n④+⑤\n⑤\n基础、墩台等厚大\n建筑物的侧模板\n⑤+⑥\n⑤",
+      "usage": {
+        "completion_tokens": 144,
+        "prompt_tokens": 6273,
+        "prompt_tokens_details": {
+          "cached_tokens": 3840
+        },
+        "total_tokens": 6417
+      }
+    },
+    {
+      "card_index": 7,
+      "elapsed_s": 8.4,
+      "finish_reason": "stop",
+      "image_sha256": "9fa83740c9ce4c76419a7ad91bdb9999978f29ed021647d5891c5dbbf7e30069",
+      "provider_id": "resp_0f6a3989d06a87d8016a7d05d1ecc08195947d69392f1a5305",
+      "render": "r1",
+      "transcript": "模板\n（2）模板和支架应具有足够的强度、刚度\n和稳定性。\n（4）模板与混凝土的接触面应涂刷隔离剂，\n但不得采用废机油等油料。\n（5）在模板上设置的吊环应采用HPB300钢\n筋（一级钢），严禁采用冷加工钢筋制作。\n在模板自重标准值作用下，吊环的拉应力\n应不大于65MPa。\n支架\n（6）支架不得与应急安全通道相连接。",
+      "usage": {
+        "completion_tokens": 131,
+        "prompt_tokens": 6273,
+        "prompt_tokens_details": {
+          "cached_tokens": 3840
+        },
+        "total_tokens": 6404
+      }
+    },
+    {
+      "card_index": 8,
+      "elapsed_s": 14.5,
+      "finish_reason": "stop",
+      "image_sha256": "f1b5dc1acf845af3c0a7ba3c727e867f15154f18e515aaa1dc17d7c6f7b16111",
+      "provider_id": "resp_0aa473cf8559f56d016a7d05da33008193b53d782d40c0238d",
+      "render": "r1",
+      "transcript": "围岩级别\n围岩或土体主要定性特征\n岩体基本质量指标BQ\nI\n坚硬岩，岩体完整\n>550\nII\n坚硬岩，岩体较完整\n较坚硬岩，岩体完整\n550～451\nIII\n坚硬岩，岩体较破碎\n较坚硬岩，岩体较完整\n较软岩，岩体完整，整体状或\n巨厚层状结构\n450～351\nIV\n坚硬岩，岩体破碎；较坚硬岩，\n岩体较破碎-破碎；较软岩，岩\n体较完整-较破碎；软岩，岩体\n完整-较完整\n350～251\nV\n较软岩，岩体破碎；软岩，岩\n体较破碎-破碎；全部极软岩和\n全部极破碎\n≤250\nVI\n软塑状黏性土及潮湿、饱和粉\n细砂层、软土等\n—",
+      "usage": {
+        "completion_tokens": 615,
+        "completion_tokens_details": {
+          "reasoning_tokens": 386
+        },
+        "prompt_tokens": 6273,
+        "prompt_tokens_details": {
+          "cached_tokens": 3840
+        },
+        "total_tokens": 6888
+      }
+    },
+    {
+      "card_index": 8,
+      "elapsed_s": 13.6,
+      "finish_reason": "stop",
+      "image_sha256": "f7477bd2c3606a85122e70c679789b3a53364894c1ad1c5595db2b4d19761c45",
+      "provider_id": "resp_0081c9218b5cd5c8016a7d05e8711c8193bf8983ded91e2db7",
+      "render": "r2",
+      "transcript": "围岩级别\n围岩或土体主要定性特征\n岩体基本质量指标BQ\nI\n坚硬岩，岩体完整\n>550\nII\n坚硬岩，岩体较完整\n较坚硬岩，岩体完整\n550～451\nIII\n坚硬岩，岩体较破碎\n较坚硬岩，岩体较完整\n较软岩，岩体完整，整体状或\n巨厚层状结构\n450～351\nIV\n坚硬岩，岩体破碎；较坚硬岩；\n岩体较破碎-破碎；较软岩，\n岩体较完整-较破碎；软岩，\n岩体完整-较完整\n350～251\nV\n较软岩，岩体破碎；软岩，\n岩体较破碎-破碎；\n全部极软岩和全部极破碎\n≤250\nVI\n软塑状黏性土及潮湿、饱和\n粉细砂层、软土等\n—\n14≤B<18",
+      "usage": {
+        "completion_tokens": 589,
+        "completion_tokens_details": {
+          "reasoning_tokens": 359
+        },
+        "prompt_tokens": 6273,
+        "prompt_tokens_details": {
+          "cached_tokens": 3840
+        },
+        "total_tokens": 6862
+      }
+    },
+    {
+      "card_index": 9,
+      "elapsed_s": 5.7,
+      "finish_reason": "stop",
+      "image_sha256": "3f228c339de31dc12f1da361e43adf5f61b8da5fce3d58b3a7c8992062f1ebaa",
+      "provider_id": "resp_05c766e9ad38b3a5016a7d05f600048196a36eccc7acae53b7",
+      "render": "r1",
+      "transcript": "③地基为冻胀土层时，基底高程应在最\n大冻结深度以下不小于0.25m。",
+      "usage": {
+        "completion_tokens": 36,
+        "prompt_tokens": 6273,
+        "prompt_tokens_details": {
+          "cached_tokens": 3840
+        },
+        "total_tokens": 6309
+      }
+    },
+    {
+      "card_index": 10,
+      "elapsed_s": 5.5,
+      "finish_reason": "stop",
+      "image_sha256": "6ec18de51249e50188fad383957b04610a3289215e8bb4bd6a748d0d8e45e607",
+      "provider_id": "resp_0d348aaeceed7c3c016a7d05fb865c81909dfae9e8cddb814f",
+      "render": "r1",
+      "transcript": "围岩\n初期支护\n防水层\n二次衬砌\n排水盲管",
+      "usage": {
+        "completion_tokens": 28,
+        "prompt_tokens": 6273,
+        "prompt_tokens_details": {
+          "cached_tokens": 3840
+        },
+        "total_tokens": 6301
+      }
+    },
+    {
+      "card_index": 11,
+      "elapsed_s": 17.6,
+      "finish_reason": "stop",
+      "image_sha256": "73d586e5a7c1244530afbae6d2a8971e9fc5c6781242452507575c4e0765b1b4",
+      "provider_id": "resp_02ee47ddc0369261016a7d060150908195a372a3eec80b1daf",
+      "render": "r1",
+      "transcript": "①物体打击；\n②车辆伤害；\n③机械伤害；\n④起重伤害；\n⑤触电；\n⑥淹溺；\n⑦灼烫；\n⑧火灾；\n⑨高处坠落；\n⑩坍塌；\n⑪冒顶片帮；\n⑫透水；\n⑬放炮；\n⑭火药爆炸；\n⑮瓦斯爆炸；\n⑯锅炉爆炸；\n⑰容器爆炸；\n⑱其他爆炸；\n⑲中毒和窒息；\n⑳其他伤害。\n（1）事故报告责任单位应在接报2小时内，核实、汇总并向负责项目监管的交通运输主管部门及其工程质量监督机构报告。\n（2）重大及以上质量事故，省级交通运输主管部门应在接报2小时内进一步核实，并按工程质量事故快报统一报交通运输部应急办转部工程质量监督管理部门。",
+      "usage": {
+        "completion_tokens": 561,
+        "completion_tokens_details": {
+          "reasoning_tokens": 343
+        },
+        "prompt_tokens": 6273,
+        "prompt_tokens_details": {
+          "cached_tokens": 3840
+        },
+        "total_tokens": 6834
+      }
+    },
+    {
+      "card_index": 12,
+      "elapsed_s": 4.5,
+      "finish_reason": "stop",
+      "image_sha256": "c12e41a7bb47b372011fcb3fc5b009cdb5be90109518eadf3cadd7c8f1aa7471",
+      "provider_id": "resp_0f66ca7396835c84016a7d0612b8348194a28cc1649429cb99",
+      "render": "r1",
+      "transcript": "一般事故\n较大事故\n重大事故\n特别重大事故\n死亡人数\n重伤人数\n直接经济损失",
+      "usage": {
+        "completion_tokens": 29,
+        "prompt_tokens": 6273,
+        "prompt_tokens_details": {
+          "cached_tokens": 3840
+        },
+        "total_tokens": 6302
+      }
+    },
+    {
+      "card_index": 13,
+      "elapsed_s": 7.0,
+      "finish_reason": "stop",
+      "image_sha256": "a6d276bc6fa25bc1ef09f8bcebe17dd2bdbf17331eb4c290833b4810cb53db25",
+      "provider_id": "resp_0afc9f309717065a016a7d06169ee4819a94b738139ed4f7a7",
+      "render": "r1",
+      "transcript": "（5）施工单位在工程投标报价中\n应当包含安全生产费用并单独计提，\n不得作为竞争性报价。\n③长度3000m及以上的隧道工程，\nV、VI级围岩连续长度超过50m或\n合计长度占隧道全长的30%及以上\n的隧道工程。",
+      "usage": {
+        "completion_tokens": 242,
+        "completion_tokens_details": {
+          "reasoning_tokens": 159
+        },
+        "prompt_tokens": 6569,
+        "prompt_tokens_details": {
+          "cached_tokens": 3840
+        },
+        "total_tokens": 6811
+      }
+    },
+    {
+      "card_index": 14,
+      "elapsed_s": 4.5,
+      "finish_reason": "stop",
+      "image_sha256": "19605ab8e6a31ee03c8395b40bb029dc244c31a27e344b865a8df42f84cc2526",
+      "provider_id": "resp_0ff336b8a88a974c016a7d061dd9d0819a9c1b704910611b7e",
+      "render": "r1",
+      "transcript": "项目预算总成本=∑（标后预算清单单价×清单工程量）\n机械租赁费=∑［（机械租赁单价+使用费）×\n租赁数量×租赁时间］\n机械租赁费=∑（机械租赁单价×租赁数量×\n租赁时间）\n计划成本偏差=施工预算成本-责任目标成本",
+      "usage": {
+        "completion_tokens": 89,
+        "prompt_tokens": 6273,
+        "prompt_tokens_details": {
+          "cached_tokens": 3840
+        },
+        "total_tokens": 6362
+      }
+    },
+    {
+      "card_index": 15,
+      "elapsed_s": 3.4,
+      "finish_reason": "stop",
+      "image_sha256": "8b4546d886ce7adb3cbfcf48c88a2bbbe11f7ea1039d60aa78969f1408bc4532",
+      "provider_id": "resp_0fa66da4172b7c37016a7d062216ec81998e8d1ed74442d3a6",
+      "render": "r1",
+      "transcript": "① 人工费的控制\n② 材料费的控制\n③ 周转工具使用费的控制\n④ 施工机械使用费的控制\n⑤ 现场管理费的控制",
+      "usage": {
+        "completion_tokens": 44,
+        "prompt_tokens": 6273,
+        "prompt_tokens_details": {
+          "cached_tokens": 3840
+        },
+        "total_tokens": 6317
+      }
+    },
+    {
+      "card_index": 16,
+      "elapsed_s": 5.2,
+      "finish_reason": "stop",
+      "image_sha256": "a2cfebf9057b3ce7ed0f4c4bb415678bc77f6896b4e25901c453254c587e5468",
+      "provider_id": "resp_0b49f96964a27c79016a7d0626eef481939aadb0770de4b738",
+      "render": "r1",
+      "transcript": "标后预算总费用\n上缴企业费用\n规费\n税金\n总部管理费\n利润\n项目预算总成本\n直接费\n设备购置费\n措施费\n专项费用\n现场管理费",
+      "usage": {
+        "completion_tokens": 49,
+        "prompt_tokens": 6273,
+        "prompt_tokens_details": {
+          "cached_tokens": 3840
+        },
+        "total_tokens": 6322
+      }
+    }
+  ]
+}
