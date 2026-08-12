@@ -177,7 +177,9 @@ def resolve_card_image(images_dir: Any, card_index: int, source_card_id: str) ->
 
 
 def _normalize_line(line: str) -> str:
-    return re.sub(r"\s+", "", line)
+    # A2 契约归一化：空白不敏感（#09 数字 kerning 先例）+ NFKC 全/半角等值形折叠
+    # （＜≡<、（）≡()、，≡, 等宽度变体等同；，→； 这类**符号替换**折叠后仍相异 → 照记 punct_diff）。
+    return unicodedata.normalize("NFKC", re.sub(r"\s+", "", line))
 
 
 def tokenize_visible_text(line: str) -> tuple[tuple[str, ...], tuple[str, ...]]:

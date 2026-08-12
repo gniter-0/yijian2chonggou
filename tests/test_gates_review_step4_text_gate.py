@@ -35,9 +35,27 @@ def test_tokenize_splits_semantic_and_punctuation() -> None:
     semantic, punct = tokenize_visible_text("隧道跨度 14≤B<18，Ⅰ级 BQ＞550；")
     assert "14" in semantic and "18" in semantic and "≤" in semantic and "<" in semantic
     assert "隧" in semantic and "道" in semantic
-    assert punct == ("，", "；")
-    # ＞（全角比较符）按语义面计，不落标点面。
-    assert "＞" not in punct
+    # NFKC 归一化后全角标点折叠为半角等值形（A2 契约③）。
+    assert punct == (",", ";")
+    # ＞（全角比较符）折叠为 > 后按语义面计，不落标点面。
+    assert ">" in semantic and "＞" not in punct and ">" not in punct
+
+
+def test_fullwidth_halfwidth_equivalence_is_pass() -> None:
+    # A2 契约③：全/半角等值形等同（＜/<、括号/冒号宽度、逗号宽度）。
+    assert compare_line("14＜B≤18（米）：说明，完", "14<B≤18(米):说明,完") is None
+    # 等值形折叠后**符号替换**仍相异：，→； 照记 warn。
+    finding = compare_line("甲，乙", "甲；乙")
+    assert finding is not None and finding.severity == "warn"
+
+
+def test_duplicate_rendered_truth_line_is_warn_injective_coverage() -> None:
+    # A2 契约④：覆盖单射——真值单元恰配一次，重复渲染的第二份记 line_extra warn。
+    truth = ("重复出现的行",)
+    transcript = "重复出现的行\n重复出现的行"
+    verdict, coverage, matched, findings = evaluate_card_transcript(truth_lines=truth, transcript=transcript)
+    assert (verdict, coverage, matched) == ("warn", 1.0, 1)
+    assert [item.code for item in findings] == ["line_extra"]
 
 
 def test_compare_line_term_single_char_diff_is_hard_fail() -> None:
