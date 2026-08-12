@@ -40,6 +40,7 @@ from . import (
     regression,
     release_merge,
     report,
+    typed_evidence_export,
 )
 
 __all__ = (
@@ -58,4 +59,5 @@ __all__ = (
     "regression",
     "release_merge",
     "report",
+    "typed_evidence_export",
 )

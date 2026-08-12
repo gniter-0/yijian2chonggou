@@ -96,6 +96,7 @@
 | `knowledge/reinforcement.py` | step2a 补强常量 `STEP2A_REINFORCEMENT_V1` + `reinforcement_id`（生产配方件；transport 注入、不进 identity） | T2（ff3728e；含 23 个离线测试 + gonglu_01 live 冒烟 4/4 绿） |
 | `gates/review/extraction.py` | typed contract **提取面**（r71/r8/r81 蒸馏补搬）：`ExtractionSource`（step2/facts 准入产物投影）+ `ManualSelectionSpec`（人工圈选，五确认背书）→ r84 五族契约（逐元素 provenance、r8x 谱系封印、显式元素身份回放通道）→ 决策/队列/r84 reviewed fixture 装配 | 提取面补搬节点（P3 方案 §8.2 v1.3）；r810 六候选金标回放逐字节 6/6 全过 + 34 例离线测试 |
 | `gates/review/authorization.py`（装配半程扩充） | **r89/r810 授权装配半程**（全仓原无 `ReviewedTypedEvidenceFixture` 构造调用）：`authorize_extraction_batch` 提取批一键授权（授权决策构造 → export_r84 → 严格摄取按**队列序**重建 → r810 fixture 构造）；冻结槽位引擎期以提取面工件绑定 | 同节点（P3 方案 §8.2 v1.3 范围细化）；语料回放 `r84_fixture_sha256` 与 r810 fixture 整体逐字节对拍全过 + 8 例测试；新考试 step3 正路引擎侧闭环 |
+| `gates/review/typed_evidence_export.py` | **T4b 驱动权威入口**（签名由 T4b 方定稿）：`export_reviewed_typed_evidence_fixture(released, queue_items_by_candidate, queue_sha256, authorization)` → r810 fixture；四哈希链内推导、候选序=released 序、`ExplicitProductionAuthorization` 显式人工授权输入 | 同节点收口件；返回对象直通 `compile_reviewed_fixture`（三族放行集实测）+ 10 例入口测试（fail-closed 边界全覆盖） |
 | `pipeline/live_run.py` | live 编排原语：`ResendPlan`（重发=新身份/禁复用/轮上限）、`load_run_env` 与双通道取值（`IMAGE_*` 显式键优先） | T2（ff3728e）；T4b 驱动在此扩展 |
 
 ## 裁决登记速查（现行口径）
