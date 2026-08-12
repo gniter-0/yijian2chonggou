@@ -179,7 +179,7 @@ exams/<exam_id>/data/live_runs/<run_id>/
 
 ### 8.2 relay_preflight 自动预检（T1 落地，driver 消费）
 
-- live 模式开跑前对选定通道自动跑一次预检（优先库函数直调，subprocess 兜底——已与 T1 承接人对齐调用面，落地签名以 T1 为准）；报告快照进 `<run>/relay_preflight/`。
+- live 模式开跑前对选定通道自动跑一次预检——**库函数直调已落地**（T1 回执 1b4bfbb）：`relay_preflight.run_preflight() -> report dict`，含机器可读 `verdict_code`（`pass/likely_pass/fail/unknown` 四值枚举）与 `report_path`；图像通道预检走 `--channel image`（新仓 .env 显式 `IMAGE_API_*` 键）。报告快照进 `<run>/relay_preflight/`。
 - **需求画像 → stage 放行矩阵**（阈值以 T1 的 `REQUIREMENT_PROFILE` 为准）：
 
 | 请求的 stage | 预检判定 | 不满足时 |
@@ -277,8 +277,8 @@ def orchestrate(config: LiveRunConfig) -> LiveRunReport: ...   # 总编排：DAG
 | 依赖 | 承接人 | 本稿引用口径 | 对齐状态 |
 |---|---|---|---|
 | `ResendPlan` / `load_run_env` / transport 可选参（stream、system_suffix）与 journal 审计字段 | T2（yijian2-4） | P3 §2 计划口径 | 已 send_to_session，待回 |
-| `relay_preflight` 库调用面 + 报告结构 + REQUIREMENT_PROFILE | T1（yijian2-7） | 落地文件实读（四探针/通道约定/报告路径） | **工具已落地 5af201b**（38 离线判定测试 + 双中继实测：2chat strict 强制 + 流式穿越掐断 → step3v2 亮绿灯；3100 图像信封漂移带 width+height 键）；「库函数直调 vs subprocess」调用面待回，§8.2 先按两可设计 |
-| step3 v2 模块面（`SingleCardModelInput` 等四件）+ 独立驱动重发规则 | T3（yijian2-5） | P3 §4 计划口径 | **已回并采纳**（落地 282fd69，四名字全保留）：摊平模型（geometry 不进回显、source_fixture_sha256 顶层、五族 presentation Literal）；`build_single_card_model_input(contract, projection, *, source_fixture_sha256=None)` 三重配对守卫；版本号族三层刻意不同（§4 step3 行）；inspector 满足 InnerGate 最小面；判负码 empty-draft-cards-escape 等四枚；重发四不变式入 §5.2；语料勘误（r810=6 卡）入 §4/§11 |
+| `relay_preflight` 库调用面 + 报告结构 + REQUIREMENT_PROFILE | T1（yijian2-7） | 落地文件实读（四探针/通道约定/报告路径） | **已回并采纳**（工具 5af201b + 库入口回执 1b4bfbb）：`run_preflight() -> report dict`（`verdict_code` 四值枚举 + `report_path`）、`--channel image` 走显式 `IMAGE_API_*`、dry-run 不再覆写 live 报告；双中继实测 2chat strict 强制 + 流式穿越掐断 → step3v2 亮绿灯，3100 图像信封漂移带 width+height 键（§8.2 已按此定稿） |
+| step3 v2 模块面（`SingleCardModelInput` 等四件）+ 独立驱动重发规则 | T3（yijian2-5） | P3 §4 计划口径 | **已回并采纳**（落地 282fd69，四名字全保留）：摊平模型（geometry 不进回显、source_fixture_sha256 顶层、五族 presentation Literal）；`build_single_card_model_input(contract, projection, *, source_fixture_sha256=None)` 三重配对守卫；版本号族三层刻意不同（§4 step3 行）；inspector 满足 InnerGate 最小面；判负码 empty-draft-cards-escape 等四枚；重发四不变式入 §5.2；语料勘误（r810=6 卡）入 §4/§11。**live 实证**（912b883）：r810 六卡 2chat+5.6-sol+SSE 单卡回显 **6/6 首发全过**（17-32s/卡，零重发）——echo 生产道可行性已被真实验证（live 语料仅覆盖 table/ordered_list/formula 三族，diagram/constraint 待后续语料） |
 | runbook 与代码 API 漂移核查结论 | yijian2-3 | runbook §1/§4/§6 原文 + 本人对代码直读交叉验证 | **已回并采纳**（`P3_runbook漂移核查_20260812.md`，41 项 0 硬漂移）：①`run_golden_registry` 可选 `sample_ids` 已入 §4；②registry_id 互锁纪律已入 §10.1 ExamPaths；③disposition/review 侧车成对强校验已入 §4；④`validate_learning_fixture` 收已加载对象（配 `load_learning_golden_fixture(path)` 加载器），driver 不得直传路径；⑤contracts phase2 为 r11/r12/r13/r14/r142 五模块（端点记法勿写成连续闭包）；⑥`inspect_chat_envelope(body: bytes, *, inner_inspector, profile=None, allowlist=None)` 实测签名 |
 
 ## 11. T4b 测试计划（全离线为主，live 彩排单列）
