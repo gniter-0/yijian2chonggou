@@ -193,11 +193,10 @@ def main() -> int:
         report.update({"network_calls": 0, "accepted": compilation.gate.valid, "stop_reason": "dry_run_complete"})
         return finish(0)
 
-    client = httpx.Client(
-        timeout=300.0,
-        follow_redirects=False,
-        headers={"Authorization": f"Bearer {env['API_KEY']}", "Content-Type": "application/json"},
-    )
+    headers = {"Authorization": f"Bearer {env['API_KEY']}", "Content-Type": "application/json"}
+    if env.get("OPENAI_USER_AGENT"):
+        headers["User-Agent"] = env["OPENAI_USER_AGENT"]
+    client = httpx.Client(timeout=300.0, follow_redirects=False, headers=headers)
     network_calls = 0
     try:
         started = time.perf_counter()

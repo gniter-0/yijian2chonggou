@@ -29,7 +29,10 @@ SCHEMA = {
 def main() -> int:
     env = load_env_file(OLD_ROOT / ".env")
     transport = OpenAICompatibleStep2Transport(
-        base_url=env["API_BASE_URL"], api_key=env["API_KEY"], timeout=180
+        base_url=env["API_BASE_URL"],
+        api_key=env["API_KEY"],
+        timeout=180,
+        default_headers={"User-Agent": env["OPENAI_USER_AGENT"]} if env.get("OPENAI_USER_AGENT") else None,
     )
     model = env["TEXT_MODEL"]
     results = []

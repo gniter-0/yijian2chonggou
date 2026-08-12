@@ -192,6 +192,7 @@ def main() -> int:
         base_url=base_url,
         api_key=env["API_KEY"],
         timeout=240,
+        default_headers={"User-Agent": env["OPENAI_USER_AGENT"]} if env.get("OPENAI_USER_AGENT") else None,
     )
 
     report["probe_attempts"] = {"step2a": [], "step2b": []}

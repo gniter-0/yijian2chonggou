@@ -101,13 +101,15 @@ def main() -> int:
         parser.error("choose exactly one of --allow-live or --dry-run")
 
     env = load_env_file(OLD_ROOT / ".env")
-    missing = [key for key in ("API_BASE_URL", "IMAGE_MODEL") if not env.get(key)]
-    if args.allow_live and not env.get("API_KEY"):
-        missing.append("API_KEY")
+    # 图像通道显式键优先（20260812 双通道配置：文本走 2chat 覆盖值，生图锁定 chatgpt2api-new）
+    base_url = (env.get("IMAGE_API_BASE_URL") or env.get("API_BASE_URL") or "").rstrip("/")
+    api_key = env.get("IMAGE_API_KEY") or env.get("API_KEY") or ""
+    model = env.get("IMAGE_MODEL") or ""
+    missing = [name for name, value in (("IMAGE_API_BASE_URL/API_BASE_URL", base_url), ("IMAGE_MODEL", model)) if not value]
+    if args.allow_live and not api_key:
+        missing.append("IMAGE_API_KEY/API_KEY")
     if missing:
         raise SystemExit(f"yijian2/.env is missing required keys: {missing}")
-    base_url = env["API_BASE_URL"].rstrip("/")
-    model = env["IMAGE_MODEL"]
 
     storage = Path(args.storage_root).resolve()
     storage.mkdir(parents=True, exist_ok=True)
@@ -204,11 +206,10 @@ def main() -> int:
         report.update({"network_calls": 0, "accepted": True, "stop_reason": "dry_run_complete"})
         return finish(0)
 
-    client = httpx.Client(
-        timeout=240.0,
-        follow_redirects=False,
-        headers={"Authorization": f"Bearer {env['API_KEY']}", "Content-Type": "application/json"},
-    )
+    headers = {"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"}
+    if env.get("OPENAI_USER_AGENT"):
+        headers["User-Agent"] = env["OPENAI_USER_AGENT"]
+    client = httpx.Client(timeout=240.0, follow_redirects=False, headers=headers)
     network_calls = 0
     try:
         started = time.perf_counter()
