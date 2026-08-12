@@ -17,16 +17,19 @@
   P4 图像端点   GET /v1/models 查 IMAGE_MODEL；--with-image 才真出 1 张最小图，
                 经 providers 严格投影 + 信封门禁验收（b64/url 变体判别）
 
-通道解析（.env 双通道约定，20260812）：API_BASE_URL/API_KEY 在 .env 中成对
-出现多次，首对=chatgpt2api-new(127.0.0.1:3100)、末对=2chat；`--channel
-first|last` 选对，或 `--base-url` 显式指定（须能在 .env 中配到成对密钥）。
+通道解析（.env 双通道约定，20260812）：
+- 旧约定（yijian2/.env）：API_BASE_URL/API_KEY 成对出现多次，按出现顺序配对，
+  首对=chatgpt2api-new(127.0.0.1:3100)、末对=2chat → `--channel first|last`；
+- 新约定（exam-card-engine/.env，T2 落地）：通用键只留一对（文本通道=2chat），
+  图像通道走显式 IMAGE_API_BASE_URL/IMAGE_API_KEY → `--channel image`；
+- 任意形态下也可 `--base-url` 显式指定（须能在 .env 中配到成对密钥）。
 若新仓根存在 .env 则优先读它（T2 迁移后原仓零接触），否则回落 yijian2/.env。
 密钥仅驻内存：不打印、不落盘、不入报告。
 
 运行（exam-card-engine 仓根）：
-  uv run python migration/relay_preflight.py --dry-run                     # 零外呼自检（打印探针装配）
-  uv run python migration/relay_preflight.py --allow-live --channel first --with-image
-  uv run python migration/relay_preflight.py --allow-live --channel last --deep
+  uv run python migration/relay_preflight.py --dry-run --channel last      # 零外呼自检（打印探针装配）
+  uv run python migration/relay_preflight.py --allow-live --channel image --with-image   # 图像通道(3100)
+  uv run python migration/relay_preflight.py --allow-live --channel last --deep          # 文本通道(2chat)
 
 输出：控制台能力矩阵 + data/relay_preflight/<label>/relay_preflight_report.json。
 费用：默认口径 ≤12 次小调用 ≈$0.1；--deep --with-image 全开 ≈$0.3-0.5。
@@ -128,12 +131,18 @@ def channel_label(base_url: str) -> str:
 
 
 def parse_env_channels(text: str) -> dict[str, Any]:
-    """把 .env 文本解析为通道列表 + 全局键（值仅驻内存，调用方不得记录密钥值）。
+    """把 .env 文本解析为通道列表 + 显式图像通道 + 全局键（值仅驻内存，调用方不得记录密钥值）。
 
-    规则：每次出现 API_BASE_URL 开启一个新通道块；块内出现的 API_KEY 归属该
-    通道。其余键为全局键（last-wins，与既有 load_env_file 口径一致）。
+    规则：
+    - 每次出现 API_BASE_URL 开启一个新通道块；块内出现的 API_KEY 归属该通道
+      （yijian2/.env 旧约定：两对通用键，first=3100 / last=2chat）。
+    - IMAGE_API_BASE_URL/IMAGE_API_KEY 为显式图像通道对（新仓 .env 约定，
+      T2 落地：通用键只留文本通道，图像通道走显式键；last-wins）。
+    - 其余键为全局键（last-wins，与既有 load_env_file 口径一致）。
     """
     channels: list[dict[str, Any]] = []
+    image_base: str | None = None
+    image_key: str | None = None
     global_values: dict[str, str] = {}
     for line in text.splitlines():
         stripped = line.strip()
@@ -150,12 +159,22 @@ def parse_env_channels(text: str) -> dict[str, Any]:
             else:
                 # 无所属通道块的孤儿密钥：登记为全局回落
                 global_values.setdefault("API_KEY", value)
+        elif key == "IMAGE_API_BASE_URL":
+            image_base = value.rstrip("/")
+        elif key == "IMAGE_API_KEY":
+            image_key = value
         else:
             global_values[key] = value
     for index, channel in enumerate(channels):
         channel["index"] = index
+        channel["role"] = "text"
         channel["label"] = channel_label(channel["base_url"])
-    return {"channels": channels, "globals": global_values}
+    image_channel = (
+        {"base_url": image_base, "api_key": image_key, "index": -1, "role": "image", "label": channel_label(image_base)}
+        if image_base
+        else None
+    )
+    return {"channels": channels, "image_channel": image_channel, "globals": global_values}
 
 
 def resolve_env_file(explicit: str | None) -> Path:
@@ -167,19 +186,26 @@ def resolve_env_file(explicit: str | None) -> Path:
 
 def resolve_channel(env_config: dict[str, Any], *, channel: str | None, base_url: str | None) -> dict[str, Any]:
     channels = env_config["channels"]
-    if not channels:
-        raise SystemExit("未在 .env 中解析到任何 API_BASE_URL 通道")
+    image_channel = env_config.get("image_channel")
     if base_url:
         wanted = base_url.rstrip("/")
-        for candidate in channels:
+        for candidate in [*channels, *( [image_channel] if image_channel else [] )]:
             if candidate["base_url"] == wanted:
                 return candidate
-        raise SystemExit(f"--base-url {wanted} 在 .env 中没有成对密钥（现有通道：{[c['base_url'] for c in channels]}）")
+        known = [c["base_url"] for c in channels] + ([image_channel["base_url"]] if image_channel else [])
+        raise SystemExit(f"--base-url {wanted} 在 .env 中没有成对密钥（现有通道：{known}）")
+    if channel == "image":
+        if image_channel is None:
+            raise SystemExit(".env 无显式图像通道键（IMAGE_API_BASE_URL/IMAGE_API_KEY）")
+        return image_channel
+    if not channels:
+        hint = "；该 .env 只有显式图像通道，用 --channel image" if image_channel else ""
+        raise SystemExit(f"未在 .env 中解析到任何 API_BASE_URL 通道{hint}")
     if channel == "first":
         return channels[0]
     if channel == "last":
         return channels[-1]
-    raise SystemExit("必须指定 --channel first|last 或 --base-url")
+    raise SystemExit("必须指定 --channel first|last|image 或 --base-url")
 
 
 # ===========================================================================
@@ -595,6 +621,10 @@ def judge_step4(image: dict[str, Any]) -> dict[str, Any]:
     return {"requirement": requirement, "verdict": "未知", "basis": "P4 未执行"}
 
 
+# 中文裁决 → 机器可读枚举（T4a 驱动 gate 用；契约经 yijian2-1 对齐 20260812）
+VERDICT_CODES = {"满足": "pass", "推定满足": "likely_pass", "不满足": "fail", "未知": "unknown"}
+
+
 def build_requirement_conclusions(
     *,
     body_limit: dict[str, Any],
@@ -603,11 +633,14 @@ def build_requirement_conclusions(
     first_byte: dict[str, Any],
     image: dict[str, Any],
 ) -> dict[str, Any]:
-    return {
+    conclusions = {
         "step2a": judge_step2a(body_limit),
         "step3_v2": judge_step3_v2(strict, single_card, first_byte),
         "step4": judge_step4(image),
     }
+    for item in conclusions.values():
+        item["verdict_code"] = VERDICT_CODES[item["verdict"]]
+    return conclusions
 
 
 # ===========================================================================
@@ -1074,103 +1107,106 @@ def build_dry_run_assembly(
     }
 
 
-def main() -> int:
-    # Windows GBK 控制台打不出 ✓/→ 等矩阵符号，统一按 UTF-8 输出
-    for stream in (sys.stdout, sys.stderr):
-        if hasattr(stream, "reconfigure"):
-            stream.reconfigure(encoding="utf-8", errors="replace")
-    parser = argparse.ArgumentParser(description="中继能力预检（四合一自检 + 需求画像结论）")
-    parser.add_argument("--allow-live", action="store_true", help="真实外呼实测")
-    parser.add_argument("--dry-run", action="store_true", help="零外呼自检：打印探针装配")
-    parser.add_argument("--channel", choices=("first", "last"), default=None, help=".env 通道选择（首对/末对）")
-    parser.add_argument("--base-url", default=None, help="显式指定 base_url（须在 .env 中有成对密钥）")
-    parser.add_argument("--env-file", default=None, help="显式指定 .env 路径（默认：新仓根 .env，缺则 yijian2/.env）")
-    parser.add_argument("--deep", action="store_true", help="跑 P3 首字节窗口探针（长调用，费钱）")
-    parser.add_argument("--with-image", action="store_true", help="P4 真出 1 张最小图验信封")
-    parser.add_argument("--skip", default="", help="跳过探针组，逗号分隔（p1,p2,p3,p4）")
-    parser.add_argument("--kb-ladder", default=",".join(str(kb) for kb in DEFAULT_KB_LADDER),
-                        help="P1 体积阶梯（KB，逗号分隔）")
-    parser.add_argument("--text-model", default=None, help="覆盖 .env TEXT_MODEL")
-    parser.add_argument("--image-model", default=None, help="覆盖 .env IMAGE_MODEL")
-    parser.add_argument("--image-size", default="1024x1536", help="P4 出图尺寸（与既有 pilot 口径一致）")
-    parser.add_argument("--timeout", type=float, default=480.0, help="单请求读超时（秒）")
-    parser.add_argument("--p3-target-seconds", type=float, default=210.0, help="P3 主探针目标生成时长")
-    parser.add_argument("--p3-max-tokens", type=int, default=16000, help="P3 主探针 max_tokens 上限")
-    parser.add_argument("--max-calls", type=int, default=DEFAULT_NETWORK_CALL_BUDGET, help="网络调用预算熔断")
-    parser.add_argument("--out", default=None, help="报告输出路径（默认 data/relay_preflight/<label>/relay_preflight_report.json）")
-    args = parser.parse_args()
-    if args.allow_live == args.dry_run:
-        parser.error("choose exactly one of --allow-live or --dry-run")
+def run_preflight(
+    *,
+    dry_run: bool = False,
+    channel: str | None = None,
+    base_url: str | None = None,
+    env_file: str | Path | None = None,
+    deep: bool = False,
+    with_image: bool = False,
+    skip: set[str] | frozenset[str] = frozenset(),
+    kb_ladder: tuple[int, ...] = DEFAULT_KB_LADDER,
+    text_model: str | None = None,
+    image_model: str | None = None,
+    image_size: str = "1024x1536",
+    timeout: float = 480.0,
+    p3_target_seconds: float = 210.0,
+    p3_max_tokens: int = 16000,
+    max_calls: int = DEFAULT_NETWORK_CALL_BUDGET,
+    out: str | Path | None = None,
+) -> dict[str, Any]:
+    """库入口（T4a 全链驱动直调契约，20260812 与 yijian2-1 对齐）。
 
-    skip = {token.strip().lower() for token in args.skip.split(",") if token.strip()}
-    kb_ladder = tuple(int(token) for token in str(args.kb_ladder).split(",") if token.strip())
-
-    env_file = resolve_env_file(args.env_file)
-    if not env_file.is_file():
-        raise SystemExit(f".env 不存在：{env_file}")
-    env_config = parse_env_channels(env_file.read_text(encoding="utf-8", errors="replace"))
-    channel = resolve_channel(env_config, channel=args.channel, base_url=args.base_url)
+    - 返回完整 report dict；同一内容总会原子写盘（缺省
+      data/relay_preflight/<label>/relay_preflight_report.json），落点见返回值
+      ``report["report_path"]``。
+    - ``dry_run=True`` 零外呼（仅探针装配自检）；live 时进度打到 stdout。
+    - 机器可读判定：``report["requirement_conclusions"][{step2a,step3_v2,step4}]
+      ["verdict_code"] ∈ {pass, likely_pass, fail, unknown}``（中文 verdict/basis
+      为人读字段）。调用方按本次要跑的 stage 自行取用对应结论做 gate。
+    - 配置错误（.env 缺失/通道无密钥/缺 TEXT_MODEL）抛 SystemExit（带中文说明）；
+      预算熔断不抛出，落在 ``report["stop_reason"]``。
+    """
+    skip = {token.lower() for token in skip}
+    env_path = resolve_env_file(str(env_file) if env_file else None)
+    if not env_path.is_file():
+        raise SystemExit(f".env 不存在：{env_path}")
+    env_config = parse_env_channels(env_path.read_text(encoding="utf-8", errors="replace"))
+    resolved = resolve_channel(env_config, channel=channel, base_url=base_url)
     globals_ = env_config["globals"]
-    api_key = channel.get("api_key") or globals_.get("API_KEY") or ""
+    api_key = resolved.get("api_key") or globals_.get("API_KEY") or ""
     user_agent = globals_.get("OPENAI_USER_AGENT")
-    text_model = args.text_model or globals_.get("TEXT_MODEL") or ""
-    image_model = args.image_model or globals_.get("IMAGE_MODEL") or ""
+    text_model = text_model or globals_.get("TEXT_MODEL") or ""
+    image_model = image_model or globals_.get("IMAGE_MODEL") or ""
     if not text_model:
-        raise SystemExit(".env 缺 TEXT_MODEL 且未给 --text-model")
+        raise SystemExit(".env 缺 TEXT_MODEL 且未给 text_model")
 
+    # dry-run 报告独立命名，避免覆盖同通道的 live 实测报告
+    default_name = REPORT_NAME if not dry_run else REPORT_NAME.replace(".json", "_dryrun.json")
+    out_path = Path(out) if out else NEW_ROOT / "data" / "relay_preflight" / resolved["label"] / default_name
     report: dict[str, Any] = {
         "tool": TOOL_VERSION,
         "started_at_utc": _utc_now(),
-        "mode": "live" if args.allow_live else "dry_run",
+        "mode": "dry_run" if dry_run else "live",
+        "report_path": str(out_path),
         "channel": {
-            "label": channel["label"],
-            "base_url": channel["base_url"],
-            "channel_index": channel["index"],
-            "env_file": str(env_file),
+            "label": resolved["label"],
+            "base_url": resolved["base_url"],
+            "channel_index": resolved["index"],
+            "role": resolved.get("role", "text"),
+            "env_file": str(env_path),
             "api_key_present": bool(api_key),
             "user_agent_present": bool(user_agent),
         },
         "models": {"text_model": text_model, "image_model": image_model or None},
-        "flags": {"deep": args.deep, "with_image": args.with_image, "skip": sorted(skip)},
+        "flags": {"deep": deep, "with_image": with_image, "skip": sorted(skip)},
         "requirement_profile": REQUIREMENT_PROFILE,
         "probes": {},
     }
-    out_path = Path(args.out) if args.out else NEW_ROOT / "data" / "relay_preflight" / channel["label"] / REPORT_NAME
 
     levels = build_p1_levels(kb_ladder)
-    if args.dry_run:
+    if dry_run:
         report["dry_run_assembly"] = build_dry_run_assembly(
             levels=levels,
             text_model=text_model,
             image_model=image_model or "<未配置>",
-            image_size=args.image_size,
-            deep=args.deep,
-            with_image=args.with_image,
+            image_size=image_size,
+            deep=deep,
+            with_image=with_image,
             skip=skip,
-            target_seconds=args.p3_target_seconds,
+            target_seconds=p3_target_seconds,
         )
         report["network_calls"] = 0
         report["finished_at_utc"] = _utc_now()
         _atomic_write_json(out_path, report)
-        print(json.dumps(report["dry_run_assembly"], ensure_ascii=False, indent=2))
-        print(f"\n[dry-run] 探针装配自检完成，零外呼。报告：{out_path}")
-        return 0
+        return report
 
     if not api_key:
         raise SystemExit("所选通道在 .env 中没有 API_KEY")
 
-    budget = CallBudget(args.max_calls)
+    budget = CallBudget(max_calls)
     transport = OpenAICompatibleStep2Transport(
-        base_url=channel["base_url"],
+        base_url=resolved["base_url"],
         api_key=api_key,
-        timeout=min(args.timeout, 300.0),
+        timeout=min(timeout, 300.0),
         default_headers={"User-Agent": user_agent} if user_agent else None,
     )
     headers = {"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"}
     if user_agent:
         headers["User-Agent"] = user_agent
     client = httpx.Client(
-        timeout=httpx.Timeout(connect=30.0, read=args.timeout, write=120.0, pool=30.0),
+        timeout=httpx.Timeout(connect=30.0, read=timeout, write=120.0, pool=30.0),
         follow_redirects=False,
         headers=headers,
     )
@@ -1178,20 +1214,20 @@ def main() -> int:
     stop_reason = "completed"
     try:
         if "p1" not in skip:
-            print(f"[P1 体积阶梯] {channel['label']} {kb_ladder}")
+            print(f"[P1 体积阶梯] {resolved['label']} {tuple(kb_ladder)}")
             level_results = run_p1(transport, text_model, levels, budget)
             report["probes"]["p1_body_ladder"] = {"levels": level_results, "limit": derive_body_limit(level_results)}
         if "p2" not in skip:
             print("[P2 strict 遵从]")
             report["probes"]["p2_strict"] = run_p2(transport, text_model, budget)
-        if args.deep and "p3" not in skip:
+        if deep and "p3" not in skip:
             print("[P3 首字节窗口（--deep）]")
             report["probes"]["p3_first_byte"] = run_p3(
                 client,
-                base_url=channel["base_url"],
+                base_url=resolved["base_url"],
                 model=text_model,
-                target_seconds=args.p3_target_seconds,
-                max_tokens_cap=args.p3_max_tokens,
+                target_seconds=p3_target_seconds,
+                max_tokens_cap=p3_max_tokens,
                 budget=budget,
             )
         if "p4" not in skip:
@@ -1199,11 +1235,11 @@ def main() -> int:
             if image_model:
                 report["probes"]["p4_image"] = run_p4(
                     client,
-                    base_url=channel["base_url"],
+                    base_url=resolved["base_url"],
                     image_model=image_model,
                     text_model=text_model,
-                    image_size=args.image_size,
-                    with_image=args.with_image,
+                    image_size=image_size,
+                    with_image=with_image,
                     budget=budget,
                 )
             else:
@@ -1230,9 +1266,66 @@ def main() -> int:
     report["stop_reason"] = stop_reason
     report["finished_at_utc"] = _utc_now()
     _atomic_write_json(out_path, report)
-    print()
-    print(render_console_matrix(report))
-    print(f"\n网络调用 {budget.used} 次；报告：{out_path}")
+    return report
+
+
+def main() -> int:
+    """CLI 薄壳。退出码语义：0=预检流程完成且报告已产出（结论判定由调用方读
+    report 的 verdict_code 决定，工具不替调用方裁决）；非 0=流程本身失败
+    （配置错误 SystemExit / 参数错误 argparse）。"""
+    # Windows GBK 控制台打不出 ✓/→ 等矩阵符号，统一按 UTF-8 输出
+    for stream in (sys.stdout, sys.stderr):
+        if hasattr(stream, "reconfigure"):
+            stream.reconfigure(encoding="utf-8", errors="replace")
+    parser = argparse.ArgumentParser(description="中继能力预检（四合一自检 + 需求画像结论）")
+    parser.add_argument("--allow-live", action="store_true", help="真实外呼实测")
+    parser.add_argument("--dry-run", action="store_true", help="零外呼自检：打印探针装配")
+    parser.add_argument("--channel", choices=("first", "last", "image"), default=None,
+                        help=".env 通道选择：first/last=通用键按出现顺序的首/末对；image=显式 IMAGE_API_* 对")
+    parser.add_argument("--base-url", default=None, help="显式指定 base_url（须在 .env 中有成对密钥）")
+    parser.add_argument("--env-file", default=None, help="显式指定 .env 路径（默认：新仓根 .env，缺则 yijian2/.env）")
+    parser.add_argument("--deep", action="store_true", help="跑 P3 首字节窗口探针（长调用，费钱）")
+    parser.add_argument("--with-image", action="store_true", help="P4 真出 1 张最小图验信封")
+    parser.add_argument("--skip", default="", help="跳过探针组，逗号分隔（p1,p2,p3,p4）")
+    parser.add_argument("--kb-ladder", default=",".join(str(kb) for kb in DEFAULT_KB_LADDER),
+                        help="P1 体积阶梯（KB，逗号分隔）")
+    parser.add_argument("--text-model", default=None, help="覆盖 .env TEXT_MODEL")
+    parser.add_argument("--image-model", default=None, help="覆盖 .env IMAGE_MODEL")
+    parser.add_argument("--image-size", default="1024x1536", help="P4 出图尺寸（与既有 pilot 口径一致）")
+    parser.add_argument("--timeout", type=float, default=480.0, help="单请求读超时（秒）")
+    parser.add_argument("--p3-target-seconds", type=float, default=210.0, help="P3 主探针目标生成时长")
+    parser.add_argument("--p3-max-tokens", type=int, default=16000, help="P3 主探针 max_tokens 上限")
+    parser.add_argument("--max-calls", type=int, default=DEFAULT_NETWORK_CALL_BUDGET, help="网络调用预算熔断")
+    parser.add_argument("--out", default=None, help="报告输出路径（默认 data/relay_preflight/<label>/relay_preflight_report.json）")
+    args = parser.parse_args()
+    if args.allow_live == args.dry_run:
+        parser.error("choose exactly one of --allow-live or --dry-run")
+
+    report = run_preflight(
+        dry_run=args.dry_run,
+        channel=args.channel,
+        base_url=args.base_url,
+        env_file=args.env_file,
+        deep=args.deep,
+        with_image=args.with_image,
+        skip={token.strip().lower() for token in args.skip.split(",") if token.strip()},
+        kb_ladder=tuple(int(token) for token in str(args.kb_ladder).split(",") if token.strip()),
+        text_model=args.text_model,
+        image_model=args.image_model,
+        image_size=args.image_size,
+        timeout=args.timeout,
+        p3_target_seconds=args.p3_target_seconds,
+        p3_max_tokens=args.p3_max_tokens,
+        max_calls=args.max_calls,
+        out=args.out,
+    )
+    if args.dry_run:
+        print(json.dumps(report["dry_run_assembly"], ensure_ascii=False, indent=2))
+        print(f"\n[dry-run] 探针装配自检完成，零外呼。报告：{report['report_path']}")
+    else:
+        print()
+        print(render_console_matrix(report))
+        print(f"\n网络调用 {report['network_calls']} 次；报告：{report['report_path']}")
     return 0
 
 

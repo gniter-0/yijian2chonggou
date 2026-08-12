@@ -70,6 +70,37 @@ class TestEnvChannels:
         assert config["globals"]["API_KEY"] == "orphan"
         assert config["channels"][0]["api_key"] is None
 
+    # 新仓 .env 约定（T2 落地）：通用键一对（文本）+ 显式 IMAGE_API_* 对（图像）
+    NEW_REPO_ENV = (
+        "API_BASE_URL = https://2chat.cc/v1\nAPI_KEY = text-key\nTEXT_MODEL = gpt-5.6-sol\n"
+        "IMAGE_API_BASE_URL = http://127.0.0.1:3100/v1\nIMAGE_API_KEY = image-key\nIMAGE_MODEL = gpt-image-2\n"
+    )
+
+    def test_explicit_image_channel_is_parsed_separately(self) -> None:
+        config = rp.parse_env_channels(self.NEW_REPO_ENV)
+        assert len(config["channels"]) == 1
+        assert config["channels"][0]["role"] == "text"
+        image = config["image_channel"]
+        assert image["base_url"] == "http://127.0.0.1:3100/v1"
+        assert image["api_key"] == "image-key"
+        assert image["role"] == "image"
+        assert image["label"] == "chatgpt2api-new"
+        assert "IMAGE_API_BASE_URL" not in config["globals"]
+        assert "IMAGE_API_KEY" not in config["globals"]
+
+    def test_resolve_channel_image_and_base_url_matches_image_pair(self) -> None:
+        config = rp.parse_env_channels(self.NEW_REPO_ENV)
+        assert rp.resolve_channel(config, channel="image", base_url=None)["api_key"] == "image-key"
+        assert rp.resolve_channel(config, channel=None, base_url="http://127.0.0.1:3100/v1")["role"] == "image"
+        # 新约定下 first == last == 文本通道
+        assert rp.resolve_channel(config, channel="first", base_url=None)["label"] == "2chat"
+        assert rp.resolve_channel(config, channel="last", base_url=None)["label"] == "2chat"
+
+    def test_resolve_channel_image_missing_is_explicit_error(self) -> None:
+        config = rp.parse_env_channels(SAMPLE_ENV)
+        with pytest.raises(SystemExit):
+            rp.resolve_channel(config, channel="image", base_url=None)
+
 
 class TestProbeAssembly:
     def test_p1_levels_match_requested_kb(self) -> None:
@@ -298,6 +329,43 @@ class TestRequirementConclusions:
         assert rp.judge_step4({"generation_status": "skipped", "model_advertised": True})["verdict"] == "推定满足"
         assert rp.judge_step4({"generation_status": "skipped", "model_advertised": False})["verdict"] == "不满足"
         assert rp.judge_step4({"generation_status": "skipped", "model_advertised": None})["verdict"] == "未知"
+
+
+class TestLibraryEntryContract:
+    """T4a 驱动直调契约（run_preflight + verdict_code，20260812 与 yijian2-1 对齐）。"""
+
+    def test_conclusions_carry_machine_readable_verdict_code(self) -> None:
+        conclusions = rp.build_requirement_conclusions(
+            body_limit={"max_success_kb": 260, "min_failure_kb": None, "tested_max_kb": 260},
+            strict={"status": "enforced"},
+            single_card={"status": "echo_exact", "elapsed_s": 26.9},
+            first_byte={"status": "measured", "window_s": 125.0, "window_is_lower_bound": False,
+                        "streaming_viable": True, "cutoff_kind": "first_byte"},
+            image={"model_advertised": False, "generation_status": "skipped"},
+        )
+        assert conclusions["step2a"]["verdict_code"] == "likely_pass"
+        assert conclusions["step3_v2"]["verdict_code"] == "pass"
+        assert conclusions["step4"]["verdict_code"] == "fail"
+        assert set(rp.VERDICT_CODES.values()) == {"pass", "likely_pass", "fail", "unknown"}
+
+    def test_run_preflight_dry_run_is_offline_and_returns_report(self, tmp_path: Path) -> None:
+        env_file = tmp_path / "probe.env"
+        env_file.write_text(
+            "API_BASE_URL=http://127.0.0.1:3100/v1\nAPI_KEY=k1\n"
+            "API_BASE_URL=https://2chat.cc/v1\nAPI_KEY=k2\n"
+            "TEXT_MODEL=gpt-x\nIMAGE_MODEL=img-x\n",
+            encoding="utf-8",
+        )
+        out = tmp_path / "report.json"
+        report = rp.run_preflight(dry_run=True, channel="last", env_file=env_file, out=out)
+        assert report["mode"] == "dry_run"
+        assert report["network_calls"] == 0
+        assert report["report_path"] == str(out)
+        assert report["channel"]["label"] == "2chat"
+        assert report["channel"]["api_key_present"] is True
+        assert "k2" not in json.dumps(report)  # 密钥值决不入报告
+        assert report["dry_run_assembly"]["p1_body_ladder"]["will_run"] is True
+        assert out.is_file()
 
 
 class TestConsoleRendering:
