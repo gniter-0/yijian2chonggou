@@ -266,6 +266,57 @@ def test_extract_truths_from_real_r2242_fixture() -> None:
     assert all(isinstance(line, str) and line for line in sample)
 
 
+def test_merged_row_label_is_semantically_equivalent_pass() -> None:
+    # A2 #07 口径：同元素内重复行标签渲染为合并单元格＝语义等价重组＝pass。
+    truth = ("模板 | 条款甲内容。\n模板 | 条款乙内容。\n支架 | 条款丙内容。",)
+    transcript = "模板 | 条款甲内容。\n条款乙内容。\n支架 | 条款丙内容。"
+    verdict, coverage, matched, findings = evaluate_card_transcript(truth_lines=truth, transcript=transcript)
+    assert (verdict, coverage, matched, findings) == ("pass", 1.0, 3, ())
+    # 首次出现的标签不可去（非重复不合并）：缺首标签行按内容仍可相似度配对，但不是精确等价。
+    transcript_faithful = "模板 | 条款甲内容。\n模板 | 条款乙内容。\n支架 | 条款丙内容。"
+    verdict2, _c, _m, findings2 = evaluate_card_transcript(truth_lines=truth, transcript=transcript_faithful)
+    assert (verdict2, findings2) == ("pass", ())
+
+
+def test_a2_gold_set_verdicts_reproduced_end_to_end() -> None:
+    """A2 金标集消费回归（tests/fixtures/step4_word_gate/b2_review_gold.json，95b18b0）：
+    逐卡 gate(human_transcript) == expected_verdict；kind→findings 码映射抽查；分布对账。"""
+
+    gold_path = _REAL_REPO / "tests/fixtures/step4_word_gate/b2_review_gold.json"
+    gold = json.loads(gold_path.read_text(encoding="utf-8"))
+    assert gold["schema"] == "step4-word-gate-gold/1.0"
+    assert len(gold["cards"]) == 18
+    kind_to_codes = {
+        "term_error": "semantic_diff",
+        "number_error": "semantic_diff",
+        "line_missing": "line_missing",
+        "punct_sub": "punct_diff",
+    }
+    verdict_counts = {"pass": 0, "warn": 0, "hard_fail": 0}
+    for card in gold["cards"]:
+        transcript = "\n".join(card["human_transcript"])
+        verdict, coverage, _matched, findings = evaluate_card_transcript(
+            truth_lines=tuple(card["truth_visible_texts"]), transcript=transcript
+        )
+        label = f"card {card['card_index']}-{card['render']}"
+        assert verdict == card["expected_verdict"], (
+            f"{label}: gate={verdict} expected={card['expected_verdict']} findings={[f.code for f in findings]}"
+        )
+        verdict_counts[verdict] += 1
+        expected_codes = {
+            kind_to_codes[item["kind"]]
+            for item in card.get("expected_findings", ())
+            if item.get("kind") in kind_to_codes
+        }
+        got_codes = {item.code for item in findings}
+        assert expected_codes <= got_codes, f"{label}: expected finding codes {expected_codes} not all present in {got_codes}"
+        if card["expected_verdict"] == "pass":
+            assert coverage == 1.0, f"{label}: pass card must have full coverage"
+    distribution = gold.get("expected_verdict_distribution") or {}
+    if distribution:
+        assert verdict_counts == {key: int(value) for key, value in distribution.items()}
+
+
 def test_resolve_card_image_prefers_highest_resend_round(tmp_path: Path) -> None:
     base = tmp_path / "step4-card-01-1011b240.png"
     base.write_bytes(b"round1")

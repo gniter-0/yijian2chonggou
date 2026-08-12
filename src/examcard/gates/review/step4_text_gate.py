@@ -285,8 +285,18 @@ def evaluate_card_transcript(*, truth_lines: Sequence[str], transcript: str) -> 
 
     if not truth_lines:
         raise ValueError("truth_lines must not be empty")
-    # 真值条目可含内嵌换行（一个元素跨多物理行）：拆成行级匹配单元（模块 docstring 口径）。
-    truth_lines = [segment.strip() for element in truth_lines for segment in str(element).splitlines() if segment.strip()]
+    # 真值条目可含内嵌换行（一个元素跨多物理行）：拆成行级匹配单元（模块 docstring 口径），
+    # 保留行→元素归属（元素级 token 流对账需要，②′段）。
+    truth_elements = [str(element) for element in truth_lines]
+    expanded: list[str] = []
+    element_of: list[int] = []
+    for element_index, element in enumerate(truth_elements):
+        for segment in element.splitlines():
+            segment = segment.strip()
+            if segment:
+                expanded.append(segment)
+                element_of.append(element_index)
+    truth_lines = expanded
     if not truth_lines:
         raise ValueError("truth_lines must not be empty after line expansion")
     transcript_lines = [line.strip() for line in transcript.splitlines() if line.strip()]
@@ -301,16 +311,35 @@ def evaluate_card_transcript(*, truth_lines: Sequence[str], transcript: str) -> 
     findings: list[TextGateFinding] = []
     truth_tokens = [tokenize_visible_text(line) for line in truth_lines]
     got_tokens = [tokenize_visible_text(line) for line in transcript_lines]
+
+    # 表格行标签合并等价（A2 #07 口径：重复行标签渲染为合并单元格＝语义等价重组＝pass）：
+    # 同元素内「LABEL | CONTENT」行的 LABEL 若与此前行重复，生成去标签备选形参与精确配对。
+    label_pattern = re.compile(r"^([^|]{1,24}?)\s*\|\s*(.+)$")
+    alt_tokens: list[tuple[tuple[str, ...], tuple[str, ...]] | None] = []
+    seen_labels: dict[int, set[str]] = {}
+    for line, element_index in zip(truth_lines, element_of):
+        match = label_pattern.match(line)
+        alternate = None
+        if match is not None:
+            label = match.group(1).strip()
+            seen = seen_labels.setdefault(element_index, set())
+            if label in seen:
+                alternate = tokenize_visible_text(match.group(2).strip())
+            seen.add(label)
+        alt_tokens.append(alternate)
+
     open_truth = set(range(len(truth_lines)))
     open_transcript = set(range(len(transcript_lines)))
     matched = 0
 
-    # ── ① 精确配对（语义+标点 token 全等；行序无关）────────────────────────
+    # ── ① 精确配对（语义+标点 token 全等；行序无关；重复行标签可去标签匹配）────
     got_by_tokens: dict[tuple[tuple[str, ...], tuple[str, ...]], list[int]] = {}
     for g_index in sorted(open_transcript):
         got_by_tokens.setdefault(got_tokens[g_index], []).append(g_index)
     for t_index in sorted(open_truth):
         bucket = got_by_tokens.get(truth_tokens[t_index])
+        if not bucket and alt_tokens[t_index] is not None:
+            bucket = got_by_tokens.get(alt_tokens[t_index])
         if bucket:
             g_index = bucket.pop(0)
             open_truth.discard(t_index)
@@ -375,6 +404,79 @@ def evaluate_card_transcript(*, truth_lines: Sequence[str], transcript: str) -> 
                     detail="merged truth lines match semantically but punctuation diverges",
                 )
             )
+
+    # ── ②′ 元素级 token 流对账（跨换行点重排 + 内部缺陷共存的卡，#01-r1 形态）──
+    # 元素的构成行经 ①② 仍未全配对时：对「该元素未配对行拼接」与「相邻未配对转写行
+    # 拼接窗口」做相似度选窗（≥0.6），再在语义 token 流上跑 SequenceMatcher——
+    # replace/delete/insert 逐段产出 semantic_diff（hard），语义全等仅标点异则 punct_diff（warn）。
+    element_open: dict[int, list[int]] = {}
+    for t_index in sorted(open_truth):
+        element_open.setdefault(element_of[t_index], []).append(t_index)
+    for element_index in sorted(element_open):
+        pending = element_open[element_index]
+        truth_concat = "".join(truth_lines[index] for index in pending)
+        truth_norm = unicodedata.normalize("NFKC", _normalize_line(truth_concat))
+        best: tuple[float, tuple[int, ...]] | None = None
+        ordered_open = sorted(open_transcript)
+        for start_pos in range(len(ordered_open)):
+            window: list[int] = []
+            cursor: int | None = None
+            for follower in ordered_open[start_pos:]:
+                if cursor is not None and follower != cursor + 1:
+                    break
+                window.append(follower)
+                cursor = follower
+                got_concat = "".join(transcript_lines[index] for index in window)
+                got_norm = unicodedata.normalize("NFKC", _normalize_line(got_concat))
+                ratio = SequenceMatcher(None, truth_norm, got_norm).ratio()
+                if ratio >= 0.6 and (best is None or ratio > best[0]):
+                    best = (ratio, tuple(window))
+        if best is None:
+            continue
+        _ratio, window_indexes = best
+        truth_semantic, truth_punct = _concat(truth_tokens, pending)
+        got_semantic, got_punct = _concat(got_tokens, window_indexes)
+        matcher = SequenceMatcher(None, truth_semantic, got_semantic)
+        semantic_findings = 0
+        for opcode, i1, i2, j1, j2 in matcher.get_opcodes():
+            if opcode == "equal":
+                continue
+            semantic_findings += 1
+            findings.append(
+                TextGateFinding(
+                    code="semantic_diff",
+                    severity="hard_fail",
+                    truth_line="".join(truth_semantic[i1:i2]) or None,
+                    transcript_line="".join(got_semantic[j1:j2]) or None,
+                    detail=(
+                        f"element-level token diff ({opcode}) inside truth element {element_index + 1}: "
+                        f"truth segment {list(truth_semantic[i1:i2])} vs transcript {list(got_semantic[j1:j2])}"
+                    ),
+                )
+            )
+        if semantic_findings == 0 and truth_punct != got_punct:
+            findings.append(
+                TextGateFinding(
+                    code="punct_diff",
+                    severity="warn",
+                    truth_line=truth_concat[:80],
+                    transcript_line="".join(transcript_lines[index] for index in window_indexes)[:80],
+                    detail="element-level punctuation diverges (relined element, semantic tokens equal)",
+                )
+            )
+        elif semantic_findings > 0 and truth_punct != got_punct:
+            findings.append(
+                TextGateFinding(
+                    code="punct_diff",
+                    severity="warn",
+                    truth_line=truth_concat[:80],
+                    transcript_line="".join(transcript_lines[index] for index in window_indexes)[:80],
+                    detail="element-level punctuation also diverges alongside semantic diffs",
+                )
+            )
+        open_truth.difference_update(pending)
+        open_transcript.difference_update(window_indexes)
+        matched += len(pending)
 
     # ── ③ 相似度贪心配对（真实差异行）──────────────────────────────────
     pairing = _similarity_pairs(sorted(open_truth), sorted(open_transcript), truth_lines, transcript_lines)
