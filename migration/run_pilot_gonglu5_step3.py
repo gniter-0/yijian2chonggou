@@ -83,6 +83,7 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--allow-live", action="store_true")
     parser.add_argument("--dry-run", action="store_true")
+    parser.add_argument("--stream", action="store_true", help="SSE streaming business call (defeats gateway first-byte timeout)")
     parser.add_argument("--storage-root", type=Path, required=True)
     args = parser.parse_args()
     if args.allow_live == args.dry_run:
@@ -260,33 +261,93 @@ def main() -> int:
             },
         }
         started = time.perf_counter()
-        response = client.post(f"{base_url}/chat/completions", json=business_payload)
-        network_calls += 1
-        latency_ms = round((time.perf_counter() - started) * 1000, 2)
-        (storage / "business-response.raw.json").write_bytes(response.content)
-
         inner = make_inner_inspector(model_input)
-        profile_inspection = inspect_chat_envelope(
-            response.content, inner_inspector=inner, profile=build_chat_profile(expected_model=None)
-        )
-        allowlist_inspection = None
-        if not profile_inspection.gate.valid:
-            allowlist_inspection = inspect_chat_envelope(response.content, inner_inspector=inner, allowlist=build_chat_allowlist())
-        effective = allowlist_inspection or profile_inspection
-        report["business"] = {
-            "http_status": response.status_code,
-            "latency_ms": latency_ms,
-            "response_bytes": len(response.content),
-            "profile_gate_valid": profile_inspection.gate.valid,
-            "profile_gate_failures": list(profile_inspection.gate.failure_codes),
-            "allowlist_gate_valid": allowlist_inspection.gate.valid if allowlist_inspection else None,
-            "allowlist_gate_failures": list(allowlist_inspection.gate.failure_codes) if allowlist_inspection else None,
-            "inner_gate_valid": bool(effective.inner_gate and effective.inner_gate.valid),
-            "inner_gate_failures": list(effective.inner_gate.failure_codes) if effective.inner_gate else ["inner-not-reached"],
-            "outcome": "success"
-            if response.status_code == 200 and effective.gate.valid and effective.inner_gate and effective.inner_gate.valid
-            else "failed",
-        }
+        if args.stream:
+            # SSE 流式：聚合 delta 后重建最小信封（choices-only，即 r96 剥 transport-only
+            # 投影的形状）喂内容门禁；流式下无单一 JSON body，信封关记 n/a。
+            from openai import OpenAI
+
+            oa = OpenAI(
+                base_url=base_url,
+                api_key=env["API_KEY"],
+                timeout=600,
+                max_retries=0,
+                default_headers={"User-Agent": env["OPENAI_USER_AGENT"]} if env.get("OPENAI_USER_AGENT") else None,
+            )
+            outcome = "failed"
+            http_status: int | None = 200
+            error_type: str | None = None
+            content = ""
+            try:
+                stream = oa.chat.completions.create(stream=True, **business_payload)
+                parts: list[str] = []
+                try:
+                    for chunk in stream:
+                        choices = getattr(chunk, "choices", None) or ()
+                        if choices:
+                            delta = getattr(choices[0].delta, "content", None)
+                            if delta:
+                                parts.append(delta)
+                finally:
+                    close = getattr(stream, "close", None)
+                    if callable(close):
+                        close()
+                content = "".join(parts).strip()
+            except Exception as error:
+                error_type = type(error).__name__
+                http_status = getattr(error, "status_code", None)
+            network_calls += 1
+            latency_ms = round((time.perf_counter() - started) * 1000, 2)
+            minimal_envelope = json.dumps(
+                {"choices": [{"index": 0, "message": {"role": "assistant", "content": content}}]},
+                ensure_ascii=False,
+            ).encode("utf-8")
+            (storage / "business-response.raw.json").write_bytes(minimal_envelope)
+            inner_gate = inner(minimal_envelope) if content else None
+            report["business"] = {
+                "transport": "sse",
+                "http_status": http_status,
+                "latency_ms": latency_ms,
+                "response_bytes": len(content.encode("utf-8")),
+                "error_type": error_type,
+                "profile_gate_valid": None,
+                "allowlist_gate_valid": None,
+                "inner_gate_valid": bool(inner_gate and inner_gate.valid),
+                "inner_gate_failures": list(inner_gate.failure_codes) if inner_gate else ["inner-not-reached"],
+                "outcome": "success" if inner_gate and inner_gate.valid else "failed",
+            }
+        else:
+            response = client.post(f"{base_url}/chat/completions", json=business_payload)
+            network_calls += 1
+            latency_ms = round((time.perf_counter() - started) * 1000, 2)
+            (storage / "business-response.raw.json").write_bytes(response.content)
+
+            profile_inspection = inspect_chat_envelope(
+                response.content, inner_inspector=inner, profile=build_chat_profile(expected_model=None)
+            )
+            allowlist_inspection = None
+            if not profile_inspection.gate.valid:
+                allowlist_inspection = inspect_chat_envelope(
+                    response.content, inner_inspector=inner, allowlist=build_chat_allowlist()
+                )
+            effective = allowlist_inspection or profile_inspection
+            report["business"] = {
+                "transport": "plain",
+                "http_status": response.status_code,
+                "latency_ms": latency_ms,
+                "response_bytes": len(response.content),
+                "profile_gate_valid": profile_inspection.gate.valid,
+                "profile_gate_failures": list(profile_inspection.gate.failure_codes),
+                "allowlist_gate_valid": allowlist_inspection.gate.valid if allowlist_inspection else None,
+                "allowlist_gate_failures": list(allowlist_inspection.gate.failure_codes) if allowlist_inspection else None,
+                "inner_gate_valid": bool(effective.inner_gate and effective.inner_gate.valid),
+                "inner_gate_failures": list(effective.inner_gate.failure_codes)
+                if effective.inner_gate
+                else ["inner-not-reached"],
+                "outcome": "success"
+                if response.status_code == 200 and effective.gate.valid and effective.inner_gate and effective.inner_gate.valid
+                else "failed",
+            }
     finally:
         client.close()
 
