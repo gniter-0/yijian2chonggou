@@ -11,7 +11,12 @@
   重发是新的探测请求不是同身份自动重试）；正式样本调用失败登记后继续下一样本
   （单点波动不熔断整场，失败样本可另行补跑）；黄金门禁失败只登记不熔断——
   pilot 的目的是测质量落点，不是验收；预算硬上限 14 次（≤4 探针 + 5×step2a + 5×step2b）；
-  老仓零写入；密钥自 yijian2\\.env 只读（shadow_wiring.load_env_file），仅驻内存不落盘不入日志。
+  老仓零写入；运行配置默认读新仓根 .env（T2 迁移，live_run.load_run_env；
+  --env-file 可显式指回旧路径），密钥仅驻内存不落盘不入日志。
+- 生产配方（T2 产品化后）：--reinforce/--stream 直接走引擎可选参
+  （OpenAICompatibleStep2Transport 的 system_suffix / stream），私有 transport
+  子类已删；补强文本常量在 examcard.knowledge.reinforcement（pilot 文本一字不改），
+  reinforcement_id 入运行报告审计。
 
 运行（exam-card-engine 仓根）：
   uv run python migration/run_pilot_gonglu5_step2.py --dry-run --storage-root data/pilot_gonglu5/step2_dryrun
@@ -49,8 +54,12 @@ from examcard.knowledge.contracts.v25_generic_contracts import (  # noqa: E402
     assess_v25_step2a_response,
     assess_v25b_step2b_response,
 )
-from examcard.knowledge.llm import OpenAICompatibleStep2Transport, TransportCompletion  # noqa: E402
-from examcard.pipeline.shadow_wiring import load_env_file  # noqa: E402
+from examcard.knowledge.llm import OpenAICompatibleStep2Transport  # noqa: E402
+from examcard.knowledge.reinforcement import (  # noqa: E402
+    STEP2A_REINFORCEMENT_V1,
+    STEP2A_REINFORCEMENT_V1_ID,
+)
+from examcard.pipeline.live_run import load_run_env  # noqa: E402
 
 PILOT_SAMPLE_IDS = (
     "gonglu_01_text_list",
@@ -62,80 +71,6 @@ PILOT_SAMPLE_IDS = (
 NETWORK_CALL_BUDGET = 14
 PROBE_ATTEMPTS = 2
 REPORT_NAME = "pilot_gonglu5_step2_report.json"
-
-# --reinforce 模式：针对 2chat 模型池四大实测症状（考情当知识点/拆行碎片/水印散字/
-# diagram 缺失）在 system 尾部追加硬性要求。不改动冻结的 V25 prompt 模板本体，
-# 仅 transport 层拼接（诊断/生产附加指令，request identity 不含此段——对比时注意口径）。
-REINFORCEMENT_NOTE = (
-    "\n\n【附加硬性要求（优先级最高）】\n"
-    "1. 『历年题量』『考查年份』『（20XX 单/多/案）』等考试元数据不是知识点，严禁作为提案输出。\n"
-    "2. 每个提案必须是完整的教学级知识点：跨行的公式、句子或例题必须合并为一个提案，严禁按行拆分。\n"
-    "3. 忽略证据中的水印散字（如孤立的『信』『微』『系』『联』『题』单字），严禁写入断言。\n"
-    "4. 若输入含受控图示（controlled_diagrams），必须为每个图示产出 diagram_relation 类型提案。\n"
-    "5. 宁缺毋滥：只输出教学价值明确的核心知识点，数量与人工讲义知识点密度相当（每页约 1~3 条）。"
-)
-
-
-class ReinforcedStep2Transport(OpenAICompatibleStep2Transport):
-    """system 尾部追加补强段的 transport（见 REINFORCEMENT_NOTE 注释）。"""
-
-    def _messages_for_model_payload(self, *, prompt: str, model_payload) -> list[dict]:
-        return OpenAICompatibleStep2Transport._messages_for_model_payload(
-            prompt=prompt + REINFORCEMENT_NOTE, model_payload=model_payload
-        )
-
-
-class StreamingStep2Transport(OpenAICompatibleStep2Transport):
-    """SSE 流式 transport：根治中继前置网关（CF ~125s）对长生成的空闲超时掐断。
-
-    覆盖 `_raw_create` 单点（探针与业务共用），聚合 delta 后返回与非流式完全同构的
-    TransportCompletion；除传输方式外不改变任何请求语义（模型/解码参数/response_format 不变）。
-    """
-
-    def _raw_create(
-        self,
-        *,
-        model: str,
-        messages: list[dict],
-        max_tokens: int,
-        temperature: float,
-        response_format,
-        idempotency_key: str | None,
-    ) -> TransportCompletion:
-        self.network_call_count += 1
-        raw = self._client.chat.completions.with_raw_response.create(
-            model=model,
-            messages=messages,
-            max_tokens=max_tokens,
-            temperature=temperature,
-            response_format=dict(response_format),
-            stream=True,
-            extra_headers={"Idempotency-Key": idempotency_key} if idempotency_key else None,
-        )
-        headers = self._normalized_headers(raw.headers)
-        stream = raw.parse()
-        parts: list[str] = []
-        try:
-            for chunk in stream:
-                choices = getattr(chunk, "choices", None) or ()
-                if choices:
-                    delta = getattr(choices[0].delta, "content", None)
-                    if delta:
-                        parts.append(delta)
-        finally:
-            close = getattr(stream, "close", None)
-            if callable(close):
-                close()
-        return TransportCompletion(
-            content="".join(parts).strip(),
-            provider_request_id=self._provider_request_id(headers),
-            http_status=self._raw_http_status(raw),
-            headers=headers,
-        )
-
-
-class StreamingReinforcedStep2Transport(StreamingStep2Transport, ReinforcedStep2Transport):
-    """流式 + 补强组合（MRO：流式 _raw_create + 补强 messages）。"""
 
 
 def _utc_now() -> str:
@@ -164,6 +99,7 @@ def main() -> int:
     parser.add_argument("--reinforce", action="store_true", help="append anti-noise reinforcement to the system prompt")
     parser.add_argument("--stream", action="store_true", help="use SSE streaming transport (defeats gateway idle timeout)")
     parser.add_argument("--only-samples", default=None, help="comma-separated sample id substrings (retry lane)")
+    parser.add_argument("--env-file", type=Path, default=None, help="run config (.env); default exam-card-engine/.env")
     args = parser.parse_args()
     if args.allow_live == args.dry_run:
         parser.error("choose exactly one of --allow-live or --dry-run")
@@ -176,12 +112,12 @@ def main() -> int:
         parser.error("--manual-reissue-reason must be an ASCII audit identifier of at most 96 characters")
     reason = args.manual_reissue_reason or "pilot5-step2-dry-run"
 
-    env = load_env_file(OLD_ROOT / ".env")
+    env = load_run_env(args.env_file)
     missing = [key for key in ("API_BASE_URL", "TEXT_MODEL") if not env.get(key)]
     if args.allow_live and not env.get("API_KEY"):
         missing.append("API_KEY")
     if missing:
-        raise SystemExit(f"yijian2/.env is missing required keys: {missing}")
+        raise SystemExit(f"run env file is missing required keys: {missing}")
     base_url = env["API_BASE_URL"]
     model = env["TEXT_MODEL"]
 
@@ -272,20 +208,19 @@ def main() -> int:
         report.update({"network_calls": 0, "accepted": True, "stop_reason": "dry_run_complete"})
         return finish(0)
 
-    transport_type = {
-        (False, False): OpenAICompatibleStep2Transport,
-        (True, False): ReinforcedStep2Transport,
-        (False, True): StreamingStep2Transport,
-        (True, True): StreamingReinforcedStep2Transport,
-    }[(args.reinforce, args.stream)]
-    transport = transport_type(
+    # 生产配方走引擎可选参（T2 产品化）：补强/流式均为传输层选项，不进请求 identity；
+    # 两者连同 reinforcement_id 入运行报告审计。
+    transport = OpenAICompatibleStep2Transport(
         base_url=base_url,
         api_key=env["API_KEY"],
         timeout=600 if args.stream else 240,
         default_headers={"User-Agent": env["OPENAI_USER_AGENT"]} if env.get("OPENAI_USER_AGENT") else None,
+        stream=args.stream,
+        system_suffix=STEP2A_REINFORCEMENT_V1 if args.reinforce else None,
     )
     report["reinforced_system_prompt"] = args.reinforce
     report["streaming_transport"] = args.stream
+    report["reinforcement_id"] = STEP2A_REINFORCEMENT_V1_ID if args.reinforce else None
 
     report["probe_attempts"] = {"step2a": [], "step2b": []}
     for stage in ("step2a", "step2b"):

@@ -312,6 +312,7 @@ class TransportCompletion(StrictModel):
     provider_request_id: str | None = None
     http_status: int | None = Field(default=None, ge=100, le=599)
     headers: dict[str, str] = {}
+    finish_reason: str | None = None
 
 
 class Step2Transport(Protocol):
@@ -326,7 +327,24 @@ class Step2Transport(Protocol):
 
 
 class OpenAICompatibleStep2Transport:
-    """Small transport wrapper with SDK retries disabled for auditable outcomes."""
+    """Small transport wrapper with SDK retries disabled for auditable outcomes.
+
+    Production-recipe options (P3 T2, both default-off so the existing behavior
+    stays byte-identical):
+
+    - ``stream=True`` aggregates an SSE response into the same
+      ``TransportCompletion`` shape (defeats gateway first-byte/idle cutoffs on
+      long generations; semantics ported verbatim from the pilot streaming
+      transport).
+    - ``system_suffix`` is appended to the end of the system message at message
+      construction time (transport-layer reinforcement injection; the frozen
+      prompt template body is never modified).
+
+    Identity discipline: neither option participates in request-identity
+    derivation (identities are computed upstream from the unmodified prompt
+    template). Drivers must journal both (``streaming_transport`` /
+    ``reinforcement_id``) in their run reports for auditability.
+    """
 
     def __init__(
         self,
@@ -335,9 +353,13 @@ class OpenAICompatibleStep2Transport:
         api_key: str,
         timeout: float,
         default_headers: Mapping[str, str] | None = None,
+        stream: bool = False,
+        system_suffix: str | None = None,
     ) -> None:
         self.base_url = base_url.rstrip("/")
         self.network_call_count = 0
+        self.stream = stream
+        self.system_suffix = system_suffix
         self._client = OpenAI(
             base_url=self.base_url,
             api_key=api_key,
@@ -378,6 +400,15 @@ class OpenAICompatibleStep2Transport:
         idempotency_key: str | None,
     ) -> TransportCompletion:
         self.network_call_count += 1
+        if self.stream:
+            return self._raw_create_streaming(
+                model=model,
+                messages=messages,
+                max_tokens=max_tokens,
+                temperature=temperature,
+                response_format=response_format,
+                idempotency_key=idempotency_key,
+            )
         raw = self._client.chat.completions.with_raw_response.create(
             model=model,
             messages=messages,
@@ -388,12 +419,70 @@ class OpenAICompatibleStep2Transport:
         )
         headers = self._normalized_headers(raw.headers)
         response = raw.parse()
-        content = (response.choices[0].message.content or "").strip()
+        choice = response.choices[0]
+        content = (choice.message.content or "").strip()
+        finish_reason = getattr(choice, "finish_reason", None)
         return TransportCompletion(
             content=content,
             provider_request_id=self._provider_request_id(headers),
             http_status=self._raw_http_status(raw),
             headers=headers,
+            finish_reason=str(finish_reason) if finish_reason is not None else None,
+        )
+
+    def _raw_create_streaming(
+        self,
+        *,
+        model: str,
+        messages: list[dict[str, Any]],
+        max_tokens: int,
+        temperature: float,
+        response_format: Mapping[str, Any],
+        idempotency_key: str | None,
+    ) -> TransportCompletion:
+        """SSE aggregation: join deltas into a TransportCompletion equivalent to the non-streaming shape.
+
+        Ported verbatim from the pilot ``StreamingStep2Transport`` (probes and
+        business calls share this single ``_raw_create`` seam). Besides the wire
+        transfer mode nothing about the request changes (model, decoder
+        parameters and response_format stay identical). The last chunk's
+        ``finish_reason`` is preserved so a mid-stream cutoff (aggregate without
+        ``finish_reason="stop"``) remains distinguishable in audits.
+        """
+
+        raw = self._client.chat.completions.with_raw_response.create(
+            model=model,
+            messages=messages,
+            max_tokens=max_tokens,
+            temperature=temperature,
+            response_format=dict(response_format),
+            stream=True,
+            extra_headers={"Idempotency-Key": idempotency_key} if idempotency_key else None,
+        )
+        headers = self._normalized_headers(raw.headers)
+        stream = raw.parse()
+        parts: list[str] = []
+        finish_reason: str | None = None
+        try:
+            for chunk in stream:
+                choices = getattr(chunk, "choices", None) or ()
+                if choices:
+                    delta = getattr(choices[0].delta, "content", None)
+                    if delta:
+                        parts.append(delta)
+                    chunk_finish = getattr(choices[0], "finish_reason", None)
+                    if chunk_finish is not None:
+                        finish_reason = str(chunk_finish)
+        finally:
+            close = getattr(stream, "close", None)
+            if callable(close):
+                close()
+        return TransportCompletion(
+            content="".join(parts).strip(),
+            provider_request_id=self._provider_request_id(headers),
+            http_status=self._raw_http_status(raw),
+            headers=headers,
+            finish_reason=finish_reason,
         )
 
     def complete(
@@ -441,7 +530,9 @@ class OpenAICompatibleStep2Transport:
             }
         else:
             response_format = {"type": "json_object"}
-        messages = self._messages_for_model_payload(prompt=prompt, model_payload=model_payload)
+        messages = self._messages_for_model_payload(
+            prompt=self._system_prompt_with_suffix(prompt), model_payload=model_payload
+        )
         return self._raw_create(
             model=identity.model,
             messages=messages,
@@ -641,6 +732,17 @@ class OpenAICompatibleStep2Transport:
                 ],
             }
         return payload
+
+    def _system_prompt_with_suffix(self, prompt: str) -> str:
+        """Append the optional reinforcement suffix at message-construction time.
+
+        The suffix is applied after the identity/prompt fingerprint has been
+        verified upstream, so request identities keep binding the unmodified
+        template (pilot-calibrated discipline: reinforcement is injected at the
+        transport layer and never enters identity derivation).
+        """
+
+        return prompt if self.system_suffix is None else prompt + self.system_suffix
 
     @staticmethod
     def _request_messages(
