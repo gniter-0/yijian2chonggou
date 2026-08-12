@@ -169,7 +169,9 @@ def cmd_vision_pass(probe: bool) -> int:
     if missing_census:
         print(f"ABORT: census incomplete, missing {missing_census}", flush=True)
         return 2
-    budget = VisionCallBudget(ROOT / "vision-budget.json", hard_cap=400)
+    # 2026-08-12 用户裁决（方案 A，pchat 决策 shadow65-vision-cap-20260812 超时自决采纳推荐项）：
+    # 实测 high_risk 644 > 400，批准提高上限全量复核；700 = 644 hints + 探针 + 失败余量。
+    budget = VisionCallBudget(ROOT / "vision-budget.json", hard_cap=700)
     verifier = make_live_vision_verifier(LEGACY / ".env")
     if probe:
         # 最小探针（计入预算）：中继不可达即 fail-closed 停下上报。
