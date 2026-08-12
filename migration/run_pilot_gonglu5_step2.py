@@ -49,7 +49,7 @@ from examcard.knowledge.contracts.v25_generic_contracts import (  # noqa: E402
     assess_v25_step2a_response,
     assess_v25b_step2b_response,
 )
-from examcard.knowledge.llm import OpenAICompatibleStep2Transport  # noqa: E402
+from examcard.knowledge.llm import OpenAICompatibleStep2Transport, TransportCompletion  # noqa: E402
 from examcard.pipeline.shadow_wiring import load_env_file  # noqa: E402
 
 PILOT_SAMPLE_IDS = (
@@ -85,6 +85,59 @@ class ReinforcedStep2Transport(OpenAICompatibleStep2Transport):
         )
 
 
+class StreamingStep2Transport(OpenAICompatibleStep2Transport):
+    """SSE 流式 transport：根治中继前置网关（CF ~125s）对长生成的空闲超时掐断。
+
+    覆盖 `_raw_create` 单点（探针与业务共用），聚合 delta 后返回与非流式完全同构的
+    TransportCompletion；除传输方式外不改变任何请求语义（模型/解码参数/response_format 不变）。
+    """
+
+    def _raw_create(
+        self,
+        *,
+        model: str,
+        messages: list[dict],
+        max_tokens: int,
+        temperature: float,
+        response_format,
+        idempotency_key: str | None,
+    ) -> TransportCompletion:
+        self.network_call_count += 1
+        raw = self._client.chat.completions.with_raw_response.create(
+            model=model,
+            messages=messages,
+            max_tokens=max_tokens,
+            temperature=temperature,
+            response_format=dict(response_format),
+            stream=True,
+            extra_headers={"Idempotency-Key": idempotency_key} if idempotency_key else None,
+        )
+        headers = self._normalized_headers(raw.headers)
+        stream = raw.parse()
+        parts: list[str] = []
+        try:
+            for chunk in stream:
+                choices = getattr(chunk, "choices", None) or ()
+                if choices:
+                    delta = getattr(choices[0].delta, "content", None)
+                    if delta:
+                        parts.append(delta)
+        finally:
+            close = getattr(stream, "close", None)
+            if callable(close):
+                close()
+        return TransportCompletion(
+            content="".join(parts).strip(),
+            provider_request_id=self._provider_request_id(headers),
+            http_status=self._raw_http_status(raw),
+            headers=headers,
+        )
+
+
+class StreamingReinforcedStep2Transport(StreamingStep2Transport, ReinforcedStep2Transport):
+    """流式 + 补强组合（MRO：流式 _raw_create + 补强 messages）。"""
+
+
 def _utc_now() -> str:
     return datetime.now(UTC).replace(microsecond=0).isoformat().replace("+00:00", "Z")
 
@@ -109,6 +162,7 @@ def main() -> int:
     parser.add_argument("--storage-root", type=Path, required=True)
     parser.add_argument("--manual-reissue-reason", default=None)
     parser.add_argument("--reinforce", action="store_true", help="append anti-noise reinforcement to the system prompt")
+    parser.add_argument("--stream", action="store_true", help="use SSE streaming transport (defeats gateway idle timeout)")
     parser.add_argument("--only-samples", default=None, help="comma-separated sample id substrings (retry lane)")
     args = parser.parse_args()
     if args.allow_live == args.dry_run:
@@ -218,14 +272,20 @@ def main() -> int:
         report.update({"network_calls": 0, "accepted": True, "stop_reason": "dry_run_complete"})
         return finish(0)
 
-    transport_type = ReinforcedStep2Transport if args.reinforce else OpenAICompatibleStep2Transport
+    transport_type = {
+        (False, False): OpenAICompatibleStep2Transport,
+        (True, False): ReinforcedStep2Transport,
+        (False, True): StreamingStep2Transport,
+        (True, True): StreamingReinforcedStep2Transport,
+    }[(args.reinforce, args.stream)]
     transport = transport_type(
         base_url=base_url,
         api_key=env["API_KEY"],
-        timeout=240,
+        timeout=600 if args.stream else 240,
         default_headers={"User-Agent": env["OPENAI_USER_AGENT"]} if env.get("OPENAI_USER_AGENT") else None,
     )
     report["reinforced_system_prompt"] = args.reinforce
+    report["streaming_transport"] = args.stream
 
     report["probe_attempts"] = {"step2a": [], "step2b": []}
     for stage in ("step2a", "step2b"):
