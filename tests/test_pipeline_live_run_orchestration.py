@@ -28,6 +28,7 @@ from examcard.pipeline.live_run import (
     ingest_admission_decisions,
     ingest_image_review_sheet,
     emit_image_review_sheet,
+    orchestrate,
 )
 from tests.fixtures.compilers_synthetic import _hex, _page
 
@@ -457,3 +458,129 @@ def test_batch_image_manifest_rejects_duplicates_and_bad_counts() -> None:
         build_batch_image_authorization([row, row])  # card_index 重复整单拒绝
     with pytest.raises(Exception):
         build_batch_image_authorization([{**row, "reviewer": ""}])  # 缺 reviewer 拒绝
+
+
+# ---------------------------------------------------------------------------
+# 检查点② resume 对账回归（彩排收口发现：step4 已 completed 时 resume 曾空跳收场，
+# 摄取块位于 step4 分支内不可达；检查点①因摄取位于后继 stage 入口而幸免）
+# ---------------------------------------------------------------------------
+
+_REAL_REPO = Path(__file__).resolve().parents[1]
+_REHEARSAL_EXAM = "gonglu_golden5_rehearsal"
+
+
+def _seed_exam_workspace(root: Path) -> None:
+    """用真实彩排工作区的已入库固定资产在 tmp 根下拼出 ExamPaths 可解析的最小仓。"""
+    import shutil
+
+    registry_rel = Path("exams") / _REHEARSAL_EXAM / "fixtures" / "golden_samples" / f"{_REHEARSAL_EXAM}_phase0.yaml"
+    profile_rel = Path("configs/v2/material_profiles/yijian_gonglu_2026.yaml")
+    policy_rel = Path("configs/v2/content_policies/core_only_v1.yaml")
+    for rel in (registry_rel, profile_rel, policy_rel):
+        target = root / rel
+        target.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(_REAL_REPO / rel, target)
+
+
+def _seed_paused_run(root: Path, run_id: str, *, checkpoint_status: str = "waiting_human") -> Path:
+    run_root = root / "exams" / _REHEARSAL_EXAM / "data" / "live_runs" / run_id
+    checkpoint_dir = run_root / "checkpoints" / "image_review"
+    checkpoint_dir.mkdir(parents=True, exist_ok=True)
+    sheet = {
+        "cards": [
+            {
+                "card_index": 1,
+                "source_card_id": "card:resume:one",
+                "render_presentation": "table",
+                "image_sha256": _hex("resume-image-one"),
+                "disposition": "approved",
+                "reviewer": "resume-tester",
+                "basis": "clean render",
+            },
+            {
+                "card_index": 2,
+                "source_card_id": "card:resume:two",
+                "render_presentation": "diagram",
+                "image_sha256": _hex("resume-image-two"),
+                "disposition": "rejected",
+                "reviewer": "resume-tester",
+                "basis": "missing edge",
+            },
+        ]
+    }
+    (checkpoint_dir / "image_review_sheet.json").write_text(json.dumps(sheet, ensure_ascii=False, indent=2), encoding="utf-8")
+    state = {
+        "run_id": run_id,
+        "exam_id": _REHEARSAL_EXAM,
+        "stages_requested": ["step3", "step4"],
+        "stage_states": {"step3": {"status": "completed"}, "step4": {"status": "completed"}},
+        "checkpoints": {"image_review": {"status": checkpoint_status, "sheet_path": str(checkpoint_dir / "image_review_sheet.json")}},
+        "created_at_utc": "2026-08-12T18:57:59Z",
+        "updated_at_utc": "2026-08-12T19:10:43Z",
+    }
+    (run_root / "run_state.json").write_text(json.dumps(state, ensure_ascii=False, indent=2), encoding="utf-8")
+    return run_root
+
+
+def _resume_config(root: Path, run_id: str) -> LiveRunConfig:
+    return LiveRunConfig(
+        exam_id=_REHEARSAL_EXAM,
+        stages=("step3", "step4"),
+        mode="live",
+        run_label="resume-regression",
+        budget_usd=1.0,
+        step3_mode="release-bypass",
+        step3_release_fixture=_REAL_REPO / "scripts/tests/fixtures/v2/release_fixtures/gonglu_phase2r2242_step3_reviewed_release.yaml",
+        skip_preflight=True,
+        resume_run_id=run_id,
+        repo_root=root,
+    )
+
+
+def test_resume_after_step4_completed_ingests_image_review(repo_tmp_path: Path) -> None:
+    _seed_exam_workspace(repo_tmp_path)
+    run_id = "20260812-resume-regression-fixture1"
+    run_root = _seed_paused_run(repo_tmp_path, run_id)
+    report, exit_code = orchestrate(_resume_config(repo_tmp_path, run_id), {"pricing": {}, "sample_ids": ("s1",)})
+    assert exit_code == 0
+    assert report.stop_reason == "completed"
+    by_stage = {entry.stage: entry for entry in report.stages}
+    assert by_stage["image_review_checkpoint"].status == "completed"
+    assert "approved=1" in by_stage["image_review_checkpoint"].detail
+    manifest_path = run_root / "checkpoints" / "image_review" / "image-authorization-manifest.json"
+    manifest = BatchImageAuthorizationManifest.model_validate(json.loads(manifest_path.read_text(encoding="utf-8")))
+    assert (manifest.decision_count, manifest.approved_count, manifest.rejected_count) == (2, 1, 1)
+    state = json.loads((run_root / "run_state.json").read_text(encoding="utf-8"))
+    assert state["checkpoints"]["image_review"]["status"] == "ingested"
+
+
+def test_resume_after_ingest_is_idempotent(repo_tmp_path: Path) -> None:
+    _seed_exam_workspace(repo_tmp_path)
+    run_id = "20260812-resume-regression-fixture2"
+    run_root = _seed_paused_run(repo_tmp_path, run_id)
+    first_report, first_exit = orchestrate(_resume_config(repo_tmp_path, run_id), {"pricing": {}})
+    assert (first_exit, first_report.stop_reason) == (0, "completed")
+    manifest_path = run_root / "checkpoints" / "image_review" / "image-authorization-manifest.json"
+    manifest_bytes = manifest_path.read_bytes()
+    second_report, second_exit = orchestrate(_resume_config(repo_tmp_path, run_id), {"pricing": {}})
+    assert (second_exit, second_report.stop_reason) == (0, "completed")
+    # 已 ingested：不再产出 image_review_checkpoint 段、清单不被重写。
+    assert all(entry.stage != "image_review_checkpoint" for entry in second_report.stages)
+    assert manifest_path.read_bytes() == manifest_bytes
+    state = json.loads((run_root / "run_state.json").read_text(encoding="utf-8"))
+    assert state["checkpoints"]["image_review"]["status"] == "ingested"
+
+
+def test_resume_with_undecided_sheet_stays_waiting(repo_tmp_path: Path) -> None:
+    _seed_exam_workspace(repo_tmp_path)
+    run_id = "20260812-resume-regression-fixture3"
+    run_root = _seed_paused_run(repo_tmp_path, run_id)
+    sheet_path = run_root / "checkpoints" / "image_review" / "image_review_sheet.json"
+    sheet = json.loads(sheet_path.read_text(encoding="utf-8"))
+    sheet["cards"][1]["disposition"] = None
+    sheet_path.write_text(json.dumps(sheet, ensure_ascii=False, indent=2), encoding="utf-8")
+    report, exit_code = orchestrate(_resume_config(repo_tmp_path, run_id), {"pricing": {}})
+    assert exit_code == 2
+    assert report.stop_reason == "waiting_human_image_review"
+    state = json.loads((run_root / "run_state.json").read_text(encoding="utf-8"))
+    assert state["checkpoints"]["image_review"]["status"] == "waiting_human"

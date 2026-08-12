@@ -1522,6 +1522,23 @@ def orchestrate(config: LiveRunConfig, providers: Mapping[str, Any]) -> tuple[Li
             continue
         if state.stage_status(stage) == "completed":
             stage_reports.append(build_stage_report(stage, "completed", "already completed in this run (resume skip)"))
+            # ◆检查点② resume 对账（彩排收口发现的盲区）：step4 已 completed 时本分支直接
+            # continue，而检查点②摄取位于 step4 分支内部（暂停时 stage 先记 completed 再退 2），
+            # 故 resume 永远走不到摄取——检查点①因摄取位于后继 stage（step3）入口而幸免。
+            # 就地对账，与 step4 分支内检查点块逐字同义（ingested/refused/仍缺三分支）。
+            if stage == "step4" and config.mode == "live":
+                ticket = state.checkpoint("image_review")
+                if ticket.get("status") != "ingested":
+                    sheet_ingest = ingest_image_review_sheet(run_root=run_root)
+                    if sheet_ingest["status"] == "ingested":
+                        state.set_checkpoint("image_review", "ingested", approved_count=sheet_ingest.get("approved_count", 0))
+                        stage_reports.append(build_stage_report("image_review_checkpoint", "completed", f"image review ingested; approved={sheet_ingest.get('approved_count', 0)}"))
+                    elif sheet_ingest["status"] == "refused":
+                        stage_reports.append(build_stage_report("image_review_checkpoint", "failed", str(sheet_ingest["detail"])))
+                        return finish("gate_refused_admission", 1)
+                    else:
+                        stage_reports.append(build_stage_report("image_review_checkpoint", "waiting_human", str(sheet_ingest.get("detail", "waiting for human dispositions"))))
+                        return finish("waiting_human_image_review", 2)
             continue
         state.set_stage(stage, "running")
 
