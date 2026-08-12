@@ -19,6 +19,7 @@
 | `engineering_skeleton.md` | 工程骨架规范：pyproject/十包布局与依赖方向、测试隔离 T1–T8、布局终裁登记（bc-888c6031 十包 + bc-9d82a196 common 六件扩容） |
 | `extraction_manifest.md` | 迁移清单 v2：142 模块去向对账基准（含 8 条【A案】跨桶契约下沉注解） |
 | `stage2_migration_report.md` | 阶段 2 总集成验收（n11）：pytest 462 全绿、依赖守护、26/26 对账、遗留风险与下一步 |
+| `new_exam_onboarding_runbook.md` | 新考试（造价/消防）接入手册 |
 | `README.md` | 本索引 |
 
 ## docs/design/（施工设计契约，正本）
@@ -40,6 +41,11 @@
 | `P2_import_scan_result_20260811.json` | 全仓 import 扫描结果（机器可读） |
 | `P2_黄金样本与字节级验收资产清点_20260811.md` | 黄金样本与字节级验收资产清点 |
 | `P2_阶段2引擎抽包搬运_汇总验收_20260812.md` | 阶段 2 引擎抽包搬运汇总验收 |
+| `P2_工程决策日志_20260811.md` | 阶段 2 全部工程裁决登记 |
+| `P2_公路65章shadow与API_pilot费用估算_20260812.md` | shadow ≈$3 / pilot ≈$5 / 全量 ≈$65-72 费用估算 |
+| `P2_交接文档_shadow65实跑中_20260812.md` | shadow65 实跑中断点交接（checkpoint，已被终版报告接续） |
+| `P2_s3_人工冲突清单_20260812.md`（+`.json`） | shadow65 终版 s3 人工冲突清单：Tier-1 161 / Tier-1b 0 / Tier-2 884 / Tier-3 67 |
+| `P2_s4_V1V2差异总报告_20260812.md` | shadow65 终版 s4 V1/V2 差异总报告：65/65 章、vision 610 调用 0 失败、482/643（75%）确认原文无误 |
 | `P3_golden_five_replay_report_20260812.md` | 黄金五章 Step2 全链重放验收（A 字节对拍 6/6、B 谱系登记 7 例、C config_hash、D 学习黄金） |
 
 ## docs/v2/（随迁历史资产，只读）
