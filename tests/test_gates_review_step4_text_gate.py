@@ -110,6 +110,39 @@ def test_card_punct_diff_only_is_warn_with_full_coverage() -> None:
     assert all(item.severity == "warn" for item in findings)
 
 
+def test_reflow_split_truth_element_across_adjacent_transcript_lines_is_pass() -> None:
+    # A2 口径：纯换行 reflow＝软分隔＝pass（拆行向）。
+    truth = ("特殊路基处治原则：①软土地段路堤②冻土地段路堤", "另一独立元素")
+    transcript = "特殊路基处治原则：①软土地段路堤\n②冻土地段路堤\n另一独立元素"
+    verdict, coverage, matched, findings = evaluate_card_transcript(truth_lines=truth, transcript=transcript)
+    assert (verdict, coverage, matched, findings) == ("pass", 1.0, 2, ())
+
+
+def test_reflow_merge_truth_lines_into_one_transcript_line_is_pass() -> None:
+    # 并行向：两真值行被并进一转写行。
+    truth = ("行一内容甲", "行二内容乙", "行三内容丙")
+    transcript = "行一内容甲行二内容乙\n行三内容丙"
+    verdict, coverage, matched, findings = evaluate_card_transcript(truth_lines=truth, transcript=transcript)
+    assert (verdict, coverage, matched, findings) == ("pass", 1.0, 3, ())
+
+
+def test_reflow_with_punct_diff_is_warn() -> None:
+    truth = ("处治原则：①换填，②抛石挤淤", "另一独立元素")
+    transcript = "处治原则：①换填；\n②抛石挤淤\n另一独立元素"
+    verdict, coverage, _matched, findings = evaluate_card_transcript(truth_lines=truth, transcript=transcript)
+    assert (verdict, coverage) == ("warn", 1.0)
+    assert [item.code for item in findings] == ["punct_diff"]
+
+
+def test_reflow_with_semantic_typo_stays_hard_fail() -> None:
+    # reflow 修复只接受语义 token 全等；拆行且带术语错 → 仍 hard。
+    truth = ("滑坡地段路基处治要点甲乙丙丁", "另一独立元素")
+    transcript = "滑坡地质路基处治要点甲乙\n丙丁\n另一独立元素"
+    verdict, _coverage, _matched, findings = evaluate_card_transcript(truth_lines=truth, transcript=transcript)
+    assert verdict == "hard_fail"
+    assert any(item.severity == "hard_fail" for item in findings)
+
+
 def test_card_multiline_truth_element_expands_to_line_units() -> None:
     # 真值条目内嵌换行（一个元素跨多物理行，r2242 实况形态）：拆行后逐行配对。
     truth = ("特殊路基分类：\n①软土地段路堤\n②冻土地段路堤", "处治原则")

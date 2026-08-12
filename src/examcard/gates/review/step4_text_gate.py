@@ -15,6 +15,11 @@
 - **匹配单元 = 行**：真值 `expected_texts` 条目可含内嵌换行（一个可见元素跨多物理行），
   先按换行拆成真值行再配对；覆盖率分母 = 拆行后的真值行数（D2「整条元素漏渲染」
   ⇒ 其全部构成行落空，仍为 hard_fail）；
+- **reflow 容忍（A2 金标集口径：纯换行 reflow＝软分隔＝pass）**：四段式配对——
+  ① 精确配对（语义+标点 token 全等）；② reflow 修复：真值行 ↔ **相邻**未配对转写行
+  拼接（拆行向），或转写行 ↔ 相邻未配对真值行拼接（并行向），语义 token 全等即配对
+  （标点差记 warn）；③ 相似度贪心配对（真实差异行，产出 semantic/punct findings）；
+  ④ 余量 → line_missing / line_extra；
 - **行间顺序无关**：真值行与转写行按相似度贪心配对（表格卡行序视觉上可变）；
 - **行内严格**：配对行内逐 token 比对——语义 token（CJK 字、拉丁字母数字串、比较/数学符
   ≤<>≥=±×∑ 与 %‰℃ 等单位记号）不一致 → hard_fail；仅标点 token（，。、；：？！""''（）
@@ -223,27 +228,54 @@ def compare_line(truth_line: str, transcript_line: str) -> TextGateFinding | Non
     return None
 
 
-def _pair_lines(truth_lines: Sequence[str], transcript_lines: Sequence[str]) -> tuple[dict[int, int], list[int]]:
-    """行间顺序无关贪心配对：相似度全对排序取最优；返回 (truth→transcript 映射, 未配对 transcript 下标)。"""
+_REFLOW_MAX_SPAN = 4  # 一个可见元素被 reflow 拆开时允许的最大相邻行数
+
+
+def _similarity_pairs(
+    truth_indexes: Sequence[int],
+    transcript_indexes: Sequence[int],
+    truth_lines: Sequence[str],
+    transcript_lines: Sequence[str],
+) -> dict[int, int]:
+    """行间顺序无关贪心配对（相似度 ≥0.5 全对排序取最优）；输入为未配对下标集。"""
 
     scored: list[tuple[float, int, int]] = []
-    for t_index, truth in enumerate(truth_lines):
-        truth_norm = unicodedata.normalize("NFKC", _normalize_line(truth))
-        for g_index, got in enumerate(transcript_lines):
-            got_norm = unicodedata.normalize("NFKC", _normalize_line(got))
+    for t_index in truth_indexes:
+        truth_norm = unicodedata.normalize("NFKC", _normalize_line(truth_lines[t_index]))
+        for g_index in transcript_indexes:
+            got_norm = unicodedata.normalize("NFKC", _normalize_line(transcript_lines[g_index]))
             ratio = SequenceMatcher(None, truth_norm, got_norm).ratio()
             if ratio >= 0.5:
                 scored.append((ratio, t_index, g_index))
     scored.sort(key=lambda item: (-item[0], item[1], item[2]))
-    truth_to_transcript: dict[int, int] = {}
-    used_transcript: set[int] = set()
+    pairs: dict[int, int] = {}
+    used: set[int] = set()
     for _ratio, t_index, g_index in scored:
-        if t_index in truth_to_transcript or g_index in used_transcript:
+        if t_index in pairs or g_index in used:
             continue
-        truth_to_transcript[t_index] = g_index
-        used_transcript.add(g_index)
-    unmatched_transcript = [index for index in range(len(transcript_lines)) if index not in used_transcript]
-    return truth_to_transcript, unmatched_transcript
+        pairs[t_index] = g_index
+        used.add(g_index)
+    return pairs
+
+
+def _consecutive_unmatched_runs(indexes: Sequence[int], unmatched: set[int], span: int) -> list[tuple[int, ...]]:
+    """在原始行序上取「全部未配对」的连续窗口（长度 2..span）。"""
+
+    runs: list[tuple[int, ...]] = []
+    ordered = [index for index in indexes if index in unmatched]
+    for start_pos, start in enumerate(ordered):
+        window = [start]
+        cursor = start
+        for follower in ordered[start_pos + 1 :]:
+            if follower != cursor + 1:
+                break
+            window.append(follower)
+            cursor = follower
+            if 2 <= len(window) <= span:
+                runs.append(tuple(window))
+            if len(window) >= span:
+                break
+    return runs
 
 
 def evaluate_card_transcript(*, truth_lines: Sequence[str], transcript: str) -> tuple[Verdict, float, int, tuple[TextGateFinding, ...]]:
@@ -263,26 +295,106 @@ def evaluate_card_transcript(*, truth_lines: Sequence[str], transcript: str) -> 
             detail="transcript is empty; nothing rendered or transcriber failed",
         )
         return "hard_fail", 0.0, 0, (finding,)
+
     findings: list[TextGateFinding] = []
-    pairing, unmatched_transcript = _pair_lines(truth_lines, transcript_lines)
+    truth_tokens = [tokenize_visible_text(line) for line in truth_lines]
+    got_tokens = [tokenize_visible_text(line) for line in transcript_lines]
+    open_truth = set(range(len(truth_lines)))
+    open_transcript = set(range(len(transcript_lines)))
     matched = 0
-    for t_index, truth_line in enumerate(truth_lines):
-        g_index = pairing.get(t_index)
-        if g_index is None:
+
+    # ── ① 精确配对（语义+标点 token 全等；行序无关）────────────────────────
+    got_by_tokens: dict[tuple[tuple[str, ...], tuple[str, ...]], list[int]] = {}
+    for g_index in sorted(open_transcript):
+        got_by_tokens.setdefault(got_tokens[g_index], []).append(g_index)
+    for t_index in sorted(open_truth):
+        bucket = got_by_tokens.get(truth_tokens[t_index])
+        if bucket:
+            g_index = bucket.pop(0)
+            open_truth.discard(t_index)
+            open_transcript.discard(g_index)
+            matched += 1
+
+    # ── ② reflow 修复（A2 口径：纯换行 reflow＝软分隔）────────────────────
+    def _concat(tokens: Sequence[tuple[tuple[str, ...], tuple[str, ...]]], indexes: Sequence[int]) -> tuple[tuple[str, ...], tuple[str, ...]]:
+        semantic: list[str] = []
+        punct: list[str] = []
+        for index in indexes:
+            semantic.extend(tokens[index][0])
+            punct.extend(tokens[index][1])
+        return tuple(semantic), tuple(punct)
+
+    # 拆行向：真值行 ↔ 相邻未配对转写行拼接。
+    for t_index in sorted(open_truth):
+        candidate = None
+        for run in _consecutive_unmatched_runs(range(len(transcript_lines)), open_transcript, _REFLOW_MAX_SPAN):
+            semantic, punct = _concat(got_tokens, run)
+            if semantic == truth_tokens[t_index][0]:
+                candidate = (run, punct)
+                break
+        if candidate is None:
+            continue
+        run, punct = candidate
+        open_truth.discard(t_index)
+        open_transcript.difference_update(run)
+        matched += 1
+        if punct != truth_tokens[t_index][1]:
             findings.append(
                 TextGateFinding(
-                    code="line_missing",
-                    severity="hard_fail",
-                    truth_line=truth_line,
-                    detail="expected visible text has no counterpart in transcript (coverage hard check, b2-D2)",
+                    code="punct_diff",
+                    severity="warn",
+                    truth_line=truth_lines[t_index],
+                    transcript_line=" / ".join(transcript_lines[index] for index in run),
+                    detail="reflow-joined lines match semantically but punctuation diverges",
                 )
             )
+
+    # 并行向：转写行 ↔ 相邻未配对真值行拼接。
+    for g_index in sorted(open_transcript):
+        candidate = None
+        for run in _consecutive_unmatched_runs(range(len(truth_lines)), open_truth, _REFLOW_MAX_SPAN):
+            semantic, punct = _concat(truth_tokens, run)
+            if semantic == got_tokens[g_index][0]:
+                candidate = (run, punct)
+                break
+        if candidate is None:
             continue
+        run, punct = candidate
+        open_transcript.discard(g_index)
+        open_truth.difference_update(run)
+        matched += len(run)
+        if punct != got_tokens[g_index][1]:
+            findings.append(
+                TextGateFinding(
+                    code="punct_diff",
+                    severity="warn",
+                    truth_line=" / ".join(truth_lines[index] for index in run),
+                    transcript_line=transcript_lines[g_index],
+                    detail="merged truth lines match semantically but punctuation diverges",
+                )
+            )
+
+    # ── ③ 相似度贪心配对（真实差异行）──────────────────────────────────
+    pairing = _similarity_pairs(sorted(open_truth), sorted(open_transcript), truth_lines, transcript_lines)
+    for t_index, g_index in pairing.items():
+        open_truth.discard(t_index)
+        open_transcript.discard(g_index)
         matched += 1
-        finding = compare_line(truth_line, transcript_lines[g_index])
+        finding = compare_line(truth_lines[t_index], transcript_lines[g_index])
         if finding is not None:
             findings.append(finding)
-    for g_index in unmatched_transcript:
+
+    # ── ④ 余量 ────────────────────────────────────────────────────────
+    for t_index in sorted(open_truth):
+        findings.append(
+            TextGateFinding(
+                code="line_missing",
+                severity="hard_fail",
+                truth_line=truth_lines[t_index],
+                detail="expected visible text has no counterpart in transcript (coverage hard check, b2-D2)",
+            )
+        )
+    for g_index in sorted(open_transcript):
         findings.append(
             TextGateFinding(
                 code="line_extra",
