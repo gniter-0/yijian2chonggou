@@ -109,8 +109,8 @@ exams/<exam_id>/data/live_runs/<run_id>/
 
 | stage | 输入（仓根相对） | 引擎入口 | 输出 | 审计件 | 网络 |
 |---|---|---|---|---|---|
-| **step1 证据** | `exams/<id>/input_pdf/*` + 黄金注册表 + material profile | `evidence.golden_runner.run_golden_registry`（黄金样本面）；全章模式走 `EvidenceEngine.ingest_document` 逐章（shadow_wiring 形态） | `exams/<id>/data/evidence_v2/golden/<registry_id>/…` | 逐样本 evidence 报告 + 引擎缓存；vision 复核启用时 `vision-budget.json` | 离线（vision 复核可选外呼，走预算） |
-| **事实底座**（step2a 的自动前置，不占 stage 名） | 注册表（**全 reviewed**）+ 标注侧车 + 内容策略 + step1 产物 + diagram/table 侧车 | `knowledge.fact_engine.run_golden_fact_pipeline` | `exams/<id>/data/facts_v2/golden/<…>/fact_run.json` ×N + `golden_fact_run_report.json` | 同左（内容寻址 fact:/card:/ev: ID，字节可复现）；`quality_gates_passed=true` 是 step2a 放行条件 | 纯离线 |
+| **step1 证据** | `exams/<id>/input_pdf/*` + 黄金注册表 + material profile | `evidence.golden_runner.run_golden_registry`（黄金样本面；可选 `sample_ids: set[str]` 支撑 `--only-samples` 单样本重跑——漂移核查实测签名）；全章模式走 `EvidenceEngine.ingest_document` 逐章（shadow_wiring 形态） | `exams/<id>/data/evidence_v2/golden/<registry.registry_id>/<sample_id>/pages/page_%04d.json` + `golden_run_report.json` | 逐样本 evidence 报告 + 引擎缓存；vision 复核启用时 `vision-budget.json` | 离线（vision 复核可选外呼，走预算） |
+| **事实底座**（step2a 的自动前置，不占 stage 名） | 注册表（**全 reviewed**）+ 标注侧车 + 内容策略 + step1 产物 + diagram/table 侧车（**disposition 侧车必须与 review 侧车成对传**——fact_engine 强校验，漂移核查 N 条） | `knowledge.fact_engine.run_golden_fact_pipeline` | `exams/<id>/data/facts_v2/golden/<…>/<sample_id>/fact_run.json` + `golden_fact_run_report.json` | 同左（内容寻址 fact:/card:/ev: ID，字节可复现）；summary 顶层键 `quality_gates_passed`/`machine_assertions_passed`（复数）为 step2a 放行条件 | 纯离线 |
 | **step2a 提案** | 事实底座产物 + reviewed 学习 fixture + 语义侧车（`build_live_sample_contexts` 的泛化版，§11-E1） | `contracts.phase2r14_v25_live._execute_stage`（经 live_run 编排）+ 生产配方 transport（补强+SSE 流式，T2 参数） | 逐样本 step2a 提案（draft） | `step2a/{requests,records,cache}/` + `telemetry/journal.jsonl`；门禁评估结果（source_contract/teaching/learning_golden，登记不熔断——pilot 口径） | live，2 探针先行 |
 | **step2b 编组** | step2a 同源上下文 + reviewed Fact 桥 | 同上（stage=step2b） | 逐样本 step2b 编组提案（draft） | 同布局；编组/卡门禁登记 | live |
 | **◆检查点① 准入** | step2 产物 + 源页图 manifest | §7.1（人工在环） | 权威 `HumanDecisionManifest`；放行集合 | `checkpoints/admission/` 全件 | 零外呼 |
@@ -216,6 +216,9 @@ class ResendPlan: ...          # 新 reason 后缀身份、禁复用失败身份
 # —— T4b 新增 ——
 @dataclass(frozen=True)
 class ExamPaths:               # 目录契约解析器（§3；一切路径仓根相对）
+    # 互锁纪律（漂移核查 N1）：evidence/facts 产物路径一律从 registry.registry_id 派生
+    # （命名 <exam_id>_phase0_v1），决不硬编码拼串；material_profile_id 必须等于
+    # profile.profile_id（golden_runner 与 fact_engine 两处强校验，resolve 时先行断言）。
     @classmethod
     def resolve(cls, repo_root: Path, exam_id: str) -> "ExamPaths": ...
 
@@ -273,7 +276,7 @@ def orchestrate(config: LiveRunConfig) -> LiveRunReport: ...   # 总编排：DAG
 | `ResendPlan` / `load_run_env` / transport 可选参（stream、system_suffix）与 journal 审计字段 | T2（yijian2-4） | P3 §2 计划口径 | 已 send_to_session，待回 |
 | `relay_preflight` 库调用面 + 报告结构 + REQUIREMENT_PROFILE | T1（yijian2-7） | 落地文件头部实读（四探针/通道约定/报告路径） | 已 send_to_session，待回 |
 | step3 v2 模块面（`SingleCardModelInput` 等四件）+ 独立驱动重发规则 | T3（yijian2-5） | P3 §4 计划口径 | 已 send_to_session，待回 |
-| runbook 与代码 API 漂移核查结论 | yijian2-3 | runbook §1/§4/§6 原文 + 本人对代码直读交叉验证 | 已 send_to_session，待回 |
+| runbook 与代码 API 漂移核查结论 | yijian2-3 | runbook §1/§4/§6 原文 + 本人对代码直读交叉验证 | **已回并采纳**（`P3_runbook漂移核查_20260812.md`，41 项 0 硬漂移）：①`run_golden_registry` 可选 `sample_ids` 已入 §4；②registry_id 互锁纪律已入 §10.1 ExamPaths；③disposition/review 侧车成对强校验已入 §4；④`validate_learning_fixture` 收已加载对象（配 `load_learning_golden_fixture(path)` 加载器），driver 不得直传路径；⑤contracts phase2 为 r11/r12/r13/r14/r142 五模块（端点记法勿写成连续闭包）；⑥`inspect_chat_envelope(body: bytes, *, inner_inspector, profile=None, allowlist=None)` 实测签名 |
 
 ## 11. T4b 测试计划（全离线为主，live 彩排单列）
 
