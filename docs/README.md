@@ -53,6 +53,7 @@
 | `P3_golden_five_replay_report_20260812.md` | 黄金五章 Step2 全链重放验收（A 字节对拍 6/6、B 谱系登记 7 例、C config_hash、D 学习黄金） |
 | `P3_未来就绪审计与优化路线图_20260812.md` | 优化期开局审计：pytest 477 全绿基线（本机 84 ERROR 系环境 ACL 损伤，附修复命令）、G1–G5 未来就绪差距、T1–T5 优化路线图（中继预检/配方产品化/step3 v2 单卡契约/通用全链驱动/文档沉淀） |
 | `P3_优化施工方案_T1-T5_20260812.md` | T1–T5 详细施工方案（待批未开工）：改动范围铁律（仅新仓，yijian2 零接触）、逐轨文件级改动清单与验收口径、执行序与工时（单干 2-4 天 / 组队 1-1.5 天）、花钱四点合计 ≈$3 逐笔报批 |
+| `P3_中继预检实测_20260812.md` | T1 交付验收：`relay_preflight` 双中继首跑矩阵（与昨日实测一致性对照全过）；新信号：2chat strict 强制+流式可续 → step3 v2 前置条件成立；漂移发现：3100 图像信封新增 width/height 键致严格门禁 FAIL，step4 跑前必须预检 |
 | `P3_runbook漂移核查_20260812.md` | 新考试接入 runbook §2–§8 与真实代码 API 漂移核查：41 项逐步核查全 PASS、0 硬漂移（签名/关键字参数/枚举/路径/门禁逐一实测吻合），6 条建议级备注 N1–N6（注册表三字段互锁、N+1 产物口径、validate_learning_fixture 收对象、17 守护口径、phase2 五模块记法、模板 revision 陈旧）供 T5 落修 |
 | `P3_step4成品图评审底稿_20260812.md` | pilot_gonglu5 step4 16 张成品图人工级评审底稿：A 10 / B 2 / C 4（可接受 75%）；diagram 类 3C1B 为重灾区，另有 ＞550→≥550 符号级考点错误（#08）与表题漏项（#06）；含逐卡证据表、分层统计与缺陷 Top 清单 D1–D5 |
 | `P3_webui勘察_20260812.md` | webui 审阅工作台现状勘察（喂 T4a 人工检查点选型）：能力/数据装载清单、已验证启动指引（渲染+回环静态服务，HTTP 200 实录）、对照 step2 准入评审与图像评审两检查点的差距（G-A1–A4 / G-B1–B3）、选型建议=文件侧车为契约 + webui 作检查点①可选检视器 |
@@ -80,6 +81,7 @@
 | `verify_admission_fixtures.py` | 准入 fixture 族真实冻结工件重放 | PARITY OK |
 | `verify_compilers_parity.py` | compilers/gates-release 双跑对照 | 37/37 byte-identical |
 | `golden_five_replay.py` | 黄金五章 Step2 全链重放 | 四验收线全过 |
+| `relay_preflight.py` | 中继能力预检（T1：体积阶梯/strict 遵从/首字节窗口/图像端点四合一 + 需求画像结论；吸收 probe_relay_body_limit.py） | 双中继首跑见 `prework/P3_中继预检实测_20260812.md` |
 
 ## 裁决登记速查（现行口径）
 
