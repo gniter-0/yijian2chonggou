@@ -1,5 +1,7 @@
 # step2a 质量深评（2chat 轮五章 live 响应 × r12 人工基准） — 20260812
 
+> **20260812 增补：gpt-5.6-sol 复测轮**（用户拍板换模型，≈$0.7）：传输 10/10 全绿（step2a 64-104s/章）。质量对比 gpt-5.5 轮：提案量 135 vs 153（基准 28）、考情噪声 5 vs 10、拆行碎片 3 vs 9、水印字进断言 3 vs 多处、断言整洁度明显提升、出现基准精确命中 1 条（「特殊路基类型」）、合格聚合率上升（如「路堤试验路段施工总结内容」「压实工艺主要参数」）。仍存硬伤：考情统计继续被当 threshold 知识点（「防护工程设置与施工为8」把题数当参数）、diagram 目标两代模型均 0 命中、新增「表中列示的路基类型」式偷懒指代（不展开内容）。**判级 B-：明显优于 5.5（C），但距全量自动化生产（基准命中 1/28）仍有实质差距。**底稿：`data/pilot_gonglu5/step2_live_56sol/step2a_quality_workpad.json`。
+
 - 方法：`migration/build_step2a_quality_workpad.py` 导出对照底稿（基准目标的标题/别名/必需术语/锚点选择器 × live 提案的类型/标签/断言/所选锚点原文），gonglu_01 与 gonglu_62 逐条全评，其余三章抽验 + 全量统计。零 API 成本。
 - 底稿：`data/pilot_gonglu5/step2_live_2chat/step2a_quality_workpad.json`（153 条提案全量）。
 
