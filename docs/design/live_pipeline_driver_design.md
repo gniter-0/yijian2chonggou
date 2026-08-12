@@ -1,6 +1,6 @@
 # T4a 通用全链 live 驱动设计稿（`migration/run_exam_pipeline.py` + `pipeline/live_run.py`）
 
-- 日期：2026-08-13 凌晨；作者：yijian2-1（T4a 节点）；状态：**设计稿待总指挥验收**，批准后为 T4b 施工依据。
+- 日期：2026-08-13 凌晨；作者：yijian2-1（T4a 节点）；状态：**设计稿待总指挥终验**（评审意见 R1/R2 已应用：step3 双取材模式 + 转换器已知开口 + T3/T1 对齐台账更新），批准后为 T4b 施工依据。
 - 任务书：`P3_优化施工方案_T1-T5_20260812.md` §5（含 §8 v1.1 修订）；输入报告：`P3_webui勘察_20260812.md`（人工检查点选型）、`new_exam_onboarding_runbook.md`（目录契约与调用形态）、`P2_pilot_step2a质量深评_20260812.md`（生产配方）、`P2_pilot_黄金五章全链实测_20260812.md`（中继能力边界）。
 - 一句话：把 runbook 第 4–8 步的"专家陪跑"手工片段，收敛为**一条命令**的可断点续跑、预算受控、人工检查点在环的全链驱动；编排逻辑进库（可测），CLI 只做薄壳。
 
@@ -33,7 +33,7 @@ uv run python migration/run_exam_pipeline.py \
   [--budget-usd N] [--dry-run | --allow-live] \
   [--run-label <ascii-audit-id>] [--only-samples <substr,substr>] \
   [--channel first|last] [--env-file PATH] \
-  [--step3-contract v2|v1] [--skip-preflight] [--resume <run_id>]
+  [--step3-contract v2|v1] [--step3-mode echo|release-bypass] [--skip-preflight] [--resume <run_id>]
 ```
 
 | 参数 | 语义 | 缺省 |
@@ -47,6 +47,7 @@ uv run python migration/run_exam_pipeline.py \
 | `--channel` | 文本通道选择（.env 多对键约定，同 T1 preflight：first=chatgpt2api-new，last=2chat） | `last` |
 | `--env-file` | 显式指定 env 文件（回归旧仓路径用） | 新仓 `.env` |
 | `--step3-contract` | step3 回显契约版本：`v2` 单卡（T3）或 `v1` 三卡 | `v2` |
+| `--step3-mode` | step3 取材模式（方案 v1.2 勘误 5a9f238）：`echo` = 检查点①放行产物经 typed-evidence fixture 走 v2 回显（通用生产道，N 卡）；`release-bypass` = 既有 reviewed 发布 fixture 直进 step4 derive 路径、跳过回显（pilot 同款，gonglu 彩排即此道——r2242 16 发布卡无 typed layout 不可喂 v2） | `echo` |
 | `--skip-preflight` | 跳过开跑预检（仅当当日已有该通道预检报告时允许） | 不跳 |
 | `--resume` | 续跑既有 run（§5）；缺省新开 run_id | 新 run |
 
@@ -114,7 +115,7 @@ exams/<exam_id>/data/live_runs/<run_id>/
 | **step2a 提案** | 事实底座产物 + reviewed 学习 fixture + 语义侧车（`build_live_sample_contexts` 的泛化版，§11-E1） | `contracts.phase2r14_v25_live._execute_stage`（经 live_run 编排）+ 生产配方 transport（补强+SSE 流式，T2 参数） | 逐样本 step2a 提案（draft） | `step2a/{requests,records,cache}/` + `telemetry/journal.jsonl`；门禁评估结果（source_contract/teaching/learning_golden，登记不熔断——pilot 口径） | live，2 探针先行 |
 | **step2b 编组** | step2a 同源上下文 + reviewed Fact 桥 | 同上（stage=step2b） | 逐样本 step2b 编组提案（draft） | 同布局；编组/卡门禁登记 | live |
 | **◆检查点① 准入** | step2 产物 + 源页图 manifest | §7.1（人工在环） | 权威 `HumanDecisionManifest`；放行集合 | `checkpoints/admission/` 全件 | 零外呼 |
-| **step3 编译+回显** | 检查点①放行的 reviewed typed-evidence fixture | 离线编译 `compilers.step3_card.compile_reviewed_fixture` → v2 单卡回显 `compilers.step3_response_v2.*`（T3，缺省）或 v1 三卡 `step3_response.*` | 逐卡确认后的 draft 卡工件 | providers `inspect_chat_envelope` 信封审计 + 逐卡 strict 回显 record + journal | live，1 探针先行 |
+| **step3 编译+回显** | `echo` 模式：检查点①放行产物转成的 reviewed typed-evidence fixture（**N 卡通用，勿写死卡数**——v1.2 勘误：r810 typed 链实编 6 卡，「16 卡」属 r2242 step4 发布语料且无 typed layout 不可喂 v2）；`release-bypass` 模式：既有 reviewed 发布 fixture 直进 step4，跳过本 stage 回显 | 离线编译 `compilers.step3_card.compile_reviewed_fixture` → v2 单卡回显 `compilers.step3_response_v2.*`（T3 已落地 282fd69，缺省）或 v1 三卡 `step3_response.*` | 逐卡确认后的 draft 卡工件 | providers `inspect_chat_envelope` 信封审计（`make_single_card_inspector(model_input)` 直接作 inner_inspector）+ 逐卡 strict 回显 record + journal；版本号族 input=`step3-response/2.0` / result=`step3-response-result/2.0` / draft 卡=`step3-response-draft-card/2.0`（input/result 刻意不同，回显错版即判负） | live，1 探针先行 |
 | **step4 出图** | step3 产物派生 `derive_step4_bundle` → `GenericCardContract` ×N | `providers.project_image_request` 五字段投影 → POST images/generations → `inspect_image_envelope` 具名门禁 | PNG ×N（尺寸/哈希校验后落盘） | 逐图信封审计 + 出图报告（成功率/时延/单价） | live，1 `/models` 探针先行 |
 | **◆检查点② 图像评审** | step4 图片 + 绑定摘要 | §7.2（人工在环） | N 图授权清单（新版本号模型）→ `ReviewedImageCard`/`PostReviewItem` + `AdmissionAudit` | `checkpoints/image_review/` 全件 | 零外呼 |
 
@@ -133,6 +134,7 @@ exams/<exam_id>/data/live_runs/<run_id>/
 - 节流：同一样本两次重发之间强制间隔（缺省 300s，可配）——昨晚 62 章三连挂的教训：热窗口内立即重发只是浪费预算。
 - 单样本失败**不熔断整场**（pilot 纪律）：登记后继续下一样本，stage 结果 `completed_with_failures`，重发道收尾；重发轮数耗尽仍失败 → stage `failed`，下游 skipped。
 - **对齐说明**：`ResendPlan`/`load_run_env()` 的最终签名以 t2-recipe 落地的 `src/examcard/pipeline/live_run.py` 为准（已 send_to_session 对齐，等回复后本节校正字段名）；本稿按 P3 §2 计划口径书写。
+- **step3 v2 重发四不变式**（T3 落地口径 282fd69；T4b 用 ResendPlan 的 reason 生成器替换其驱动内规则时必须保持等价）：(a) 首发 attempt=1、reason=None；(b) 重发 reason=`manual_reissue_step3v2_r{attempt}`（attempt≥2），每（卡,轮）唯一、禁复用失败身份；(c) 轮上限 2（stage 预算=探针+2N）；(d) 补强 system 与 stream 是传输层参数**不进 identity**，`reinforcement_id` 单独入 journal。
 
 ## 6. 预算护栏（仿 shadow vision-budget，双账本）
 
@@ -153,6 +155,7 @@ exams/<exam_id>/data/live_runs/<run_id>/
 - **启动指引**（G-A4）：驱动打印一条命令——`\.venv\Scripts\python.exe -m http.server 8777 --bind 127.0.0.1 --directory <服务根>`；**服务根钉死为 `exams/<exam_id>/` 运行根**（勘察 §7 硬输入：`image_uri` 根绝对路径必须可解析到源页图）。
 - **摄取**（G-A2 补齐）：人工在工作台导出 `review-browser-decisions.json`（或直接手写同信封文件）放入 `checkpoints/admission/inbox/`；`--resume` 时走严格链：`RawReviewDraftManifest → classify_browser_decision()`（浏览器 `reviewed_candidate` 一律降格 `manual_review`，语义照搬 r84 定式不新造）`→ normalize_raw_draft()`（重绑定冻结候选，`decision_builder` 由驱动注入并重算权威哈希）`→ HumanDecisionManifest` 落盘。
 - **放行门禁**：仅 `reviewed_candidate`（CLI 侧权威决策）集合进入 step3；`manual_review/blocked/not_applicable` 留在准入队列并入报告。queue_sha256 贯穿决定/清单/审计（链绑定）。
+- **已知开口（T4b 首项验证点，不得默认存在）**：「准入放行的 step2 产物 → reviewed typed-evidence fixture」的转换器（旧仓 r71→r8x 链的新仓等价物）**存在性未验证**——T4b 开工第一件事即核实；若缺失，need_input 上报总指挥裁决（补搬运该链 or 该考试暂走 `--step3-mode release-bypass`），不得自行发明新的转换语义。
 - **进度可续**（G-A3 补齐）：`build_progress()` 快照随摄取落盘 `checkpoints/admission/progress.json`，分批评审不丢。
 - **黄金样本注册表 `reviewed` 状态机独立于此**：它门禁的是"黄金样本能不能进事实底座"（`run_golden_fact_pipeline` 第一道校验），本检查点门禁的是"step2 产物能不能进 step3"——两道门都不绕过。
 
@@ -274,8 +277,8 @@ def orchestrate(config: LiveRunConfig) -> LiveRunReport: ...   # 总编排：DAG
 | 依赖 | 承接人 | 本稿引用口径 | 对齐状态 |
 |---|---|---|---|
 | `ResendPlan` / `load_run_env` / transport 可选参（stream、system_suffix）与 journal 审计字段 | T2（yijian2-4） | P3 §2 计划口径 | 已 send_to_session，待回 |
-| `relay_preflight` 库调用面 + 报告结构 + REQUIREMENT_PROFILE | T1（yijian2-7） | 落地文件头部实读（四探针/通道约定/报告路径） | 已 send_to_session，待回 |
-| step3 v2 模块面（`SingleCardModelInput` 等四件）+ 独立驱动重发规则 | T3（yijian2-5） | P3 §4 计划口径 | 已 send_to_session，待回 |
+| `relay_preflight` 库调用面 + 报告结构 + REQUIREMENT_PROFILE | T1（yijian2-7） | 落地文件实读（四探针/通道约定/报告路径） | **工具已落地 5af201b**（38 离线判定测试 + 双中继实测：2chat strict 强制 + 流式穿越掐断 → step3v2 亮绿灯；3100 图像信封漂移带 width+height 键）；「库函数直调 vs subprocess」调用面待回，§8.2 先按两可设计 |
+| step3 v2 模块面（`SingleCardModelInput` 等四件）+ 独立驱动重发规则 | T3（yijian2-5） | P3 §4 计划口径 | **已回并采纳**（落地 282fd69，四名字全保留）：摊平模型（geometry 不进回显、source_fixture_sha256 顶层、五族 presentation Literal）；`build_single_card_model_input(contract, projection, *, source_fixture_sha256=None)` 三重配对守卫；版本号族三层刻意不同（§4 step3 行）；inspector 满足 InnerGate 最小面；判负码 empty-draft-cards-escape 等四枚；重发四不变式入 §5.2；语料勘误（r810=6 卡）入 §4/§11 |
 | runbook 与代码 API 漂移核查结论 | yijian2-3 | runbook §1/§4/§6 原文 + 本人对代码直读交叉验证 | **已回并采纳**（`P3_runbook漂移核查_20260812.md`，41 项 0 硬漂移）：①`run_golden_registry` 可选 `sample_ids` 已入 §4；②registry_id 互锁纪律已入 §10.1 ExamPaths；③disposition/review 侧车成对强校验已入 §4；④`validate_learning_fixture` 收已加载对象（配 `load_learning_golden_fixture(path)` 加载器），driver 不得直传路径；⑤contracts phase2 为 r11/r12/r13/r14/r142 五模块（端点记法勿写成连续闭包）；⑥`inspect_chat_envelope(body: bytes, *, inner_inspector, profile=None, allowlist=None)` 实测签名 |
 
 ## 11. T4b 测试计划（全离线为主，live 彩排单列）
@@ -293,7 +296,7 @@ def orchestrate(config: LiveRunConfig) -> LiveRunReport: ...   # 总编排：DAG
 9. dry-run 零外呼保证：伪 transport 计数恒 0 + 预算预演字段在场。
 10. 报告/freeze：`LiveRunReport` 自证哈希、stage 序、failed 后 skipped 不变式（对拍 `PipelineRunReport` 语义）。
 
-**live 彩排（T4b 验收，预算 ≈$1-2，报总指挥审计）**：gonglu 黄金五章伪装新考试落 `exams/gonglu_golden5_rehearsal/`（复用既有 reviewed 资产），依次 `--stages step1,step2a,step2b`（→人工准入）`step3,step4`（→图像评审），一条命令链全通、审计件齐全、`uv run pytest` 全绿。
+**live 彩排（T4b 验收，预算 ≈$1-2，报总指挥审计）**：gonglu 黄金五章伪装新考试落 `exams/gonglu_golden5_rehearsal/`（复用既有 reviewed 资产），依次 `--stages step1,step2a,step2b`（→人工准入）`step3,step4`（→图像评审），一条命令链全通、审计件齐全、`uv run pytest` 全绿。step3 取材按 v1.2 勘误双道走：主彩排 `--step3-mode release-bypass`（r2242 16 发布卡直进 step4 derive，pilot 同款）；`echo` 生产道以 r810 六卡 typed 语料作演示车道（N 卡通用，验证 v2 回显编排）。
 
 ## 12. 与既有件的边界（防误改清单）
 
