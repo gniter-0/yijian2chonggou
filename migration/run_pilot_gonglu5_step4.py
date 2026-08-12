@@ -19,6 +19,10 @@
 运行（exam-card-engine 仓根）：
   uv run python migration/run_pilot_gonglu5_step4.py --dry-run --storage-root data/pilot_gonglu5/step4_dryrun
   uv run python migration/run_pilot_gonglu5_step4.py --allow-live --storage-root data/pilot_gonglu5/step4_live
+
+prompt v2（20260812 评审底稿修复轨：diagram 结构枚举 + 字形保真硬性要求；默认 v1 逐字节不变）：
+  uv run python migration/run_pilot_gonglu5_step4.py --allow-live --prompt-variant v2 --only-cards 2,6,8,10,12,16 \
+      --env-file .env --storage-root data/pilot_gonglu5/step4_fix_v2
 """
 from __future__ import annotations
 
@@ -90,17 +94,132 @@ def source_prompt(presentation: str, source_texts: tuple[str, ...]) -> str:
     )
 
 
+def classify_benign_envelope_drift(body: bytes, profile) -> bytes | None:
+    """20260812 深夜实测：本地中继 data[0] 新增 width/height 两个良性元数据键（值=画像尺寸），
+    冻结适配器按键集精确性正确拒绝（envelope drift 检测在履职）。本函数只在
+    「恰好多出 width/height 且与画像钉扎尺寸一致」时返回剥离后的等价 body 供门禁复检；
+    任何其他漂移一律返回 None（保持 fail-closed）。providers 冻结面零改动。"""
+    try:
+        document = json.loads(body.decode("utf-8"))
+        item = document["data"][0]
+    except Exception:
+        return None
+    if not isinstance(item, dict):
+        return None
+    expected = set(profile.data_item_keys)
+    if set(item) != expected | {"width", "height"}:
+        return None
+    if item.get("width") != profile.image_width or item.get("height") != profile.image_height:
+        return None
+    document = dict(document)
+    document["data"] = [{key: value for key, value in item.items() if key in expected}]
+    return json.dumps(document, ensure_ascii=False).encode("utf-8")
+
+
+def _v2_structure_block(card) -> str:
+    """prompt v2 结构枚举块：diagram 出 NODES/EDGES，table 出 TABLE_GRID；其余卡型无块。
+
+    信息全部来自 GenericCardContract 既有字段（bundle 内已冻结、零推断）：
+    diagram 节点标签取 visible_texts 的 semantic_node_id 映射，边取 semantic_layout_edges；
+    table 网格取 table_contracts 的 reviewed_grid 单元格图。关系词仅作布局提示，
+    并在硬性要求里禁止其成为可见文字（对齐 v1 冻结口径 relation_layout_only）。
+    """
+    if card.render_presentation == "diagram":
+        labels = {item.semantic_node_id: item.visible_text for item in card.visible_texts if item.semantic_node_id}
+        nodes = [labels[node_id] for node_id in card.diagram_node_ids]
+        node_lines = "\n".join(f"  N{index}. {label}" for index, label in enumerate(nodes, 1))
+        edge_lines = "\n".join(
+            f"  E{index}. {labels[edge.source_node_id]} -> {labels[edge.target_node_id]} (layout hint: {edge.layout_relation})"
+            for index, edge in enumerate(card.semantic_layout_edges, 1)
+        )
+        return (
+            "STRUCTURE_BEGIN\n"
+            f"NODES ({len(nodes)}):\n{node_lines}\n"
+            f"EDGES ({len(card.semantic_layout_edges)}):\n{edge_lines}\n"
+            "STRUCTURE_END"
+        )
+    if card.render_presentation == "table":
+        blocks: list[str] = []
+        for table in card.table_contracts:
+            if table.table_state != "reviewed_grid":
+                continue
+            cell_lines = "\n".join(
+                f"  r{cell.row} c{cell.column}"
+                + (f" (span {cell.row_span}x{cell.column_span})" if cell.row_span > 1 or cell.column_span > 1 else "")
+                + f": {cell.text}"
+                for cell in table.cells
+            )
+            blocks.append(
+                f"TABLE_GRID_BEGIN ({table.row_count} rows x {table.column_count} columns; cells listed as row/column, 0-based)\n"
+                f"{cell_lines}\n"
+                "TABLE_GRID_END"
+            )
+        return "\n".join(blocks)
+    return ""
+
+
+def source_prompt_v2(card) -> str:
+    """v2 变体（20260812）：v1 全文保留 + 硬性要求（字形保真/全量覆盖/禁空框禁臆造）+ 结构枚举块。
+
+    针对评审底稿缺陷归因：D1 diagram 结构失真（prompt 只给标签没给节点/边）、
+    D2 阈值符号级错误（＞550→≥550）、D3 表题整行漏渲染。默认 v1 路径逐字节不变。
+    """
+    texts = tuple(item.visible_text for item in card.visible_texts)
+    base = source_prompt(card.render_presentation, texts)
+    requirements = [
+        "HARD REQUIREMENTS:",
+        "1. Copy every comparison/range symbol glyph-for-glyph exactly as written in the source "
+        "(＞ vs ≥, ＜ vs ≤, ～ ranges, — dashes). Never substitute one symbol for another: "
+        "if the source says ＞550 the image must show ＞550, not ≥550.",
+        "2. Render every SOURCE item completely and exactly once, including any table caption line "
+        "(a line like 表x.x-x ...) as a visible caption row above the table grid. Omitting a line is a failure.",
+        "3. Never draw an empty/unlabeled box, never invent an extra box, node, row, column, line or text "
+        "that is not in the source.",
+    ]
+    structure = _v2_structure_block(card)
+    if card.render_presentation == "diagram":
+        node_count = len(card.diagram_node_ids)
+        edge_count = len(card.semantic_layout_edges)
+        requirements.append(
+            f"4. Draw a node-and-edge diagram with exactly {node_count} labeled boxes (one per NODES entry) "
+            f"and exactly {edge_count} connections (one per EDGES entry). Every box must contain its label text.",
+        )
+        requirements.append(
+            "5. Connect exactly the listed EDGES pairs with clear lines/arrows between their two named boxes; "
+            "a child box in a containment/hierarchy edge must visually attach under its own parent box, never under "
+            "any other box. Do not connect any pair that is not listed. The layout-hint words in parentheses "
+            "describe placement only and must NOT appear as visible text in the image.",
+        )
+    elif card.render_presentation == "table" and structure:
+        requirements.append(
+            "4. Reproduce the table exactly as TABLE_GRID specifies: same row count, same column count, "
+            "every cell text verbatim in its listed row/column position.",
+        )
+    parts = [base, "\n".join(requirements)]
+    if structure:
+        parts.append(structure)
+    return "\n".join(parts)
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--allow-live", action="store_true")
     parser.add_argument("--dry-run", action="store_true")
     parser.add_argument("--storage-root", type=Path, required=True)
     parser.add_argument("--only-card-index", type=int, default=None, help="live: send exactly one card (manual retry lane)")
+    parser.add_argument("--only-cards", type=str, default=None, help="live: comma separated card indexes, e.g. 2,6,8,10,12,16 (defect re-render lane)")
+    parser.add_argument("--prompt-variant", choices=("v1", "v2"), default="v1", help="v1: r119 source projection (default, unchanged); v2: + hard requirements & structure enumeration (20260812 fix lane)")
+    parser.add_argument("--env-file", type=Path, default=OLD_ROOT / ".env", help="env file path (default: yijian2/.env; new-repo runs pass .env)")
     args = parser.parse_args()
     if args.allow_live == args.dry_run:
         parser.error("choose exactly one of --allow-live or --dry-run")
+    selected_cards: set[int] | None = None
+    if args.only_cards:
+        selected_cards = {int(item) for item in args.only_cards.split(",") if item.strip()}
+    if args.only_card_index is not None:
+        selected_cards = (selected_cards or set()) | {args.only_card_index}
 
-    env = load_env_file(OLD_ROOT / ".env")
+    env = load_env_file(args.env_file)
     # 图像通道显式键优先（20260812 双通道配置：文本走 2chat 覆盖值，生图锁定 chatgpt2api-new）
     base_url = (env.get("IMAGE_API_BASE_URL") or env.get("API_BASE_URL") or "").rstrip("/")
     api_key = env.get("IMAGE_API_KEY") or env.get("API_KEY") or ""
@@ -128,7 +247,10 @@ def main() -> int:
     profile = build_image_profile(model=model, image_width=IMAGE_WIDTH, image_height=IMAGE_HEIGHT)
     projections = []
     for card in bundle.cards:
-        prompt = source_prompt(card.render_presentation, tuple(item.visible_text for item in card.visible_texts))
+        if args.prompt_variant == "v2":
+            prompt = source_prompt_v2(card)
+        else:
+            prompt = source_prompt(card.render_presentation, tuple(item.visible_text for item in card.visible_texts))
         payload = {
             "model": model,
             "n": 1,
@@ -147,6 +269,7 @@ def main() -> int:
         "started_at_utc": _utc_now(),
         "mode": "live" if args.allow_live else "dry_run",
         "model": model,
+        "prompt_variant": args.prompt_variant,
         "size": f"{IMAGE_WIDTH}x{IMAGE_HEIGHT}",
         "unified_fixture_sha256": _sha256_bytes(fixture_bytes),
         "r319_handoff_sha256": _sha256_bytes(handoff_bytes),
@@ -166,6 +289,7 @@ def main() -> int:
                 "sample_id": entry["card"].sample_id,
                 "source_card_id": entry["card"].source_card_id,
                 "render_presentation": entry["card"].render_presentation,
+                "prompt_variant": args.prompt_variant,
                 "visible_text_count": len(entry["card"].visible_texts),
                 "prompt_utf8_bytes": len(entry["prompt"].encode("utf-8")),
                 "http_payload_utf8_bytes": entry["projection"].http_payload_utf8_bytes,
@@ -236,7 +360,7 @@ def main() -> int:
         images_dir = storage / "images"
         for entry in projections:
             card = entry["card"]
-            if args.only_card_index is not None and card.card_index != args.only_card_index:
+            if selected_cards is not None and card.card_index not in selected_cards:
                 continue
             image_path = images_dir / f"step4-card-{card.card_index:02d}-{card.source_card_id.rsplit(':', 1)[-1][:8]}.png"
             if image_path.exists():
@@ -265,6 +389,13 @@ def main() -> int:
                 record["response_bytes"] = len(response.content)
                 gate = inspect_image_envelope(response.status_code, response.content, entry["prompt"], profile)
                 record["gate_failures"] = list(gate.failure_codes)
+                if not gate.valid:
+                    stripped = classify_benign_envelope_drift(response.content, profile)
+                    if stripped is not None:
+                        regate = inspect_image_envelope(response.status_code, stripped, entry["prompt"], profile)
+                        if regate.valid:
+                            record["envelope_drift"] = "data0_extra_width_height_stripped"
+                            gate = regate
                 if gate.valid:
                     document = json.loads(response.content.decode("utf-8"))
                     image_bytes = base64.b64decode(document["data"][0]["b64_json"], validate=True)
