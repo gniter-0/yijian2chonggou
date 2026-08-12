@@ -29,6 +29,7 @@
 | `providers_distillation_design.md` | distill:providers（4.2，18 模块） | 12 条传输不变式；common 冻结签名依据（§6.1/§9.1） |
 | `p1_compilers_release_gate_design.md` | distill:compilers（4.1）+ release-gate（4.4） | 复制改造手法、逐符号去向表、§6 哈希稳定性红线、§8.1 A 案契约下沉 |
 | `distill_gates_review_design.md` | distill:gates-review（4.3，27 模块） | 人工准入内核六公理、法定哈希双变体勘察、生产契约保真条款 |
+| `live_pipeline_driver_design.md` | T4a 通用全链 live 驱动（待批，T4b 施工依据） | 一条命令全链 CLI 契约、exams/ 目录契约与运行产物布局、断点续跑（cache-state 跳过 + ResendPlan 重发）、双账本预算熔断、两处人工检查点（文件为契约 + webui 可选检视器）、双通道路由与 preflight 放行矩阵、fail-closed stop_reason 总表、T4b 签名清单与测试计划 |
 
 > 迁移备注：`distill_gates_review_design.md` 曾在 `docs/` 顶层、`p1_compilers_release_gate_design.md` 曾在 `migration/`，均已按产出路径纪律（bc-b8b9aca6 ②）归位 design/，旧路径指路占位件已于本次清理删除。历史消息/任务书中的旧路径一律以本表为准。
 
