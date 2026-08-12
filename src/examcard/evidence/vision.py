@@ -86,7 +86,7 @@ class OpenAIVisionVerifier:
                     ],
                 },
             ],
-            max_tokens=400,
+            max_tokens=1000,
             extra_headers=extra_headers,
         )
         headers = {str(key).lower(): str(value) for key, value in raw_response.headers.items()}
@@ -105,15 +105,21 @@ class OpenAIVisionVerifier:
         try:
             parsed = json.loads(content)
         except json.JSONDecodeError:
+            # 截断/包裹等导致的残缺 JSON 一律按 uncertain 兜底，绝不让解析异常炸掉整章复核。
             match = re.search(r"\{.*\}", content, re.DOTALL)
-            if not match:
+            parsed = None
+            if match:
+                try:
+                    parsed = json.loads(match.group(0))
+                except json.JSONDecodeError:
+                    parsed = None
+            if parsed is None:
                 return VisionVerification(
                     visible_text=content.strip(),
                     uncertain=True,
                     provider_request_id=headers.get("x-request-id"),
                     idempotency_replayed=self._idempotency_replayed(headers),
                 )
-            parsed = json.loads(match.group(0))
         visible_text = str(parsed.get("visible_text") or "").strip()
         uncertain = bool(parsed.get("uncertain", False))
         return VisionVerification(
