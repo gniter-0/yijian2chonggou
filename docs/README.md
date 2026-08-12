@@ -94,6 +94,7 @@
 |---|---|---|
 | `compilers/step3_response_v2.py` | step3 **v2 单卡回显契约**：摸平 `SingleCardModelInput`（无嵌套卡、geometry 不进回显）、三层版本号族（input=`step3-response/2.0` / result=`step3-response-result/2.0` / draft 卡=`step3-response-draft-card/2.0`，回显错版即判负）、`make_single_card_inspector` 可直作 `inspect_chat_envelope` 的 inner_inspector | T3（282fd69）；live 实测 `prework/P3_step3v2实测_20260812.md` |
 | `knowledge/reinforcement.py` | step2a 补强常量 `STEP2A_REINFORCEMENT_V1` + `reinforcement_id`（生产配方件；transport 注入、不进 identity） | T2（ff3728e；含 23 个离线测试 + gonglu_01 live 冒烟 4/4 绿） |
+| `gates/review/extraction.py` | typed contract **提取面**（r71/r8/r81 蒸馏补搬）：`ExtractionSource`（step2/facts 准入产物投影）+ `ManualSelectionSpec`（人工圈选，五确认背书）→ r84 五族契约（逐元素 provenance、r8x 谱系封印、显式元素身份回放通道）→ 决策/队列/r84 reviewed fixture 装配 | 提取面补搬节点（P3 方案 §8.2 v1.3）；r810 六候选金标回放逐字节 6/6 全过 + 34 例离线测试 |
 | `pipeline/live_run.py` | live 编排原语：`ResendPlan`（重发=新身份/禁复用/轮上限）、`load_run_env` 与双通道取值（`IMAGE_*` 显式键优先） | T2（ff3728e）；T4b 驱动在此扩展 |
 
 ## 裁决登记速查（现行口径）

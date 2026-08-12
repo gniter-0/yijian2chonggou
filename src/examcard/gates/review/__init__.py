@@ -10,6 +10,8 @@
 - authorization：r810 显式生产授权 → 导出 r84 清单（含守恒投影）；
 - browser：非权威浏览器界（pending 哈希草稿信封 / r82 分类 / 进度快照）；
 - audit：决策审计与 browser demo 不可授权不变量；
+- extraction：typed contract 提取面（r71/r8/r81 蒸馏补搬：step2/facts 准入产物 +
+  人工圈选 spec → r84 五族契约（逐元素 provenance）→ 决策/队列/fixture 装配）；
 - fixtures：r84 reviewed fixture 族与构建器（跨桶模型向下引用）;
 - release_merge：r2242 双层合并判定与发布草稿投影；
 - image_admission：r11101 图片目检准入全套状态机；
@@ -29,6 +31,7 @@ from . import (
     contracts,
     decisions,
     dispositions,
+    extraction,
     fixtures,
     gate,
     handoff,
@@ -46,6 +49,7 @@ __all__ = (
     "contracts",
     "decisions",
     "dispositions",
+    "extraction",
     "fixtures",
     "gate",
     "handoff",
