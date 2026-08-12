@@ -59,6 +59,7 @@
 | `P3_webui勘察_20260812.md` | webui 审阅工作台现状勘察（喂 T4a 人工检查点选型）：能力/数据装载清单、已验证启动指引（渲染+回环静态服务，HTTP 200 实录）、对照 step2 准入评审与图像评审两检查点的差距（G-A1–A4 / G-B1–B3）、选型建议=文件侧车为契约 + webui 作检查点①可选检视器 |
 | `P3_step3v2实测_20260812.md` | T3 验收实测：r810 六卡单卡回显 live（2chat+5.6-sol+SSE）**6/6 全过、零重发**（17-32s/卡，输出 0.6-1.5K tokens/卡）→ 新卡自动 step3 路径实测可用；含 v1 三卡整体回显证伪史对比、表达族覆盖注记（live 仅 table/ordered_list/formula 三族，diagram/constraint 由离线五族用例保障）、2chat 上游 502 瞬断运维注记 |
 | `P3_T2字节级回归守卫_20260812.md` | T2 落地回归守卫：黄金五章重放 A/B 对拍（A 腿 282fd69 前置控制点 / B 腿 cb6c1a2 含 ff3728e），四验收线全过且两腿产物与基线报告**三方字节全等**（六产物 SHA256 逐一相同）；全量 pytest 558 passed/1 skipped（唯一 skip 为 v1_adapter 留守既定项）；双独立验证一致（yijian2-1 执行记录交叉印证）；**结论：T2 无需返工** |
+| `P3_T4b前置_伪新考试工作区预铺_20260813.md` | T4b 前置预铺：`exams/gonglu_golden5_rehearsal/` 伪新考试工作区（设计稿 §3 目录契约落地 + 接入点物料 + 命名空间侧车副本哈希互锁链）；关键决策：material_profile_id 保留 `yijian_gonglu_2026`（config_hash 把 profile 身份编进 ev: 锚，改名=黄金五章评审资产整体失锚）；全链事实底座验证跑通（quality/machine gates 双真）；彩排双道语料核实（r2242 16 卡新仓件与老仓字节一致 / r810 六卡编译+门禁绿）；§7.1 转换器核查结论=r84 半程在库、r89/r810 授权半程缺失（彩排不受阻，新考试 step3 正路暂走 release-bypass） |
 
 ## docs/v2/（随迁历史资产，只读）
 
@@ -85,6 +86,7 @@
 | `golden_five_replay.py` | 黄金五章 Step2 全链重放 | 四验收线全过 |
 | `relay_preflight.py` | 中继能力预检（T1：体积阶梯/strict 遵从/首字节窗口/图像端点四合一 + 需求画像结论；吸收 probe_relay_body_limit.py；库入口 `run_preflight() -> report`，`verdict_code` 四值枚举） | 双中继首跑见 `prework/P3_中继预检实测_20260812.md` |
 | `run_pilot_gonglu5_step3_v2.py` | T3 v2 单卡回显独立 live 驱动（SSE 流式 + 逐卡重发四不变式） | r810 六卡 6/6 首发全过（`prework/P3_step3v2实测_20260812.md`） |
+| `prelay_gonglu5_rehearsal_workspace.py` | T4b 前置：伪新考试工作区预铺执行器（幂等：PDF 复制/命名空间侧车副本/哈希链重算/事实底座全链自验证/彩排双道语料核实） | accepted=true（`prework/P3_T4b前置_伪新考试工作区预铺_20260813.md`） |
 
 ## P3 优化期新增引擎件（src/，速查）
 

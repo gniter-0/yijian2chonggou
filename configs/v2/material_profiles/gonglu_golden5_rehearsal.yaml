@@ -1,0 +1,27 @@
+# gonglu_golden5_rehearsal —— T4b 彩排「伪新考试」接入点（预铺件，migration/prelay_gonglu5_rehearsal_workspace.py 生成）
+# 来源：configs/v2/material_profiles/yijian_gonglu_2026.yaml 逐字段复制派生（20260813）。
+# 纪律：profile_id/revision 保留原值——EvidenceEngine.config_hash 把二者编进 ev: 证据身份，
+# 全部 reviewed 侧车锚点以此为前提；改名=黄金五章人工评审资产整体失锚（重做评审级代价）。
+# 「新考试」身份由 exams/gonglu_golden5_rehearsal/ 工作区 + registry_id 承担（设计稿 §10.1）。
+# 详见 docs/prework/P3_T4b前置_伪新考试工作区预铺_20260813.md。
+schema_version: "2.0"
+profile_id: yijian_gonglu_2026
+revision: 1
+display_name: 2026 一级建造师公路实务
+collection_id: yijian/2026/gonglu
+exam_family: 一级建造师
+exam_level: 一级
+subject_id: gonglu
+subject_name: 公路工程管理与实务
+source_kind: lecture_note
+source_language: zh-CN
+edition: "2026"
+jurisdiction: CN
+effective_window: {}
+content_policy_id: core_only_v1
+content_policy_revision: 2
+layout_profile_id: haixue_textbook_cn_v1
+taxonomy_profile_id: yijian_gonglu_v1
+validation_profile_id: construction_cn_v1
+card_profile_id: knowledge_diagram_v1
+dedup_scope: within_collection

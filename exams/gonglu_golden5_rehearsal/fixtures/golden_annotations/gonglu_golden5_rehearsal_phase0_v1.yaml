@@ -1,0 +1,2847 @@
+# gonglu_golden5_rehearsal 人工标注侧车（预铺件）：源=scripts/tests/fixtures/v2/golden_annotations/gonglu_phase0_v1.yaml，
+# 仅改 sidecar_id/registry_id；页级评审、冲突锚、config_hash 逐字节保留（profile 身份未变故依然成立）。
+schema_version: '2.0'
+sidecar_id: gonglu_golden5_rehearsal_phase0_v1.reviewed
+registry_id: gonglu_golden5_rehearsal_phase0_v1
+material_profile_id: yijian_gonglu_2026
+annotation_revision: 2
+state: reviewed
+samples:
+- sample_id: gonglu_01_text_list
+  pdf_sha256: ace9041ad220a4ebda2bba279900de49ebd83cb4a81fd601a38b37db315d0b4d
+  config_hash: 69e65f6760edb42651233ff0a4a0fa7a5caf7a1345382a3426e290aea88403af
+  pages:
+  - page_num: 1
+    page_render_sha256: 3e44da9591aec7fb1e45a0331d98fce9433ba1dd7125b5f94de54d22ed7e9f8b
+    state: reviewed
+    review_checklist:
+    - 确认页面渲染 hash 与此 sidecar 一致；hash 变化时必须重新审核本页。
+    - 确认标题树、阅读顺序、父子关系、表格/公式/图形结构均可回跳到 source locator。
+    - 图文页：确认横断面图节点、边和表格没有替代正文锚点。
+    - 确认例题、真题标签和水印保留为 evidence，并由 Content Policy 后续非破坏性分流。
+    conflicts: []
+    audit:
+      reviewer: codex_phase1_visual_audit
+      reviewed_at_utc: '2026-07-25T03:57:40Z'
+      page_render_sha256: 3e44da9591aec7fb1e45a0331d98fce9433ba1dd7125b5f94de54d22ed7e9f8b
+      page_sheet_path: data/evidence_v2_golden_review_final_20260725/page_sheets/gonglu_01_text_list_p0001.png
+      page_sheet_sha256: e0cec3f30901bfabaf9f8ad6e85c2cf54227eb4bf15c856b4245d1a5b1e2b272
+      basis: 已逐页核验原页渲染、标题/阅读顺序、结构证据、Content Policy 非破坏性分流与全部标注冲突。
+  - page_num: 2
+    page_render_sha256: 36a0f19d896b9151b1339ac16c28b84ae297cd46f675a7ce51ba14efc0ab2a6e
+    state: reviewed
+    review_checklist:
+    - 确认页面渲染 hash 与此 sidecar 一致；hash 变化时必须重新审核本页。
+    - 确认标题树、阅读顺序、父子关系、表格/公式/图形结构均可回跳到 source locator。
+    - 大纲枚举：①至⑧和表格分类必须保留序号与顺序。
+    - 确认例题、真题标签和水印保留为 evidence，并由 Content Policy 后续非破坏性分流。
+    conflicts:
+    - conflict_id: conflict:10f187722768a94dd80fb455
+      locator:
+        schema_version: '2.0'
+        document_sha256: ace9041ad220a4ebda2bba279900de49ebd83cb4a81fd601a38b37db315d0b4d
+        page_num: 2
+        bbox:
+          x0: 235.85
+          y0: 75.5459
+          x1: 327.43
+          y1: 87.0051
+        native_block_index: null
+        native_line_index: null
+        native_span_index: null
+        region_id: null
+      native_text: ①路基施工准备
+      visual_text: 路基施工准备
+      classification: real_error
+      authoritative_channel: native_text
+      proposed_canonical_text: ①路基施工准备
+      proposed_action: 保留 native 文本作为当前证据读数；将 OCR/视觉差异保留在 conflict 队列并纳入回归断言。
+      requires_human_confirmation: false
+      rationale: OCR/视觉读数丢失或改写了枚举编号、文本、数字、单位、公式符号或约束表达，不能静默等价。
+      audit:
+        reviewer: codex_phase1_visual_audit
+        reviewed_at_utc: '2026-07-25T03:57:40Z'
+        page_render_sha256: 36a0f19d896b9151b1339ac16c28b84ae297cd46f675a7ce51ba14efc0ab2a6e
+        crop_path: data/evidence_v2_golden_review_final_20260725/gonglu_01_text_list/page_0002/conflicts/01_conflict-10f187722768a94dd80fb455.png
+        crop_sha256: f2b25f1a9e12ad642c6d77e26d263965c19d8bb7838093449b74948835126d6a
+        basis: 逐项核对裁剪、native 读数和视觉读数；确认 canonical“①路基施工准备”必须保留，视觉读数存在枚举、文本、数字、单位、公式符号或约束表达的丢失/改写。
+    - conflict_id: conflict:8aea9d0dc91976977f2b0715
+      locator:
+        schema_version: '2.0'
+        document_sha256: ace9041ad220a4ebda2bba279900de49ebd83cb4a81fd601a38b37db315d0b4d
+        page_num: 2
+        bbox:
+          x0: 235.85
+          y0: 90.8249
+          x1: 337.87
+          y1: 102.2841
+        native_block_index: null
+        native_line_index: null
+        native_span_index: null
+        region_id: null
+      native_text: ②原地基处理要求
+      visual_text: 原地基处理要求
+      classification: real_error
+      authoritative_channel: native_text
+      proposed_canonical_text: ②原地基处理要求
+      proposed_action: 保留 native 文本作为当前证据读数；将 OCR/视觉差异保留在 conflict 队列并纳入回归断言。
+      requires_human_confirmation: false
+      rationale: OCR/视觉读数丢失或改写了枚举编号、文本、数字、单位、公式符号或约束表达，不能静默等价。
+      audit:
+        reviewer: codex_phase1_visual_audit
+        reviewed_at_utc: '2026-07-25T03:57:40Z'
+        page_render_sha256: 36a0f19d896b9151b1339ac16c28b84ae297cd46f675a7ce51ba14efc0ab2a6e
+        crop_path: data/evidence_v2_golden_review_final_20260725/gonglu_01_text_list/page_0002/conflicts/02_conflict-8aea9d0dc91976977f2b0715.png
+        crop_sha256: 8b26da5378df2d68ec56620c0032346190a6362dc23bb9da841d19a7ed7ddd89
+        basis: 逐项核对裁剪、native 读数和视觉读数；确认 canonical“②原地基处理要求”必须保留，视觉读数存在枚举、文本、数字、单位、公式符号或约束表达的丢失/改写。
+    - conflict_id: conflict:a6a9a6e65937f9fb4437033a
+      locator:
+        schema_version: '2.0'
+        document_sha256: ace9041ad220a4ebda2bba279900de49ebd83cb4a81fd601a38b37db315d0b4d
+        page_num: 2
+        bbox:
+          x0: 235.85
+          y0: 105.255
+          x1: 327.43
+          y1: 118.8363
+        native_block_index: null
+        native_line_index: null
+        native_span_index: null
+        region_id: null
+      native_text: ③挖方路基施工
+      visual_text: 挖方路基施工
+      classification: real_error
+      authoritative_channel: native_text
+      proposed_canonical_text: ③挖方路基施工
+      proposed_action: 保留 native 文本作为当前证据读数；将 OCR/视觉差异保留在 conflict 队列并纳入回归断言。
+      requires_human_confirmation: false
+      rationale: OCR/视觉读数丢失或改写了枚举编号、文本、数字、单位、公式符号或约束表达，不能静默等价。
+      audit:
+        reviewer: codex_phase1_visual_audit
+        reviewed_at_utc: '2026-07-25T03:57:40Z'
+        page_render_sha256: 36a0f19d896b9151b1339ac16c28b84ae297cd46f675a7ce51ba14efc0ab2a6e
+        crop_path: data/evidence_v2_golden_review_final_20260725/gonglu_01_text_list/page_0002/conflicts/03_conflict-a6a9a6e65937f9fb4437033a.png
+        crop_sha256: 2d64a171689de2704dd4b42c86ef6b9ce023e44ac7f6833cecabd142f2ade698
+        basis: 逐项核对裁剪、native 读数和视觉读数；确认 canonical“③挖方路基施工”必须保留，视觉读数存在枚举、文本、数字、单位、公式符号或约束表达的丢失/改写。
+    - conflict_id: conflict:0da7f4e89575420123a7c74d
+      locator:
+        schema_version: '2.0'
+        document_sha256: ace9041ad220a4ebda2bba279900de49ebd83cb4a81fd601a38b37db315d0b4d
+        page_num: 2
+        bbox:
+          x0: 235.85
+          y0: 122.2316
+          x1: 327.43
+          y1: 133.6908
+        native_block_index: null
+        native_line_index: null
+        native_span_index: null
+        region_id: null
+      native_text: ④填方路基施工
+      visual_text: 填方路基施工
+      classification: real_error
+      authoritative_channel: native_text
+      proposed_canonical_text: ④填方路基施工
+      proposed_action: 保留 native 文本作为当前证据读数；将 OCR/视觉差异保留在 conflict 队列并纳入回归断言。
+      requires_human_confirmation: false
+      rationale: OCR/视觉读数丢失或改写了枚举编号、文本、数字、单位、公式符号或约束表达，不能静默等价。
+      audit:
+        reviewer: codex_phase1_visual_audit
+        reviewed_at_utc: '2026-07-25T03:57:40Z'
+        page_render_sha256: 36a0f19d896b9151b1339ac16c28b84ae297cd46f675a7ce51ba14efc0ab2a6e
+        crop_path: data/evidence_v2_golden_review_final_20260725/gonglu_01_text_list/page_0002/conflicts/04_conflict-0da7f4e89575420123a7c74d.png
+        crop_sha256: e462a2da90de35e56371878db6d6ac7b5cb3ab99bdfdc8df3721008f461a3d3d
+        basis: 逐项核对裁剪、native 读数和视觉读数；确认 canonical“④填方路基施工”必须保留，视觉读数存在枚举、文本、数字、单位、公式符号或约束表达的丢失/改写。
+    - conflict_id: conflict:e2643c4b49cf06bc44e59ed3
+      locator:
+        schema_version: '2.0'
+        document_sha256: ace9041ad220a4ebda2bba279900de49ebd83cb4a81fd601a38b37db315d0b4d
+        page_num: 2
+        bbox:
+          x0: 235.85
+          y0: 137.935
+          x1: 337.87
+          y1: 149.3942
+        native_block_index: null
+        native_line_index: null
+        native_span_index: null
+        region_id: null
+      native_text: ⑤路基季节性施工
+      visual_text: 路基季节性施工
+      classification: real_error
+      authoritative_channel: native_text
+      proposed_canonical_text: ⑤路基季节性施工
+      proposed_action: 保留 native 文本作为当前证据读数；将 OCR/视觉差异保留在 conflict 队列并纳入回归断言。
+      requires_human_confirmation: false
+      rationale: OCR/视觉读数丢失或改写了枚举编号、文本、数字、单位、公式符号或约束表达，不能静默等价。
+      audit:
+        reviewer: codex_phase1_visual_audit
+        reviewed_at_utc: '2026-07-25T03:57:40Z'
+        page_render_sha256: 36a0f19d896b9151b1339ac16c28b84ae297cd46f675a7ce51ba14efc0ab2a6e
+        crop_path: data/evidence_v2_golden_review_final_20260725/gonglu_01_text_list/page_0002/conflicts/05_conflict-e2643c4b49cf06bc44e59ed3.png
+        crop_sha256: 3c3c31a71882e611998cb68eb89fc8921465eb7222db2a7f14ebd5c6db9e0bb7
+        basis: 逐项核对裁剪、native 读数和视觉读数；确认 canonical“⑤路基季节性施工”必须保留，视觉读数存在枚举、文本、数字、单位、公式符号或约束表达的丢失/改写。
+    - conflict_id: conflict:c0f9b5bc3da8857073ad4c93
+      locator:
+        schema_version: '2.0'
+        document_sha256: ace9041ad220a4ebda2bba279900de49ebd83cb4a81fd601a38b37db315d0b4d
+        page_num: 2
+        bbox:
+          x0: 235.85
+          y0: 153.2139
+          x1: 358.87
+          y1: 164.6731
+        native_block_index: null
+        native_line_index: null
+        native_span_index: null
+        region_id: null
+      native_text: ⑥路基改（扩）建施工
+      visual_text: 路基改（扩）建施工
+      classification: real_error
+      authoritative_channel: native_text
+      proposed_canonical_text: ⑥路基改（扩）建施工
+      proposed_action: 保留 native 文本作为当前证据读数；将 OCR/视觉差异保留在 conflict 队列并纳入回归断言。
+      requires_human_confirmation: false
+      rationale: OCR/视觉读数丢失或改写了枚举编号、文本、数字、单位、公式符号或约束表达，不能静默等价。
+      audit:
+        reviewer: codex_phase1_visual_audit
+        reviewed_at_utc: '2026-07-25T03:57:40Z'
+        page_render_sha256: 36a0f19d896b9151b1339ac16c28b84ae297cd46f675a7ce51ba14efc0ab2a6e
+        crop_path: data/evidence_v2_golden_review_final_20260725/gonglu_01_text_list/page_0002/conflicts/06_conflict-c0f9b5bc3da8857073ad4c93.png
+        crop_sha256: 380f15161d55d3ebd11a2ae999bdf93ded12867944059c91649a99f039616f6b
+        basis: 逐项核对裁剪、native 读数和视觉读数；确认 canonical“⑥路基改（扩）建施工”必须保留，视觉读数存在枚举、文本、数字、单位、公式符号或约束表达的丢失/改写。
+    - conflict_id: conflict:79631fa38ebb22f7e8854250
+      locator:
+        schema_version: '2.0'
+        document_sha256: ace9041ad220a4ebda2bba279900de49ebd83cb4a81fd601a38b37db315d0b4d
+        page_num: 2
+        bbox:
+          x0: 235.85
+          y0: 168.9173
+          x1: 327.43
+          y1: 180.3765
+        native_block_index: null
+        native_line_index: null
+        native_span_index: null
+        region_id: null
+      native_text: ⑦特殊路基施工
+      visual_text: 特殊路基施工
+      classification: real_error
+      authoritative_channel: native_text
+      proposed_canonical_text: ⑦特殊路基施工
+      proposed_action: 保留 native 文本作为当前证据读数；将 OCR/视觉差异保留在 conflict 队列并纳入回归断言。
+      requires_human_confirmation: false
+      rationale: OCR/视觉读数丢失或改写了枚举编号、文本、数字、单位、公式符号或约束表达，不能静默等价。
+      audit:
+        reviewer: codex_phase1_visual_audit
+        reviewed_at_utc: '2026-07-25T03:57:40Z'
+        page_render_sha256: 36a0f19d896b9151b1339ac16c28b84ae297cd46f675a7ce51ba14efc0ab2a6e
+        crop_path: data/evidence_v2_golden_review_final_20260725/gonglu_01_text_list/page_0002/conflicts/07_conflict-79631fa38ebb22f7e8854250.png
+        crop_sha256: 28154a16fa9f41e638d65ac0260f4847e3486ce7dd96cc3c5c154638a4b6fa74
+        basis: 逐项核对裁剪、native 读数和视觉读数；确认 canonical“⑦特殊路基施工”必须保留，视觉读数存在枚举、文本、数字、单位、公式符号或约束表达的丢失/改写。
+    - conflict_id: conflict:673716bd57bf7cc4f4358efa
+      locator:
+        schema_version: '2.0'
+        document_sha256: ace9041ad220a4ebda2bba279900de49ebd83cb4a81fd601a38b37db315d0b4d
+        page_num: 2
+        bbox:
+          x0: 235.85
+          y0: 184.6207
+          x1: 327.43
+          y1: 196.0799
+        native_block_index: null
+        native_line_index: null
+        native_span_index: null
+        region_id: null
+      native_text: ⑧路基施工测量
+      visual_text: 路基施工测量
+      classification: real_error
+      authoritative_channel: native_text
+      proposed_canonical_text: ⑧路基施工测量
+      proposed_action: 保留 native 文本作为当前证据读数；将 OCR/视觉差异保留在 conflict 队列并纳入回归断言。
+      requires_human_confirmation: false
+      rationale: OCR/视觉读数丢失或改写了枚举编号、文本、数字、单位、公式符号或约束表达，不能静默等价。
+      audit:
+        reviewer: codex_phase1_visual_audit
+        reviewed_at_utc: '2026-07-25T03:57:40Z'
+        page_render_sha256: 36a0f19d896b9151b1339ac16c28b84ae297cd46f675a7ce51ba14efc0ab2a6e
+        crop_path: data/evidence_v2_golden_review_final_20260725/gonglu_01_text_list/page_0002/conflicts/08_conflict-673716bd57bf7cc4f4358efa.png
+        crop_sha256: 959f8a4f01bd6044a9cb72c7107e7b6cf7109b5bd6e8aea33e998693d6df2e8b
+        basis: 逐项核对裁剪、native 读数和视觉读数；确认 canonical“⑧路基施工测量”必须保留，视觉读数存在枚举、文本、数字、单位、公式符号或约束表达的丢失/改写。
+    - conflict_id: conflict:c139d46645512342d292c9be
+      locator:
+        schema_version: '2.0'
+        document_sha256: ace9041ad220a4ebda2bba279900de49ebd83cb4a81fd601a38b37db315d0b4d
+        page_num: 2
+        bbox:
+          x0: 235.85
+          y0: 199.8996
+          x1: 358.87
+          y1: 214.3297
+        native_block_index: null
+        native_line_index: null
+        native_span_index: null
+        region_id: null
+      native_text: ①防护工程设置与施工
+      visual_text: 防护工程设置与施工
+      classification: real_error
+      authoritative_channel: native_text
+      proposed_canonical_text: ①防护工程设置与施工
+      proposed_action: 保留 native 文本作为当前证据读数；将 OCR/视觉差异保留在 conflict 队列并纳入回归断言。
+      requires_human_confirmation: false
+      rationale: OCR/视觉读数丢失或改写了枚举编号、文本、数字、单位、公式符号或约束表达，不能静默等价。
+      audit:
+        reviewer: codex_phase1_visual_audit
+        reviewed_at_utc: '2026-07-25T03:57:40Z'
+        page_render_sha256: 36a0f19d896b9151b1339ac16c28b84ae297cd46f675a7ce51ba14efc0ab2a6e
+        crop_path: data/evidence_v2_golden_review_final_20260725/gonglu_01_text_list/page_0002/conflicts/09_conflict-c139d46645512342d292c9be.png
+        crop_sha256: f3ade497cf0fc4ebb5a2f63dc5b8cb74d03b7611244fe422431fd36546d009f7
+        basis: 逐项核对裁剪、native 读数和视觉读数；确认 canonical“①防护工程设置与施工”必须保留，视觉读数存在枚举、文本、数字、单位、公式符号或约束表达的丢失/改写。
+    - conflict_id: conflict:9b625fc01e571b1a3d755dbd
+      locator:
+        schema_version: '2.0'
+        document_sha256: ace9041ad220a4ebda2bba279900de49ebd83cb4a81fd601a38b37db315d0b4d
+        page_num: 2
+        bbox:
+          x0: 235.85
+          y0: 216.0274
+          x1: 358.87
+          y1: 229.6087
+        native_block_index: null
+        native_line_index: null
+        native_span_index: null
+        region_id: null
+      native_text: ②支挡工程设置与施工
+      visual_text: 支挡工程设置与施工
+      classification: real_error
+      authoritative_channel: native_text
+      proposed_canonical_text: ②支挡工程设置与施工
+      proposed_action: 保留 native 文本作为当前证据读数；将 OCR/视觉差异保留在 conflict 队列并纳入回归断言。
+      requires_human_confirmation: false
+      rationale: OCR/视觉读数丢失或改写了枚举编号、文本、数字、单位、公式符号或约束表达，不能静默等价。
+      audit:
+        reviewer: codex_phase1_visual_audit
+        reviewed_at_utc: '2026-07-25T03:57:40Z'
+        page_render_sha256: 36a0f19d896b9151b1339ac16c28b84ae297cd46f675a7ce51ba14efc0ab2a6e
+        crop_path: data/evidence_v2_golden_review_final_20260725/gonglu_01_text_list/page_0002/conflicts/10_conflict-9b625fc01e571b1a3d755dbd.png
+        crop_sha256: fcdc0ffacf3ff89aab7ef128b13e034f35e816e931cc431d957279b8a77dcb22
+        basis: 逐项核对裁剪、native 读数和视觉读数；确认 canonical“②支挡工程设置与施工”必须保留，视觉读数存在枚举、文本、数字、单位、公式符号或约束表达的丢失/改写。
+    - conflict_id: conflict:6ef1127ac4a5fccac21a61fa
+      locator:
+        schema_version: '2.0'
+        document_sha256: ace9041ad220a4ebda2bba279900de49ebd83cb4a81fd601a38b37db315d0b4d
+        page_num: 2
+        bbox:
+          x0: 235.85
+          y0: 233.8528
+          x1: 369.43
+          y1: 244.8876
+        native_block_index: null
+        native_line_index: null
+        native_span_index: null
+        region_id: null
+      native_text: ①地下水排水设置与施工
+      visual_text: 地下水排水设置与施工
+      classification: real_error
+      authoritative_channel: native_text
+      proposed_canonical_text: ①地下水排水设置与施工
+      proposed_action: 保留 native 文本作为当前证据读数；将 OCR/视觉差异保留在 conflict 队列并纳入回归断言。
+      requires_human_confirmation: false
+      rationale: OCR/视觉读数丢失或改写了枚举编号、文本、数字、单位、公式符号或约束表达，不能静默等价。
+      audit:
+        reviewer: codex_phase1_visual_audit
+        reviewed_at_utc: '2026-07-25T03:57:40Z'
+        page_render_sha256: 36a0f19d896b9151b1339ac16c28b84ae297cd46f675a7ce51ba14efc0ab2a6e
+        crop_path: data/evidence_v2_golden_review_final_20260725/gonglu_01_text_list/page_0002/conflicts/11_conflict-6ef1127ac4a5fccac21a61fa.png
+        crop_sha256: f0790d9396bee3d5dffab24d74b2755f8fda4937d8f923d8b6474bf2e85a06af
+        basis: 逐项核对裁剪、native 读数和视觉读数；确认 canonical“①地下水排水设置与施工”必须保留，视觉读数存在枚举、文本、数字、单位、公式符号或约束表达的丢失/改写。
+    - conflict_id: conflict:a17296d05988fb42c24a21aa
+      locator:
+        schema_version: '2.0'
+        document_sha256: ace9041ad220a4ebda2bba279900de49ebd83cb4a81fd601a38b37db315d0b4d
+        page_num: 2
+        bbox:
+          x0: 235.85
+          y0: 249.1318
+          x1: 369.43
+          y1: 261.8643
+        native_block_index: null
+        native_line_index: null
+        native_span_index: null
+        region_id: null
+      native_text: ②地面水排水设置与施工
+      visual_text: 地面水排水设置与施工
+      classification: real_error
+      authoritative_channel: native_text
+      proposed_canonical_text: ②地面水排水设置与施工
+      proposed_action: 保留 native 文本作为当前证据读数；将 OCR/视觉差异保留在 conflict 队列并纳入回归断言。
+      requires_human_confirmation: false
+      rationale: OCR/视觉读数丢失或改写了枚举编号、文本、数字、单位、公式符号或约束表达，不能静默等价。
+      audit:
+        reviewer: codex_phase1_visual_audit
+        reviewed_at_utc: '2026-07-25T03:57:40Z'
+        page_render_sha256: 36a0f19d896b9151b1339ac16c28b84ae297cd46f675a7ce51ba14efc0ab2a6e
+        crop_path: data/evidence_v2_golden_review_final_20260725/gonglu_01_text_list/page_0002/conflicts/12_conflict-a17296d05988fb42c24a21aa.png
+        crop_sha256: 07ff5876723d82cfda22beb4e2b64b9def26347b3165fcf4b2e0ba3ba6c6edc7
+        basis: 逐项核对裁剪、native 读数和视觉读数；确认 canonical“②地面水排水设置与施工”必须保留，视觉读数存在枚举、文本、数字、单位、公式符号或约束表达的丢失/改写。
+    - conflict_id: conflict:8d14d705f09a56018400b51c
+      locator:
+        schema_version: '2.0'
+        document_sha256: ace9041ad220a4ebda2bba279900de49ebd83cb4a81fd601a38b37db315d0b4d
+        page_num: 2
+        bbox:
+          x0: 217.85
+          y0: 271.2014
+          x1: 475.3
+          y1: 288.6024
+        native_block_index: null
+        native_line_index: null
+        native_span_index: null
+        region_id: null
+      native_text: 压实质量、边坡病害、高填方路基沉降、路基裂缝防治
+      visual_text: 边坡病害、高填方路基沉降、路基裂缝防治
+      classification: real_error
+      authoritative_channel: native_text
+      proposed_canonical_text: 压实质量、边坡病害、高填方路基沉降、路基裂缝防治
+      proposed_action: 保留 native 文本作为当前证据读数；将 OCR/视觉差异保留在 conflict 队列并纳入回归断言。
+      requires_human_confirmation: false
+      rationale: OCR/视觉读数丢失或改写了枚举编号、文本、数字、单位、公式符号或约束表达，不能静默等价。
+      audit:
+        reviewer: codex_phase1_visual_audit
+        reviewed_at_utc: '2026-07-25T03:57:40Z'
+        page_render_sha256: 36a0f19d896b9151b1339ac16c28b84ae297cd46f675a7ce51ba14efc0ab2a6e
+        crop_path: data/evidence_v2_golden_review_final_20260725/gonglu_01_text_list/page_0002/conflicts/13_conflict-8d14d705f09a56018400b51c.png
+        crop_sha256: d03d3b7e06cda1f59dfee9a2be66fb2a446002b1aeb85d755e5832460768802d
+        basis: 逐项核对裁剪、native 读数和视觉读数；确认 canonical“压实质量、边坡病害、高填方路基沉降、路基裂缝防治”必须保留，视觉读数存在枚举、文本、数字、单位、公式符号或约束表达的丢失/改写。
+    - conflict_id: conflict:aa7926b2a4dc0578c30d9b49
+      locator:
+        schema_version: '2.0'
+        document_sha256: ace9041ad220a4ebda2bba279900de49ebd83cb4a81fd601a38b37db315d0b4d
+        page_num: 2
+        bbox:
+          x0: 111.02
+          y0: 348.8694
+          x1: 247.61
+          y1: 359.9042
+        native_block_index: null
+        native_line_index: null
+        native_span_index: null
+        region_id: null
+      native_text: 1.路基施工准备的一般规定
+      visual_text: 路基施工准备的一般规定
+      classification: real_error
+      authoritative_channel: native_text
+      proposed_canonical_text: 1.路基施工准备的一般规定
+      proposed_action: 保留 native 文本作为当前证据读数；将 OCR/视觉差异保留在 conflict 队列并纳入回归断言。
+      requires_human_confirmation: false
+      rationale: OCR/视觉读数丢失或改写了枚举编号、文本、数字、单位、公式符号或约束表达，不能静默等价。
+      audit:
+        reviewer: codex_phase1_visual_audit
+        reviewed_at_utc: '2026-07-25T03:57:40Z'
+        page_render_sha256: 36a0f19d896b9151b1339ac16c28b84ae297cd46f675a7ce51ba14efc0ab2a6e
+        crop_path: data/evidence_v2_golden_review_final_20260725/gonglu_01_text_list/page_0002/conflicts/14_conflict-aa7926b2a4dc0578c30d9b49.png
+        crop_sha256: 9761b2e373ad4112f49a2f61bf21e8d172405507cc5d59f3ae788cc797d9d62e
+        basis: 逐项核对裁剪、native 读数和视觉读数；确认 canonical“1.路基施工准备的一般规定”必须保留，视觉读数存在枚举、文本、数字、单位、公式符号或约束表达的丢失/改写。
+    audit:
+      reviewer: codex_phase1_visual_audit
+      reviewed_at_utc: '2026-07-25T03:57:40Z'
+      page_render_sha256: 36a0f19d896b9151b1339ac16c28b84ae297cd46f675a7ce51ba14efc0ab2a6e
+      page_sheet_path: data/evidence_v2_golden_review_final_20260725/page_sheets/gonglu_01_text_list_p0002.png
+      page_sheet_sha256: 50375520e33efecc100e6ef1ed9f8f77d26b4575d7bdb72a693e8878fc1defb2
+      basis: 已逐页核验原页渲染、标题/阅读顺序、结构证据、Content Policy 非破坏性分流与全部标注冲突。
+  - page_num: 5
+    page_render_sha256: ca13b90be426de61fb3cbc4763a11870c5b9c1b7eaf0d5c72dee0949de55e233
+    state: reviewed
+    review_checklist:
+    - 确认页面渲染 hash 与此 sidecar 一致；hash 变化时必须重新审核本页。
+    - 确认标题树、阅读顺序、父子关系、表格/公式/图形结构均可回跳到 source locator。
+    - 表格、参数枚举和例题混排：例题保留为 worked_example。
+    - 确认例题、真题标签和水印保留为 evidence，并由 Content Policy 后续非破坏性分流。
+    conflicts:
+    - conflict_id: conflict:56b38a5b44dcd569853e0cd2
+      locator:
+        schema_version: '2.0'
+        document_sha256: ace9041ad220a4ebda2bba279900de49ebd83cb4a81fd601a38b37db315d0b4d
+        page_num: 5
+        bbox:
+          x0: 93.144
+          y0: 140.4815
+          x1: 500.86
+          y1: 159.0689
+        native_block_index: null
+        native_line_index: null
+        native_span_index: null
+        region_id: null
+      native_text: 受水、气候等自然因素影响风沙地区路基、雪害地段路基、涎流冰地段路基、采空区路
+      visual_text: 风沙地区路基、雪害地段路基、涎流冰地段路基、采空区路
+      classification: real_error
+      authoritative_channel: native_text
+      proposed_canonical_text: 受水、气候等自然因素影响风沙地区路基、雪害地段路基、涎流冰地段路基、采空区路
+      proposed_action: 保留 native 文本作为当前证据读数；将 OCR/视觉差异保留在 conflict 队列并纳入回归断言。
+      requires_human_confirmation: false
+      rationale: OCR/视觉读数丢失或改写了枚举编号、文本、数字、单位、公式符号或约束表达，不能静默等价。
+      audit:
+        reviewer: codex_phase1_visual_audit
+        reviewed_at_utc: '2026-07-25T03:57:40Z'
+        page_render_sha256: ca13b90be426de61fb3cbc4763a11870c5b9c1b7eaf0d5c72dee0949de55e233
+        crop_path: data/evidence_v2_golden_review_final_20260725/gonglu_01_text_list/page_0005/conflicts/01_conflict-56b38a5b44dcd569853e0cd2.png
+        crop_sha256: 818a2ace02032017343c62fbd6cf72f73b7460d442f9818147cca406ca33404c
+        basis: 逐项核对裁剪、native 读数和视觉读数；确认 canonical“受水、气候等自然因素影响风沙地区路基、雪害地段路基、涎流冰地段路基、采空区路”必须保留，视觉读数存在枚举、文本、数字、单位、公式符号或约束表达的丢失/改写。
+    - conflict_id: conflict:38850198ecd9435b8ba816d3
+      locator:
+        schema_version: '2.0'
+        document_sha256: ace9041ad220a4ebda2bba279900de49ebd83cb4a81fd601a38b37db315d0b4d
+        page_num: 5
+        bbox:
+          x0: 111.02
+          y0: 269.8589
+          x1: 378.79
+          y1: 280.9629
+        native_block_index: null
+        native_line_index: null
+        native_span_index: null
+        region_id: null
+      native_text: ①机械组合、压实机械规格；②碾压遍数、碾压速度；
+      visual_text: ①机械组合、压实机械规格；②
+      classification: real_error
+      authoritative_channel: native_text
+      proposed_canonical_text: ①机械组合、压实机械规格；②碾压遍数、碾压速度；
+      proposed_action: 保留 native 文本作为当前证据读数；将 OCR/视觉差异保留在 conflict 队列并纳入回归断言。
+      requires_human_confirmation: false
+      rationale: OCR/视觉读数丢失或改写了枚举编号、文本、数字、单位、公式符号或约束表达，不能静默等价。
+      audit:
+        reviewer: codex_phase1_visual_audit
+        reviewed_at_utc: '2026-07-25T03:57:40Z'
+        page_render_sha256: ca13b90be426de61fb3cbc4763a11870c5b9c1b7eaf0d5c72dee0949de55e233
+        crop_path: data/evidence_v2_golden_review_final_20260725/gonglu_01_text_list/page_0005/conflicts/02_conflict-38850198ecd9435b8ba816d3.png
+        crop_sha256: 7d6c5131307d53eb90d22dd9ae2f3ccecf9b0ddeb7f747ed30b508aeb82cd949
+        basis: 逐项核对裁剪、native 读数和视觉读数；确认 canonical“①机械组合、压实机械规格；②碾压遍数、碾压速度；”必须保留，视觉读数存在枚举、文本、数字、单位、公式符号或约束表达的丢失/改写。
+    - conflict_id: conflict:c42a03f2358de3caa62e05f5
+      locator:
+        schema_version: '2.0'
+        document_sha256: ace9041ad220a4ebda2bba279900de49ebd83cb4a81fd601a38b37db315d0b4d
+        page_num: 5
+        bbox:
+          x0: 111.02
+          y0: 550.4667
+          x1: 331.63
+          y1: 561.5015
+        native_block_index: null
+        native_line_index: null
+        native_span_index: null
+        region_id: null
+      native_text: 【答案】A—土路肩；B—硬路肩；C—路缘带。
+      visual_text: 【答案】A一土路肩；B一硬路肩；C一路缘带
+      classification: acceptable_layout_equivalence
+      authoritative_channel: native_text
+      proposed_canonical_text: 【答案】A—土路肩；B—硬路肩；C—路缘带。
+      proposed_action: 保留 native 文本和原 bbox；记录为版式等价，不产生教材内容修订。
+      requires_human_confirmation: false
+      rationale: 差异仅限标点或破折号字形，未改变编号、数值、单位、公式运算符、否定词或答案语义。
+      audit:
+        reviewer: codex_phase1_visual_audit
+        reviewed_at_utc: '2026-07-25T03:57:40Z'
+        page_render_sha256: ca13b90be426de61fb3cbc4763a11870c5b9c1b7eaf0d5c72dee0949de55e233
+        crop_path: data/evidence_v2_golden_review_final_20260725/gonglu_01_text_list/page_0005/conflicts/03_conflict-c42a03f2358de3caa62e05f5.png
+        crop_sha256: c0cb47e583a486e9f20a98f27275e79b1cb7845b80787e94ac8b3aaab86cc409
+        basis: 逐项核对裁剪、native 读数和视觉读数；确认 canonical“【答案】A—土路肩；B—硬路肩；C—路缘带。”的差异仅为标点或字形，未改变编号、数值、单位、公式运算符、否定词或答案语义。
+    audit:
+      reviewer: codex_phase1_visual_audit
+      reviewed_at_utc: '2026-07-25T03:57:40Z'
+      page_render_sha256: ca13b90be426de61fb3cbc4763a11870c5b9c1b7eaf0d5c72dee0949de55e233
+      page_sheet_path: data/evidence_v2_golden_review_final_20260725/page_sheets/gonglu_01_text_list_p0005.png
+      page_sheet_sha256: 594430009bd0b26cc45de6399b9e551e3d34934d6b8ac24ee1a762c5083d18bd
+      basis: 已逐页核验原页渲染、标题/阅读顺序、结构证据、Content Policy 非破坏性分流与全部标注冲突。
+  - page_num: 6
+    page_render_sha256: f160425295354db5f32cfe0b479dc727000870ff7844f22e66c1d6775e9172f1
+    state: reviewed
+    review_checklist:
+    - 确认页面渲染 hash 与此 sidecar 一致；hash 变化时必须重新审核本页。
+    - 确认标题树、阅读顺序、父子关系、表格/公式/图形结构均可回跳到 source locator。
+    - 跨页例题：确认题干保留，后续 core_only policy 不得把它当噪声。
+    - 确认例题、真题标签和水印保留为 evidence，并由 Content Policy 后续非破坏性分流。
+    conflicts:
+    - conflict_id: conflict:136c1dbbadbff5f3f7692f90
+      locator:
+        schema_version: '2.0'
+        document_sha256: ace9041ad220a4ebda2bba279900de49ebd83cb4a81fd601a38b37db315d0b4d
+        page_num: 6
+        bbox:
+          x0: 97.464
+          y0: 288.178
+          x1: 181.46
+          y1: 300.9105
+        native_block_index: null
+        native_line_index: null
+        native_span_index: null
+        region_id: null
+      native_text: 2.土工试验项目
+      visual_text: 土工试验项目
+      classification: real_error
+      authoritative_channel: native_text
+      proposed_canonical_text: 2.土工试验项目
+      proposed_action: 保留 native 文本作为当前证据读数；将 OCR/视觉差异保留在 conflict 队列并纳入回归断言。
+      requires_human_confirmation: false
+      rationale: OCR/视觉读数丢失或改写了枚举编号、文本、数字、单位、公式符号或约束表达，不能静默等价。
+      audit:
+        reviewer: codex_phase1_visual_audit
+        reviewed_at_utc: '2026-07-25T03:57:40Z'
+        page_render_sha256: f160425295354db5f32cfe0b479dc727000870ff7844f22e66c1d6775e9172f1
+        crop_path: data/evidence_v2_golden_review_final_20260725/gonglu_01_text_list/page_0006/conflicts/01_conflict-136c1dbbadbff5f3f7692f90.png
+        crop_sha256: 9cf32d29898280ff31879f605c1aa77aeea9b1a0ca27269ba3fe4c517bda9b9f
+        basis: 逐项核对裁剪、native 读数和视觉读数；确认 canonical“2.土工试验项目”必须保留，视觉读数存在枚举、文本、数字、单位、公式符号或约束表达的丢失/改写。
+    audit:
+      reviewer: codex_phase1_visual_audit
+      reviewed_at_utc: '2026-07-25T03:57:40Z'
+      page_render_sha256: f160425295354db5f32cfe0b479dc727000870ff7844f22e66c1d6775e9172f1
+      page_sheet_path: data/evidence_v2_golden_review_final_20260725/page_sheets/gonglu_01_text_list_p0006.png
+      page_sheet_sha256: 5ad9eacd04717e279e2e9659caa503068cc766aafff6870e120e58de41dc4327
+      basis: 已逐页核验原页渲染、标题/阅读顺序、结构证据、Content Policy 非破坏性分流与全部标注冲突。
+- sample_id: gonglu_24_table_formula
+  pdf_sha256: 9308dac1b5aa40bd1da44c22d847f22b872bd8025abc3cdc5b5b34c1407e2cf3
+  config_hash: 69e65f6760edb42651233ff0a4a0fa7a5caf7a1345382a3426e290aea88403af
+  pages:
+  - page_num: 1
+    page_render_sha256: 1095e8939db0a9d4bc7b30accc301bb4d421736db42f7d01ac43d9763f780a1b
+    state: reviewed
+    review_checklist:
+    - 确认页面渲染 hash 与此 sidecar 一致；hash 变化时必须重新审核本页。
+    - 确认标题树、阅读顺序、父子关系、表格/公式/图形结构均可回跳到 source locator。
+    - 荷载组合表：公式符号、箭头、HPB300 与 65MPa 必须逐字核验。
+    - 确认例题、真题标签和水印保留为 evidence，并由 Content Policy 后续非破坏性分流。
+    conflicts:
+    - conflict_id: conflict:ccbfeefbf86171de6c426380
+      locator:
+        schema_version: '2.0'
+        document_sha256: 9308dac1b5aa40bd1da44c22d847f22b872bd8025abc3cdc5b5b34c1407e2cf3
+        page_num: 1
+        bbox:
+          x0: 111.02
+          y0: 124.3537
+          x1: 174.02
+          y1: 137.0861
+        native_block_index: null
+        native_line_index: null
+        native_span_index: null
+        region_id: null
+      native_text: 1.一般规定
+      visual_text: 一般规定
+      classification: real_error
+      authoritative_channel: native_text
+      proposed_canonical_text: 1.一般规定
+      proposed_action: 保留 native 文本作为当前证据读数；将 OCR/视觉差异保留在 conflict 队列并纳入回归断言。
+      requires_human_confirmation: false
+      rationale: OCR/视觉读数丢失或改写了枚举编号、文本、数字、单位、公式符号或约束表达，不能静默等价。
+      audit:
+        reviewer: codex_phase1_visual_audit
+        reviewed_at_utc: '2026-07-25T03:57:40Z'
+        page_render_sha256: 1095e8939db0a9d4bc7b30accc301bb4d421736db42f7d01ac43d9763f780a1b
+        crop_path: data/evidence_v2_golden_review_final_20260725/gonglu_24_table_formula/page_0001/conflicts/01_conflict-ccbfeefbf86171de6c426380.png
+        crop_sha256: 55e14530f8e8a49824626caf0005c278039ac526bca3a6e06465e8b78512b6b5
+        basis: 逐项核对裁剪、native 读数和视觉读数；确认 canonical“1.一般规定”必须保留，视觉读数存在枚举、文本、数字、单位、公式符号或约束表达的丢失/改写。
+    - conflict_id: conflict:b153c7a8ea19bc80442ee549
+      locator:
+        schema_version: '2.0'
+        document_sha256: 9308dac1b5aa40bd1da44c22d847f22b872bd8025abc3cdc5b5b34c1407e2cf3
+        page_num: 1
+        bbox:
+          x0: 90.5001
+          y0: 467.7057
+          x1: 397.63
+          y1: 479.5893
+        native_block_index: null
+        native_line_index: null
+        native_span_index: null
+        region_id: null
+      native_text: 梁、板和拱的底模板以及支承板、支架及拱等①+②+③+④+⑦+⑧
+      visual_text: 梁、板和拱的底模板以及支承板、支架及拱等①+②+③+④++⑧
+      classification: real_error
+      authoritative_channel: native_text
+      proposed_canonical_text: 梁、板和拱的底模板以及支承板、支架及拱等①+②+③+④+⑦+⑧
+      proposed_action: 保留 native 文本作为当前证据读数；将 OCR/视觉差异保留在 conflict 队列并纳入回归断言。
+      requires_human_confirmation: false
+      rationale: OCR/视觉读数丢失或改写了枚举编号、文本、数字、单位、公式符号或约束表达，不能静默等价。
+      audit:
+        reviewer: codex_phase1_visual_audit
+        reviewed_at_utc: '2026-07-25T03:57:40Z'
+        page_render_sha256: 1095e8939db0a9d4bc7b30accc301bb4d421736db42f7d01ac43d9763f780a1b
+        crop_path: data/evidence_v2_golden_review_final_20260725/gonglu_24_table_formula/page_0001/conflicts/02_conflict-b153c7a8ea19bc80442ee549.png
+        crop_sha256: e395612ac75c68ed29dccee053d4e7819662c1723335d5470dd35657b4e1cfc3
+        basis: 逐项核对裁剪、native 读数和视觉读数；确认 canonical“梁、板和拱的底模板以及支承板、支架及拱等①+②+③+④+⑦+⑧”必须保留，视觉读数存在枚举、文本、数字、单位、公式符号或约束表达的丢失/改写。
+    - conflict_id: conflict:5fb97ab3b86471987c8d2bf1
+      locator:
+        schema_version: '2.0'
+        document_sha256: 9308dac1b5aa40bd1da44c22d847f22b872bd8025abc3cdc5b5b34c1407e2cf3
+        page_num: 1
+        bbox:
+          x0: 408.67
+          y0: 468.1301
+          x1: 471.7
+          y1: 479.5893
+        native_block_index: null
+        native_line_index: null
+        native_span_index: null
+        region_id: null
+      native_text: ①+②+⑦+⑧
+      visual_text: ①+②++⑧
+      classification: real_error
+      authoritative_channel: native_text
+      proposed_canonical_text: ①+②+⑦+⑧
+      proposed_action: 保留 native 文本作为当前证据读数；将 OCR/视觉差异保留在 conflict 队列并纳入回归断言。
+      requires_human_confirmation: false
+      rationale: OCR/视觉读数丢失或改写了枚举编号、文本、数字、单位、公式符号或约束表达，不能静默等价。
+      audit:
+        reviewer: codex_phase1_visual_audit
+        reviewed_at_utc: '2026-07-25T03:57:40Z'
+        page_render_sha256: 1095e8939db0a9d4bc7b30accc301bb4d421736db42f7d01ac43d9763f780a1b
+        crop_path: data/evidence_v2_golden_review_final_20260725/gonglu_24_table_formula/page_0001/conflicts/03_conflict-5fb97ab3b86471987c8d2bf1.png
+        crop_sha256: a20f91606f46a964281df4aedc8848df1f9ee1b605063dbc7e6f2aef09fb62bb
+        basis: 逐项核对裁剪、native 读数和视觉读数；确认 canonical“①+②+⑦+⑧”必须保留，视觉读数存在枚举、文本、数字、单位、公式符号或约束表达的丢失/改写。
+    - conflict_id: conflict:e273871ae3eabb46bcf243d7
+      locator:
+        schema_version: '2.0'
+        document_sha256: 9308dac1b5aa40bd1da44c22d847f22b872bd8025abc3cdc5b5b34c1407e2cf3
+        page_num: 1
+        bbox:
+          x0: 111.02
+          y0: 723.6281
+          x1: 226.61
+          y1: 735.9362
+        native_block_index: null
+        native_line_index: null
+        native_span_index: null
+        region_id: null
+      native_text: ①模板、支架自重；↓
+      visual_text: ①模板、支架自重；←
+      classification: real_error
+      authoritative_channel: native_text
+      proposed_canonical_text: ①模板、支架自重；↓
+      proposed_action: 保留 native 文本作为当前证据读数；将 OCR/视觉差异保留在 conflict 队列并纳入回归断言。
+      requires_human_confirmation: false
+      rationale: OCR/视觉读数丢失或改写了枚举编号、文本、数字、单位、公式符号或约束表达，不能静默等价。
+      audit:
+        reviewer: codex_phase1_visual_audit
+        reviewed_at_utc: '2026-07-25T03:57:40Z'
+        page_render_sha256: 1095e8939db0a9d4bc7b30accc301bb4d421736db42f7d01ac43d9763f780a1b
+        crop_path: data/evidence_v2_golden_review_final_20260725/gonglu_24_table_formula/page_0001/conflicts/04_conflict-e273871ae3eabb46bcf243d7.png
+        crop_sha256: df333b746687983813aedb88a3ad5793c2ef7b84e51bb4371a8b10b0dc7174d3
+        basis: 逐项核对裁剪、native 读数和视觉读数；确认 canonical“①模板、支架自重；↓”必须保留，视觉读数存在枚举、文本、数字、单位、公式符号或约束表达的丢失/改写。
+    - conflict_id: conflict:e47569fe43906d8dcd0217de
+      locator:
+        schema_version: '2.0'
+        document_sha256: 9308dac1b5aa40bd1da44c22d847f22b872bd8025abc3cdc5b5b34c1407e2cf3
+        page_num: 1
+        bbox:
+          x0: 111.02
+          y0: 747.8198
+          x1: 415.63
+          y1: 758.8546
+        native_block_index: null
+        native_line_index: null
+        native_span_index: null
+        region_id: null
+      native_text: ②新浇筑混凝土、钢筋、预应力筋或其他圬工结构物的重力；↓
+      visual_text: ②新浇筑混凝土、钢筋、预应力筋或其他坛工结构物的重力；√
+      classification: real_error
+      authoritative_channel: native_text
+      proposed_canonical_text: ②新浇筑混凝土、钢筋、预应力筋或其他圬工结构物的重力；↓
+      proposed_action: 保留 native 文本作为当前证据读数；将 OCR/视觉差异保留在 conflict 队列并纳入回归断言。
+      requires_human_confirmation: false
+      rationale: OCR/视觉读数丢失或改写了枚举编号、文本、数字、单位、公式符号或约束表达，不能静默等价。
+      audit:
+        reviewer: codex_phase1_visual_audit
+        reviewed_at_utc: '2026-07-25T03:57:40Z'
+        page_render_sha256: 1095e8939db0a9d4bc7b30accc301bb4d421736db42f7d01ac43d9763f780a1b
+        crop_path: data/evidence_v2_golden_review_final_20260725/gonglu_24_table_formula/page_0001/conflicts/05_conflict-e47569fe43906d8dcd0217de.png
+        crop_sha256: a79dd0eb9a657844430425f0c3af473c7c146c8aec674be85a050c84a76dd656
+        basis: 逐项核对裁剪、native 读数和视觉读数；确认 canonical“②新浇筑混凝土、钢筋、预应力筋或其他圬工结构物的重力；↓”必须保留，视觉读数存在枚举、文本、数字、单位、公式符号或约束表达的丢失/改写。
+    audit:
+      reviewer: codex_phase1_visual_audit
+      reviewed_at_utc: '2026-07-25T03:57:40Z'
+      page_render_sha256: 1095e8939db0a9d4bc7b30accc301bb4d421736db42f7d01ac43d9763f780a1b
+      page_sheet_path: data/evidence_v2_golden_review_final_20260725/page_sheets/gonglu_24_table_formula_p0001.png
+      page_sheet_sha256: 329984beabc67ccb2b793e79a8637a53b28163adce55554ce520c08772e316dd
+      basis: 已逐页核验原页渲染、标题/阅读顺序、结构证据、Content Policy 非破坏性分流与全部标注冲突。
+  - page_num: 3
+    page_render_sha256: 17e182bd6a52fcb5e3dbc5298743ea7d7a724734f9b7c278acdbed652a5a2b58
+    state: reviewed
+    review_checklist:
+    - 确认页面渲染 hash 与此 sidecar 一致；hash 变化时必须重新审核本页。
+    - 确认标题树、阅读顺序、父子关系、表格/公式/图形结构均可回跳到 source locator。
+    - 模板安装约束：序号、防倾覆、1.5mm、250mm/h 不能被 OCR 改写。
+    - 确认例题、真题标签和水印保留为 evidence，并由 Content Policy 后续非破坏性分流。
+    conflicts:
+    - conflict_id: conflict:e9fcf877483229931b0e8d97
+      locator:
+        schema_version: '2.0'
+        document_sha256: 9308dac1b5aa40bd1da44c22d847f22b872bd8025abc3cdc5b5b34c1407e2cf3
+        page_num: 3
+        bbox:
+          x0: 111.02
+          y0: 253.8004
+          x1: 268.61
+          y1: 265.684
+        native_block_index: null
+        native_line_index: null
+        native_span_index: null
+        region_id: null
+      native_text: C.振捣混凝土时产生的振动荷载
+      visual_text: 振捣混凝土时产生的振动荷载
+      classification: real_error
+      authoritative_channel: native_text
+      proposed_canonical_text: C.振捣混凝土时产生的振动荷载
+      proposed_action: 保留 native 文本作为当前证据读数；将 OCR/视觉差异保留在 conflict 队列并纳入回归断言。
+      requires_human_confirmation: false
+      rationale: OCR/视觉读数丢失或改写了枚举编号、文本、数字、单位、公式符号或约束表达，不能静默等价。
+      audit:
+        reviewer: codex_phase1_visual_audit
+        reviewed_at_utc: '2026-07-25T03:57:40Z'
+        page_render_sha256: 17e182bd6a52fcb5e3dbc5298743ea7d7a724734f9b7c278acdbed652a5a2b58
+        crop_path: data/evidence_v2_golden_review_final_20260725/gonglu_24_table_formula/page_0003/conflicts/01_conflict-e9fcf877483229931b0e8d97.png
+        crop_sha256: 4217659dae9031a750e46d9e76101e9d742a1d6d8fb43aea92befc60667bcf66
+        basis: 逐项核对裁剪、native 读数和视觉读数；确认 canonical“C.振捣混凝土时产生的振动荷载”必须保留，视觉读数存在枚举、文本、数字、单位、公式符号或约束表达的丢失/改写。
+    - conflict_id: conflict:398b341ce4107f8a1b6a58b4
+      locator:
+        schema_version: '2.0'
+        document_sha256: 9308dac1b5aa40bd1da44c22d847f22b872bd8025abc3cdc5b5b34c1407e2cf3
+        page_num: 3
+        bbox:
+          x0: 201.77
+          y0: 393.433
+          x1: 338.35
+          y1: 405.741
+        native_block_index: null
+        native_line_index: null
+        native_span_index: null
+        region_id: null
+      native_text: ①模板不宜与脚手架连接。
+      visual_text: 模板不宜与脚手架连接。
+      classification: real_error
+      authoritative_channel: native_text
+      proposed_canonical_text: ①模板不宜与脚手架连接。
+      proposed_action: 保留 native 文本作为当前证据读数；将 OCR/视觉差异保留在 conflict 队列并纳入回归断言。
+      requires_human_confirmation: false
+      rationale: OCR/视觉读数丢失或改写了枚举编号、文本、数字、单位、公式符号或约束表达，不能静默等价。
+      audit:
+        reviewer: codex_phase1_visual_audit
+        reviewed_at_utc: '2026-07-25T03:57:40Z'
+        page_render_sha256: 17e182bd6a52fcb5e3dbc5298743ea7d7a724734f9b7c278acdbed652a5a2b58
+        crop_path: data/evidence_v2_golden_review_final_20260725/gonglu_24_table_formula/page_0003/conflicts/02_conflict-398b341ce4107f8a1b6a58b4.png
+        crop_sha256: 00de1e8f682350c64cea23ee14910c2905d37d45406f6173ec9ba8fc525018f4
+        basis: 逐项核对裁剪、native 读数和视觉读数；确认 canonical“①模板不宜与脚手架连接。”必须保留，视觉读数存在枚举、文本、数字、单位、公式符号或约束表达的丢失/改写。
+    - conflict_id: conflict:e699cf824481bd8ecb7b3b6c
+      locator:
+        schema_version: '2.0'
+        document_sha256: 9308dac1b5aa40bd1da44c22d847f22b872bd8025abc3cdc5b5b34c1407e2cf3
+        page_num: 3
+        bbox:
+          x0: 201.77
+          y0: 409.8989
+          x1: 359.35
+          y1: 421.02
+        native_block_index: null
+        native_line_index: null
+        native_span_index: null
+        region_id: null
+      native_text: ②安装侧模板时，支撑应牢固。
+      visual_text: 安装侧模板时，支撑应牢固。
+      classification: real_error
+      authoritative_channel: native_text
+      proposed_canonical_text: ②安装侧模板时，支撑应牢固。
+      proposed_action: 保留 native 文本作为当前证据读数；将 OCR/视觉差异保留在 conflict 队列并纳入回归断言。
+      requires_human_confirmation: false
+      rationale: OCR/视觉读数丢失或改写了枚举编号、文本、数字、单位、公式符号或约束表达，不能静默等价。
+      audit:
+        reviewer: codex_phase1_visual_audit
+        reviewed_at_utc: '2026-07-25T03:57:40Z'
+        page_render_sha256: 17e182bd6a52fcb5e3dbc5298743ea7d7a724734f9b7c278acdbed652a5a2b58
+        crop_path: data/evidence_v2_golden_review_final_20260725/gonglu_24_table_formula/page_0003/conflicts/03_conflict-e699cf824481bd8ecb7b3b6c.png
+        crop_sha256: 86962ea0771b2576b87c7ff8f5ffce778e824d8a7d67f2b8ef27000f9d419c56
+        basis: 逐项核对裁剪、native 读数和视觉读数；确认 canonical“②安装侧模板时，支撑应牢固。”必须保留，视觉读数存在枚举、文本、数字、单位、公式符号或约束表达的丢失/改写。
+    - conflict_id: conflict:29f1f50b072402265a17ff6d
+      locator:
+        schema_version: '2.0'
+        document_sha256: 9308dac1b5aa40bd1da44c22d847f22b872bd8025abc3cdc5b5b34c1407e2cf3
+        page_num: 3
+        bbox:
+          x0: 201.77
+          y0: 425.2642
+          x1: 474.94
+          y1: 436.299
+        native_block_index: null
+        native_line_index: null
+        native_span_index: null
+        region_id: null
+      native_text: ③模板在安装过程中，必须设置防倾覆的临时固定设施。
+      visual_text: 模板在安装过程中，必须设置防倾覆的临时固定设施。
+      classification: real_error
+      authoritative_channel: native_text
+      proposed_canonical_text: ③模板在安装过程中，必须设置防倾覆的临时固定设施。
+      proposed_action: 保留 native 文本作为当前证据读数；将 OCR/视觉差异保留在 conflict 队列并纳入回归断言。
+      requires_human_confirmation: false
+      rationale: OCR/视觉读数丢失或改写了枚举编号、文本、数字、单位、公式符号或约束表达，不能静默等价。
+      audit:
+        reviewer: codex_phase1_visual_audit
+        reviewed_at_utc: '2026-07-25T03:57:40Z'
+        page_render_sha256: 17e182bd6a52fcb5e3dbc5298743ea7d7a724734f9b7c278acdbed652a5a2b58
+        crop_path: data/evidence_v2_golden_review_final_20260725/gonglu_24_table_formula/page_0003/conflicts/04_conflict-29f1f50b072402265a17ff6d.png
+        crop_sha256: ec9b44be3247cb69e13fc9fe112a7a4a1f569bdad102fff9a350f8b86d0286f7
+        basis: 逐项核对裁剪、native 读数和视觉读数；确认 canonical“③模板在安装过程中，必须设置防倾覆的临时固定设施。”必须保留，视觉读数存在枚举、文本、数字、单位、公式符号或约束表达的丢失/改写。
+    - conflict_id: conflict:a5127f36b26da82d95f03298
+      locator:
+        schema_version: '2.0'
+        document_sha256: 9308dac1b5aa40bd1da44c22d847f22b872bd8025abc3cdc5b5b34c1407e2cf3
+        page_num: 3
+        bbox:
+          x0: 200.8764
+          y0: 471.101
+          x1: 443.38
+          y1: 483.8335
+        native_block_index: null
+        native_line_index: null
+        native_span_index: null
+        region_id: null
+      native_text: ⑤梁、板等结构的底模板宜根据需要设置预拱度。
+      visual_text: ③梁、板等结构的底模板宜根据需要设置预拱度。
+      classification: real_error
+      authoritative_channel: native_text
+      proposed_canonical_text: ⑤梁、板等结构的底模板宜根据需要设置预拱度。
+      proposed_action: 保留 native 文本作为当前证据读数；将 OCR/视觉差异保留在 conflict 队列并纳入回归断言。
+      requires_human_confirmation: false
+      rationale: OCR/视觉读数丢失或改写了枚举编号、文本、数字、单位、公式符号或约束表达，不能静默等价。
+      audit:
+        reviewer: codex_phase1_visual_audit
+        reviewed_at_utc: '2026-07-25T03:57:40Z'
+        page_render_sha256: 17e182bd6a52fcb5e3dbc5298743ea7d7a724734f9b7c278acdbed652a5a2b58
+        crop_path: data/evidence_v2_golden_review_final_20260725/gonglu_24_table_formula/page_0003/conflicts/05_conflict-a5127f36b26da82d95f03298.png
+        crop_sha256: 41f1a69c95a48b66a517740eb763f0bb3c1f7c5802cc31138f678fa00024f160
+        basis: 逐项核对裁剪、native 读数和视觉读数；确认 canonical“⑤梁、板等结构的底模板宜根据需要设置预拱度。”必须保留，视觉读数存在枚举、文本、数字、单位、公式符号或约束表达的丢失/改写。
+    - conflict_id: conflict:631f08f628af1c568f1a1757
+      locator:
+        schema_version: '2.0'
+        document_sha256: 9308dac1b5aa40bd1da44c22d847f22b872bd8025abc3cdc5b5b34c1407e2cf3
+        page_num: 3
+        bbox:
+          x0: 201.77
+          y0: 546.2225
+          x1: 490.9842
+          y1: 557.2573
+        native_block_index: null
+        native_line_index: null
+        native_span_index: null
+        region_id: null
+      native_text: ②施工过程中应随时检查爬模的中线、水平位置和高程等，发
+      visual_text: ）施工过程中应随时检查爬模的中线、水平位置和高程等，发
+      classification: real_error
+      authoritative_channel: native_text
+      proposed_canonical_text: ②施工过程中应随时检查爬模的中线、水平位置和高程等，发
+      proposed_action: 保留 native 文本作为当前证据读数；将 OCR/视觉差异保留在 conflict 队列并纳入回归断言。
+      requires_human_confirmation: false
+      rationale: OCR/视觉读数丢失或改写了枚举编号、文本、数字、单位、公式符号或约束表达，不能静默等价。
+      audit:
+        reviewer: codex_phase1_visual_audit
+        reviewed_at_utc: '2026-07-25T03:57:40Z'
+        page_render_sha256: 17e182bd6a52fcb5e3dbc5298743ea7d7a724734f9b7c278acdbed652a5a2b58
+        crop_path: data/evidence_v2_golden_review_final_20260725/gonglu_24_table_formula/page_0003/conflicts/06_conflict-631f08f628af1c568f1a1757.png
+        crop_sha256: b2729ff90498bbca0b5ffea5d69b8c0eb373f5c33375690780a25d3d756e850d
+        basis: 逐项核对裁剪、native 读数和视觉读数；确认 canonical“②施工过程中应随时检查爬模的中线、水平位置和高程等，发”必须保留，视觉读数存在枚举、文本、数字、单位、公式符号或约束表达的丢失/改写。
+    - conflict_id: conflict:4d3d94a365c82ced477553be
+      locator:
+        schema_version: '2.0'
+        document_sha256: 9308dac1b5aa40bd1da44c22d847f22b872bd8025abc3cdc5b5b34c1407e2cf3
+        page_num: 3
+        bbox:
+          x0: 201.77
+          y0: 582.7223
+          x1: 432.79
+          y1: 595.0303
+        native_block_index: null
+        native_line_index: null
+        native_span_index: null
+        region_id: null
+      native_text: ①模板结构应具有足够的强度、刚度和稳定性。
+      visual_text: 模板结构应具有足够的强度、刚度和稳定性。
+      classification: real_error
+      authoritative_channel: native_text
+      proposed_canonical_text: ①模板结构应具有足够的强度、刚度和稳定性。
+      proposed_action: 保留 native 文本作为当前证据读数；将 OCR/视觉差异保留在 conflict 队列并纳入回归断言。
+      requires_human_confirmation: false
+      rationale: OCR/视觉读数丢失或改写了枚举编号、文本、数字、单位、公式符号或约束表达，不能静默等价。
+      audit:
+        reviewer: codex_phase1_visual_audit
+        reviewed_at_utc: '2026-07-25T03:57:40Z'
+        page_render_sha256: 17e182bd6a52fcb5e3dbc5298743ea7d7a724734f9b7c278acdbed652a5a2b58
+        crop_path: data/evidence_v2_golden_review_final_20260725/gonglu_24_table_formula/page_0003/conflicts/07_conflict-4d3d94a365c82ced477553be.png
+        crop_sha256: 08916277503fc518b0795c6f59eb49753e539ee4232d200ca8ea94c9d6344084
+        basis: 逐项核对裁剪、native 读数和视觉读数；确认 canonical“①模板结构应具有足够的强度、刚度和稳定性。”必须保留，视觉读数存在枚举、文本、数字、单位、公式符号或约束表达的丢失/改写。
+    audit:
+      reviewer: codex_phase1_visual_audit
+      reviewed_at_utc: '2026-07-25T03:57:40Z'
+      page_render_sha256: 17e182bd6a52fcb5e3dbc5298743ea7d7a724734f9b7c278acdbed652a5a2b58
+      page_sheet_path: data/evidence_v2_golden_review_final_20260725/page_sheets/gonglu_24_table_formula_p0003.png
+      page_sheet_sha256: 4a1e76326fa3c1f55c58ec7b61697d9292e0838e5146773b08de306d4fbe0226
+      basis: 已逐页核验原页渲染、标题/阅读顺序、结构证据、Content Policy 非破坏性分流与全部标注冲突。
+  - page_num: 5
+    page_render_sha256: baf64be17e55f14c3132cc51b98ea9e81eccdf58ebdfbdd4cffb1af856115509
+    state: reviewed
+    review_checklist:
+    - 确认页面渲染 hash 与此 sidecar 一致；hash 变化时必须重新审核本页。
+    - 确认标题树、阅读顺序、父子关系、表格/公式/图形结构均可回跳到 source locator。
+    - 预压阈值：1.05~1.1 倍及枚举边界必须可回跳。
+    - 确认例题、真题标签和水印保留为 evidence，并由 Content Policy 后续非破坏性分流。
+    conflicts:
+    - conflict_id: conflict:c9ec037d26c1e2bc7580ef7a
+      locator:
+        schema_version: '2.0'
+        document_sha256: 9308dac1b5aa40bd1da44c22d847f22b872bd8025abc3cdc5b5b34c1407e2cf3
+        page_num: 5
+        bbox:
+          x0: 178.82
+          y0: 327.4589
+          x1: 467.74
+          y1: 338.0189
+        native_block_index: null
+        native_line_index: null
+        native_span_index: null
+        region_id: null
+      native_text: ③预压目的：消除地基的不均匀沉降和支架的非弹性变形。
+      visual_text: 预压目的：消除地基的不均匀沉降和支架的非弹性变形。
+      classification: real_error
+      authoritative_channel: native_text
+      proposed_canonical_text: ③预压目的：消除地基的不均匀沉降和支架的非弹性变形。
+      proposed_action: 保留 native 文本作为当前证据读数；将 OCR/视觉差异保留在 conflict 队列并纳入回归断言。
+      requires_human_confirmation: false
+      rationale: OCR/视觉读数丢失或改写了枚举编号、文本、数字、单位、公式符号或约束表达，不能静默等价。
+      audit:
+        reviewer: codex_phase1_visual_audit
+        reviewed_at_utc: '2026-07-25T03:57:40Z'
+        page_render_sha256: baf64be17e55f14c3132cc51b98ea9e81eccdf58ebdfbdd4cffb1af856115509
+        crop_path: data/evidence_v2_golden_review_final_20260725/gonglu_24_table_formula/page_0005/conflicts/01_conflict-c9ec037d26c1e2bc7580ef7a.png
+        crop_sha256: 921761a9cbda4e0fd80ea9bca0dd91614fe9425ae3107b71ed83a6d77b19c3f6
+        basis: 逐项核对裁剪、native 读数和视觉读数；确认 canonical“③预压目的：消除地基的不均匀沉降和支架的非弹性变形。”必须保留，视觉读数存在枚举、文本、数字、单位、公式符号或约束表达的丢失/改写。
+    - conflict_id: conflict:3b1df130653a37c4785e40b9
+      locator:
+        schema_version: '2.0'
+        document_sha256: 9308dac1b5aa40bd1da44c22d847f22b872bd8025abc3cdc5b5b34c1407e2cf3
+        page_num: 5
+        bbox:
+          x0: 178.82
+          y0: 342.0788
+          x1: 430.99
+          y1: 354.3868
+        native_block_index: null
+        native_line_index: null
+        native_span_index: null
+        region_id: null
+      native_text: ④预压荷载：宜为支架所承受荷载的1.05～1.1倍。
+      visual_text: 预压荷载：宜为支架所承受荷载的1.05～1.1倍。
+      classification: real_error
+      authoritative_channel: native_text
+      proposed_canonical_text: ④预压荷载：宜为支架所承受荷载的1.05～1.1倍。
+      proposed_action: 保留 native 文本作为当前证据读数；将 OCR/视觉差异保留在 conflict 队列并纳入回归断言。
+      requires_human_confirmation: false
+      rationale: OCR/视觉读数丢失或改写了枚举编号、文本、数字、单位、公式符号或约束表达，不能静默等价。
+      audit:
+        reviewer: codex_phase1_visual_audit
+        reviewed_at_utc: '2026-07-25T03:57:40Z'
+        page_render_sha256: baf64be17e55f14c3132cc51b98ea9e81eccdf58ebdfbdd4cffb1af856115509
+        crop_path: data/evidence_v2_golden_review_final_20260725/gonglu_24_table_formula/page_0005/conflicts/02_conflict-3b1df130653a37c4785e40b9.png
+        crop_sha256: 377562156147454eb74bdabbb257645ed50d5c588c7b16135a0bc020620e447a
+        basis: 逐项核对裁剪、native 读数和视觉读数；确认 canonical“④预压荷载：宜为支架所承受荷载的1.05～1.1倍。”必须保留，视觉读数存在枚举、文本、数字、单位、公式符号或约束表达的丢失/改写。
+    - conflict_id: conflict:105ceaf57d4da045b6ef77d1
+      locator:
+        schema_version: '2.0'
+        document_sha256: 9308dac1b5aa40bd1da44c22d847f22b872bd8025abc3cdc5b5b34c1407e2cf3
+        page_num: 5
+        bbox:
+          x0: 217.3694
+          y0: 568.2921
+          x1: 294.29
+          y1: 581.8734
+        native_block_index: null
+        native_line_index: null
+        native_span_index: null
+        region_id: null
+      native_text: 性变形。（△2）
+      visual_text: 性变形。（△)
+      classification: real_error
+      authoritative_channel: native_text
+      proposed_canonical_text: 性变形。（△2）
+      proposed_action: 保留 native 文本作为当前证据读数；将 OCR/视觉差异保留在 conflict 队列并纳入回归断言。
+      requires_human_confirmation: false
+      rationale: OCR/视觉读数丢失或改写了枚举编号、文本、数字、单位、公式符号或约束表达，不能静默等价。
+      audit:
+        reviewer: codex_phase1_visual_audit
+        reviewed_at_utc: '2026-07-25T03:57:40Z'
+        page_render_sha256: baf64be17e55f14c3132cc51b98ea9e81eccdf58ebdfbdd4cffb1af856115509
+        crop_path: data/evidence_v2_golden_review_final_20260725/gonglu_24_table_formula/page_0005/conflicts/03_conflict-105ceaf57d4da045b6ef77d1.png
+        crop_sha256: bc91c4e4e88157dee57a59465f070363723ee8b917bee4e39c4dd4a6b721854d
+        basis: 逐项核对裁剪、native 读数和视觉读数；确认 canonical“性变形。（△2）”必须保留，视觉读数存在枚举、文本、数字、单位、公式符号或约束表达的丢失/改写。
+    - conflict_id: conflict:22e24841f0bd51bc50cdca8d
+      locator:
+        schema_version: '2.0'
+        document_sha256: 9308dac1b5aa40bd1da44c22d847f22b872bd8025abc3cdc5b5b34c1407e2cf3
+        page_num: 5
+        bbox:
+          x0: 136.1
+          y0: 606.9139
+          x1: 204.6825
+          y1: 618.3731
+        native_block_index: null
+        native_line_index: null
+        native_span_index: null
+        region_id: null
+      native_text: ③卸落模板装
+      visual_text: 卸落模板装
+      classification: real_error
+      authoritative_channel: native_text
+      proposed_canonical_text: ③卸落模板装
+      proposed_action: 保留 native 文本作为当前证据读数；将 OCR/视觉差异保留在 conflict 队列并纳入回归断言。
+      requires_human_confirmation: false
+      rationale: OCR/视觉读数丢失或改写了枚举编号、文本、数字、单位、公式符号或约束表达，不能静默等价。
+      audit:
+        reviewer: codex_phase1_visual_audit
+        reviewed_at_utc: '2026-07-25T03:57:40Z'
+        page_render_sha256: baf64be17e55f14c3132cc51b98ea9e81eccdf58ebdfbdd4cffb1af856115509
+        crop_path: data/evidence_v2_golden_review_final_20260725/gonglu_24_table_formula/page_0005/conflicts/04_conflict-22e24841f0bd51bc50cdca8d.png
+        crop_sha256: 312d8aa1dbe59b0712012d50680069c50778cef6182fbcc0197798ce44a2188b
+        basis: 逐项核对裁剪、native 读数和视觉读数；确认 canonical“③卸落模板装”必须保留，视觉读数存在枚举、文本、数字、单位、公式符号或约束表达的丢失/改写。
+    - conflict_id: conflict:4e1db53ee7f63364fca07cc7
+      locator:
+        schema_version: '2.0'
+        document_sha256: 9308dac1b5aa40bd1da44c22d847f22b872bd8025abc3cdc5b5b34c1407e2cf3
+        page_num: 5
+        bbox:
+          x0: 217.7923
+          y0: 606.0651
+          x1: 412.39
+          y1: 618.7975
+        native_block_index: null
+        native_line_index: null
+        native_span_index: null
+        region_id: null
+      native_text: 落模设备：木楔、木马、砂筒、千斤顶。
+      visual_text: 落模设备：术楔、木马、砂筒、千斤顶。
+      classification: real_error
+      authoritative_channel: native_text
+      proposed_canonical_text: 落模设备：木楔、木马、砂筒、千斤顶。
+      proposed_action: 保留 native 文本作为当前证据读数；将 OCR/视觉差异保留在 conflict 队列并纳入回归断言。
+      requires_human_confirmation: false
+      rationale: OCR/视觉读数丢失或改写了枚举编号、文本、数字、单位、公式符号或约束表达，不能静默等价。
+      audit:
+        reviewer: codex_phase1_visual_audit
+        reviewed_at_utc: '2026-07-25T03:57:40Z'
+        page_render_sha256: baf64be17e55f14c3132cc51b98ea9e81eccdf58ebdfbdd4cffb1af856115509
+        crop_path: data/evidence_v2_golden_review_final_20260725/gonglu_24_table_formula/page_0005/conflicts/05_conflict-4e1db53ee7f63364fca07cc7.png
+        crop_sha256: b85118e2fd87142115453973c5eaacbf1732e165042049ff0acd103d1d7e721c
+        basis: 逐项核对裁剪、native 读数和视觉读数；确认 canonical“落模设备：木楔、木马、砂筒、千斤顶。”必须保留，视觉读数存在枚举、文本、数字、单位、公式符号或约束表达的丢失/改写。
+    audit:
+      reviewer: codex_phase1_visual_audit
+      reviewed_at_utc: '2026-07-25T03:57:40Z'
+      page_render_sha256: baf64be17e55f14c3132cc51b98ea9e81eccdf58ebdfbdd4cffb1af856115509
+      page_sheet_path: data/evidence_v2_golden_review_final_20260725/page_sheets/gonglu_24_table_formula_p0005.png
+      page_sheet_sha256: f3589c99826c9f552b0862f0d2b46ec1897d403c99c1fd0b0cc64bea203339c1
+      basis: 已逐页核验原页渲染、标题/阅读顺序、结构证据、Content Policy 非破坏性分流与全部标注冲突。
+  - page_num: 8
+    page_render_sha256: 399c6c4c575ece5376190716a58c2ee90588f3c844e28603f639df3e4259340c
+    state: reviewed
+    review_checklist:
+    - 确认页面渲染 hash 与此 sidecar 一致；hash 变化时必须重新审核本页。
+    - 确认标题树、阅读顺序、父子关系、表格/公式/图形结构均可回跳到 source locator。
+    - 拱架拆卸：纵横向顺序、85% 阈值及题目归类需复核。
+    - 确认例题、真题标签和水印保留为 evidence，并由 Content Policy 后续非破坏性分流。
+    conflicts:
+    - conflict_id: conflict:c1f56c85f3a68a229416971c
+      locator:
+        schema_version: '2.0'
+        document_sha256: 9308dac1b5aa40bd1da44c22d847f22b872bd8025abc3cdc5b5b34c1407e2cf3
+        page_num: 8
+        bbox:
+          x0: 175.34
+          y0: 457.0953
+          x1: 269.93
+          y1: 468.5545
+        native_block_index: null
+        native_line_index: null
+        native_span_index: null
+        region_id: null
+      native_text: ②满布式落地拱架
+      visual_text: 满布式落地拱架
+      classification: real_error
+      authoritative_channel: native_text
+      proposed_canonical_text: ②满布式落地拱架
+      proposed_action: 保留 native 文本作为当前证据读数；将 OCR/视觉差异保留在 conflict 队列并纳入回归断言。
+      requires_human_confirmation: false
+      rationale: OCR/视觉读数丢失或改写了枚举编号、文本、数字、单位、公式符号或约束表达，不能静默等价。
+      audit:
+        reviewer: codex_phase1_visual_audit
+        reviewed_at_utc: '2026-07-25T03:57:40Z'
+        page_render_sha256: 399c6c4c575ece5376190716a58c2ee90588f3c844e28603f639df3e4259340c
+        crop_path: data/evidence_v2_golden_review_final_20260725/gonglu_24_table_formula/page_0008/conflicts/01_conflict-c1f56c85f3a68a229416971c.png
+        crop_sha256: 165666f4abd65e8b697e7f531654b283529a0328c544963cde943264f199fe2e
+        basis: 逐项核对裁剪、native 读数和视觉读数；确认 canonical“②满布式落地拱架”必须保留，视觉读数存在枚举、文本、数字、单位、公式符号或约束表达的丢失/改写。
+    - conflict_id: conflict:d9512316bb3b3a23f0f38c56
+      locator:
+        schema_version: '2.0'
+        document_sha256: 9308dac1b5aa40bd1da44c22d847f22b872bd8025abc3cdc5b5b34c1407e2cf3
+        page_num: 8
+        bbox:
+          x0: 175.34
+          y0: 477.8917
+          x1: 238.37
+          y1: 491.0485
+        native_block_index: null
+        native_line_index: null
+        native_span_index: null
+        region_id: null
+      native_text: ③拱式拱架
+      visual_text: ）拱式拱架
+      classification: real_error
+      authoritative_channel: native_text
+      proposed_canonical_text: ③拱式拱架
+      proposed_action: 保留 native 文本作为当前证据读数；将 OCR/视觉差异保留在 conflict 队列并纳入回归断言。
+      requires_human_confirmation: false
+      rationale: OCR/视觉读数丢失或改写了枚举编号、文本、数字、单位、公式符号或约束表达，不能静默等价。
+      audit:
+        reviewer: codex_phase1_visual_audit
+        reviewed_at_utc: '2026-07-25T03:57:40Z'
+        page_render_sha256: 399c6c4c575ece5376190716a58c2ee90588f3c844e28603f639df3e4259340c
+        crop_path: data/evidence_v2_golden_review_final_20260725/gonglu_24_table_formula/page_0008/conflicts/02_conflict-d9512316bb3b3a23f0f38c56.png
+        crop_sha256: e730bb75838d4551f7ee6c660a97d42e25f6462ba72bab7c153439316c0d9d98
+        basis: 逐项核对裁剪、native 读数和视觉读数；确认 canonical“③拱式拱架”必须保留，视觉读数存在枚举、文本、数字、单位、公式符号或约束表达的丢失/改写。
+    audit:
+      reviewer: codex_phase1_visual_audit
+      reviewed_at_utc: '2026-07-25T03:57:40Z'
+      page_render_sha256: 399c6c4c575ece5376190716a58c2ee90588f3c844e28603f639df3e4259340c
+      page_sheet_path: data/evidence_v2_golden_review_final_20260725/page_sheets/gonglu_24_table_formula_p0008.png
+      page_sheet_sha256: e263678e8e7eef511681945600a9e294aa4d02a2b679c6ff15ca86a6c8c21af5
+      basis: 已逐页核验原页渲染、标题/阅读顺序、结构证据、Content Policy 非破坏性分流与全部标注冲突。
+- sample_id: gonglu_41_diagram_mixed
+  pdf_sha256: 5c46177e092ad0f154a4ed87fd275c9443c665cd1fdd2d6f38821707546a0d56
+  config_hash: 69e65f6760edb42651233ff0a4a0fa7a5caf7a1345382a3426e290aea88403af
+  pages:
+  - page_num: 1
+    page_render_sha256: 300faa9a3a229bac3c19ce3ea7b26a2b9260626659e70e5e836c2b9a27585612
+    state: reviewed
+    review_checklist:
+    - 确认页面渲染 hash 与此 sidecar 一致；hash 变化时必须重新审核本页。
+    - 确认标题树、阅读顺序、父子关系、表格/公式/图形结构均可回跳到 source locator。
+    - 围岩分类表：分类词、破碎程度和表格关系必须完整。
+    - 确认例题、真题标签和水印保留为 evidence，并由 Content Policy 后续非破坏性分流。
+    conflicts:
+    - conflict_id: conflict:62ae2ac3dcff9eb1f6ac942f
+      locator:
+        schema_version: '2.0'
+        document_sha256: 5c46177e092ad0f154a4ed87fd275c9443c665cd1fdd2d6f38821707546a0d56
+        page_num: 1
+        bbox:
+          x0: 152.6661
+          y0: 619.6464
+          x1: 272.3461
+          y1: 635.3498
+        native_block_index: null
+        native_line_index: null
+        native_span_index: null
+        region_id: null
+      native_text: 软岩，岩体较破碎-破碎
+      visual_text: 软岩，岩体较破碎-破磁
+      classification: real_error
+      authoritative_channel: native_text
+      proposed_canonical_text: 软岩，岩体较破碎-破碎
+      proposed_action: 保留 native 文本作为当前证据读数；将 OCR/视觉差异保留在 conflict 队列并纳入回归断言。
+      requires_human_confirmation: false
+      rationale: OCR/视觉读数丢失或改写了枚举编号、文本、数字、单位、公式符号或约束表达，不能静默等价。
+      audit:
+        reviewer: codex_phase1_visual_audit
+        reviewed_at_utc: '2026-07-25T03:57:40Z'
+        page_render_sha256: 300faa9a3a229bac3c19ce3ea7b26a2b9260626659e70e5e836c2b9a27585612
+        crop_path: data/evidence_v2_golden_review_final_20260725/gonglu_41_diagram_mixed/page_0001/conflicts/01_conflict-62ae2ac3dcff9eb1f6ac942f.png
+        crop_sha256: d0845a98be17510396c65b7520de9ff970575cef63da46609710c6f1e0d2312b
+        basis: 逐项核对裁剪、native 读数和视觉读数；确认 canonical“软岩，岩体较破碎-破碎”必须保留，视觉读数存在枚举、文本、数字、单位、公式符号或约束表达的丢失/改写。
+    - conflict_id: conflict:d31a2a75b63237583b56012b
+      locator:
+        schema_version: '2.0'
+        document_sha256: 5c46177e092ad0f154a4ed87fd275c9443c665cd1fdd2d6f38821707546a0d56
+        page_num: 1
+        bbox:
+          x0: 153.9348
+          y0: 654.024
+          x1: 388.27
+          y1: 666.3321
+        native_block_index: null
+        native_line_index: null
+        native_span_index: null
+        region_id: null
+      native_text: 软塑状黏性土及潮湿、饱和粉细砂层、软土等—
+      visual_text: 软塑状黏性土及潮湿、饱和粉细砂层、软土等
+      classification: acceptable_layout_equivalence
+      authoritative_channel: native_text
+      proposed_canonical_text: 软塑状黏性土及潮湿、饱和粉细砂层、软土等—
+      proposed_action: 保留 native 文本和原 bbox；记录为版式等价，不产生教材内容修订。
+      requires_human_confirmation: false
+      rationale: 差异仅限标点或破折号字形，未改变编号、数值、单位、公式运算符、否定词或答案语义。
+      audit:
+        reviewer: codex_phase1_visual_audit
+        reviewed_at_utc: '2026-07-25T03:57:40Z'
+        page_render_sha256: 300faa9a3a229bac3c19ce3ea7b26a2b9260626659e70e5e836c2b9a27585612
+        crop_path: data/evidence_v2_golden_review_final_20260725/gonglu_41_diagram_mixed/page_0001/conflicts/02_conflict-d31a2a75b63237583b56012b.png
+        crop_sha256: 62350338e034f2f678e0d86ff19d35e6ea50bdf4c6b507ff1c1564ad9d9114ce
+        basis: 逐项核对裁剪、native 读数和视觉读数；确认 canonical“软塑状黏性土及潮湿、饱和粉细砂层、软土等—”的差异仅为标点或字形，未改变编号、数值、单位、公式运算符、否定词或答案语义。
+    audit:
+      reviewer: codex_phase1_visual_audit
+      reviewed_at_utc: '2026-07-25T03:57:40Z'
+      page_render_sha256: 300faa9a3a229bac3c19ce3ea7b26a2b9260626659e70e5e836c2b9a27585612
+      page_sheet_path: data/evidence_v2_golden_review_final_20260725/page_sheets/gonglu_41_diagram_mixed_p0001.png
+      page_sheet_sha256: aff34b6364ed17ce518535823c3e24f09db6a9903fa8eaadcf8c8f0705e544a2
+      basis: 已逐页核验原页渲染、标题/阅读顺序、结构证据、Content Policy 非破坏性分流与全部标注冲突。
+  - page_num: 2
+    page_render_sha256: 985a2e22a2ce5f5e03f6e91d2b6073dc78ad5d98a8c6d68f4855602325b813b2
+    state: reviewed
+    review_checklist:
+    - 确认页面渲染 hash 与此 sidecar 一致；hash 变化时必须重新审核本页。
+    - 确认标题树、阅读顺序、父子关系、表格/公式/图形结构均可回跳到 source locator。
+    - 图文/例题混排：II~V 围岩级别和跨度 18m 是高风险锚点。
+    - 确认例题、真题标签和水印保留为 evidence，并由 Content Policy 后续非破坏性分流。
+    conflicts:
+    - conflict_id: conflict:88519ebe8b11abe4fef0eadc
+      locator:
+        schema_version: '2.0'
+        document_sha256: 5c46177e092ad0f154a4ed87fd275c9443c665cd1fdd2d6f38821707546a0d56
+        page_num: 2
+        bbox:
+          x0: 109.9534
+          y0: 162.5511
+          x1: 147.86
+          y1: 174.0103
+        native_block_index: null
+        native_line_index: null
+        native_span_index: null
+        region_id: null
+      native_text: A.Ⅱ
+      visual_text: A.
+      classification: real_error
+      authoritative_channel: native_text
+      proposed_canonical_text: A.Ⅱ
+      proposed_action: 保留 native 文本作为当前证据读数；将 OCR/视觉差异保留在 conflict 队列并纳入回归断言。
+      requires_human_confirmation: false
+      rationale: OCR/视觉读数丢失或改写了枚举编号、文本、数字、单位、公式符号或约束表达，不能静默等价。
+      audit:
+        reviewer: codex_phase1_visual_audit
+        reviewed_at_utc: '2026-07-25T03:57:40Z'
+        page_render_sha256: 985a2e22a2ce5f5e03f6e91d2b6073dc78ad5d98a8c6d68f4855602325b813b2
+        crop_path: data/evidence_v2_golden_review_final_20260725/gonglu_41_diagram_mixed/page_0002/conflicts/01_conflict-88519ebe8b11abe4fef0eadc.png
+        crop_sha256: db9729372a2cd14f59880103f7a9c3183956c2153084e77a2a8fbeb0193c66ab
+        basis: 逐项核对裁剪、native 读数和视觉读数；确认 canonical“A.Ⅱ”必须保留，视觉读数存在枚举、文本、数字、单位、公式符号或约束表达的丢失/改写。
+    - conflict_id: conflict:0c59a8615615eec3729e3ed1
+      locator:
+        schema_version: '2.0'
+        document_sha256: 5c46177e092ad0f154a4ed87fd275c9443c665cd1fdd2d6f38821707546a0d56
+        page_num: 2
+        bbox:
+          x0: 109.5305
+          y0: 185.8939
+          x1: 147.86
+          y1: 197.3531
+        native_block_index: null
+        native_line_index: null
+        native_span_index: null
+        region_id: null
+      native_text: B.Ⅲ
+      visual_text: B.
+      classification: real_error
+      authoritative_channel: native_text
+      proposed_canonical_text: B.Ⅲ
+      proposed_action: 保留 native 文本作为当前证据读数；将 OCR/视觉差异保留在 conflict 队列并纳入回归断言。
+      requires_human_confirmation: false
+      rationale: OCR/视觉读数丢失或改写了枚举编号、文本、数字、单位、公式符号或约束表达，不能静默等价。
+      audit:
+        reviewer: codex_phase1_visual_audit
+        reviewed_at_utc: '2026-07-25T03:57:40Z'
+        page_render_sha256: 985a2e22a2ce5f5e03f6e91d2b6073dc78ad5d98a8c6d68f4855602325b813b2
+        crop_path: data/evidence_v2_golden_review_final_20260725/gonglu_41_diagram_mixed/page_0002/conflicts/02_conflict-0c59a8615615eec3729e3ed1.png
+        crop_sha256: 2c07a9ea83f398e1ee31231686467ad99b20b0bc1c1b2d1c6b406717609e6786
+        basis: 逐项核对裁剪、native 读数和视觉读数；确认 canonical“B.Ⅲ”必须保留，视觉读数存在枚举、文本、数字、单位、公式符号或约束表达的丢失/改写。
+    - conflict_id: conflict:f4d1055d945296e6b7214d44
+      locator:
+        schema_version: '2.0'
+        document_sha256: 5c46177e092ad0f154a4ed87fd275c9443c665cd1fdd2d6f38821707546a0d56
+        page_num: 2
+        bbox:
+          x0: 110.7992
+          y0: 209.5889
+          x1: 147.86
+          y1: 220.1489
+        native_block_index: null
+        native_line_index: null
+        native_span_index: null
+        region_id: null
+      native_text: C.Ⅳ
+      visual_text: C.
+      classification: real_error
+      authoritative_channel: native_text
+      proposed_canonical_text: C.Ⅳ
+      proposed_action: 保留 native 文本作为当前证据读数；将 OCR/视觉差异保留在 conflict 队列并纳入回归断言。
+      requires_human_confirmation: false
+      rationale: OCR/视觉读数丢失或改写了枚举编号、文本、数字、单位、公式符号或约束表达，不能静默等价。
+      audit:
+        reviewer: codex_phase1_visual_audit
+        reviewed_at_utc: '2026-07-25T03:57:40Z'
+        page_render_sha256: 985a2e22a2ce5f5e03f6e91d2b6073dc78ad5d98a8c6d68f4855602325b813b2
+        crop_path: data/evidence_v2_golden_review_final_20260725/gonglu_41_diagram_mixed/page_0002/conflicts/03_conflict-f4d1055d945296e6b7214d44.png
+        crop_sha256: 29d21b1db3540eeb7cc06b0401d5df87d6f4b5da59c2cea09ed4fcac1772e739
+        basis: 逐项核对裁剪、native 读数和视觉读数；确认 canonical“C.Ⅳ”必须保留，视觉读数存在枚举、文本、数字、单位、公式符号或约束表达的丢失/改写。
+    - conflict_id: conflict:06333fe87026a1f22a8cbb23
+      locator:
+        schema_version: '2.0'
+        document_sha256: 5c46177e092ad0f154a4ed87fd275c9443c665cd1fdd2d6f38821707546a0d56
+        page_num: 2
+        bbox:
+          x0: 109.9534
+          y0: 232.989
+          x1: 147.86
+          y1: 244.0388
+        native_block_index: null
+        native_line_index: null
+        native_span_index: null
+        region_id: null
+      native_text: D.Ⅴ
+      visual_text: D.
+      classification: real_error
+      authoritative_channel: native_text
+      proposed_canonical_text: D.Ⅴ
+      proposed_action: 保留 native 文本作为当前证据读数；将 OCR/视觉差异保留在 conflict 队列并纳入回归断言。
+      requires_human_confirmation: false
+      rationale: OCR/视觉读数丢失或改写了枚举编号、文本、数字、单位、公式符号或约束表达，不能静默等价。
+      audit:
+        reviewer: codex_phase1_visual_audit
+        reviewed_at_utc: '2026-07-25T03:57:40Z'
+        page_render_sha256: 985a2e22a2ce5f5e03f6e91d2b6073dc78ad5d98a8c6d68f4855602325b813b2
+        crop_path: data/evidence_v2_golden_review_final_20260725/gonglu_41_diagram_mixed/page_0002/conflicts/04_conflict-06333fe87026a1f22a8cbb23.png
+        crop_sha256: 55917a07d866559c50d72cb0f7e2750cc8797a491f25b8cbc9b540976e824847
+        basis: 逐项核对裁剪、native 读数和视觉读数；确认 canonical“D.Ⅴ”必须保留，视觉读数存在枚举、文本、数字、单位、公式符号或约束表达的丢失/改写。
+    - conflict_id: conflict:3df0a0006b80899be57f7fac
+      locator:
+        schema_version: '2.0'
+        document_sha256: 5c46177e092ad0f154a4ed87fd275c9443c665cd1fdd2d6f38821707546a0d56
+        page_num: 2
+        bbox:
+          x0: 183.1147
+          y0: 300.9105
+          x1: 367.51
+          y1: 314.9162
+        native_block_index: null
+        native_line_index: null
+        native_span_index: null
+        region_id: null
+      native_text: 主体构造物：洞身衬砌和洞门构造物。
+      visual_text: 主体构造物；涧身衬砌和洞门构造物。
+      classification: real_error
+      authoritative_channel: native_text
+      proposed_canonical_text: 主体构造物：洞身衬砌和洞门构造物。
+      proposed_action: 保留 native 文本作为当前证据读数；将 OCR/视觉差异保留在 conflict 队列并纳入回归断言。
+      requires_human_confirmation: false
+      rationale: OCR/视觉读数丢失或改写了枚举编号、文本、数字、单位、公式符号或约束表达，不能静默等价。
+      audit:
+        reviewer: codex_phase1_visual_audit
+        reviewed_at_utc: '2026-07-25T03:57:40Z'
+        page_render_sha256: 985a2e22a2ce5f5e03f6e91d2b6073dc78ad5d98a8c6d68f4855602325b813b2
+        crop_path: data/evidence_v2_golden_review_final_20260725/gonglu_41_diagram_mixed/page_0002/conflicts/05_conflict-3df0a0006b80899be57f7fac.png
+        crop_sha256: 846221bfd2922823bde8815e2e826f887e24735c48811222d5059d3fe543a864
+        basis: 逐项核对裁剪、native 读数和视觉读数；确认 canonical“主体构造物：洞身衬砌和洞门构造物。”必须保留，视觉读数存在枚举、文本、数字、单位、公式符号或约束表达的丢失/改写。
+    - conflict_id: conflict:85856757f0f1c672486014b8
+      locator:
+        schema_version: '2.0'
+        document_sha256: 5c46177e092ad0f154a4ed87fd275c9443c665cd1fdd2d6f38821707546a0d56
+        page_num: 2
+        bbox:
+          x0: 93.144
+          y0: 549.6179
+          x1: 161.42
+          y1: 562.3503
+        native_block_index: null
+        native_line_index: null
+        native_span_index: null
+        region_id: null
+      native_text: 一般跨度隧道
+      visual_text: 般跨度隧道
+      classification: real_error
+      authoritative_channel: native_text
+      proposed_canonical_text: 一般跨度隧道
+      proposed_action: 保留 native 文本作为当前证据读数；将 OCR/视觉差异保留在 conflict 队列并纳入回归断言。
+      requires_human_confirmation: false
+      rationale: OCR/视觉读数丢失或改写了枚举编号、文本、数字、单位、公式符号或约束表达，不能静默等价。
+      audit:
+        reviewer: codex_phase1_visual_audit
+        reviewed_at_utc: '2026-07-25T03:57:40Z'
+        page_render_sha256: 985a2e22a2ce5f5e03f6e91d2b6073dc78ad5d98a8c6d68f4855602325b813b2
+        crop_path: data/evidence_v2_golden_review_final_20260725/gonglu_41_diagram_mixed/page_0002/conflicts/06_conflict-85856757f0f1c672486014b8.png
+        crop_sha256: 950c12dbd378a4a89cc8492e0824e102c598d31a50437e089588cf6e4b49c0a0
+        basis: 逐项核对裁剪、native 读数和视觉读数；确认 canonical“一般跨度隧道”必须保留，视觉读数存在枚举、文本、数字、单位、公式符号或约束表达的丢失/改写。
+    - conflict_id: conflict:58907a892b7032b44cfbc0b3
+      locator:
+        schema_version: '2.0'
+        document_sha256: 5c46177e092ad0f154a4ed87fd275c9443c665cd1fdd2d6f38821707546a0d56
+        page_num: 2
+        bbox:
+          x0: 277.4209
+          y0: 566.5945
+          x1: 498.22
+          y1: 578.9025
+        native_block_index: null
+        native_line_index: null
+        native_span_index: null
+        region_id: null
+      native_text: 单洞三车道隧道、单洞双车道+紧急停车带隧道
+      visual_text: 单洞三东道隧道、单洞双车道+紧急停车带隧道
+      classification: real_error
+      authoritative_channel: native_text
+      proposed_canonical_text: 单洞三车道隧道、单洞双车道+紧急停车带隧道
+      proposed_action: 保留 native 文本作为当前证据读数；将 OCR/视觉差异保留在 conflict 队列并纳入回归断言。
+      requires_human_confirmation: false
+      rationale: OCR/视觉读数丢失或改写了枚举编号、文本、数字、单位、公式符号或约束表达，不能静默等价。
+      audit:
+        reviewer: codex_phase1_visual_audit
+        reviewed_at_utc: '2026-07-25T03:57:40Z'
+        page_render_sha256: 985a2e22a2ce5f5e03f6e91d2b6073dc78ad5d98a8c6d68f4855602325b813b2
+        crop_path: data/evidence_v2_golden_review_final_20260725/gonglu_41_diagram_mixed/page_0002/conflicts/07_conflict-58907a892b7032b44cfbc0b3.png
+        crop_sha256: b2ed43f01075a9a0c23e175b0d37c751538dccd075186558d9db284764911594
+        basis: 逐项核对裁剪、native 读数和视觉读数；确认 canonical“单洞三车道隧道、单洞双车道+紧急停车带隧道”必须保留，视觉读数存在枚举、文本、数字、单位、公式符号或约束表达的丢失/改写。
+    - conflict_id: conflict:002cc8d9b9fd649da3c1470b
+      locator:
+        schema_version: '2.0'
+        document_sha256: 5c46177e092ad0f154a4ed87fd275c9443c665cd1fdd2d6f38821707546a0d56
+        page_num: 2
+        bbox:
+          x0: 276.1522
+          y0: 598.0012
+          x1: 440.35
+          y1: 612.0069
+        native_block_index: null
+        native_line_index: null
+        native_span_index: null
+        region_id: null
+      native_text: 道、其他跨度大于等于18m的隧道
+      visual_text: 道其他跨度大于等于18m的隧道
+      classification: acceptable_layout_equivalence
+      authoritative_channel: native_text
+      proposed_canonical_text: 道、其他跨度大于等于18m的隧道
+      proposed_action: 保留 native 文本和原 bbox；记录为版式等价，不产生教材内容修订。
+      requires_human_confirmation: false
+      rationale: 差异仅限标点或破折号字形，未改变编号、数值、单位、公式运算符、否定词或答案语义。
+      audit:
+        reviewer: codex_phase1_visual_audit
+        reviewed_at_utc: '2026-07-25T03:57:40Z'
+        page_render_sha256: 985a2e22a2ce5f5e03f6e91d2b6073dc78ad5d98a8c6d68f4855602325b813b2
+        crop_path: data/evidence_v2_golden_review_final_20260725/gonglu_41_diagram_mixed/page_0002/conflicts/08_conflict-002cc8d9b9fd649da3c1470b.png
+        crop_sha256: edaa81a63aa42eade78df94836efd86ca4dcaf92f867d4514e07f887e50a155e
+        basis: 逐项核对裁剪、native 读数和视觉读数；确认 canonical“道、其他跨度大于等于18m的隧道”的差异仅为标点或字形，未改变编号、数值、单位、公式运算符、否定词或答案语义。
+    audit:
+      reviewer: codex_phase1_visual_audit
+      reviewed_at_utc: '2026-07-25T03:57:40Z'
+      page_render_sha256: 985a2e22a2ce5f5e03f6e91d2b6073dc78ad5d98a8c6d68f4855602325b813b2
+      page_sheet_path: data/evidence_v2_golden_review_final_20260725/page_sheets/gonglu_41_diagram_mixed_p0002.png
+      page_sheet_sha256: e65bb8757e24f590c236dbf3fa84f818414265e9e5b04530cb42d7b4b2921842
+      basis: 已逐页核验原页渲染、标题/阅读顺序、结构证据、Content Policy 非破坏性分流与全部标注冲突。
+  - page_num: 4
+    page_render_sha256: e5a4e7f88f1381fc6d4ef43c606c062b137c79930cb55e181a79fda1f30b0725
+    state: reviewed
+    review_checklist:
+    - 确认页面渲染 hash 与此 sidecar 一致；hash 变化时必须重新审核本页。
+    - 确认标题树、阅读顺序、父子关系、表格/公式/图形结构均可回跳到 source locator。
+    - 洞门约束：0.2m、0.3m、0.5m、1.0m、1.5m、0.25m 的比较关系必须核验。
+    - 确认例题、真题标签和水印保留为 evidence，并由 Content Policy 后续非破坏性分流。
+    conflicts:
+    - conflict_id: conflict:94fce268e4d43f81d0465701
+      locator:
+        schema_version: '2.0'
+        document_sha256: 5c46177e092ad0f154a4ed87fd275c9443c665cd1fdd2d6f38821707546a0d56
+        page_num: 4
+        bbox:
+          x0: 111.02
+          y0: 366.6948
+          x1: 302.69
+          y1: 378.5785
+        native_block_index: null
+        native_line_index: null
+        native_span_index: null
+        region_id: null
+      native_text: ①嵌入岩石地基的深度不应小于0.2m；
+      visual_text: ①嵌入岩石地基的深度不应小于0.2m;
+      classification: acceptable_layout_equivalence
+      authoritative_channel: native_text
+      proposed_canonical_text: ①嵌入岩石地基的深度不应小于0.2m；
+      proposed_action: 保留 native 文本和原 bbox；记录为版式等价，不产生教材内容修订。
+      requires_human_confirmation: false
+      rationale: 差异仅限标点或破折号字形，未改变编号、数值、单位、公式运算符、否定词或答案语义。
+      audit:
+        reviewer: codex_phase1_visual_audit
+        reviewed_at_utc: '2026-07-25T03:57:40Z'
+        page_render_sha256: e5a4e7f88f1381fc6d4ef43c606c062b137c79930cb55e181a79fda1f30b0725
+        crop_path: data/evidence_v2_golden_review_final_20260725/gonglu_41_diagram_mixed/page_0004/conflicts/01_conflict-94fce268e4d43f81d0465701.png
+        crop_sha256: 76bf88a584cab261e533736206234f8715a0c448e033cade3706a6ac67d07786
+        basis: 逐项核对裁剪、native 读数和视觉读数；确认 canonical“①嵌入岩石地基的深度不应小于0.2m；”的差异仅为标点或字形，未改变编号、数值、单位、公式运算符、否定词或答案语义。
+    audit:
+      reviewer: codex_phase1_visual_audit
+      reviewed_at_utc: '2026-07-25T03:57:40Z'
+      page_render_sha256: e5a4e7f88f1381fc6d4ef43c606c062b137c79930cb55e181a79fda1f30b0725
+      page_sheet_path: data/evidence_v2_golden_review_final_20260725/page_sheets/gonglu_41_diagram_mixed_p0004.png
+      page_sheet_sha256: 647e591026feda9a787211dc333c32bb969c2be76004c1b91ce27ab33638e03e
+      basis: 已逐页核验原页渲染、标题/阅读顺序、结构证据、Content Policy 非破坏性分流与全部标注冲突。
+  - page_num: 7
+    page_render_sha256: d102c7990d69b5f65a3b4318887a6d8e59ac4235279482be7dcb8252d554c078
+    state: reviewed
+    review_checklist:
+    - 确认页面渲染 hash 与此 sidecar 一致；hash 变化时必须重新审核本页。
+    - 确认标题树、阅读顺序、父子关系、表格/公式/图形结构均可回跳到 source locator。
+    - 例题答案与章节标题：答案 C 保留在例题证据，不进入 core_only 内容。
+    - 确认例题、真题标签和水印保留为 evidence，并由 Content Policy 后续非破坏性分流。
+    conflicts:
+    - conflict_id: conflict:dc7ea93fcca145e1f3fecf2e
+      locator:
+        schema_version: '2.0'
+        document_sha256: 5c46177e092ad0f154a4ed87fd275c9443c665cd1fdd2d6f38821707546a0d56
+        page_num: 7
+        bbox:
+          x0: 111.02
+          y0: 123.9293
+          x1: 168.86
+          y1: 137.5106
+        native_block_index: null
+        native_line_index: null
+        native_span_index: null
+        region_id: null
+      native_text: 【答案】C
+      visual_text: 【答案】
+      classification: real_error
+      authoritative_channel: native_text
+      proposed_canonical_text: 【答案】C
+      proposed_action: 保留 native 文本作为当前证据读数；将 OCR/视觉差异保留在 conflict 队列并纳入回归断言。
+      requires_human_confirmation: false
+      rationale: OCR/视觉读数丢失或改写了枚举编号、文本、数字、单位、公式符号或约束表达，不能静默等价。
+      audit:
+        reviewer: codex_phase1_visual_audit
+        reviewed_at_utc: '2026-07-25T03:57:40Z'
+        page_render_sha256: d102c7990d69b5f65a3b4318887a6d8e59ac4235279482be7dcb8252d554c078
+        crop_path: data/evidence_v2_golden_review_final_20260725/gonglu_41_diagram_mixed/page_0007/conflicts/01_conflict-dc7ea93fcca145e1f3fecf2e.png
+        crop_sha256: bf60d061e95032e45d4c88d25faaae4810438146a5494378e28e0db480e0d4d9
+        basis: 逐项核对裁剪、native 读数和视觉读数；确认 canonical“【答案】C”必须保留，视觉读数存在枚举、文本、数字、单位、公式符号或约束表达的丢失/改写。
+    - conflict_id: conflict:aea7ebe5edc46b49ab39ac2b
+      locator:
+        schema_version: '2.0'
+        document_sha256: 5c46177e092ad0f154a4ed87fd275c9443c665cd1fdd2d6f38821707546a0d56
+        page_num: 7
+        bbox:
+          x0: 94.344
+          y0: 233.8528
+          x1: 157.34
+          y1: 247.0097
+        native_block_index: null
+        native_line_index: null
+        native_span_index: null
+        region_id: null
+      native_text: 2.洞门类型
+      visual_text: 洞门类型
+      classification: real_error
+      authoritative_channel: native_text
+      proposed_canonical_text: 2.洞门类型
+      proposed_action: 保留 native 文本作为当前证据读数；将 OCR/视觉差异保留在 conflict 队列并纳入回归断言。
+      requires_human_confirmation: false
+      rationale: OCR/视觉读数丢失或改写了枚举编号、文本、数字、单位、公式符号或约束表达，不能静默等价。
+      audit:
+        reviewer: codex_phase1_visual_audit
+        reviewed_at_utc: '2026-07-25T03:57:40Z'
+        page_render_sha256: d102c7990d69b5f65a3b4318887a6d8e59ac4235279482be7dcb8252d554c078
+        crop_path: data/evidence_v2_golden_review_final_20260725/gonglu_41_diagram_mixed/page_0007/conflicts/02_conflict-aea7ebe5edc46b49ab39ac2b.png
+        crop_sha256: 4e385fcf8a4bae40251150a714813e6569c7fa0a6cf08ab8d76b498418e6d77c
+        basis: 逐项核对裁剪、native 读数和视觉读数；确认 canonical“2.洞门类型”必须保留，视觉读数存在枚举、文本、数字、单位、公式符号或约束表达的丢失/改写。
+    audit:
+      reviewer: codex_phase1_visual_audit
+      reviewed_at_utc: '2026-07-25T03:57:40Z'
+      page_render_sha256: d102c7990d69b5f65a3b4318887a6d8e59ac4235279482be7dcb8252d554c078
+      page_sheet_path: data/evidence_v2_golden_review_final_20260725/page_sheets/gonglu_41_diagram_mixed_p0007.png
+      page_sheet_sha256: 623831f5c0e41b9a922e1b78909b51c28f2204c064d7b0fce2d133abb50e4f4c
+      basis: 已逐页核验原页渲染、标题/阅读顺序、结构证据、Content Policy 非破坏性分流与全部标注冲突。
+- sample_id: gonglu_55_standard_constraints
+  pdf_sha256: c13e1bb19a0bd5f3ba37ac57160d8ee1c62f19fcbb4e4415870d4e4d78a675ce
+  config_hash: 69e65f6760edb42651233ff0a4a0fa7a5caf7a1345382a3426e290aea88403af
+  pages:
+  - page_num: 1
+    page_render_sha256: 9a62e391d4367f8aaee504ba0e9972529200a9a92ceb5633e6bdd58fc4c4dd8a
+    state: reviewed
+    review_checklist:
+    - 确认页面渲染 hash 与此 sidecar 一致；hash 变化时必须重新审核本页。
+    - 确认标题树、阅读顺序、父子关系、表格/公式/图形结构均可回跳到 source locator。
+    - 安全职责：人员配备、竞争性报价禁令、职责编号必须复核。
+    - 确认例题、真题标签和水印保留为 evidence，并由 Content Policy 后续非破坏性分流。
+    conflicts:
+    - conflict_id: conflict:5632cc992294aa2d36fe0ee6
+      locator:
+        schema_version: '2.0'
+        document_sha256: c13e1bb19a0bd5f3ba37ac57160d8ee1c62f19fcbb4e4415870d4e4d78a675ce
+        page_num: 1
+        bbox:
+          x0: 109.9534
+          y0: 242.2289
+          x1: 444.58
+          y1: 253.8004
+        native_block_index: null
+        native_line_index: null
+        native_span_index: null
+        region_id: null
+      native_text: B.5000万元以上不足2亿元的按每5000万元不少于1名的比例配备；
+      visual_text: B.5000万元以上不足2亿元的按每5000
+      classification: real_error
+      authoritative_channel: native_text
+      proposed_canonical_text: B.5000万元以上不足2亿元的按每5000万元不少于1名的比例配备；
+      proposed_action: 保留 native 文本作为当前证据读数；将 OCR/视觉差异保留在 conflict 队列并纳入回归断言。
+      requires_human_confirmation: false
+      rationale: OCR/视觉读数丢失或改写了枚举编号、文本、数字、单位、公式符号或约束表达，不能静默等价。
+      audit:
+        reviewer: codex_phase1_visual_audit
+        reviewed_at_utc: '2026-07-25T03:57:40Z'
+        page_render_sha256: 9a62e391d4367f8aaee504ba0e9972529200a9a92ceb5633e6bdd58fc4c4dd8a
+        crop_path: data/evidence_v2_golden_review_final_20260725/gonglu_55_standard_constraints/page_0001/conflicts/01_conflict-5632cc992294aa2d36fe0ee6.png
+        crop_sha256: 65eefd6353dacafebec85637086223c59a3aa35d8b5b52bc7f3f93b175ec1b3c
+        basis: 逐项核对裁剪、native 读数和视觉读数；确认 canonical“B.5000万元以上不足2亿元的按每5000万元不少于1名的比例配备；”必须保留，视觉读数存在枚举、文本、数字、单位、公式符号或约束表达的丢失/改写。
+    - conflict_id: conflict:157fbb0cacf27f5229dc374f
+      locator:
+        schema_version: '2.0'
+        document_sha256: c13e1bb19a0bd5f3ba37ac57160d8ee1c62f19fcbb4e4415870d4e4d78a675ce
+        page_num: 1
+        bbox:
+          x0: 111.02
+          y0: 286.4803
+          x1: 507.0544
+          y1: 303.8814
+        native_block_index: null
+        native_line_index: null
+        native_span_index: null
+        region_id: null
+      native_text: （5）施工单位在工程投标报价中应当包含安全生产费用并单独计提，不得作为竞争性
+      visual_text: （5）施工单位在工程投标报价险当包含安全生产费用并单独计提，不得作为竞争性
+      classification: real_error
+      authoritative_channel: native_text
+      proposed_canonical_text: （5）施工单位在工程投标报价中应当包含安全生产费用并单独计提，不得作为竞争性
+      proposed_action: 保留 native 文本作为当前证据读数；将 OCR/视觉差异保留在 conflict 队列并纳入回归断言。
+      requires_human_confirmation: false
+      rationale: OCR/视觉读数丢失或改写了枚举编号、文本、数字、单位、公式符号或约束表达，不能静默等价。
+      audit:
+        reviewer: codex_phase1_visual_audit
+        reviewed_at_utc: '2026-07-25T03:57:40Z'
+        page_render_sha256: 9a62e391d4367f8aaee504ba0e9972529200a9a92ceb5633e6bdd58fc4c4dd8a
+        crop_path: data/evidence_v2_golden_review_final_20260725/gonglu_55_standard_constraints/page_0001/conflicts/02_conflict-157fbb0cacf27f5229dc374f.png
+        crop_sha256: e08cfe961e34c679fba934b62507304a0a6365fefdcf4e5d5b670d8d38bd0204
+        basis: 逐项核对裁剪、native 读数和视觉读数；确认 canonical“（5）施工单位在工程投标报价中应当包含安全生产费用并单独计提，不得作为竞争性”必须保留，视觉读数存在枚举、文本、数字、单位、公式符号或约束表达的丢失/改写。
+    - conflict_id: conflict:0d9962abb8afbc72ecc044c6
+      locator:
+        schema_version: '2.0'
+        document_sha256: c13e1bb19a0bd5f3ba37ac57160d8ee1c62f19fcbb4e4415870d4e4d78a675ce
+        page_num: 1
+        bbox:
+          x0: 111.02
+          y0: 546.4789
+          x1: 310.61
+          y1: 558.1062
+        native_block_index: null
+        native_line_index: null
+        native_span_index: null
+        region_id: null
+      native_text: ⑤保证本项目安全生产投入的有效实施。
+      visual_text: ③保证本项目安全生产投入的有效实施。
+      classification: real_error
+      authoritative_channel: native_text
+      proposed_canonical_text: ⑤保证本项目安全生产投入的有效实施。
+      proposed_action: 保留 native 文本作为当前证据读数；将 OCR/视觉差异保留在 conflict 队列并纳入回归断言。
+      requires_human_confirmation: false
+      rationale: OCR/视觉读数丢失或改写了枚举编号、文本、数字、单位、公式符号或约束表达，不能静默等价。
+      audit:
+        reviewer: codex_phase1_visual_audit
+        reviewed_at_utc: '2026-07-25T03:57:40Z'
+        page_render_sha256: 9a62e391d4367f8aaee504ba0e9972529200a9a92ceb5633e6bdd58fc4c4dd8a
+        crop_path: data/evidence_v2_golden_review_final_20260725/gonglu_55_standard_constraints/page_0001/conflicts/03_conflict-0d9962abb8afbc72ecc044c6.png
+        crop_sha256: 000db42e4714f6fffed0cbf06735072ff706f23ced1189adb8ed76fcd468bdc3
+        basis: 逐项核对裁剪、native 读数和视觉读数；确认 canonical“⑤保证本项目安全生产投入的有效实施。”必须保留，视觉读数存在枚举、文本、数字、单位、公式符号或约束表达的丢失/改写。
+    - conflict_id: conflict:5ad9142678b5baca7a55a957
+      locator:
+        schema_version: '2.0'
+        document_sha256: c13e1bb19a0bd5f3ba37ac57160d8ee1c62f19fcbb4e4415870d4e4d78a675ce
+        page_num: 1
+        bbox:
+          x0: 111.02
+          y0: 593.2789
+          x1: 505.3628
+          y1: 604.7918
+        native_block_index: null
+        native_line_index: null
+        native_span_index: null
+        region_id: null
+      native_text: ⑦组织建立并落实安全风险分级管控和隐患排查治理双重预防工作机制，督促、检查
+      visual_text: 组织建立并落实安全风险分级管控和隐患排查治理双重预防工作机制，督促、检查
+      classification: real_error
+      authoritative_channel: native_text
+      proposed_canonical_text: ⑦组织建立并落实安全风险分级管控和隐患排查治理双重预防工作机制，督促、检查
+      proposed_action: 保留 native 文本作为当前证据读数；将 OCR/视觉差异保留在 conflict 队列并纳入回归断言。
+      requires_human_confirmation: false
+      rationale: OCR/视觉读数丢失或改写了枚举编号、文本、数字、单位、公式符号或约束表达，不能静默等价。
+      audit:
+        reviewer: codex_phase1_visual_audit
+        reviewed_at_utc: '2026-07-25T03:57:40Z'
+        page_render_sha256: 9a62e391d4367f8aaee504ba0e9972529200a9a92ceb5633e6bdd58fc4c4dd8a
+        crop_path: data/evidence_v2_golden_review_final_20260725/gonglu_55_standard_constraints/page_0001/conflicts/04_conflict-5ad9142678b5baca7a55a957.png
+        crop_sha256: baede27d7c8132a193695009e7193d2091497761f17497fec138528fadefe582
+        basis: 逐项核对裁剪、native 读数和视觉读数；确认 canonical“⑦组织建立并落实安全风险分级管控和隐患排查治理双重预防工作机制，督促、检查”必须保留，视觉读数存在枚举、文本、数字、单位、公式符号或约束表达的丢失/改写。
+    - conflict_id: conflict:35c50477a0ec6d89585c6c07
+      locator:
+        schema_version: '2.0'
+        document_sha256: c13e1bb19a0bd5f3ba37ac57160d8ee1c62f19fcbb4e4415870d4e4d78a675ce
+        page_num: 1
+        bbox:
+          x0: 110.7992
+          y0: 663.3612
+          x1: 384.19
+          y1: 674.8204
+        native_block_index: null
+        native_line_index: null
+        native_span_index: null
+        region_id: null
+      native_text: ⑨按要求及时、如实报告生产安全事故并合理组织自救。
+      visual_text: 9按要求及时、如实报告生产安全事故并合理组织自救。
+      classification: real_error
+      authoritative_channel: native_text
+      proposed_canonical_text: ⑨按要求及时、如实报告生产安全事故并合理组织自救。
+      proposed_action: 保留 native 文本作为当前证据读数；将 OCR/视觉差异保留在 conflict 队列并纳入回归断言。
+      requires_human_confirmation: false
+      rationale: OCR/视觉读数丢失或改写了枚举编号、文本、数字、单位、公式符号或约束表达，不能静默等价。
+      audit:
+        reviewer: codex_phase1_visual_audit
+        reviewed_at_utc: '2026-07-25T03:57:40Z'
+        page_render_sha256: 9a62e391d4367f8aaee504ba0e9972529200a9a92ceb5633e6bdd58fc4c4dd8a
+        crop_path: data/evidence_v2_golden_review_final_20260725/gonglu_55_standard_constraints/page_0001/conflicts/05_conflict-35c50477a0ec6d89585c6c07.png
+        crop_sha256: cd57cc4b9496dbe2652d42bc24845f0d6f1efd01ef2691e05e58991d9b3c1801
+        basis: 逐项核对裁剪、native 读数和视觉读数；确认 canonical“⑨按要求及时、如实报告生产安全事故并合理组织自救。”必须保留，视觉读数存在枚举、文本、数字、单位、公式符号或约束表达的丢失/改写。
+    audit:
+      reviewer: codex_phase1_visual_audit
+      reviewed_at_utc: '2026-07-25T03:57:40Z'
+      page_render_sha256: 9a62e391d4367f8aaee504ba0e9972529200a9a92ceb5633e6bdd58fc4c4dd8a
+      page_sheet_path: data/evidence_v2_golden_review_final_20260725/page_sheets/gonglu_55_standard_constraints_p0001.png
+      page_sheet_sha256: fe4da81b3bceac7ade889310dc0c4d44caca08980b05af3c16f0960fb9585c59
+      basis: 已逐页核验原页渲染、标题/阅读顺序、结构证据、Content Policy 非破坏性分流与全部标注冲突。
+  - page_num: 3
+    page_render_sha256: a5e3af9c8356eaedf9f683014434254ebeacd351ac7893fcc6c7147ad787a6f0
+    state: reviewed
+    review_checklist:
+    - 确认页面渲染 hash 与此 sidecar 一致；hash 变化时必须重新审核本页。
+    - 确认标题树、阅读顺序、父子关系、表格/公式/图形结构均可回跳到 source locator。
+    - 风险评估：40m、3000m、50m 等阈值及 ①至⑦范围不得丢失。
+    - 确认例题、真题标签和水印保留为 evidence，并由 Content Policy 后续非破坏性分流。
+    conflicts:
+    - conflict_id: conflict:c0f74989cb865178651a70ea
+      locator:
+        schema_version: '2.0'
+        document_sha256: c13e1bb19a0bd5f3ba37ac57160d8ee1c62f19fcbb4e4415870d4e4d78a675ce
+        page_num: 3
+        bbox:
+          x0: 93.144
+          y0: 74.6971
+          x1: 174.38
+          y1: 87.854
+        native_block_index: null
+        native_line_index: null
+        native_span_index: null
+        region_id: null
+      native_text: 阶段评估时间
+      visual_text: 评估时间
+      classification: real_error
+      authoritative_channel: native_text
+      proposed_canonical_text: 阶段评估时间
+      proposed_action: 保留 native 文本作为当前证据读数；将 OCR/视觉差异保留在 conflict 队列并纳入回归断言。
+      requires_human_confirmation: false
+      rationale: OCR/视觉读数丢失或改写了枚举编号、文本、数字、单位、公式符号或约束表达，不能静默等价。
+      audit:
+        reviewer: codex_phase1_visual_audit
+        reviewed_at_utc: '2026-07-25T03:57:40Z'
+        page_render_sha256: a5e3af9c8356eaedf9f683014434254ebeacd351ac7893fcc6c7147ad787a6f0
+        crop_path: data/evidence_v2_golden_review_final_20260725/gonglu_55_standard_constraints/page_0003/conflicts/01_conflict-c0f74989cb865178651a70ea.png
+        crop_sha256: 9e9d79d224cb874bbad6d539566ff641a48ae25fb2f5c06f13007caab64e4068
+        basis: 逐项核对裁剪、native 读数和视觉读数；确认 canonical“阶段评估时间”必须保留，视觉读数存在枚举、文本、数字、单位、公式符号或约束表达的丢失/改写。
+    - conflict_id: conflict:0e41476bb9bf81ef626c46aa
+      locator:
+        schema_version: '2.0'
+        document_sha256: c13e1bb19a0bd5f3ba37ac57160d8ee1c62f19fcbb4e4415870d4e4d78a675ce
+        page_num: 3
+        bbox:
+          x0: 292.25
+          y0: 115.8654
+          x1: 355.27
+          y1: 127.3246
+        native_block_index: null
+        native_line_index: null
+        native_span_index: null
+        region_id: null
+      native_text: ①评估依据
+      visual_text: 评估依据
+      classification: real_error
+      authoritative_channel: native_text
+      proposed_canonical_text: ①评估依据
+      proposed_action: 保留 native 文本作为当前证据读数；将 OCR/视觉差异保留在 conflict 队列并纳入回归断言。
+      requires_human_confirmation: false
+      rationale: OCR/视觉读数丢失或改写了枚举编号、文本、数字、单位、公式符号或约束表达，不能静默等价。
+      audit:
+        reviewer: codex_phase1_visual_audit
+        reviewed_at_utc: '2026-07-25T03:57:40Z'
+        page_render_sha256: a5e3af9c8356eaedf9f683014434254ebeacd351ac7893fcc6c7147ad787a6f0
+        crop_path: data/evidence_v2_golden_review_final_20260725/gonglu_55_standard_constraints/page_0003/conflicts/02_conflict-0e41476bb9bf81ef626c46aa.png
+        crop_sha256: 076ab8f86613c5e0994075a57322fbe9868cb1f265ecc839bda418cf44afa29c
+        basis: 逐项核对裁剪、native 读数和视觉读数；确认 canonical“①评估依据”必须保留，视觉读数存在枚举、文本、数字、单位、公式符号或约束表达的丢失/改写。
+    - conflict_id: conflict:ef38d8a84a46ee253e872215
+      locator:
+        schema_version: '2.0'
+        document_sha256: c13e1bb19a0bd5f3ba37ac57160d8ee1c62f19fcbb4e4415870d4e4d78a675ce
+        page_num: 3
+        bbox:
+          x0: 292.25
+          y0: 131.5687
+          x1: 355.27
+          y1: 143.028
+        native_block_index: null
+        native_line_index: null
+        native_span_index: null
+        region_id: null
+      native_text: ②工程概况
+      visual_text: 工程概况
+      classification: real_error
+      authoritative_channel: native_text
+      proposed_canonical_text: ②工程概况
+      proposed_action: 保留 native 文本作为当前证据读数；将 OCR/视觉差异保留在 conflict 队列并纳入回归断言。
+      requires_human_confirmation: false
+      rationale: OCR/视觉读数丢失或改写了枚举编号、文本、数字、单位、公式符号或约束表达，不能静默等价。
+      audit:
+        reviewer: codex_phase1_visual_audit
+        reviewed_at_utc: '2026-07-25T03:57:40Z'
+        page_render_sha256: a5e3af9c8356eaedf9f683014434254ebeacd351ac7893fcc6c7147ad787a6f0
+        crop_path: data/evidence_v2_golden_review_final_20260725/gonglu_55_standard_constraints/page_0003/conflicts/03_conflict-ef38d8a84a46ee253e872215.png
+        crop_sha256: 5a2869d2f795be83684b302bc44cb7e976e063e6b2380415e0ef45c6343bbcc3
+        basis: 逐项核对裁剪、native 读数和视觉读数；确认 canonical“②工程概况”必须保留，视觉读数存在枚举、文本、数字、单位、公式符号或约束表达的丢失/改写。
+    - conflict_id: conflict:6efd1bf04e433699bb47e302
+      locator:
+        schema_version: '2.0'
+        document_sha256: c13e1bb19a0bd5f3ba37ac57160d8ee1c62f19fcbb4e4415870d4e4d78a675ce
+        page_num: 3
+        bbox:
+          x0: 292.25
+          y0: 146.8477
+          x1: 355.27
+          y1: 158.3069
+        native_block_index: null
+        native_line_index: null
+        native_span_index: null
+        region_id: null
+      native_text: ③评估方法
+      visual_text: 评估方法
+      classification: real_error
+      authoritative_channel: native_text
+      proposed_canonical_text: ③评估方法
+      proposed_action: 保留 native 文本作为当前证据读数；将 OCR/视觉差异保留在 conflict 队列并纳入回归断言。
+      requires_human_confirmation: false
+      rationale: OCR/视觉读数丢失或改写了枚举编号、文本、数字、单位、公式符号或约束表达，不能静默等价。
+      audit:
+        reviewer: codex_phase1_visual_audit
+        reviewed_at_utc: '2026-07-25T03:57:40Z'
+        page_render_sha256: a5e3af9c8356eaedf9f683014434254ebeacd351ac7893fcc6c7147ad787a6f0
+        crop_path: data/evidence_v2_golden_review_final_20260725/gonglu_55_standard_constraints/page_0003/conflicts/04_conflict-6efd1bf04e433699bb47e302.png
+        crop_sha256: b85fb20fc09f92d4b68b7f6e0905e8ccd1b5e68793a9c76c16b0efb7bfdb3973
+        basis: 逐项核对裁剪、native 读数和视觉读数；确认 canonical“③评估方法”必须保留，视觉读数存在枚举、文本、数字、单位、公式符号或约束表达的丢失/改写。
+    - conflict_id: conflict:c62c267e056dd70f15553f71
+      locator:
+        schema_version: '2.0'
+        document_sha256: c13e1bb19a0bd5f3ba37ac57160d8ee1c62f19fcbb4e4415870d4e4d78a675ce
+        page_num: 3
+        bbox:
+          x0: 292.25
+          y0: 162.1267
+          x1: 355.27
+          y1: 174.8591
+        native_block_index: null
+        native_line_index: null
+        native_span_index: null
+        region_id: null
+      native_text: ④评估步骤
+      visual_text: 评估步骤
+      classification: real_error
+      authoritative_channel: native_text
+      proposed_canonical_text: ④评估步骤
+      proposed_action: 保留 native 文本作为当前证据读数；将 OCR/视觉差异保留在 conflict 队列并纳入回归断言。
+      requires_human_confirmation: false
+      rationale: OCR/视觉读数丢失或改写了枚举编号、文本、数字、单位、公式符号或约束表达，不能静默等价。
+      audit:
+        reviewer: codex_phase1_visual_audit
+        reviewed_at_utc: '2026-07-25T03:57:40Z'
+        page_render_sha256: a5e3af9c8356eaedf9f683014434254ebeacd351ac7893fcc6c7147ad787a6f0
+        crop_path: data/evidence_v2_golden_review_final_20260725/gonglu_55_standard_constraints/page_0003/conflicts/05_conflict-c62c267e056dd70f15553f71.png
+        crop_sha256: 2fb3c63a7935a49e83117f8b8a5f12c13bd51b5e4fba050fc30ac0afe0f5dd79
+        basis: 逐项核对裁剪、native 读数和视觉读数；确认 canonical“④评估步骤”必须保留，视觉读数存在枚举、文本、数字、单位、公式符号或约束表达的丢失/改写。
+    - conflict_id: conflict:0bde578c3c9e6e2c376a9ff6
+      locator:
+        schema_version: '2.0'
+        document_sha256: c13e1bb19a0bd5f3ba37ac57160d8ee1c62f19fcbb4e4415870d4e4d78a675ce
+        page_num: 3
+        bbox:
+          x0: 292.25
+          y0: 178.2544
+          x1: 355.27
+          y1: 189.7136
+        native_block_index: null
+        native_line_index: null
+        native_span_index: null
+        region_id: null
+      native_text: ⑤评估内容
+      visual_text: 评估内容
+      classification: real_error
+      authoritative_channel: native_text
+      proposed_canonical_text: ⑤评估内容
+      proposed_action: 保留 native 文本作为当前证据读数；将 OCR/视觉差异保留在 conflict 队列并纳入回归断言。
+      requires_human_confirmation: false
+      rationale: OCR/视觉读数丢失或改写了枚举编号、文本、数字、单位、公式符号或约束表达，不能静默等价。
+      audit:
+        reviewer: codex_phase1_visual_audit
+        reviewed_at_utc: '2026-07-25T03:57:40Z'
+        page_render_sha256: a5e3af9c8356eaedf9f683014434254ebeacd351ac7893fcc6c7147ad787a6f0
+        crop_path: data/evidence_v2_golden_review_final_20260725/gonglu_55_standard_constraints/page_0003/conflicts/06_conflict-0bde578c3c9e6e2c376a9ff6.png
+        crop_sha256: be07ce196d3b14794704082321cd738de914c21a71e49085bc3188f67b7f31b4
+        basis: 逐项核对裁剪、native 读数和视觉读数；确认 canonical“⑤评估内容”必须保留，视觉读数存在枚举、文本、数字、单位、公式符号或约束表达的丢失/改写。
+    - conflict_id: conflict:fe1c04b068a7ea9da7041ef4
+      locator:
+        schema_version: '2.0'
+        document_sha256: c13e1bb19a0bd5f3ba37ac57160d8ee1c62f19fcbb4e4415870d4e4d78a675ce
+        page_num: 3
+        bbox:
+          x0: 292.25
+          y0: 193.5334
+          x1: 355.27
+          y1: 205.417
+        native_block_index: null
+        native_line_index: null
+        native_span_index: null
+        region_id: null
+      native_text: ⑥评估结论
+      visual_text: 评估结论
+      classification: real_error
+      authoritative_channel: native_text
+      proposed_canonical_text: ⑥评估结论
+      proposed_action: 保留 native 文本作为当前证据读数；将 OCR/视觉差异保留在 conflict 队列并纳入回归断言。
+      requires_human_confirmation: false
+      rationale: OCR/视觉读数丢失或改写了枚举编号、文本、数字、单位、公式符号或约束表达，不能静默等价。
+      audit:
+        reviewer: codex_phase1_visual_audit
+        reviewed_at_utc: '2026-07-25T03:57:40Z'
+        page_render_sha256: a5e3af9c8356eaedf9f683014434254ebeacd351ac7893fcc6c7147ad787a6f0
+        crop_path: data/evidence_v2_golden_review_final_20260725/gonglu_55_standard_constraints/page_0003/conflicts/07_conflict-fe1c04b068a7ea9da7041ef4.png
+        crop_sha256: f7670a117fbee86105568d70466146e1b83b6a7ae7d577722bbd90f8d315ca82
+        basis: 逐项核对裁剪、native 读数和视觉读数；确认 canonical“⑥评估结论”必须保留，视觉读数存在枚举、文本、数字、单位、公式符号或约束表达的丢失/改写。
+    - conflict_id: conflict:a92f2ffbb920b45fc4c5a296
+      locator:
+        schema_version: '2.0'
+        document_sha256: c13e1bb19a0bd5f3ba37ac57160d8ee1c62f19fcbb4e4415870d4e4d78a675ce
+        page_num: 3
+        bbox:
+          x0: 110.3763
+          y0: 252.1027
+          x1: 310.61
+          y1: 264.4107
+        native_block_index: null
+        native_line_index: null
+        native_span_index: null
+        region_id: null
+      native_text: 3.公路桥梁和隧道工程施工安全风险评估
+      visual_text: 3．公路桥梁和隧道工程施工安全风险评
+      classification: real_error
+      authoritative_channel: native_text
+      proposed_canonical_text: 3.公路桥梁和隧道工程施工安全风险评估
+      proposed_action: 保留 native 文本作为当前证据读数；将 OCR/视觉差异保留在 conflict 队列并纳入回归断言。
+      requires_human_confirmation: false
+      rationale: OCR/视觉读数丢失或改写了枚举编号、文本、数字、单位、公式符号或约束表达，不能静默等价。
+      audit:
+        reviewer: codex_phase1_visual_audit
+        reviewed_at_utc: '2026-07-25T03:57:40Z'
+        page_render_sha256: a5e3af9c8356eaedf9f683014434254ebeacd351ac7893fcc6c7147ad787a6f0
+        crop_path: data/evidence_v2_golden_review_final_20260725/gonglu_55_standard_constraints/page_0003/conflicts/08_conflict-a92f2ffbb920b45fc4c5a296.png
+        crop_sha256: 1ed761c1815f5fdd020e83ef1c1ab18136f70d5b2c10a22a46844fb1e10a67d8
+        basis: 逐项核对裁剪、native 读数和视觉读数；确认 canonical“3.公路桥梁和隧道工程施工安全风险评估”必须保留，视觉读数存在枚举、文本、数字、单位、公式符号或约束表达的丢失/改写。
+    - conflict_id: conflict:3e5f6d116b5e16e2404f02a8
+      locator:
+        schema_version: '2.0'
+        document_sha256: c13e1bb19a0bd5f3ba37ac57160d8ee1c62f19fcbb4e4415870d4e4d78a675ce
+        page_num: 3
+        bbox:
+          x0: 111.02
+          y0: 440.1187
+          x1: 363.19
+          y1: 451.1535
+        native_block_index: null
+        native_line_index: null
+        native_span_index: null
+        region_id: null
+      native_text: ⑤建设规模为中桥、大桥或特大桥的桥梁拆除工程。
+      visual_text: ③建设规模为中桥、大桥或特大桥的桥梁拆除工程。
+      classification: real_error
+      authoritative_channel: native_text
+      proposed_canonical_text: ⑤建设规模为中桥、大桥或特大桥的桥梁拆除工程。
+      proposed_action: 保留 native 文本作为当前证据读数；将 OCR/视觉差异保留在 conflict 队列并纳入回归断言。
+      requires_human_confirmation: false
+      rationale: OCR/视觉读数丢失或改写了枚举编号、文本、数字、单位、公式符号或约束表达，不能静默等价。
+      audit:
+        reviewer: codex_phase1_visual_audit
+        reviewed_at_utc: '2026-07-25T03:57:40Z'
+        page_render_sha256: a5e3af9c8356eaedf9f683014434254ebeacd351ac7893fcc6c7147ad787a6f0
+        crop_path: data/evidence_v2_golden_review_final_20260725/gonglu_55_standard_constraints/page_0003/conflicts/09_conflict-3e5f6d116b5e16e2404f02a8.png
+        crop_sha256: 1fb08e444597eb1fb6a3cb30e8d59fb069c564ef8d1bf059b2dae67966c5f184
+        basis: 逐项核对裁剪、native 读数和视觉读数；确认 canonical“⑤建设规模为中桥、大桥或特大桥的桥梁拆除工程。”必须保留，视觉读数存在枚举、文本、数字、单位、公式符号或约束表达的丢失/改写。
+    - conflict_id: conflict:4df2bcba7009a3bfdb2e1dcf
+      locator:
+        schema_version: '2.0'
+        document_sha256: c13e1bb19a0bd5f3ba37ac57160d8ee1c62f19fcbb4e4415870d4e4d78a675ce
+        page_num: 3
+        bbox:
+          x0: 110.7992
+          y0: 463.0371
+          x1: 331.63
+          y1: 474.4963
+        native_block_index: null
+        native_line_index: null
+        native_span_index: null
+        region_id: null
+      native_text: ⑥其他有必要开展总体风险评估的桥梁工程。
+      visual_text: ③其他有必要开展总体风险评估的桥梁工程。
+      classification: real_error
+      authoritative_channel: native_text
+      proposed_canonical_text: ⑥其他有必要开展总体风险评估的桥梁工程。
+      proposed_action: 保留 native 文本作为当前证据读数；将 OCR/视觉差异保留在 conflict 队列并纳入回归断言。
+      requires_human_confirmation: false
+      rationale: OCR/视觉读数丢失或改写了枚举编号、文本、数字、单位、公式符号或约束表达，不能静默等价。
+      audit:
+        reviewer: codex_phase1_visual_audit
+        reviewed_at_utc: '2026-07-25T03:57:40Z'
+        page_render_sha256: a5e3af9c8356eaedf9f683014434254ebeacd351ac7893fcc6c7147ad787a6f0
+        crop_path: data/evidence_v2_golden_review_final_20260725/gonglu_55_standard_constraints/page_0003/conflicts/10_conflict-4df2bcba7009a3bfdb2e1dcf.png
+        crop_sha256: 1c59c158839ecd3bfaff121ee5a1478a630fa85f6c9b131127009c7bc8ef0a5f
+        basis: 逐项核对裁剪、native 读数和视觉读数；确认 canonical“⑥其他有必要开展总体风险评估的桥梁工程。”必须保留，视觉读数存在枚举、文本、数字、单位、公式符号或约束表达的丢失/改写。
+    - conflict_id: conflict:7c245ded659d263cb63a53e8
+      locator:
+        schema_version: '2.0'
+        document_sha256: c13e1bb19a0bd5f3ba37ac57160d8ee1c62f19fcbb4e4415870d4e4d78a675ce
+        page_num: 3
+        bbox:
+          x0: 111.02
+          y0: 580.1758
+          x1: 502.8254
+          y1: 592.9082
+        native_block_index: null
+        native_line_index: null
+        native_span_index: null
+        region_id: null
+      native_text: ③长度3000m及以上的隧道工程，V、VI级围岩连续长度超过50m或合计长度占隧道
+      visual_text: ③长度3000m及以上的隧道工程，V、Y级围岩连续长度超过50m或合计长度占隧道
+      classification: real_error
+      authoritative_channel: native_text
+      proposed_canonical_text: ③长度3000m及以上的隧道工程，V、VI级围岩连续长度超过50m或合计长度占隧道
+      proposed_action: 保留 native 文本作为当前证据读数；将 OCR/视觉差异保留在 conflict 队列并纳入回归断言。
+      requires_human_confirmation: false
+      rationale: OCR/视觉读数丢失或改写了枚举编号、文本、数字、单位、公式符号或约束表达，不能静默等价。
+      audit:
+        reviewer: codex_phase1_visual_audit
+        reviewed_at_utc: '2026-07-25T03:57:40Z'
+        page_render_sha256: a5e3af9c8356eaedf9f683014434254ebeacd351ac7893fcc6c7147ad787a6f0
+        crop_path: data/evidence_v2_golden_review_final_20260725/gonglu_55_standard_constraints/page_0003/conflicts/11_conflict-7c245ded659d263cb63a53e8.png
+        crop_sha256: 6aa7f8b36d61360807f1dd93a4232bba914af35d5fbdcf4fc713e5add407968d
+        basis: 逐项核对裁剪、native 读数和视觉读数；确认 canonical“③长度3000m及以上的隧道工程，V、VI级围岩连续长度超过50m或合计长度占隧道”必须保留，视觉读数存在枚举、文本、数字、单位、公式符号或约束表达的丢失/改写。
+    - conflict_id: conflict:8318c9df07a3d52f1add01ff
+      locator:
+        schema_version: '2.0'
+        document_sha256: c13e1bb19a0bd5f3ba37ac57160d8ee1c62f19fcbb4e4415870d4e4d78a675ce
+        page_num: 3
+        bbox:
+          x0: 111.02
+          y0: 650.2043
+          x1: 373.63
+          y1: 662.0879
+        native_block_index: null
+        native_line_index: null
+        native_span_index: null
+        region_id: null
+      native_text: ⑤采用新技术、新材料、新设备、新工艺的隧道工程。
+      visual_text: 5采用新技术、新材料、新设备、新工艺的隧道工程。
+      classification: real_error
+      authoritative_channel: native_text
+      proposed_canonical_text: ⑤采用新技术、新材料、新设备、新工艺的隧道工程。
+      proposed_action: 保留 native 文本作为当前证据读数；将 OCR/视觉差异保留在 conflict 队列并纳入回归断言。
+      requires_human_confirmation: false
+      rationale: OCR/视觉读数丢失或改写了枚举编号、文本、数字、单位、公式符号或约束表达，不能静默等价。
+      audit:
+        reviewer: codex_phase1_visual_audit
+        reviewed_at_utc: '2026-07-25T03:57:40Z'
+        page_render_sha256: a5e3af9c8356eaedf9f683014434254ebeacd351ac7893fcc6c7147ad787a6f0
+        crop_path: data/evidence_v2_golden_review_final_20260725/gonglu_55_standard_constraints/page_0003/conflicts/12_conflict-8318c9df07a3d52f1add01ff.png
+        crop_sha256: 975b9c8e2334ae1e1b44eb9718b95c364925e5f2d38261545dacf4cbfed6cbe3
+        basis: 逐项核对裁剪、native 读数和视觉读数；确认 canonical“⑤采用新技术、新材料、新设备、新工艺的隧道工程。”必须保留，视觉读数存在枚举、文本、数字、单位、公式符号或约束表达的丢失/改写。
+    - conflict_id: conflict:aef8f6d911b8884906aea0a9
+      locator:
+        schema_version: '2.0'
+        document_sha256: c13e1bb19a0bd5f3ba37ac57160d8ee1c62f19fcbb4e4415870d4e4d78a675ce
+        page_num: 3
+        bbox:
+          x0: 111.02
+          y0: 674.309
+          x1: 216.05
+          y1: 685.4308
+        native_block_index: null
+        native_line_index: null
+        native_span_index: null
+        region_id: null
+      native_text: ⑥隧道改扩建工程。
+      visual_text: ?隧道改扩建工程。
+      classification: real_error
+      authoritative_channel: native_text
+      proposed_canonical_text: ⑥隧道改扩建工程。
+      proposed_action: 保留 native 文本作为当前证据读数；将 OCR/视觉差异保留在 conflict 队列并纳入回归断言。
+      requires_human_confirmation: false
+      rationale: OCR/视觉读数丢失或改写了枚举编号、文本、数字、单位、公式符号或约束表达，不能静默等价。
+      audit:
+        reviewer: codex_phase1_visual_audit
+        reviewed_at_utc: '2026-07-25T03:57:40Z'
+        page_render_sha256: a5e3af9c8356eaedf9f683014434254ebeacd351ac7893fcc6c7147ad787a6f0
+        crop_path: data/evidence_v2_golden_review_final_20260725/gonglu_55_standard_constraints/page_0003/conflicts/13_conflict-aef8f6d911b8884906aea0a9.png
+        crop_sha256: 1821d936ff9fa501a3df05e792ead9bc9be25da5a18be62a0a386e51ee4379e1
+        basis: 逐项核对裁剪、native 读数和视觉读数；确认 canonical“⑥隧道改扩建工程。”必须保留，视觉读数存在枚举、文本、数字、单位、公式符号或约束表达的丢失/改写。
+    - conflict_id: conflict:a9d4b1bd21febb36f3682e90
+      locator:
+        schema_version: '2.0'
+        document_sha256: c13e1bb19a0bd5f3ba37ac57160d8ee1c62f19fcbb4e4415870d4e4d78a675ce
+        page_num: 3
+        bbox:
+          x0: 111.02
+          y0: 697.7089
+          x1: 357.79
+          y1: 708.7736
+        native_block_index: null
+        native_line_index: null
+        native_span_index: null
+        region_id: null
+      native_text: ⑦施工环境复杂、施工工艺复杂的其他隧道工程。
+      visual_text: 施工环境复杂、施工工艺复杂的其他隧道工程。
+      classification: real_error
+      authoritative_channel: native_text
+      proposed_canonical_text: ⑦施工环境复杂、施工工艺复杂的其他隧道工程。
+      proposed_action: 保留 native 文本作为当前证据读数；将 OCR/视觉差异保留在 conflict 队列并纳入回归断言。
+      requires_human_confirmation: false
+      rationale: OCR/视觉读数丢失或改写了枚举编号、文本、数字、单位、公式符号或约束表达，不能静默等价。
+      audit:
+        reviewer: codex_phase1_visual_audit
+        reviewed_at_utc: '2026-07-25T03:57:40Z'
+        page_render_sha256: a5e3af9c8356eaedf9f683014434254ebeacd351ac7893fcc6c7147ad787a6f0
+        crop_path: data/evidence_v2_golden_review_final_20260725/gonglu_55_standard_constraints/page_0003/conflicts/14_conflict-a9d4b1bd21febb36f3682e90.png
+        crop_sha256: 4824e1ca70aa581fd0b382e83c902152f5b1290e0dfd3fa522c4dce5bd2a248e
+        basis: 逐项核对裁剪、native 读数和视觉读数；确认 canonical“⑦施工环境复杂、施工工艺复杂的其他隧道工程。”必须保留，视觉读数存在枚举、文本、数字、单位、公式符号或约束表达的丢失/改写。
+    audit:
+      reviewer: codex_phase1_visual_audit
+      reviewed_at_utc: '2026-07-25T03:57:40Z'
+      page_render_sha256: a5e3af9c8356eaedf9f683014434254ebeacd351ac7893fcc6c7147ad787a6f0
+      page_sheet_path: data/evidence_v2_golden_review_final_20260725/page_sheets/gonglu_55_standard_constraints_p0003.png
+      page_sheet_sha256: 5e22f448956c8ca689baacf9cfd1734df0053a27a3c7cfcb153f1daf98d4351e
+      basis: 已逐页核验原页渲染、标题/阅读顺序、结构证据、Content Policy 非破坏性分流与全部标注冲突。
+  - page_num: 5
+    page_render_sha256: 7d848470bca4f46c5b1295cf2bab941f9d7e00573b650828c9d536f2aae8c52b
+    state: reviewed
+    review_checklist:
+    - 确认页面渲染 hash 与此 sidecar 一致；hash 变化时必须重新审核本页。
+    - 确认标题树、阅读顺序、父子关系、表格/公式/图形结构均可回跳到 source locator。
+    - 事故分类：①至⑳、死亡/重伤/经济损失分级图的数字关系必须核验。
+    - 确认例题、真题标签和水印保留为 evidence，并由 Content Policy 后续非破坏性分流。
+    conflicts:
+    - conflict_id: conflict:297a72278df2bb2c49e2862b
+      locator:
+        schema_version: '2.0'
+        document_sha256: c13e1bb19a0bd5f3ba37ac57160d8ee1c62f19fcbb4e4415870d4e4d78a675ce
+        page_num: 5
+        bbox:
+          x0: 111.02
+          y0: 124.7781
+          x1: 205.61
+          y1: 136.2373
+        native_block_index: null
+        native_line_index: null
+        native_span_index: null
+        region_id: null
+      native_text: 1.事故分类及等级
+      visual_text: 事故分类及等级
+      classification: real_error
+      authoritative_channel: native_text
+      proposed_canonical_text: 1.事故分类及等级
+      proposed_action: 保留 native 文本作为当前证据读数；将 OCR/视觉差异保留在 conflict 队列并纳入回归断言。
+      requires_human_confirmation: false
+      rationale: OCR/视觉读数丢失或改写了枚举编号、文本、数字、单位、公式符号或约束表达，不能静默等价。
+      audit:
+        reviewer: codex_phase1_visual_audit
+        reviewed_at_utc: '2026-07-25T03:57:40Z'
+        page_render_sha256: 7d848470bca4f46c5b1295cf2bab941f9d7e00573b650828c9d536f2aae8c52b
+        crop_path: data/evidence_v2_golden_review_final_20260725/gonglu_55_standard_constraints/page_0005/conflicts/01_conflict-297a72278df2bb2c49e2862b.png
+        crop_sha256: edf378f11a8b7fb8b3b9184b1a915842d514058e8e189f2fc1b6c2913938d3e5
+        basis: 逐项核对裁剪、native 读数和视觉读数；确认 canonical“1.事故分类及等级”必须保留，视觉读数存在枚举、文本、数字、单位、公式符号或约束表达的丢失/改写。
+    - conflict_id: conflict:41560ea8d1e61e6eb0692b99
+      locator:
+        schema_version: '2.0'
+        document_sha256: c13e1bb19a0bd5f3ba37ac57160d8ee1c62f19fcbb4e4415870d4e4d78a675ce
+        page_num: 5
+        bbox:
+          x0: 111.02
+          y0: 195.231
+          x1: 373.63
+          y1: 206.2658
+        native_block_index: null
+        native_line_index: null
+        native_span_index: null
+        region_id: null
+      native_text: ④起重伤害；⑤触电；⑥淹溺；⑦灼烫；⑧火灾；
+      visual_text: ④起重伤害；③触电；淹溺；灼烫；⑧
+      classification: real_error
+      authoritative_channel: native_text
+      proposed_canonical_text: ④起重伤害；⑤触电；⑥淹溺；⑦灼烫；⑧火灾；
+      proposed_action: 保留 native 文本作为当前证据读数；将 OCR/视觉差异保留在 conflict 队列并纳入回归断言。
+      requires_human_confirmation: false
+      rationale: OCR/视觉读数丢失或改写了枚举编号、文本、数字、单位、公式符号或约束表达，不能静默等价。
+      audit:
+        reviewer: codex_phase1_visual_audit
+        reviewed_at_utc: '2026-07-25T03:57:40Z'
+        page_render_sha256: 7d848470bca4f46c5b1295cf2bab941f9d7e00573b650828c9d536f2aae8c52b
+        crop_path: data/evidence_v2_golden_review_final_20260725/gonglu_55_standard_constraints/page_0005/conflicts/02_conflict-41560ea8d1e61e6eb0692b99.png
+        crop_sha256: dbbf7945787ae25b756cfeb427abcf24a14f9aeee5887e744ee90e75e6a817bc
+        basis: 逐项核对裁剪、native 读数和视觉读数；确认 canonical“④起重伤害；⑤触电；⑥淹溺；⑦灼烫；⑧火灾；”必须保留，视觉读数存在枚举、文本、数字、单位、公式符号或约束表达的丢失/改写。
+    - conflict_id: conflict:9648fd70a30ac4b7c86d3351
+      locator:
+        schema_version: '2.0'
+        document_sha256: c13e1bb19a0bd5f3ba37ac57160d8ee1c62f19fcbb4e4415870d4e4d78a675ce
+        page_num: 5
+        bbox:
+          x0: 110.7992
+          y0: 218.1495
+          x1: 351.67
+          y1: 230.4575
+        native_block_index: null
+        native_line_index: null
+        native_span_index: null
+        region_id: null
+      native_text: ⑨高处坠落；⑩坍塌；⑪冒顶片帮；⑫透水；
+      visual_text: 9高处坠落；坍塌；①冒顶片帮；2
+      classification: real_error
+      authoritative_channel: native_text
+      proposed_canonical_text: ⑨高处坠落；⑩坍塌；⑪冒顶片帮；⑫透水；
+      proposed_action: 保留 native 文本作为当前证据读数；将 OCR/视觉差异保留在 conflict 队列并纳入回归断言。
+      requires_human_confirmation: false
+      rationale: OCR/视觉读数丢失或改写了枚举编号、文本、数字、单位、公式符号或约束表达，不能静默等价。
+      audit:
+        reviewer: codex_phase1_visual_audit
+        reviewed_at_utc: '2026-07-25T03:57:40Z'
+        page_render_sha256: 7d848470bca4f46c5b1295cf2bab941f9d7e00573b650828c9d536f2aae8c52b
+        crop_path: data/evidence_v2_golden_review_final_20260725/gonglu_55_standard_constraints/page_0005/conflicts/03_conflict-9648fd70a30ac4b7c86d3351.png
+        crop_sha256: 6ec6d8e17d81810cb92de9629be27bfb423f2527316ae9191ce7dbed552ea1c1
+        basis: 逐项核对裁剪、native 读数和视觉读数；确认 canonical“⑨高处坠落；⑩坍塌；⑪冒顶片帮；⑫透水；”必须保留，视觉读数存在枚举、文本、数字、单位、公式符号或约束表达的丢失/改写。
+    - conflict_id: conflict:a79d4c268ea1407eefbdeb25
+      locator:
+        schema_version: '2.0'
+        document_sha256: c13e1bb19a0bd5f3ba37ac57160d8ee1c62f19fcbb4e4415870d4e4d78a675ce
+        page_num: 5
+        bbox:
+          x0: 111.02
+          y0: 288.178
+          x1: 186.62
+          y1: 300.9105
+        native_block_index: null
+        native_line_index: null
+        native_span_index: null
+        region_id: null
+      native_text: ⑳其他伤害。
+      visual_text: ）其他伤害。
+      classification: real_error
+      authoritative_channel: native_text
+      proposed_canonical_text: ⑳其他伤害。
+      proposed_action: 保留 native 文本作为当前证据读数；将 OCR/视觉差异保留在 conflict 队列并纳入回归断言。
+      requires_human_confirmation: false
+      rationale: OCR/视觉读数丢失或改写了枚举编号、文本、数字、单位、公式符号或约束表达，不能静默等价。
+      audit:
+        reviewer: codex_phase1_visual_audit
+        reviewed_at_utc: '2026-07-25T03:57:40Z'
+        page_render_sha256: 7d848470bca4f46c5b1295cf2bab941f9d7e00573b650828c9d536f2aae8c52b
+        crop_path: data/evidence_v2_golden_review_final_20260725/gonglu_55_standard_constraints/page_0005/conflicts/04_conflict-a79d4c268ea1407eefbdeb25.png
+        crop_sha256: 9e4769c692a6aa6b141d69d12208f1bd7b5a4c5d3f4631ad493772b5d1fc4a5c
+        basis: 逐项核对裁剪、native 读数和视觉读数；确认 canonical“⑳其他伤害。”必须保留，视觉读数存在枚举、文本、数字、单位、公式符号或约束表达的丢失/改写。
+    - conflict_id: conflict:39b91262d2f08a42237cf2b7
+      locator:
+        schema_version: '2.0'
+        document_sha256: c13e1bb19a0bd5f3ba37ac57160d8ee1c62f19fcbb4e4415870d4e4d78a675ce
+        page_num: 5
+        bbox:
+          x0: 111.02
+          y0: 309.8232
+          x1: 506.6314
+          y1: 324.2533
+        native_block_index: null
+        native_line_index: null
+        native_span_index: null
+        region_id: null
+      native_text: （2）根据生产安全事故（以下简称事故）造成的人员伤亡或者直接经济损失，事故一
+      visual_text: （2）根据生产安全事故（以不简称事故）造成的人员伤亡或者直接经济损失，事故一
+      classification: real_error
+      authoritative_channel: native_text
+      proposed_canonical_text: （2）根据生产安全事故（以下简称事故）造成的人员伤亡或者直接经济损失，事故一
+      proposed_action: 保留 native 文本作为当前证据读数；将 OCR/视觉差异保留在 conflict 队列并纳入回归断言。
+      requires_human_confirmation: false
+      rationale: OCR/视觉读数丢失或改写了枚举编号、文本、数字、单位、公式符号或约束表达，不能静默等价。
+      audit:
+        reviewer: codex_phase1_visual_audit
+        reviewed_at_utc: '2026-07-25T03:57:40Z'
+        page_render_sha256: 7d848470bca4f46c5b1295cf2bab941f9d7e00573b650828c9d536f2aae8c52b
+        crop_path: data/evidence_v2_golden_review_final_20260725/gonglu_55_standard_constraints/page_0005/conflicts/05_conflict-39b91262d2f08a42237cf2b7.png
+        crop_sha256: c049d9e93903d31191b288f61e234130ffd544ed08485b0241f420bcd6ac1040
+        basis: 逐项核对裁剪、native 读数和视觉读数；确认 canonical“（2）根据生产安全事故（以下简称事故）造成的人员伤亡或者直接经济损失，事故一”必须保留，视觉读数存在枚举、文本、数字、单位、公式符号或约束表达的丢失/改写。
+    audit:
+      reviewer: codex_phase1_visual_audit
+      reviewed_at_utc: '2026-07-25T03:57:40Z'
+      page_render_sha256: 7d848470bca4f46c5b1295cf2bab941f9d7e00573b650828c9d536f2aae8c52b
+      page_sheet_path: data/evidence_v2_golden_review_final_20260725/page_sheets/gonglu_55_standard_constraints_p0005.png
+      page_sheet_sha256: 1dbb4c170288858dc76e4c49a0f44bf5c9a56dec19c038478b8b1d08f5175c32
+      basis: 已逐页核验原页渲染、标题/阅读顺序、结构证据、Content Policy 非破坏性分流与全部标注冲突。
+  - page_num: 7
+    page_render_sha256: 0c5918ab86ee3ea8a9c6328f85c493e0d4963a5c835ef08ba7770e17fab65fcc
+    state: reviewed
+    review_checklist:
+    - 确认页面渲染 hash 与此 sidecar 一致；hash 变化时必须重新审核本页。
+    - 确认标题树、阅读顺序、父子关系、表格/公式/图形结构均可回跳到 source locator。
+    - 质量事故报告：2 小时报送约束与章节层级必须复核。
+    - 确认例题、真题标签和水印保留为 evidence，并由 Content Policy 后续非破坏性分流。
+    conflicts: []
+    audit:
+      reviewer: codex_phase1_visual_audit
+      reviewed_at_utc: '2026-07-25T03:57:40Z'
+      page_render_sha256: 0c5918ab86ee3ea8a9c6328f85c493e0d4963a5c835ef08ba7770e17fab65fcc
+      page_sheet_path: data/evidence_v2_golden_review_final_20260725/page_sheets/gonglu_55_standard_constraints_p0007.png
+      page_sheet_sha256: a2e1800f17d4261164320b99e9a33715bb604804bbfa42d9bd48c9a7e10e0edf
+      basis: 已逐页核验原页渲染、标题/阅读顺序、结构证据、Content Policy 非破坏性分流与全部标注冲突。
+- sample_id: gonglu_62_cost_flow_incident
+  pdf_sha256: 4c60afd99478136289b2de9721f1dcd22ea63ad3b6f612877088e502ca6cb7b8
+  config_hash: 69e65f6760edb42651233ff0a4a0fa7a5caf7a1345382a3426e290aea88403af
+  pages:
+  - page_num: 1
+    page_render_sha256: 17abe8f55dfca154fabbdd7863645fe9b543d3ad31444dd10a42ea14ce1dd049
+    state: reviewed
+    review_checklist:
+    - 确认页面渲染 hash 与此 sidecar 一致；hash 变化时必须重新审核本页。
+    - 确认标题树、阅读顺序、父子关系、表格/公式/图形结构均可回跳到 source locator。
+    - 预算成本公式：求和符号、乘号和预算成本层级是硬锚点。
+    - 确认例题、真题标签和水印保留为 evidence，并由 Content Policy 后续非破坏性分流。
+    conflicts:
+    - conflict_id: conflict:b6524834486400c0d25295ab
+      locator:
+        schema_version: '2.0'
+        document_sha256: 4c60afd99478136289b2de9721f1dcd22ea63ad3b6f612877088e502ca6cb7b8
+        page_num: 1
+        bbox:
+          x0: 111.02
+          y0: 460.4906
+          x1: 373.63
+          y1: 471.5254
+        native_block_index: null
+        native_line_index: null
+        native_span_index: null
+        region_id: null
+      native_text: 项目预算总成本=∑（标后预算清单单价×清单工程量）
+      visual_text: 项目预算总成本=（标后预算清单单价×清单工程量）
+      classification: real_error
+      authoritative_channel: native_text
+      proposed_canonical_text: 项目预算总成本=∑（标后预算清单单价×清单工程量）
+      proposed_action: 保留 native 文本作为当前证据读数；将 OCR/视觉差异保留在 conflict 队列并纳入回归断言。
+      requires_human_confirmation: false
+      rationale: OCR/视觉读数丢失或改写了枚举编号、文本、数字、单位、公式符号或约束表达，不能静默等价。
+      audit:
+        reviewer: codex_phase1_visual_audit
+        reviewed_at_utc: '2026-07-25T03:57:40Z'
+        page_render_sha256: 17abe8f55dfca154fabbdd7863645fe9b543d3ad31444dd10a42ea14ce1dd049
+        crop_path: data/evidence_v2_golden_review_final_20260725/gonglu_62_cost_flow_incident/page_0001/conflicts/01_conflict-b6524834486400c0d25295ab.png
+        crop_sha256: 9da996fae236c427cf8bf83237066fc7d116bdd049162b54483a19c6af656d6a
+        basis: 逐项核对裁剪、native 读数和视觉读数；确认 canonical“项目预算总成本=∑（标后预算清单单价×清单工程量）”必须保留，视觉读数存在枚举、文本、数字、单位、公式符号或约束表达的丢失/改写。
+    audit:
+      reviewer: codex_phase1_visual_audit
+      reviewed_at_utc: '2026-07-25T03:57:40Z'
+      page_render_sha256: 17abe8f55dfca154fabbdd7863645fe9b543d3ad31444dd10a42ea14ce1dd049
+      page_sheet_path: data/evidence_v2_golden_review_final_20260725/page_sheets/gonglu_62_cost_flow_incident_p0001.png
+      page_sheet_sha256: 27efc678d5d5bd9490d7c973ab01dc5384ccd7ba4e76f085df50b5ba75b53845
+      basis: 已逐页核验原页渲染、标题/阅读顺序、结构证据、Content Policy 非破坏性分流与全部标注冲突。
+  - page_num: 2
+    page_render_sha256: 1447ddb277dea4629ec84aeac91038a496cb102ccd97864040c25a9276dc6f12
+    state: reviewed
+    review_checklist:
+    - 确认页面渲染 hash 与此 sidecar 一致；hash 变化时必须重新审核本页。
+    - 确认标题树、阅读顺序、父子关系、表格/公式/图形结构均可回跳到 source locator。
+    - 材料/机械费公式：Σ、括号、乘号和租赁条件不得丢失。
+    - 确认例题、真题标签和水印保留为 evidence，并由 Content Policy 后续非破坏性分流。
+    conflicts:
+    - conflict_id: conflict:4e63364ae839e39c0fba2878
+      locator:
+        schema_version: '2.0'
+        document_sha256: 4c60afd99478136289b2de9721f1dcd22ea63ad3b6f612877088e502ca6cb7b8
+        page_num: 2
+        bbox:
+          x0: 292.49
+          y0: 460.0662
+          x1: 497.5077
+          y1: 471.101
+        native_block_index: null
+        native_line_index: null
+        native_span_index: null
+        region_id: null
+      native_text: 机械租赁费=Σ［（机械租赁单价+使用费）×
+      visual_text: 机械租赁费=>［（机械租赁单价+使用费）×
+      classification: real_error
+      authoritative_channel: native_text
+      proposed_canonical_text: 机械租赁费=Σ［（机械租赁单价+使用费）×
+      proposed_action: 保留 native 文本作为当前证据读数；将 OCR/视觉差异保留在 conflict 队列并纳入回归断言。
+      requires_human_confirmation: false
+      rationale: OCR/视觉读数丢失或改写了枚举编号、文本、数字、单位、公式符号或约束表达，不能静默等价。
+      audit:
+        reviewer: codex_phase1_visual_audit
+        reviewed_at_utc: '2026-07-25T03:57:40Z'
+        page_render_sha256: 1447ddb277dea4629ec84aeac91038a496cb102ccd97864040c25a9276dc6f12
+        crop_path: data/evidence_v2_golden_review_final_20260725/gonglu_62_cost_flow_incident/page_0002/conflicts/01_conflict-4e63364ae839e39c0fba2878.png
+        crop_sha256: 176d1970f595365094abaa2e62b4d4054b238f1652004d63572573727ce611b2
+        basis: 逐项核对裁剪、native 读数和视觉读数；确认 canonical“机械租赁费=Σ［（机械租赁单价+使用费）×”必须保留，视觉读数存在枚举、文本、数字、单位、公式符号或约束表达的丢失/改写。
+    - conflict_id: conflict:243746df72a99d8704519b09
+      locator:
+        schema_version: '2.0'
+        document_sha256: 4c60afd99478136289b2de9721f1dcd22ea63ad3b6f612877088e502ca6cb7b8
+        page_num: 2
+        bbox:
+          x0: 291.7994
+          y0: 500.3857
+          x1: 497.3769
+          y1: 512.6937
+        native_block_index: null
+        native_line_index: null
+        native_span_index: null
+        region_id: null
+      native_text: 机械租赁费=Σ（机械租赁单价×租赁数量×
+      visual_text: 机械租赁费=》（机械租赁单价×租赁数量×
+      classification: real_error
+      authoritative_channel: native_text
+      proposed_canonical_text: 机械租赁费=Σ（机械租赁单价×租赁数量×
+      proposed_action: 保留 native 文本作为当前证据读数；将 OCR/视觉差异保留在 conflict 队列并纳入回归断言。
+      requires_human_confirmation: false
+      rationale: OCR/视觉读数丢失或改写了枚举编号、文本、数字、单位、公式符号或约束表达，不能静默等价。
+      audit:
+        reviewer: codex_phase1_visual_audit
+        reviewed_at_utc: '2026-07-25T03:57:40Z'
+        page_render_sha256: 1447ddb277dea4629ec84aeac91038a496cb102ccd97864040c25a9276dc6f12
+        crop_path: data/evidence_v2_golden_review_final_20260725/gonglu_62_cost_flow_incident/page_0002/conflicts/02_conflict-243746df72a99d8704519b09.png
+        crop_sha256: 4d9989fc3699d4f366986d083872deb0dc453506ebe36cc837f36aec36624718
+        basis: 逐项核对裁剪、native 读数和视觉读数；确认 canonical“机械租赁费=Σ（机械租赁单价×租赁数量×”必须保留，视觉读数存在枚举、文本、数字、单位、公式符号或约束表达的丢失/改写。
+    audit:
+      reviewer: codex_phase1_visual_audit
+      reviewed_at_utc: '2026-07-25T03:57:40Z'
+      page_render_sha256: 1447ddb277dea4629ec84aeac91038a496cb102ccd97864040c25a9276dc6f12
+      page_sheet_path: data/evidence_v2_golden_review_final_20260725/page_sheets/gonglu_62_cost_flow_incident_p0002.png
+      page_sheet_sha256: 609b0404b88e20d589a518294aa457a3a7e869e55705d6918724d2bd2a28aced
+      basis: 已逐页核验原页渲染、标题/阅读顺序、结构证据、Content Policy 非破坏性分流与全部标注冲突。
+  - page_num: 4
+    page_render_sha256: 613263f632c51f5dfd2481f818afd6a14b018f5486772672630fe449b50d7870
+    state: reviewed
+    review_checklist:
+    - 确认页面渲染 hash 与此 sidecar 一致；hash 变化时必须重新审核本页。
+    - 确认标题树、阅读顺序、父子关系、表格/公式/图形结构均可回跳到 source locator。
+    - 成本管理流程图：节点、边、公式和“目标戚本/目标成本”必须人工定版。
+    - 确认例题、真题标签和水印保留为 evidence，并由 Content Policy 后续非破坏性分流。
+    conflicts:
+    - conflict_id: conflict:036b1d1491b550bb1677acbd
+      locator:
+        schema_version: '2.0'
+        document_sha256: 4c60afd99478136289b2de9721f1dcd22ea63ad3b6f612877088e502ca6cb7b8
+        page_num: 4
+        bbox:
+          x0: 82.024
+          y0: 359.0589
+          x1: 507.9
+          y1: 409.0189
+        native_block_index: null
+        native_line_index: null
+        native_span_index: null
+        region_id: null
+      native_text: 目标戚本
+      visual_text: '包括由项目经理部根据项目施工责任成本确定的施工工期内的总施工成本计划（目标
+
+        成本）和月度施工成本计划的编制。'
+      classification: real_error
+      authoritative_channel: vision_structure
+      proposed_canonical_text: 目标成本
+      proposed_action: 原页裁剪与真实 Vision 复核均确认“目标成本”；以 revision 记录视觉校正，不覆盖 native 原文“目标戚本”。
+      requires_human_confirmation: false
+      rationale: 原页像素显示“目标成本”，PDF 文本层为“目标戚本”。该差异是文本层真实错字，最终 canonical text 采用视觉结构通道读数。
+      audit:
+        reviewer: codex_phase1_visual_audit
+        reviewed_at_utc: '2026-07-25T03:57:40Z'
+        page_render_sha256: 613263f632c51f5dfd2481f818afd6a14b018f5486772672630fe449b50d7870
+        crop_path: data/evidence_v2_golden_review_final_20260725/gonglu_62_cost_flow_incident/page_0004/conflicts/01_conflict-036b1d1491b550bb1677acbd.png
+        crop_sha256: ce61eea375c0176f40e87ec1418d4850f8c49d88a24498788edfbdaa350363ee
+        basis: 原页裁剪清晰显示“目标成本”；PDF 文本层读为“目标戚本”，真实 Vision 复核亦返回“目标成本”。
+    audit:
+      reviewer: codex_phase1_visual_audit
+      reviewed_at_utc: '2026-07-25T03:57:40Z'
+      page_render_sha256: 613263f632c51f5dfd2481f818afd6a14b018f5486772672630fe449b50d7870
+      page_sheet_path: data/evidence_v2_golden_review_final_20260725/page_sheets/gonglu_62_cost_flow_incident_p0004.png
+      page_sheet_sha256: 716fa5a3ae85580c2cad1dc9160494e0561a26628677a3e1ce35925f98741d9a
+      basis: 已逐页核验原页渲染、标题/阅读顺序、结构证据、Content Policy 非破坏性分流与全部标注冲突。
+  - page_num: 5
+    page_render_sha256: 1aedd5d2f9696ecf47bbda7c2db68939ed28586de0c4e15f1d597ddbbd2b2493
+    state: reviewed
+    review_checklist:
+    - 确认页面渲染 hash 与此 sidecar 一致；hash 变化时必须重新审核本页。
+    - 确认标题树、阅读顺序、父子关系、表格/公式/图形结构均可回跳到 source locator。
+    - 成本控制枚举：①至⑤与核算分类的顺序必须完整。
+    - 确认例题、真题标签和水印保留为 evidence，并由 Content Policy 后续非破坏性分流。
+    conflicts:
+    - conflict_id: conflict:ff171b57fae22cfff8d8b740
+      locator:
+        schema_version: '2.0'
+        document_sha256: 4c60afd99478136289b2de9721f1dcd22ea63ad3b6f612877088e502ca6cb7b8
+        page_num: 5
+        bbox:
+          x0: 346.39
+          y0: 77.668
+          x1: 432.67
+          y1: 90.4005
+        native_block_index: null
+        native_line_index: null
+        native_span_index: null
+        region_id: null
+      native_text: ①人工费的控制
+      visual_text: 人工费的控制
+      classification: real_error
+      authoritative_channel: native_text
+      proposed_canonical_text: ①人工费的控制
+      proposed_action: 保留 native 文本作为当前证据读数；将 OCR/视觉差异保留在 conflict 队列并纳入回归断言。
+      requires_human_confirmation: false
+      rationale: OCR/视觉读数丢失或改写了枚举编号、文本、数字、单位、公式符号或约束表达，不能静默等价。
+      audit:
+        reviewer: codex_phase1_visual_audit
+        reviewed_at_utc: '2026-07-25T03:57:40Z'
+        page_render_sha256: 1aedd5d2f9696ecf47bbda7c2db68939ed28586de0c4e15f1d597ddbbd2b2493
+        crop_path: data/evidence_v2_golden_review_final_20260725/gonglu_62_cost_flow_incident/page_0005/conflicts/01_conflict-ff171b57fae22cfff8d8b740.png
+        crop_sha256: df2a828b8b8c473a12eaffc25dd64e1acc6efec5b028ca13bad36b7569320eb8
+        basis: 逐项核对裁剪、native 读数和视觉读数；确认 canonical“①人工费的控制”必须保留，视觉读数存在枚举、文本、数字、单位、公式符号或约束表达的丢失/改写。
+    - conflict_id: conflict:7f887c34a9f39ebe9648ccda
+      locator:
+        schema_version: '2.0'
+        document_sha256: 4c60afd99478136289b2de9721f1dcd22ea63ad3b6f612877088e502ca6cb7b8
+        page_num: 5
+        bbox:
+          x0: 346.39
+          y0: 93.7958
+          x1: 432.67
+          y1: 105.255
+        native_block_index: null
+        native_line_index: null
+        native_span_index: null
+        region_id: null
+      native_text: ②材料费的控制
+      visual_text: 材料费的控制
+      classification: real_error
+      authoritative_channel: native_text
+      proposed_canonical_text: ②材料费的控制
+      proposed_action: 保留 native 文本作为当前证据读数；将 OCR/视觉差异保留在 conflict 队列并纳入回归断言。
+      requires_human_confirmation: false
+      rationale: OCR/视觉读数丢失或改写了枚举编号、文本、数字、单位、公式符号或约束表达，不能静默等价。
+      audit:
+        reviewer: codex_phase1_visual_audit
+        reviewed_at_utc: '2026-07-25T03:57:40Z'
+        page_render_sha256: 1aedd5d2f9696ecf47bbda7c2db68939ed28586de0c4e15f1d597ddbbd2b2493
+        crop_path: data/evidence_v2_golden_review_final_20260725/gonglu_62_cost_flow_incident/page_0005/conflicts/02_conflict-7f887c34a9f39ebe9648ccda.png
+        crop_sha256: 444030cfb0f779b04733c801ce4755a7dcb35f9763e515a204a216c6689b878a
+        basis: 逐项核对裁剪、native 读数和视觉读数；确认 canonical“②材料费的控制”必须保留，视觉读数存在枚举、文本、数字、单位、公式符号或约束表达的丢失/改写。
+    - conflict_id: conflict:02a27aeda4305e6386f6b172
+      locator:
+        schema_version: '2.0'
+        document_sha256: 4c60afd99478136289b2de9721f1dcd22ea63ad3b6f612877088e502ca6cb7b8
+        page_num: 5
+        bbox:
+          x0: 346.39
+          y0: 109.0747
+          x1: 474.7
+          y1: 120.429
+        native_block_index: null
+        native_line_index: null
+        native_span_index: null
+        region_id: null
+      native_text: ③周转工具使用费的控制
+      visual_text: 周转工具使用费的控制
+      classification: real_error
+      authoritative_channel: native_text
+      proposed_canonical_text: ③周转工具使用费的控制
+      proposed_action: 保留 native 文本作为当前证据读数；将 OCR/视觉差异保留在 conflict 队列并纳入回归断言。
+      requires_human_confirmation: false
+      rationale: OCR/视觉读数丢失或改写了枚举编号、文本、数字、单位、公式符号或约束表达，不能静默等价。
+      audit:
+        reviewer: codex_phase1_visual_audit
+        reviewed_at_utc: '2026-07-25T03:57:40Z'
+        page_render_sha256: 1aedd5d2f9696ecf47bbda7c2db68939ed28586de0c4e15f1d597ddbbd2b2493
+        crop_path: data/evidence_v2_golden_review_final_20260725/gonglu_62_cost_flow_incident/page_0005/conflicts/03_conflict-02a27aeda4305e6386f6b172.png
+        crop_sha256: 807e82a65d7102bb797e2649533ed1de2851287ee197fc68ca96be5e0526c8e9
+        basis: 逐项核对裁剪、native 读数和视觉读数；确认 canonical“③周转工具使用费的控制”必须保留，视觉读数存在枚举、文本、数字、单位、公式符号或约束表达的丢失/改写。
+    - conflict_id: conflict:b4b8198ecadaca74b2495384
+      locator:
+        schema_version: '2.0'
+        document_sha256: 4c60afd99478136289b2de9721f1dcd22ea63ad3b6f612877088e502ca6cb7b8
+        page_num: 5
+        bbox:
+          x0: 346.39
+          y0: 125.2025
+          x1: 474.7
+          y1: 136.6617
+        native_block_index: null
+        native_line_index: null
+        native_span_index: null
+        region_id: null
+      native_text: ④施工机械使用费的控制
+      visual_text: 施工机械使用费的控制
+      classification: real_error
+      authoritative_channel: native_text
+      proposed_canonical_text: ④施工机械使用费的控制
+      proposed_action: 保留 native 文本作为当前证据读数；将 OCR/视觉差异保留在 conflict 队列并纳入回归断言。
+      requires_human_confirmation: false
+      rationale: OCR/视觉读数丢失或改写了枚举编号、文本、数字、单位、公式符号或约束表达，不能静默等价。
+      audit:
+        reviewer: codex_phase1_visual_audit
+        reviewed_at_utc: '2026-07-25T03:57:40Z'
+        page_render_sha256: 1aedd5d2f9696ecf47bbda7c2db68939ed28586de0c4e15f1d597ddbbd2b2493
+        crop_path: data/evidence_v2_golden_review_final_20260725/gonglu_62_cost_flow_incident/page_0005/conflicts/04_conflict-b4b8198ecadaca74b2495384.png
+        crop_sha256: d37039130795ac70cf45c1c876438a591f8e25aabfa3a06f1f93fb2ea0cd4ab0
+        basis: 逐项核对裁剪、native 读数和视觉读数；确认 canonical“④施工机械使用费的控制”必须保留，视觉读数存在枚举、文本、数字、单位、公式符号或约束表达的丢失/改写。
+    - conflict_id: conflict:cd51c6c47addcc51aaee5088
+      locator:
+        schema_version: '2.0'
+        document_sha256: 4c60afd99478136289b2de9721f1dcd22ea63ad3b6f612877088e502ca6cb7b8
+        page_num: 5
+        bbox:
+          x0: 346.39
+          y0: 140.9059
+          x1: 453.7
+          y1: 152.3651
+        native_block_index: null
+        native_line_index: null
+        native_span_index: null
+        region_id: null
+      native_text: ⑤现场管理费的控制
+      visual_text: 现场管理费的控制
+      classification: real_error
+      authoritative_channel: native_text
+      proposed_canonical_text: ⑤现场管理费的控制
+      proposed_action: 保留 native 文本作为当前证据读数；将 OCR/视觉差异保留在 conflict 队列并纳入回归断言。
+      requires_human_confirmation: false
+      rationale: OCR/视觉读数丢失或改写了枚举编号、文本、数字、单位、公式符号或约束表达，不能静默等价。
+      audit:
+        reviewer: codex_phase1_visual_audit
+        reviewed_at_utc: '2026-07-25T03:57:40Z'
+        page_render_sha256: 1aedd5d2f9696ecf47bbda7c2db68939ed28586de0c4e15f1d597ddbbd2b2493
+        crop_path: data/evidence_v2_golden_review_final_20260725/gonglu_62_cost_flow_incident/page_0005/conflicts/05_conflict-cd51c6c47addcc51aaee5088.png
+        crop_sha256: a3083ffdbbf4711f35669c36338c4de3c04124597c1c1924b55f928b65db5adf
+        basis: 逐项核对裁剪、native 读数和视觉读数；确认 canonical“⑤现场管理费的控制”必须保留，视觉读数存在枚举、文本、数字、单位、公式符号或约束表达的丢失/改写。
+    - conflict_id: conflict:d2e7c2446acb1816ce4c8e8e
+      locator:
+        schema_version: '2.0'
+        document_sha256: 4c60afd99478136289b2de9721f1dcd22ea63ad3b6f612877088e502ca6cb7b8
+        page_num: 5
+        bbox:
+          x0: 97.584
+          y0: 655.7217
+          x1: 255.17
+          y1: 667.1809
+        native_block_index: null
+        native_line_index: null
+        native_span_index: null
+        region_id: null
+      native_text: 2.材料费用组成及材料单价计算
+      visual_text: 材料费用组成及材料单价计算
+      classification: real_error
+      authoritative_channel: native_text
+      proposed_canonical_text: 2.材料费用组成及材料单价计算
+      proposed_action: 保留 native 文本作为当前证据读数；将 OCR/视觉差异保留在 conflict 队列并纳入回归断言。
+      requires_human_confirmation: false
+      rationale: OCR/视觉读数丢失或改写了枚举编号、文本、数字、单位、公式符号或约束表达，不能静默等价。
+      audit:
+        reviewer: codex_phase1_visual_audit
+        reviewed_at_utc: '2026-07-25T03:57:40Z'
+        page_render_sha256: 1aedd5d2f9696ecf47bbda7c2db68939ed28586de0c4e15f1d597ddbbd2b2493
+        crop_path: data/evidence_v2_golden_review_final_20260725/gonglu_62_cost_flow_incident/page_0005/conflicts/06_conflict-d2e7c2446acb1816ce4c8e8e.png
+        crop_sha256: 704b0c77aa506588fa61cdaeb4f973176efd39d817c177593ae82fb9c97606a4
+        basis: 逐项核对裁剪、native 读数和视觉读数；确认 canonical“2.材料费用组成及材料单价计算”必须保留，视觉读数存在枚举、文本、数字、单位、公式符号或约束表达的丢失/改写。
+    - conflict_id: conflict:193315d22a68493b3a09fa00
+      locator:
+        schema_version: '2.0'
+        document_sha256: 4c60afd99478136289b2de9721f1dcd22ea63ad3b6f612877088e502ca6cb7b8
+        page_num: 5
+        bbox:
+          x0: 97.584
+          y0: 679.4689
+          x1: 213.17
+          y1: 690.9481
+        native_block_index: null
+        native_line_index: null
+        native_span_index: null
+        region_id: null
+      native_text: 3.机械费用组成及计算
+      visual_text: 机械费用组成及计算
+      classification: real_error
+      authoritative_channel: native_text
+      proposed_canonical_text: 3.机械费用组成及计算
+      proposed_action: 保留 native 文本作为当前证据读数；将 OCR/视觉差异保留在 conflict 队列并纳入回归断言。
+      requires_human_confirmation: false
+      rationale: OCR/视觉读数丢失或改写了枚举编号、文本、数字、单位、公式符号或约束表达，不能静默等价。
+      audit:
+        reviewer: codex_phase1_visual_audit
+        reviewed_at_utc: '2026-07-25T03:57:40Z'
+        page_render_sha256: 1aedd5d2f9696ecf47bbda7c2db68939ed28586de0c4e15f1d597ddbbd2b2493
+        crop_path: data/evidence_v2_golden_review_final_20260725/gonglu_62_cost_flow_incident/page_0005/conflicts/07_conflict-193315d22a68493b3a09fa00.png
+        crop_sha256: db9c697c2f46328e01eca1e91008c75a0f0233c0c6a48309ee977fe07f0bc530
+        basis: 逐项核对裁剪、native 读数和视觉读数；确认 canonical“3.机械费用组成及计算”必须保留，视觉读数存在枚举、文本、数字、单位、公式符号或约束表达的丢失/改写。
+    - conflict_id: conflict:f3601d8055e79b5cf87e8cfe
+      locator:
+        schema_version: '2.0'
+        document_sha256: 4c60afd99478136289b2de9721f1dcd22ea63ad3b6f612877088e502ca6cb7b8
+        page_num: 5
+        bbox:
+          x0: 97.584
+          y0: 702.8318
+          x1: 234.17
+          y1: 714.291
+        native_block_index: null
+        native_line_index: null
+        native_span_index: null
+        region_id: null
+      native_text: 4.措施费和专项费用的组成
+      visual_text: 措施费和专项费用的组成
+      classification: real_error
+      authoritative_channel: native_text
+      proposed_canonical_text: 4.措施费和专项费用的组成
+      proposed_action: 保留 native 文本作为当前证据读数；将 OCR/视觉差异保留在 conflict 队列并纳入回归断言。
+      requires_human_confirmation: false
+      rationale: OCR/视觉读数丢失或改写了枚举编号、文本、数字、单位、公式符号或约束表达，不能静默等价。
+      audit:
+        reviewer: codex_phase1_visual_audit
+        reviewed_at_utc: '2026-07-25T03:57:40Z'
+        page_render_sha256: 1aedd5d2f9696ecf47bbda7c2db68939ed28586de0c4e15f1d597ddbbd2b2493
+        crop_path: data/evidence_v2_golden_review_final_20260725/gonglu_62_cost_flow_incident/page_0005/conflicts/08_conflict-f3601d8055e79b5cf87e8cfe.png
+        crop_sha256: 8957fe728e54ab993d67137d1d071dc6f0a8135fe61dd0a7063cb1028988c4c1
+        basis: 逐项核对裁剪、native 读数和视觉读数；确认 canonical“4.措施费和专项费用的组成”必须保留，视觉读数存在枚举、文本、数字、单位、公式符号或约束表达的丢失/改写。
+    audit:
+      reviewer: codex_phase1_visual_audit
+      reviewed_at_utc: '2026-07-25T03:57:40Z'
+      page_render_sha256: 1aedd5d2f9696ecf47bbda7c2db68939ed28586de0c4e15f1d597ddbbd2b2493
+      page_sheet_path: data/evidence_v2_golden_review_final_20260725/page_sheets/gonglu_62_cost_flow_incident_p0005.png
+      page_sheet_sha256: bb6c594d4f3266f32c77a4336fa1faf7bb6be0dff0751636c13a4795706f478d
+      basis: 已逐页核验原页渲染、标题/阅读顺序、结构证据、Content Policy 非破坏性分流与全部标注冲突。
+reviewer: codex_phase1_visual_audit
+reviewed_at_utc: '2026-07-25T03:57:40Z'

@@ -1,0 +1,283 @@
+# gonglu_golden5_rehearsal 黄金注册表（预铺件）：源=scripts/tests/fixtures/v2/golden_samples/gonglu_phase0.yaml，
+# 仅改 registry_id 与 pdf_relative_path 前缀；样本/断言/评审元数据逐字节保留。
+schema_version: "2.0"
+registry_id: gonglu_golden5_rehearsal_phase0_v1
+material_profile_id: yijian_gonglu_2026
+samples:
+  - sample_id: gonglu_01_text_list
+    pdf_relative_path: exams/gonglu_golden5_rehearsal/input_pdf/01 第1章（1）路基施工准备.pdf
+    pdf_sha256: ace9041ad220a4ebda2bba279900de49ebd83cb4a81fd601a38b37db315d0b4d
+    selected_pages: [1, 2, 5, 6]
+    focus: [普通正文, 多级枚举, 页眉页脚, 跨页结构]
+    annotation_status: reviewed
+    reviewer: codex_phase1_visual_audit
+    reviewed_at_utc: '2026-07-25T03:57:40Z'
+    assertions:
+      - assertion_id: page1_cross_section_visual_structure
+        description: 第1页路基横断面必须同时保留图形区域和视觉节点，不能用正文替代图示锚点
+        expected_evidence_kinds: [figure, diagram_node]
+        expected_matches:
+          - text: 路基横断面
+            kind: diagram_node
+            semantic_role: core
+            must_cover: true
+          - text: 路堤（填方）
+            kind: diagram_node
+            semantic_role: core
+            must_cover: true
+      - assertion_id: page2_outline_enumeration_integrity
+        description: 第2页路基施工目录的①至⑧必须作为带序号的 list_item 保留
+        expected_evidence_kinds: [list_item, table]
+        expected_matches:
+          - text: ①路基施工准备
+            kind: list_item
+            semantic_role: core
+            must_cover: true
+          - text: ⑧路基施工测量
+            kind: list_item
+            semantic_role: core
+            must_cover: true
+      - assertion_id: page5_table_and_example_routing
+        description: 第5页特殊路基表格必须可回源，例题必须保留为 worked_example 供后续 Content Policy 分流
+        expected_evidence_kinds: [table, table_cell, exercise]
+        expected_matches:
+          - text: 风沙地区路基
+            kind: table_cell
+            semantic_role: core
+            must_cover: true
+          - text: 【例题】写出结构设计图中A、B、C的名称。
+            kind: exercise
+            semantic_role: worked_example
+            must_cover: true
+      - assertion_id: page6_example_preserved
+        description: 第6页例题题干必须保留为 worked_example，不能在 Step 1 被删除或标记为噪声
+        expected_evidence_kinds: [exercise]
+        expected_matches:
+          - text: 【例题】以下情况不需要进行试验路段施工的是（）。
+            kind: exercise
+            semantic_role: worked_example
+            must_cover: true
+
+  - sample_id: gonglu_24_table_formula
+    pdf_relative_path: exams/gonglu_golden5_rehearsal/input_pdf/24 第3章（24）常用模板、支架和拱架设计与施工.pdf
+    pdf_sha256: 9308dac1b5aa40bd1da44c22d847f22b872bd8025abc3cdc5b5b34c1407e2cf3
+    selected_pages: [1, 3, 5, 8]
+    focus: [表格, 公式, 数值和单位, 结构关系]
+    annotation_status: reviewed
+    reviewer: codex_phase1_visual_audit
+    reviewed_at_utc: '2026-07-25T03:57:40Z'
+    assertions:
+      - assertion_id: page1_load_combination_table_and_threshold
+        description: 第1页荷载组合表、吊环强度阈值和组合序号必须完整回源
+        expected_evidence_kinds: [table, formula, list_item]
+        expected_matches:
+          - text: 65MPa
+            kind: formula
+            semantic_role: core
+            must_cover: true
+          - text: ①+②+⑦+⑧
+            kind: list_item
+            semantic_role: core
+            must_cover: true
+      - assertion_id: page3_template_installation_constraints
+        description: 第3页防倾覆约束、1.5mm变形和250mm/h滑升速度必须保留比较关系与单位
+        expected_evidence_kinds: [formula, list_item]
+        expected_matches:
+          - text: 必须设置防倾覆的临时固定设施
+            kind: list_item
+            semantic_role: core
+            must_cover: true
+          - text: 250mm/h
+            kind: formula
+            semantic_role: core
+            must_cover: true
+      - assertion_id: page5_preload_threshold
+        description: 第5页预压荷载的1.05~1.1倍阈值不得因 OCR 或拆行而丢失
+        expected_evidence_kinds: [list_item]
+        expected_matches:
+          - text: 1.05～1.1倍
+            kind: list_item
+            semantic_role: core
+            must_cover: true
+      - assertion_id: page8_arch_removal_sequence
+        description: 第8页拱架拆卸顺序与85%强度阈值必须保留为带序号的原子证据
+        expected_evidence_kinds: [list_item]
+        expected_matches:
+          - text: ②满布式落地拱架
+            kind: list_item
+            semantic_role: core
+            must_cover: true
+          - text: 85%后方可卸落
+            kind: list_item
+            semantic_role: core
+            must_cover: true
+
+  - sample_id: gonglu_41_diagram_mixed
+    pdf_relative_path: exams/gonglu_golden5_rehearsal/input_pdf/41 第4章（41）隧道围岩分级与隧道构造.pdf
+    pdf_sha256: 5c46177e092ad0f154a4ed87fd275c9443c665cd1fdd2d6f38821707546a0d56
+    selected_pages: [1, 2, 4, 7]
+    focus: [图文混排, 分类关系, 表格, OCR冲突]
+    annotation_status: reviewed
+    reviewer: codex_phase1_visual_audit
+    reviewed_at_utc: '2026-07-25T03:57:40Z'
+    assertions:
+      - assertion_id: page1_rock_classification_table
+        description: 第1页围岩分类表必须保留表格结构及“软岩，岩体较破碎”分类文本
+        expected_evidence_kinds: [table, table_cell]
+        expected_matches:
+          - text: 软岩，岩体较破碎
+            kind: table_cell
+            semantic_role: core
+            must_cover: true
+      - assertion_id: page2_tunnel_span_and_example_routing
+        description: 第2页18m跨度阈值和例题必须分别保留为公式证据与 worked_example
+        expected_evidence_kinds: [formula, exercise]
+        expected_matches:
+          - text: 18m的隧道
+            kind: formula
+            semantic_role: core
+            must_cover: true
+          - text: 【例题】某山岭隧道
+            kind: exercise
+            semantic_role: worked_example
+            must_cover: true
+      - assertion_id: page4_portal_depth_constraints
+        description: 第4页洞门基础的0.2m、1.0m和0.25m深度约束必须保留单位与不应小于关系
+        expected_evidence_kinds: [formula]
+        expected_matches:
+          - text: 0.2m
+            kind: formula
+            semantic_role: core
+            must_cover: true
+          - text: 0.25m
+            kind: formula
+            semantic_role: core
+            must_cover: true
+      - assertion_id: page7_answer_policy_routing
+        description: 第7页例题答案必须保留为 exercise_answer，供 core_only Content Policy 非破坏性排除
+        expected_evidence_kinds: [exercise, heading]
+        expected_matches:
+          - text: 【答案】C
+            kind: exercise
+            semantic_role: exercise_answer
+            must_cover: true
+          - text: 2.洞门类型
+            kind: heading
+            semantic_role: heading
+
+  - sample_id: gonglu_55_standard_constraints
+    pdf_relative_path: exams/gonglu_golden5_rehearsal/input_pdf/55 第7章（55）相关标准.pdf
+    pdf_sha256: c13e1bb19a0bd5f3ba37ac57160d8ee1c62f19fcbb4e4415870d4e4d78a675ce
+    selected_pages: [1, 3, 5, 7]
+    focus: [标准编号, 强约束词, 数值阈值, 有效版本]
+    annotation_status: reviewed
+    reviewer: codex_phase1_visual_audit
+    reviewed_at_utc: '2026-07-25T03:57:40Z'
+    assertions:
+      - assertion_id: page1_safety_duty_enumeration
+        description: 第1页安全生产职责的编号、禁止竞争性报价约束和完整职责任务必须可回源
+        expected_evidence_kinds: [list_item]
+        expected_matches:
+          - text: 不得作为竞争性
+            kind: list_item
+            semantic_role: core
+            must_cover: true
+          - text: ⑨按要求及时、如实报告生产安全事故
+            kind: list_item
+            semantic_role: core
+            must_cover: true
+      - assertion_id: page3_risk_thresholds_and_enumeration
+        description: 第3页风险评估范围中的40m、3000m、50m阈值及①至⑦枚举必须完整保留
+        expected_evidence_kinds: [formula, list_item]
+        expected_matches:
+          - text: 40m的桥梁工程
+            kind: formula
+            semantic_role: core
+            must_cover: true
+          - text: 长度3000m及以上的隧道工程
+            kind: list_item
+            semantic_role: core
+            must_cover: true
+      - assertion_id: page5_accident_category_enumeration
+        description: 第5页事故分类①至⑳和事故等级图节点必须保留，不能因 OCR 丢失圈号
+        expected_evidence_kinds: [list_item, diagram_node]
+        expected_matches:
+          - text: ①物体打击；②车辆伤害；③机械伤害；
+            kind: list_item
+            semantic_role: core
+            must_cover: true
+          - text: 特别重大
+            kind: diagram_node
+            semantic_role: core
+            must_cover: true
+      - assertion_id: page7_quality_report_deadline
+        description: 第7页质量事故报告2小时期限必须携带数字、单位和约束文本
+        expected_evidence_kinds: [list_item]
+        expected_matches:
+          - text: 接报2小时内
+            kind: list_item
+            semantic_role: core
+            must_cover: true
+
+  - sample_id: gonglu_62_cost_flow_incident
+    pdf_relative_path: exams/gonglu_golden5_rehearsal/input_pdf/62 第12章（62）施工成本管理.pdf
+    pdf_sha256: 4c60afd99478136289b2de9721f1dcd22ea63ad3b6f612877088e502ca6cb7b8
+    selected_pages: [1, 2, 4, 5]
+    focus: [流程图, visual-only节点, native与OCR冲突, 公式, 例题混排]
+    annotation_status: reviewed
+    reviewer: codex_phase1_visual_audit
+    reviewed_at_utc: '2026-07-25T03:57:40Z'
+    assertions:
+      - assertion_id: page1_budget_formula_integrity
+        description: 第1页项目预算总成本公式的求和符号、乘号和工程量必须完整回源
+        expected_evidence_kinds: [formula]
+        expected_matches:
+          - text: 项目预算总成本=∑（标后预算清单单价×清单工程量）
+            kind: formula
+            semantic_role: core
+            must_cover: true
+      - assertion_id: page2_mechanical_rental_formula_integrity
+        description: 第2页机械租赁费公式的Σ、括号和租赁条件不得在 OCR 融合时丢失
+        expected_evidence_kinds: [formula, table]
+        expected_matches:
+          - text: 机械租赁费=Σ［（机械租赁单价+使用费）×
+            kind: formula
+            semantic_role: core
+            must_cover: true
+      - assertion_id: page5_cost_control_enumeration
+        description: 第5页成本控制①至⑤必须作为有序枚举保留
+        expected_evidence_kinds: [list_item, table]
+        expected_matches:
+          - text: ①人工费的控制
+            kind: list_item
+            semantic_role: core
+            must_cover: true
+          - text: ⑤现场管理费的控制
+            kind: list_item
+            semantic_role: core
+            must_cover: true
+      - assertion_id: page4_cost_flow_region
+        description: 第4页必须检测施工成本管理流程图视觉区域，不能仅凭文本层判定完整
+        expected_evidence_kinds: [figure, diagram_node, diagram_edge]
+        expected_texts:
+          - 施工项目成本
+          - 成本预测
+          - 成本计划编制
+          - 成本控制
+          - 成本计算
+          - 成本核算
+          - 成本分析
+          - 成本考核
+        must_cover: true
+      - assertion_id: page4_cost_typo_conflict
+        description: 第4页必须识别文本层“目标戚本”和视觉“目标成本”的冲突
+        expected_evidence_kinds: [paragraph]
+        expected_conflicts:
+          - [目标戚本, 目标成本]
+        must_cover: true
+      - assertion_id: page4_formula_integrity
+        description: 计划成本偏差公式的对象、减号和变量必须完整回源
+        expected_evidence_kinds: [formula]
+        expected_texts:
+          - 计划成本偏差=施工预算成本-责任目标成本
+        must_cover: true

@@ -1,0 +1,171 @@
+# gonglu_golden5_rehearsal diagram 处置侧车（预铺件）：源=configs/v2/diagram_disposition_sidecars/gonglu_phase0_v1.phase25f_remaining_audited.yaml，
+# 改 sidecar_id/registry_id/source_*（指向本命名空间评审侧车副本）/review_crop_manifest（指向本命名空间清单副本）；
+# 处置条目与高清 crop 引用逐字节保留（crop PNG 复用 gonglu_phase0_v1 原位资产，只读）。
+# 注意：manifest 为 data/ 面（不入库），异机先跑 uv run python migration/prelay_gonglu5_rehearsal_workspace.py 重建。
+schema_version: '2.0'
+sidecar_id: gonglu_golden5_rehearsal_phase0_v1.phase25f_remaining_visual_disposition
+registry_id: gonglu_golden5_rehearsal_phase0_v1
+material_profile_id: yijian_gonglu_2026
+annotation_revision: 3
+source_diagram_review_sidecar_id: gonglu_golden5_rehearsal_phase0_v1.diagram_review_phase25f_structural_reviewed
+source_diagram_review_sidecar_sha256: e6c1ddccdd6b8e446ce1949f8741afbfae0a4138ad685dd3219f9b09b8254abf
+entries:
+- disposition_id: visual:ed29757d6651363303fa62de
+  review_id: diagram:ed29757d6651363303fa62de
+  sample_id: gonglu_24_table_formula
+  pdf_sha256: 9308dac1b5aa40bd1da44c22d847f22b872bd8025abc3cdc5b5b34c1407e2cf3
+  page_num: 1
+  figure_evidence_id: ev:fbb202669fb26251689d2011
+  figure_crop_path: crops/p0001_image_001.png
+  figure_crop_sha256: 6a7f9eeedf52f57fdb554ba28475819018b1b5115ad3bc8480b4a7ac740ebe5d
+  disposition: photo_example
+  title: 模板与支架施工实景（示例）
+  audit:
+    reviewer: phase25e_manual_visual_review
+    reviewed_at_utc: '2026-07-25T12:49:34Z'
+    crop_path: crops/p0001_image_001.png
+    crop_sha256: 6a7f9eeedf52f57fdb554ba28475819018b1b5115ad3bc8480b4a7ac740ebe5d
+    basis: 人工复核 600 DPI 裁剪；两张均为无可读构件标注和无明确关系箭头的模板、支架施工照片，仅作为本节施工实例保留，不创建结构节点和关系边。
+  review_asset:
+    review_crop_path: data/diagram_review_v2/gonglu_phase0_v1/phase25f_remaining_highres/crops/ed29757d6651363303fa62de.png
+    review_crop_sha256: 3cc5e5ef99e55ebb328d942e41a6342574de4de1239fa0975de0f036eebc2040
+    render_dpi: 600
+    margin_pt: 4.0
+    figure_bbox:
+      x0: 90.0
+      y0: 243.65
+      x1: 292.45
+      y1: 338.05
+- disposition_id: visual:b9b8b8c77908716fbe677324
+  review_id: diagram:b9b8b8c77908716fbe677324
+  sample_id: gonglu_24_table_formula
+  pdf_sha256: 9308dac1b5aa40bd1da44c22d847f22b872bd8025abc3cdc5b5b34c1407e2cf3
+  page_num: 5
+  figure_evidence_id: ev:21d2c80d32a260a355b191f9
+  figure_crop_path: crops/p0005_image_002.png
+  figure_crop_sha256: ee0e2ea2062365c28b1a523419c5c736f0e4e52267a3e23cf9026b0446d3c7b1
+  disposition: photo_example
+  title: 支架预压施工实景（示例）
+  audit:
+    reviewer: phase25e_manual_visual_review
+    reviewed_at_utc: '2026-07-25T12:49:34Z'
+    crop_path: crops/p0005_image_002.png
+    crop_sha256: ee0e2ea2062365c28b1a523419c5c736f0e4e52267a3e23cf9026b0446d3c7b1
+    basis: 人工复核 600 DPI 裁剪；图像展示支架和堆载预压施工现场，但没有可逐项锚定的结构标签或关系，按照片实例处理。
+  review_asset:
+    review_crop_path: data/diagram_review_v2/gonglu_phase0_v1/phase25f_remaining_highres/crops/b9b8b8c77908716fbe677324.png
+    review_crop_sha256: 91fc29f8595e644470582591f38c92de446bb6e0064036f812b7bd3ff3243074
+    render_dpi: 600
+    margin_pt: 4.0
+    figure_bbox:
+      x0: 90.0
+      y0: 359.8
+      x1: 355.75
+      y1: 467.4
+- disposition_id: visual:79a635606e898dd2c8054d8b
+  review_id: diagram:79a635606e898dd2c8054d8b
+  sample_id: gonglu_24_table_formula
+  pdf_sha256: 9308dac1b5aa40bd1da44c22d847f22b872bd8025abc3cdc5b5b34c1407e2cf3
+  page_num: 8
+  figure_evidence_id: ev:15e219d794955469118009af
+  figure_crop_path: crops/p0008_image_005.png
+  figure_crop_sha256: c0fe889e0c504814dde66173d3f2af5d1fb99f797b5671e0f0eb78558a5b7b4a
+  disposition: photo_example
+  title: 拱桥拱架施工实景（示例）
+  audit:
+    reviewer: phase25e_manual_visual_review
+    reviewed_at_utc: '2026-07-25T12:49:34Z'
+    crop_path: crops/p0008_image_005.png
+    crop_sha256: c0fe889e0c504814dde66173d3f2af5d1fb99f797b5671e0f0eb78558a5b7b4a
+    basis: 人工复核 600 DPI 裁剪；该图是拱桥拱架施工现场照片，无可读结构标签或显式关系，仅作为施工实例保留。
+  review_asset:
+    review_crop_path: data/diagram_review_v2/gonglu_phase0_v1/phase25f_remaining_highres/crops/79a635606e898dd2c8054d8b.png
+    review_crop_sha256: a8e3540957bf88567d5db74b4d29d07135ce2405f086465c646baeccd9a4aa85
+    render_dpi: 600
+    margin_pt: 4.0
+    figure_bbox:
+      x0: 248.95
+      y0: 535.5
+      x1: 380.68
+      y1: 610.1
+- disposition_id: visual:396dc40c301a19c4ec5f4fe5
+  review_id: diagram:396dc40c301a19c4ec5f4fe5
+  sample_id: gonglu_24_table_formula
+  pdf_sha256: 9308dac1b5aa40bd1da44c22d847f22b872bd8025abc3cdc5b5b34c1407e2cf3
+  page_num: 8
+  figure_evidence_id: ev:619d0a69534104405d8df586
+  figure_crop_path: crops/p0008_image_003.png
+  figure_crop_sha256: 512ab5004c0702719ae2751c2de5f34157e037d96d94f38068ea56dd4d17e7e0
+  disposition: photo_example
+  title: 拱桥支架预压实景（示例）
+  audit:
+    reviewer: phase25e_manual_visual_review
+    reviewed_at_utc: '2026-07-25T12:49:34Z'
+    crop_path: crops/p0008_image_003.png
+    crop_sha256: 512ab5004c0702719ae2751c2de5f34157e037d96d94f38068ea56dd4d17e7e0
+    basis: 人工复核 600 DPI 裁剪；图像展示拱桥上部堆载预压现场，但无可读构件标签、尺寸或关系边，仅作为实例照片保留。
+  review_asset:
+    review_crop_path: data/diagram_review_v2/gonglu_phase0_v1/phase25f_remaining_highres/crops/396dc40c301a19c4ec5f4fe5.png
+    review_crop_sha256: a8db498415ae56d62ebde11f3990c6d8e7943dcdba5c9252513045ccbbe60793
+    render_dpi: 600
+    margin_pt: 4.0
+    figure_bbox:
+      x0: 90.0
+      y0: 282.2
+      x1: 210.79
+      y1: 363.4
+- disposition_id: visual:5a449a7a443f885d90936488
+  review_id: diagram:5a449a7a443f885d90936488
+  sample_id: gonglu_24_table_formula
+  pdf_sha256: 9308dac1b5aa40bd1da44c22d847f22b872bd8025abc3cdc5b5b34c1407e2cf3
+  page_num: 8
+  figure_evidence_id: ev:e9e49a77afad9fc24066fe8d
+  figure_crop_path: crops/p0008_image_002.png
+  figure_crop_sha256: ba12e70f24415fd4273f51170a37ba316e6aa4ca74410ae52922f10f4f02dfdb
+  disposition: photo_example
+  title: 桥梁支架预压实景（示例）
+  audit:
+    reviewer: phase25e_manual_visual_review
+    reviewed_at_utc: '2026-07-25T12:49:34Z'
+    crop_path: crops/p0008_image_002.png
+    crop_sha256: ba12e70f24415fd4273f51170a37ba316e6aa4ca74410ae52922f10f4f02dfdb
+    basis: 人工复核 600 DPI 裁剪；图像为桥梁支架堆载预压现场，无逐项结构标注或可验证关系，按照片实例保留。
+  review_asset:
+    review_crop_path: data/diagram_review_v2/gonglu_phase0_v1/phase25f_remaining_highres/crops/5a449a7a443f885d90936488.png
+    review_crop_sha256: 8b184c68450c82e32962d443338f70e57b91168e614f2bac2bc431b66f7d94e2
+    render_dpi: 600
+    margin_pt: 4.0
+    figure_bbox:
+      x0: 252.05
+      y0: 120.55
+      x1: 402.23
+      y1: 191.6
+- disposition_id: visual:42184d082a0b0faa4f5cb65c
+  review_id: diagram:42184d082a0b0faa4f5cb65c
+  sample_id: gonglu_41_diagram_mixed
+  pdf_sha256: 5c46177e092ad0f154a4ed87fd275c9443c665cd1fdd2d6f38821707546a0d56
+  page_num: 2
+  figure_evidence_id: ev:dc884fee211aaa58db43e3a7
+  figure_crop_path: crops/p0002_image_001.png
+  figure_crop_sha256: 9277f14370c011b7ca4d06c60a5e37c6abd6f3a942a264723b958d74120fb82e
+  disposition: photo_example
+  title: 隧道洞口与洞内施工实景（示例）
+  audit:
+    reviewer: phase25e_manual_visual_review
+    reviewed_at_utc: '2026-07-25T12:49:34Z'
+    crop_path: crops/p0002_image_001.png
+    crop_sha256: 9277f14370c011b7ca4d06c60a5e37c6abd6f3a942a264723b958d74120fb82e
+    basis: 人工复核 600 DPI 裁剪；图中为洞口和洞内支护实景照片，只有洞名牌可读，无法构成完整的构件关系图，按实例照片处理。
+  review_asset:
+    review_crop_path: data/diagram_review_v2/gonglu_phase0_v1/phase25f_remaining_highres/crops/42184d082a0b0faa4f5cb65c.png
+    review_crop_sha256: 7b0bcccff5cf48c5c3de60d9467ba4731ddfdb5786bc5c7c3f98e2a4c883b2dd
+    render_dpi: 600
+    margin_pt: 4.0
+    figure_bbox:
+      x0: 90.0
+      y0: 358.866
+      x1: 299.4
+      y1: 430.91
+review_crop_manifest:
+  manifest_path: data/diagram_review_v2/gonglu_golden5_rehearsal_phase0_v1/phase25f_remaining_highres_crop_manifest.json
+  manifest_sha256: c7037d5bf71ac0ec94c4b5348dc8d20f05603a6dae91e41f30fc46f91b3769f5

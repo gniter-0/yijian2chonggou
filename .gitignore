@@ -30,3 +30,11 @@ htmlcov/
 /data/
 /input_pdf_公路/
 /docs/v2/baselines/
+
+# New-exam workspaces (live_pipeline_driver_design.md section 3.2; runbook section 1 code/data split)
+/exams/*/input_pdf/
+/exams/*/data/
+
+# 新考试工作区（runbook §1：代码与数据分仓；T4b §3.2）
+/exams/*/input_pdf/
+/exams/*/data/
