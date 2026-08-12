@@ -15,6 +15,8 @@ uv run pytest            # 默认套件：离线、密闭（live 用例自动剔
 uv run pytest -m live    # 显式运行真实外呼用例（需自备密钥，见规范 T6）
 ```
 
+> 本机裸 `uv run pytest` 出现大批 `tmp_path` ERROR？系 Windows ACL 环境损伤（非代码缺陷）：管理员一行修复命令与 `--basetemp .test-tmp/pytest-base` 替代口径见 `docs/engineering_skeleton.md` §5.1。
+
 ## 目录一览
 
 ```

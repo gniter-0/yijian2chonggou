@@ -16,7 +16,7 @@ effective_window:
   effective_to: null
   standard_id: null
 content_policy_id: core_only_v1
-content_policy_revision: 1
+content_policy_revision: 2
 layout_profile_id: textbook_cn_v1
 taxonomy_profile_id: replace_me_v1
 validation_profile_id: replace_me_v1

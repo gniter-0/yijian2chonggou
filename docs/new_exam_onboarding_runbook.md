@@ -73,9 +73,7 @@ dedup_scope: within_collection         # 红线：跨 collection 决不自动合
 
 校验：`uv run python -c "from pathlib import Path; from examcard.materials.catalog import load_material_profile; print(load_material_profile(Path('configs/v2/material_profiles/zaojia_jishu_2026.yaml')).profile_id)"`——`MaterialProfile` 模型（`materials/schema.py`）会强校验字段与枚举。
 
-> 模板同步注记（漂移核查 N6，T5 已落修 20260813）：`exam_profile.template.yaml` 的 `content_policy_revision` 已同步为现行 `core_only_v1.yaml` 的 `revision: 2`（与本节示例一致）。今后 content policy 改版时，模板与本节示例须一并同步；沿用其他 policy 时以该 policy 文件内的 `revision` 实值为准。
-
-> 模板陈旧项提醒（漂移核查 N6）：`exam_profile.template.yaml` 里 `content_policy_revision: 1` 可能落后于现行 policy 文件（`core_only_v1.yaml` 现为 `revision: 2`，本节示例已用 2）——复制模板后须对照所选 content policy 文件核对 revision 再提交。
+> 模板同步注记（漂移核查 N6，T5 已落修 20260813）：`exam_profile.template.yaml` 的 `content_policy_revision` 已同步为现行 `core_only_v1.yaml` 的 `revision: 2`（与本节示例一致）。今后 content policy 改版时，模板与本节示例须一并同步；复制模板后仍应对照所选 content policy 文件内的 `revision` 实值核对再提交（沿用 `question_bank_v1` 等其他 policy 时尤其）。
 
 ## 3. 第二步：黄金样本（方案 §16.1 方法论，逐考试重建）
 
