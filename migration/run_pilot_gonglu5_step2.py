@@ -63,6 +63,27 @@ NETWORK_CALL_BUDGET = 14
 PROBE_ATTEMPTS = 2
 REPORT_NAME = "pilot_gonglu5_step2_report.json"
 
+# --reinforce 模式：针对 2chat 模型池四大实测症状（考情当知识点/拆行碎片/水印散字/
+# diagram 缺失）在 system 尾部追加硬性要求。不改动冻结的 V25 prompt 模板本体，
+# 仅 transport 层拼接（诊断/生产附加指令，request identity 不含此段——对比时注意口径）。
+REINFORCEMENT_NOTE = (
+    "\n\n【附加硬性要求（优先级最高）】\n"
+    "1. 『历年题量』『考查年份』『（20XX 单/多/案）』等考试元数据不是知识点，严禁作为提案输出。\n"
+    "2. 每个提案必须是完整的教学级知识点：跨行的公式、句子或例题必须合并为一个提案，严禁按行拆分。\n"
+    "3. 忽略证据中的水印散字（如孤立的『信』『微』『系』『联』『题』单字），严禁写入断言。\n"
+    "4. 若输入含受控图示（controlled_diagrams），必须为每个图示产出 diagram_relation 类型提案。\n"
+    "5. 宁缺毋滥：只输出教学价值明确的核心知识点，数量与人工讲义知识点密度相当（每页约 1~3 条）。"
+)
+
+
+class ReinforcedStep2Transport(OpenAICompatibleStep2Transport):
+    """system 尾部追加补强段的 transport（见 REINFORCEMENT_NOTE 注释）。"""
+
+    def _messages_for_model_payload(self, *, prompt: str, model_payload) -> list[dict]:
+        return OpenAICompatibleStep2Transport._messages_for_model_payload(
+            prompt=prompt + REINFORCEMENT_NOTE, model_payload=model_payload
+        )
+
 
 def _utc_now() -> str:
     return datetime.now(UTC).replace(microsecond=0).isoformat().replace("+00:00", "Z")
@@ -87,6 +108,8 @@ def main() -> int:
     parser.add_argument("--dry-run", action="store_true", help="build requests and sizes only; zero network calls")
     parser.add_argument("--storage-root", type=Path, required=True)
     parser.add_argument("--manual-reissue-reason", default=None)
+    parser.add_argument("--reinforce", action="store_true", help="append anti-noise reinforcement to the system prompt")
+    parser.add_argument("--only-samples", default=None, help="comma-separated sample id substrings (retry lane)")
     args = parser.parse_args()
     if args.allow_live == args.dry_run:
         parser.error("choose exactly one of --allow-live or --dry-run")
@@ -113,13 +136,20 @@ def main() -> int:
         raise SystemExit(f"storage root must be new or empty: {storage}")
     storage.mkdir(parents=True, exist_ok=True)
 
+    selected_ids = PILOT_SAMPLE_IDS
+    if args.only_samples:
+        needles = [item.strip() for item in args.only_samples.split(",") if item.strip()]
+        selected_ids = tuple(sid for sid in PILOT_SAMPLE_IDS if any(needle in sid for needle in needles))
+        if not selected_ids:
+            raise SystemExit(f"--only-samples matched nothing: {args.only_samples}")
+
     frozen_before = freeze_phase2r13_inputs(repository_root=OLD_ROOT)
     contexts = build_live_sample_contexts(
         repository_root=OLD_ROOT,
         model=model,
         relay_base_url=base_url,
         manual_reissue_reason=reason,
-        sample_ids=PILOT_SAMPLE_IDS,
+        sample_ids=selected_ids,
     )
 
     report: dict[str, object] = {
@@ -130,7 +160,7 @@ def main() -> int:
         "relay_fingerprint_sha256": fingerprint_step2_relay(base_url),
         "network_call_budget": NETWORK_CALL_BUDGET,
         "manual_reissue_reason": reason,
-        "sample_ids": list(PILOT_SAMPLE_IDS),
+        "sample_ids": list(selected_ids),
         "probes": {"step2a": None, "step2b": None},
         "samples": [],
         "gate_failures": [],
@@ -188,12 +218,14 @@ def main() -> int:
         report.update({"network_calls": 0, "accepted": True, "stop_reason": "dry_run_complete"})
         return finish(0)
 
-    transport = OpenAICompatibleStep2Transport(
+    transport_type = ReinforcedStep2Transport if args.reinforce else OpenAICompatibleStep2Transport
+    transport = transport_type(
         base_url=base_url,
         api_key=env["API_KEY"],
         timeout=240,
         default_headers={"User-Agent": env["OPENAI_USER_AGENT"]} if env.get("OPENAI_USER_AGENT") else None,
     )
+    report["reinforced_system_prompt"] = args.reinforce
 
     report["probe_attempts"] = {"step2a": [], "step2b": []}
     for stage in ("step2a", "step2b"):
@@ -220,23 +252,37 @@ def main() -> int:
         if step2a["state"] != "success":
             sample_failures.append({"sample_id": context.sample_id, "stage": "step2a", "state": step2a["state"]})
         else:
+            # 门禁评估对模型行为 fail-safe：劣质模型可能编造不存在的锚点 ID（56terra 实测），
+            # 评估器索引崩溃时登记为评估错误并继续，不熔断整场。
             response_a = V25Step2AResultPayload.model_validate(step2a["response"])
-            source_gate = assess_v25_step2a_response(request=context.step2a_request, response=response_a)
-            teaching_gate = _teaching_gate(context, response_a)
+            gates: dict[str, object] = {}
+            results: list[tuple[str, bool]] = []
+            try:
+                source_gate = assess_v25_step2a_response(request=context.step2a_request, response=response_a)
+                gates["source_contract"] = source_gate.model_dump(mode="json")
+                results.append(("source_contract", source_gate.valid))
+            except Exception as error:
+                gates["source_contract"] = {"evaluation_error": type(error).__name__, "detail": str(error)[:160]}
+                results.append(("source_contract_evaluation_error", False))
+            try:
+                teaching_gate = _teaching_gate(context, response_a)
+                gates["teaching"] = teaching_gate.model_dump(mode="json")
+                results.append(("teaching_publishable", teaching_gate.publishable))
+            except Exception as error:
+                gates["teaching"] = {"evaluation_error": type(error).__name__, "detail": str(error)[:160]}
+                results.append(("teaching_evaluation_error", False))
             learning_fact = _learning_fact_gate(context)
-            learning_golden = assess_v25_response_learning_golden(context=context, response=response_a)
-            sample_report["step2a_gates"] = {
-                "source_contract": source_gate.model_dump(mode="json"),
-                "teaching": teaching_gate.model_dump(mode="json"),
-                "learning_fixture": learning_fact,
-                "learning_golden": learning_golden,
-            }
-            for gate_name, ok in (
-                ("source_contract", source_gate.valid),
-                ("teaching_publishable", teaching_gate.publishable),
-                ("learning_fixture", learning_fact["valid"]),
-                ("learning_golden", learning_golden["valid"]),
-            ):
+            gates["learning_fixture"] = learning_fact
+            results.append(("learning_fixture", learning_fact["valid"]))
+            try:
+                learning_golden = assess_v25_response_learning_golden(context=context, response=response_a)
+                gates["learning_golden"] = learning_golden
+                results.append(("learning_golden", learning_golden["valid"]))
+            except Exception as error:
+                gates["learning_golden"] = {"evaluation_error": type(error).__name__, "detail": str(error)[:160]}
+                results.append(("learning_golden_evaluation_error", False))
+            sample_report["step2a_gates"] = gates
+            for gate_name, ok in results:
                 if not ok:
                     report["gate_failures"].append({"sample_id": context.sample_id, "stage": "step2a", "gate": gate_name})
 
