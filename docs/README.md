@@ -30,6 +30,7 @@
 | `p1_compilers_release_gate_design.md` | distill:compilers（4.1）+ release-gate（4.4） | 复制改造手法、逐符号去向表、§6 哈希稳定性红线、§8.1 A 案契约下沉 |
 | `distill_gates_review_design.md` | distill:gates-review（4.3，27 模块） | 人工准入内核六公理、法定哈希双变体勘察、生产契约保真条款 |
 | `live_pipeline_driver_design.md` | T4a 通用全链 live 驱动（待批，T4b 施工依据） | 一条命令全链 CLI 契约、exams/ 目录契约与运行产物布局、断点续跑（cache-state 跳过 + ResendPlan 重发）、双账本预算熔断、两处人工检查点（文件为契约 + webui 可选检视器）、双通道路由与 preflight 放行矩阵、fail-closed stop_reason 总表、T4b 签名清单与测试计划 |
+| `echo_step4_bridge_design.md` | P8 补链设计稿（**待用户审，只设计未施工**）：echo 新批→step4 产品化衔接道——五件一桥（step3 echo 批人工评审文件契约（b2_review 取证块签名）→ `echo-batch-release/1.0` N 卡新版本号家族（四哈希谱系防注入）→ `echo-batch-step4-handoff/1.0`（授权语义由摄取门禁签发）→ `derive_step4_bundle_echo`+装载接缝 → run_step4_stage 下游循环零改动复用）+ 词级门禁 1.1 分层行级衔接；断头点代码级取证（r319 Literal 钉扎/驱动硬绑行号）、防误改清单（pilot 原件零字节改动）、测试计划（离线 ~15 例 + 彩排 ≈$0.2-0.4 用 B1 三卡批）、估算单人 ~8h |
 
 > 迁移备注：`distill_gates_review_design.md` 曾在 `docs/` 顶层、`p1_compilers_release_gate_design.md` 曾在 `migration/`，均已按产出路径纪律（bc-b8b9aca6 ②）归位 design/，旧路径指路占位件已于本次清理删除。历史消息/任务书中的旧路径一律以本表为准。
 
