@@ -283,8 +283,21 @@ def build_echo_release_fixture(
     """
 
     typed_sha, compilation = _compile_contracts(typed_fixture_path)
-    if not compilation.gate.valid:
-        raise ValueError("typed fixture offline gate is invalid; refuse to build an echo release")
+    # 内容级门禁必须全绿；复合 valid 刻意不要求——其还与入 r9 试点常量
+    # batch_generation_authorized（「批产不授权」）：echo 道的批产授权正是本链
+    # 由人工评审签发的 handoff（§3.3 授权语义翻转，P8 的核心矫正对象）。
+    gate = compilation.gate
+    content_checks = {
+        "source_fixture_authorized": gate.source_fixture_authorized,
+        "source_contracts_valid": gate.source_contracts_valid,
+        "provenance_valid": gate.provenance_valid,
+        "source_text_exactly_once": gate.source_text_exactly_once,
+        "model_input_clean": gate.model_input_clean,
+        "deterministic_draft_valid": gate.deterministic_draft_valid,
+    }
+    failed_checks = [name for name, passed in content_checks.items() if not passed]
+    if failed_checks:
+        raise ValueError(f"typed fixture content gate failed; refuse to build an echo release: {failed_checks}")
     contracts_by_id = {contract.contract_id: contract for contract in compilation.contracts}
     review_sheet_sha = hashlib.sha256(Path(review_sheet_path).read_bytes()).hexdigest()
 

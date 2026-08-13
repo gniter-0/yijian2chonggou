@@ -102,50 +102,62 @@ def _json_transcriber(transcripts_path: Path, cards: list[dict]) -> "callable":
 
 
 def _live_transcriber(env_path: Path) -> tuple["callable", str]:
-    # live 视觉转写道（A2 卡校准；本卡纪律零 live）——形状对齐 OpenAI 兼容 chat+image_url。
-    import httpx
+    # live 视觉转写道——**SSE 流式**（生产配方：2chat 首字节窗口以流式穿越，T2/T3 实证；
+    # 20260813 P8 彩排实测非流式被网关 http=524 掐断后改流式，transcriber_id 携 +sse 谱系）。
+    from openai import OpenAI
 
     env = load_env_file(env_path)
     missing = [key for key in ("API_BASE_URL", "API_KEY", "TEXT_MODEL") if not env.get(key)]
     if missing:
         raise SystemExit(f"{env_path} is missing required keys for live transcription: {missing}")
-    base_url = env["API_BASE_URL"].rstrip("/")
     model = env["TEXT_MODEL"]
-    headers = {"Authorization": f"Bearer {env['API_KEY']}", "Content-Type": "application/json"}
-    if env.get("OPENAI_USER_AGENT"):
-        headers["User-Agent"] = env["OPENAI_USER_AGENT"]
-    client = httpx.Client(timeout=300.0, follow_redirects=False, headers=headers)
+    client = OpenAI(
+        base_url=env["API_BASE_URL"].rstrip("/"),
+        api_key=env["API_KEY"],
+        timeout=600,
+        max_retries=0,
+        default_headers={"User-Agent": env["OPENAI_USER_AGENT"]} if env.get("OPENAI_USER_AGENT") else None,
+    )
 
     def transcribe(image_bytes: bytes) -> str:
-        payload = {
-            "model": model,
-            "messages": [
+        # Responses API 路：A2 校准实录（provider_id=resp_…，3-18s/卡）证实 2chat 视觉
+        # 输入走 /responses 快速返回；chat/completions+image（含流式）实测被 120s 源站
+        # 窗口掐断（http=524，20260813 P8 彩排两次取证）。
+        response = client.responses.create(
+            model=model,
+            input=[
                 {
                     "role": "user",
                     "content": [
-                        {"type": "text", "text": TRANSCRIBE_PROMPT},
+                        {"type": "input_text", "text": TRANSCRIBE_PROMPT},
                         {
-                            "type": "image_url",
-                            "image_url": {"url": "data:image/png;base64," + base64.b64encode(image_bytes).decode("ascii")},
+                            "type": "input_image",
+                            "image_url": "data:image/png;base64," + base64.b64encode(image_bytes).decode("ascii"),
                         },
                     ],
                 }
             ],
-            "max_tokens": 4000,
-            "temperature": 0,
-        }
-        response = client.post(f"{base_url}/chat/completions", json=payload)
-        if response.status_code != 200:
-            raise SystemExit(f"live transcription failed: http={response.status_code}")
-        return str(response.json()["choices"][0]["message"]["content"])
+            max_output_tokens=4000,
+            temperature=0,
+        )
+        content = (getattr(response, "output_text", None) or "").strip()
+        if not content:
+            raise SystemExit("live transcription returned empty output")
+        return content
 
-    return transcribe, _live_transcriber_id(model)
+    return transcribe, _live_transcriber_id(model) + "+responses"
 
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--run-dir", type=Path, required=True)
     parser.add_argument("--release-fixture", type=Path, required=True)
+    parser.add_argument(
+        "--release-family",
+        choices=("pilot", "echo"),
+        default="pilot",
+        help="truth source family: pilot = r2242 YAML (expected_texts); echo = echo-batch-release/1.0 json (P8 bridge)",
+    )
     parser.add_argument("--transcripts-json", type=Path, default=None)
     parser.add_argument("--allow-live", action="store_true")
     parser.add_argument("--env-file", type=Path, default=NEW_ROOT / ".env")
@@ -161,10 +173,16 @@ def main() -> int:
         raise SystemExit(f"run dir lacks step4 artifacts (requests-manifest.json / images/): {run_dir}")
     manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
     fixture_bytes = args.release_fixture.read_bytes()
-    import yaml
+    if args.release_family == "echo":
+        from examcard.gates.review.step4_text_gate import extract_truths_from_echo_release
+        from examcard.knowledge.contracts.echo_release import load_echo_release_fixture
 
-    fixture = Step3UnifiedReviewedReleaseFixture.model_validate(yaml.safe_load(fixture_bytes.decode("utf-8")))
-    truths = extract_truths_from_release_fixture(fixture)
+        truths = extract_truths_from_echo_release(load_echo_release_fixture(args.release_fixture))
+    else:
+        import yaml
+
+        fixture = Step3UnifiedReviewedReleaseFixture.model_validate(yaml.safe_load(fixture_bytes.decode("utf-8")))
+        truths = extract_truths_from_release_fixture(fixture)
 
     cards: list[dict] = []
     for entry in manifest:
