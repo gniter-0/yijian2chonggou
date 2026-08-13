@@ -223,6 +223,12 @@ def test_report_builds_counts_overall_and_self_hash(tmp_path: Path) -> None:
     assert report.overall_verdict == "hard_fail"
     assert report.cards[0].verdict == "pass" and report.cards[1].verdict == "warn"
     assert report.cards[2].verdict == "hard_fail"
+    # R5 机拦人裁分层：disposition 按 verdict 定向（hard_fail 路由人工，非自动废图）。
+    assert [card.disposition for card in report.cards] == [
+        "auto_accept",
+        "auto_archive_with_note",
+        "human_adjudication",
+    ]
     # 防篡改：改一处判级即哈希失配。
     payload = report.model_dump(mode="json")
     payload["pass_count"] = 2
@@ -231,6 +237,32 @@ def test_report_builds_counts_overall_and_self_hash(tmp_path: Path) -> None:
         Step4TextGateReport.model_validate(payload)
     # 序列化-回读闭环。
     assert Step4TextGateReport.model_validate(json.loads(json.dumps(report.model_dump(mode="json")))).report_sha256 == report.report_sha256
+
+
+def test_card_disposition_must_follow_verdict_routing() -> None:
+    # R5 映射被 validator 钉死：hard_fail 卡标成 auto_accept（即便自证哈希算对）也必须被拒。
+    from examcard.common.hashing import hash_model
+    from examcard.gates.review.step4_text_gate import TextGateCardVerdict
+
+    payload = {
+        "card_index": 1,
+        "source_card_id": "card:gate:one",
+        "render_presentation": "table",
+        "image_path": "images/step4-card-01-deadbeef.png",
+        "image_sha256": hashlib.sha256(b"image").hexdigest(),
+        "transcript_sha256": hashlib.sha256(b"transcript").hexdigest(),
+        "verdict": "hard_fail",
+        "disposition": "auto_accept",
+        "coverage": 0.5,
+        "truth_line_count": 2,
+        "matched_line_count": 1,
+        "findings": (),
+    }
+    with pytest.raises(ValueError, match="disposition must follow verdict routing"):
+        hash_model(TextGateCardVerdict, payload, "card_sha256")
+    payload["disposition"] = "human_adjudication"
+    card = hash_model(TextGateCardVerdict, payload, "card_sha256")
+    assert card.disposition == "human_adjudication"
 
 
 def test_report_refuses_missing_truth(tmp_path: Path) -> None:

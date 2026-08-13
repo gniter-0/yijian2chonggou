@@ -28,6 +28,11 @@
 - 转写多余行 → warn（装饰性文字容忍为警告）；空转写 → hard_fail（empty_transcript）；
 - 空白差异忽略；全角/半角**同类标点互替仍记 punct_diff**（保守：报 warn 留人裁）。
 
+机拦人裁分层（A2 校准 R5，report/1.1）：门禁 hard_fail **≠ 自动废图**——两道零漏报支撑
+「机器只负责拦截，处置权路由人工/重发道」：逐卡 ``disposition`` 按 verdict 定向
+pass→auto_accept、warn→auto_archive_with_note（自动记档放行）、hard_fail→human_adjudication
+（人工确认后定夺重发/豁免），映射由 validator 钉死防篡改。
+
 自证哈希走 ``common.hashing``（新产出域；与旧契约法定哈希域不掺混——铁律 bc-b8b9aca6）。
 """
 from __future__ import annotations
@@ -45,6 +50,7 @@ from ...materials.schema import StrictModel
 
 __all__ = (
     "STEP4_TEXT_GATE_VERSION",
+    "DISPOSITION_BY_VERDICT",
     "TextGateFinding",
     "TextGateCardVerdict",
     "Step4TextGateReport",
@@ -56,7 +62,7 @@ __all__ = (
     "resolve_card_image",
 )
 
-STEP4_TEXT_GATE_VERSION = "step4-text-gate-report/1.0"
+STEP4_TEXT_GATE_VERSION = "step4-text-gate-report/1.1"
 
 # 语义 token：CJK / 拉丁字母数字串 / 数值（含小数与百分比）/ 比较与数学符号（考点级，D2 符号谱系）。
 _SEMANTIC_TOKEN = re.compile(
@@ -82,6 +88,14 @@ _GLYPH_FOLD = str.maketrans({"∑": "Σ", "≦": "≤", "≧": "≥"})
 FindingCode = Literal["line_missing", "line_extra", "semantic_diff", "punct_diff", "empty_transcript"]
 Severity = Literal["hard_fail", "warn"]
 Verdict = Literal["pass", "warn", "hard_fail"]
+Disposition = Literal["auto_accept", "auto_archive_with_note", "human_adjudication"]
+
+# R5 机拦人裁分层路由（verdict → 处置）：hard_fail 只拦截不废图，定向人工/重发道。
+DISPOSITION_BY_VERDICT: Mapping[str, str] = {
+    "pass": "auto_accept",
+    "warn": "auto_archive_with_note",
+    "hard_fail": "human_adjudication",
+}
 
 
 class TextGateFinding(StrictModel):
@@ -100,6 +114,7 @@ class TextGateCardVerdict(StrictModel):
     image_sha256: str = Field(pattern=SHA256_HEX)
     transcript_sha256: str = Field(pattern=SHA256_HEX)
     verdict: Verdict
+    disposition: Disposition
     coverage: float = Field(ge=0.0, le=1.0)
     truth_line_count: int = Field(ge=1)
     matched_line_count: int = Field(ge=0)
@@ -108,6 +123,8 @@ class TextGateCardVerdict(StrictModel):
 
     @model_validator(mode="after")
     def validate_card(self) -> "TextGateCardVerdict":
+        if self.disposition != DISPOSITION_BY_VERDICT[self.verdict]:
+            raise ValueError("text gate card disposition must follow verdict routing (R5)")
         expected = canonical_hash(self.model_dump(mode="json", exclude={"schema_version", "card_sha256"}))
         if self.card_sha256 != expected:
             raise ValueError("text gate card verdict hash mismatch")
@@ -115,7 +132,7 @@ class TextGateCardVerdict(StrictModel):
 
 
 class Step4TextGateReport(StrictModel):
-    schema_version: Literal["step4-text-gate-report/1.0"] = STEP4_TEXT_GATE_VERSION
+    schema_version: Literal["step4-text-gate-report/1.1"] = STEP4_TEXT_GATE_VERSION
     run_dir: str = Field(min_length=1)
     truth_fixture_path: str = Field(min_length=1)
     truth_fixture_sha256: str = Field(pattern=SHA256_HEX)
@@ -594,6 +611,7 @@ def build_step4_text_gate_report(
             "image_sha256": hashlib.sha256(image_bytes).hexdigest(),
             "transcript_sha256": hashlib.sha256(transcript.encode("utf-8")).hexdigest(),
             "verdict": verdict,
+            "disposition": DISPOSITION_BY_VERDICT[verdict],
             "coverage": round(coverage, 4),
             "truth_line_count": len(truth_lines),
             "matched_line_count": matched,

@@ -12,6 +12,9 @@
   负责实测校准，本仓测试全部走伪转写。**
 
 退出码：0=pass 或 warn（warn 记录在报告，不拦截）；1=存在 hard_fail 或输入缺件。
+机拦人裁（R5，report/1.1）：exit 1 语义是「机器拦截、路由人工」而非自动废图——报告逐卡
+``disposition`` 给出定向（pass→auto_accept、warn→auto_archive_with_note、
+hard_fail→human_adjudication），stdout 汇总行附 human_adjudication_cards 清单。
 
 运行（exam-card-engine 仓根）：
   uv run python migration/run_step4_text_gate.py \
@@ -39,11 +42,23 @@ from examcard.gates.review.step4_text_gate import (  # noqa: E402
 from examcard.knowledge.contracts.admission_fixtures import Step3UnifiedReviewedReleaseFixture  # noqa: E402
 from examcard.pipeline.shadow_wiring import load_env_file  # noqa: E402
 
+# R4（A2 校准建议）：转写行约定入 prompt——表格卡整行转写为一行、单元格间以 " | " 连接，
+# 从源头把转写形态对齐真值行约定（逐单元格一行是 live 道 G2 碎行的主因）。prompt 一旦变更
+# 必须同步 bump 版本号：transcriber_id 携带之（A2 提醒——转写实录缓存/复放按版本区分谱系）。
+TRANSCRIBE_PROMPT_VERSION = "prompt-v2"
 TRANSCRIBE_PROMPT = (
     "Transcribe every piece of visible text in this exam knowledge-card image verbatim, "
     "one visible element per line, preserving all punctuation, comparison operators and units "
-    "exactly as rendered. Output only the transcription lines with no commentary."
+    "exactly as rendered. For table cards transcribe each table row as one single line in "
+    "reading order, joining the row's cell contents with ' | '; never split one table row "
+    "across multiple output lines. Output only the transcription lines with no commentary."
 )
+
+
+def _live_transcriber_id(model: str) -> str:
+    """live 道 transcriber_id＝模型+prompt 版本（R4：转写形态随 prompt 变，谱系必须可区分）。"""
+
+    return f"live:{model}:{TRANSCRIBE_PROMPT_VERSION}"
 
 
 def _atomic_write_json(path: Path, payload: object) -> None:
@@ -124,7 +139,7 @@ def _live_transcriber(env_path: Path) -> tuple["callable", str]:
             raise SystemExit(f"live transcription failed: http={response.status_code}")
         return str(response.json()["choices"][0]["message"]["content"])
 
-    return transcribe, f"live:{model}"
+    return transcribe, _live_transcriber_id(model)
 
 
 def main() -> int:
@@ -190,6 +205,10 @@ def main() -> int:
                 "warn": report.warn_count,
                 "hard_fail": report.hard_fail_count,
                 "overall_verdict": report.overall_verdict,
+                # R5 机拦人裁分层：hard_fail 卡定向人工/重发道（非自动废图），warn 卡自动记档。
+                "human_adjudication_cards": [
+                    card.card_index for card in report.cards if card.disposition == "human_adjudication"
+                ],
             },
             ensure_ascii=False,
         )
