@@ -317,6 +317,29 @@ def test_a2_gold_set_verdicts_reproduced_end_to_end() -> None:
         assert verdict_counts == {key: int(value) for key, value in distribution.items()}
 
 
+def test_a2_live_vision_transcripts_replay_matches_human_verdicts() -> None:
+    """真 vision 转写复放回归（A2 live 校准实录 fixture，d90afa9）：
+    18 卡逐卡 gate(真转写) == 人工 expected_verdict——含逐单元格转写、罗马数字字母化、
+    ∑/Σ 归一、| → / 分隔替换、自由折行等全部真实转写形态（零网络复放）。"""
+
+    gold = json.loads((_REAL_REPO / "tests/fixtures/step4_word_gate/b2_review_gold.json").read_text(encoding="utf-8"))
+    live = json.loads(
+        (_REAL_REPO / "tests/fixtures/step4_word_gate/b2_live_vision_transcripts_20260813.json").read_text(encoding="utf-8")
+    )
+    by_key = {(entry["card_index"], entry.get("render", "r1")): entry for entry in live["transcripts"]}
+    for card in gold["cards"]:
+        entry = by_key[(card["card_index"], card["render"])]
+        transcript = entry["transcript"]
+        transcript = "\n".join(transcript) if isinstance(transcript, list) else str(transcript)
+        verdict, _coverage, _matched, findings = evaluate_card_transcript(
+            truth_lines=tuple(card["truth_visible_texts"]), transcript=transcript
+        )
+        assert verdict == card["expected_verdict"], (
+            f"card {card['card_index']}-{card['render']} (live transcript): gate={verdict} "
+            f"expected={card['expected_verdict']} findings={[f.code for f in findings]}"
+        )
+
+
 def test_resolve_card_image_prefers_highest_resend_round(tmp_path: Path) -> None:
     base = tmp_path / "step4-card-01-1011b240.png"
     base.write_bytes(b"round1")

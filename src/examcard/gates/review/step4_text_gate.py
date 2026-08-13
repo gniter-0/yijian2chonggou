@@ -64,8 +64,19 @@ _SEMANTIC_TOKEN = re.compile(
     r"|[A-Za-z0-9]+(?:\.[0-9]+)?"            # 拉丁/数字串（含小数）
     r"|[≤≥<>＜＞≦≧=±×÷∑Σ√∞≈≠~％%‰℃°]"          # 比较/数学/单位记号（含全角比较符）——错一个即考点级
 )
-# 标点 token：全半角常用标点（差异只记 warn）。
-_PUNCT_TOKEN = re.compile(r"[，。、；：？！""''『』「」（）【】,.;:?!\"'()\[\]{}\-—–…·/\\|]")
+# 标点 token：全半角常用标点（差异只记 warn）；写成 \u 转义防引号书写歧义。
+_PUNCT_TOKEN = re.compile(
+    r"[\uff0c\u3002\u3001\uff1b\uff1a\uff1f\uff01"      # ，。、；：？！
+    r"\u201c\u201d\u2018\u2019\u300e\u300f\u300c\u300d"  # “”‘’『』「」
+    r"\uff08\uff09\u3010\u3011"                          # （）【】
+    r",.;:?!\"'()\[\]{}\-"
+    r"\u2014\u2013\u2026\u00b7\\]"                       # —–…·
+)
+# 布局分隔记号（A2 校准 G1/R4：真值用「|」标注单元格边界、vision 转写常用「/」代——
+# 图面上是网格线而非字符，两侧一律丢弃不参与比对；内容斜杠（km/h）两侧对称丢弃仍等价）。
+_LAYOUT_TOKEN = re.compile(r"[|/∣｜／]")
+# R1 显式等值字形折叠表（NFKC 之外无兼容分解的视觉同形对；只折字形不折语义，＞ vs ≥ 照旧 hard）。
+_GLYPH_FOLD = str.maketrans({"∑": "Σ", "≦": "≤", "≧": "≥"})
 
 
 FindingCode = Literal["line_missing", "line_extra", "semantic_diff", "punct_diff", "empty_transcript"]
@@ -178,8 +189,9 @@ def resolve_card_image(images_dir: Any, card_index: int, source_card_id: str) ->
 
 def _normalize_line(line: str) -> str:
     # A2 契约归一化：空白不敏感（#09 数字 kerning 先例）+ NFKC 全/半角等值形折叠
-    # （＜≡<、（）≡()、，≡, 等宽度变体等同；，→； 这类**符号替换**折叠后仍相异 → 照记 punct_diff）。
-    return unicodedata.normalize("NFKC", re.sub(r"\s+", "", line))
+    # （＜≡<、（）≡()、，≡, 等宽度变体等同；，→； 这类**符号替换**折叠后仍相异 → 照记 punct_diff）
+    # + R1 显式字形折叠（∑≡Σ、≦≡≤、≧≡≥——NFKC 无兼容分解的视觉同形对）。
+    return unicodedata.normalize("NFKC", re.sub(r"\s+", "", line)).translate(_GLYPH_FOLD)
 
 
 def tokenize_visible_text(line: str) -> tuple[tuple[str, ...], tuple[str, ...]]:
@@ -190,6 +202,10 @@ def tokenize_visible_text(line: str) -> tuple[tuple[str, ...], tuple[str, ...]]:
     punct: list[str] = []
     cursor = 0
     while cursor < len(compact):
+        match = _LAYOUT_TOKEN.match(compact, cursor)
+        if match is not None:
+            cursor = match.end()  # 布局分隔记号：丢弃不参与比对
+            continue
         match = _SEMANTIC_TOKEN.match(compact, cursor)
         if match is not None:
             semantic.append(match.group(0))
@@ -414,27 +430,50 @@ def evaluate_card_transcript(*, truth_lines: Sequence[str], transcript: str) -> 
         element_open.setdefault(element_of[t_index], []).append(t_index)
     for element_index in sorted(element_open):
         pending = element_open[element_index]
-        truth_concat = "".join(truth_lines[index] for index in pending)
-        truth_norm = unicodedata.normalize("NFKC", _normalize_line(truth_concat))
-        best: tuple[float, tuple[int, ...]] | None = None
+
+        def _variant(use_alt: bool) -> tuple[str, tuple[str, ...], tuple[str, ...]]:
+            texts: list[str] = []
+            semantic: list[str] = []
+            punct: list[str] = []
+            for index in pending:
+                if use_alt and alt_tokens[index] is not None:
+                    stripped = label_pattern.match(truth_lines[index])
+                    assert stripped is not None
+                    texts.append(stripped.group(2).strip())
+                    tokens = alt_tokens[index]
+                else:
+                    texts.append(truth_lines[index])
+                    tokens = truth_tokens[index]
+                semantic.extend(tokens[0])
+                punct.extend(tokens[1])
+            return "".join(texts), tuple(semantic), tuple(punct)
+
+        # 重复行标签可去标签参与元素级对账（真转写「标签独立成行/合并单元格+自由折行」形态，
+        # A2 校准 R3 剩余项）：全形与去标签形两个候选取窗口相似度更高者。
+        variants = [_variant(False)]
+        if any(alt_tokens[index] is not None for index in pending):
+            variants.append(_variant(True))
+        best: tuple[float, tuple[int, ...], int] | None = None
         ordered_open = sorted(open_transcript)
-        for start_pos in range(len(ordered_open)):
-            window: list[int] = []
-            cursor: int | None = None
-            for follower in ordered_open[start_pos:]:
-                if cursor is not None and follower != cursor + 1:
-                    break
-                window.append(follower)
-                cursor = follower
-                got_concat = "".join(transcript_lines[index] for index in window)
-                got_norm = unicodedata.normalize("NFKC", _normalize_line(got_concat))
-                ratio = SequenceMatcher(None, truth_norm, got_norm).ratio()
-                if ratio >= 0.6 and (best is None or ratio > best[0]):
-                    best = (ratio, tuple(window))
+        for variant_index, (truth_concat, _sem, _pun) in enumerate(variants):
+            truth_norm = unicodedata.normalize("NFKC", _normalize_line(truth_concat))
+            for start_pos in range(len(ordered_open)):
+                window: list[int] = []
+                cursor: int | None = None
+                for follower in ordered_open[start_pos:]:
+                    if cursor is not None and follower != cursor + 1:
+                        break
+                    window.append(follower)
+                    cursor = follower
+                    got_concat = "".join(transcript_lines[index] for index in window)
+                    got_norm = unicodedata.normalize("NFKC", _normalize_line(got_concat))
+                    ratio = SequenceMatcher(None, truth_norm, got_norm).ratio()
+                    if ratio >= 0.6 and (best is None or ratio > best[0]):
+                        best = (ratio, tuple(window), variant_index)
         if best is None:
             continue
-        _ratio, window_indexes = best
-        truth_semantic, truth_punct = _concat(truth_tokens, pending)
+        _ratio, window_indexes, variant_index = best
+        truth_concat, truth_semantic, truth_punct = variants[variant_index]
         got_semantic, got_punct = _concat(got_tokens, window_indexes)
         matcher = SequenceMatcher(None, truth_semantic, got_semantic)
         semantic_findings = 0
