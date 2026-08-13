@@ -2841,6 +2841,14 @@
           },
           "title": "Controlled Diagrams",
           "type": "array"
+        },
+        "controlled_diagram_anchor_spans": {
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/EvidenceAnchorSpan"
+          },
+          "title": "Controlled Diagram Anchor Spans",
+          "type": "array"
         }
       },
       "required": [
@@ -2860,7 +2868,7 @@
           "type": "string"
         },
         "projection_version": {
-          "default": "step2a_semantic_projection_v5_table_atomic_continuation",
+          "default": "step2a_semantic_projection_v6_controlled_diagram_node_anchors",
           "title": "Projection Version",
           "type": "string"
         },
@@ -2990,6 +2998,14 @@
           ],
           "default": null,
           "title": "Diagram Review Sidecar Sha256"
+        },
+        "controlled_diagram_anchor_spans": {
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/EvidenceAnchorSpan"
+          },
+          "title": "Controlled Diagram Anchor Spans",
+          "type": "array"
         }
       },
       "required": [

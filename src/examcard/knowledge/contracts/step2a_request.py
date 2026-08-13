@@ -28,6 +28,8 @@ from .table_inputs import Step2ASectionInput, TableContinuationRequestInput
 from .versions import (
     COMPOSITION_NUMERIC_OCCURRENCE_STEP2A_MODEL_INPUT_VERSION,
     COMPOSITION_NUMERIC_OCCURRENCE_STEP2A_REQUEST_VERSION,
+    CONTROLLED_DIAGRAM_ANCHOR_STEP2A_MODEL_INPUT_VERSION,
+    CONTROLLED_DIAGRAM_ANCHOR_STEP2A_REQUEST_VERSION,
     DETERMINISTIC_NUMERIC_CLAIM_STEP2A_MODEL_INPUT_VERSION,
     DETERMINISTIC_NUMERIC_CLAIM_STEP2A_REQUEST_VERSION,
     LEGACY_STEP2A_MODEL_INPUT_VERSION,
@@ -91,6 +93,7 @@ class Step2ARequest(StrictModel):
             LEGACY_STEP2A_REQUEST_VERSION,
             PREVIOUS_STEP2A_REQUEST_VERSION,
             STEP2A_REQUEST_VERSION,
+            CONTROLLED_DIAGRAM_ANCHOR_STEP2A_REQUEST_VERSION,
             MULTIPAGE_STEP2A_REQUEST_VERSION,
             REVIEWED_MULTIPAGE_STEP2A_REQUEST_VERSION,
             MINIMAL_REVIEWED_MULTIPAGE_STEP2A_REQUEST_VERSION,
@@ -110,6 +113,7 @@ class Step2ARequest(StrictModel):
             LEGACY_STEP2A_REQUEST_VERSION: LEGACY_STEP2A_MODEL_INPUT_VERSION,
             PREVIOUS_STEP2A_REQUEST_VERSION: LEGACY_STEP2A_MODEL_INPUT_VERSION,
             STEP2A_REQUEST_VERSION: STEP2A_MODEL_INPUT_VERSION,
+            CONTROLLED_DIAGRAM_ANCHOR_STEP2A_REQUEST_VERSION: CONTROLLED_DIAGRAM_ANCHOR_STEP2A_MODEL_INPUT_VERSION,
             MULTIPAGE_STEP2A_REQUEST_VERSION: MULTIPAGE_STEP2A_MODEL_INPUT_VERSION,
             REVIEWED_MULTIPAGE_STEP2A_REQUEST_VERSION: REVIEWED_MULTIPAGE_STEP2A_MODEL_INPUT_VERSION,
             MINIMAL_REVIEWED_MULTIPAGE_STEP2A_REQUEST_VERSION: MINIMAL_REVIEWED_MULTIPAGE_STEP2A_MODEL_INPUT_VERSION,
@@ -199,6 +203,21 @@ class Step2ARequest(StrictModel):
         projection_span_ids = {span.anchor_span_id for item in projections for span in item.anchor_spans}
         if section_span_ids != projection_span_ids:
             raise ValueError("Step 2A request anchor spans must exactly match its semantic projection")
+        quarantined_section_ids = {
+            span.anchor_span_id for section in self.sections for span in section.controlled_diagram_anchor_spans
+        }
+        quarantined_projection_ids = {
+            span.anchor_span_id for item in projections for span in item.controlled_diagram_anchor_spans
+        }
+        if quarantined_section_ids != quarantined_projection_ids:
+            raise ValueError("Step 2A controlled-diagram node anchors must exactly match their semantic projections")
+        if quarantined_section_ids & projection_span_ids:
+            raise ValueError("controlled-diagram node anchors must stay disjoint from selectable anchor spans")
+        if self.identity.request_version == CONTROLLED_DIAGRAM_ANCHOR_STEP2A_REQUEST_VERSION:
+            if not quarantined_section_ids:
+                raise ValueError("V24 Step 2A requests require controlled-diagram node anchors")
+        elif quarantined_section_ids:
+            raise ValueError("only the V24 base contract admits controlled-diagram node anchors")
         controlled_input_ids = [item.input_id for item in self.table_continuation_inputs]
         if len(controlled_input_ids) != len(set(controlled_input_ids)):
             raise ValueError("controlled table continuation request inputs must be unique")
@@ -551,7 +570,7 @@ class Step2ARequest(StrictModel):
             manual_reissue_reason=self.manual_reissue_reason,
             include_manual_reissue_reason=self.identity.request_version != LEGACY_STEP2A_REQUEST_VERSION,
             include_phase2r054_fields=self.identity.request_version
-            in {STEP2A_REQUEST_VERSION, *_MULTIPAGE_STEP2A_REQUEST_VERSIONS},
+            in {STEP2A_REQUEST_VERSION, CONTROLLED_DIAGRAM_ANCHOR_STEP2A_REQUEST_VERSION, *_MULTIPAGE_STEP2A_REQUEST_VERSIONS},
             include_multipage_fields=self.identity.request_version
             in _MULTIPAGE_STEP2A_REQUEST_VERSIONS,
             continuation_review_sidecar=self.continuation_review_sidecar,

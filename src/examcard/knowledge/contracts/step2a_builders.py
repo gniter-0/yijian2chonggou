@@ -40,6 +40,8 @@ from .table_inputs import (
 from .versions import (
     COMPOSITION_NUMERIC_OCCURRENCE_STEP2A_MODEL_INPUT_VERSION,
     COMPOSITION_NUMERIC_OCCURRENCE_STEP2A_REQUEST_VERSION,
+    CONTROLLED_DIAGRAM_ANCHOR_STEP2A_MODEL_INPUT_VERSION,
+    CONTROLLED_DIAGRAM_ANCHOR_STEP2A_REQUEST_VERSION,
     DETERMINISTIC_NUMERIC_CLAIM_STEP2A_MODEL_INPUT_VERSION,
     DETERMINISTIC_NUMERIC_CLAIM_STEP2A_REQUEST_VERSION,
     MINIMAL_REVIEWED_MULTIPAGE_STEP2A_MODEL_INPUT_VERSION,
@@ -76,11 +78,13 @@ def build_step2a_section(
     controlled_diagrams: Iterable[ReviewedStructuralDiagramInput] = (),
     context_only_evidence_ids: Iterable[str] = (),
     table_cell_span_overrides: Mapping[str, tuple[int, int]] | None = None,
+    controlled_diagram_anchor_spans: Iterable[EvidenceAnchorSpan] = (),
 ) -> Step2ASectionInput:
     """Build one page-local 2A section without flattening table text."""
     ordered = tuple(sorted(units, key=lambda unit: unit.order))
     frozen_diagrams = tuple(controlled_diagrams)
     frozen_spans = tuple(anchor_spans)
+    frozen_diagram_anchor_spans = tuple(controlled_diagram_anchor_spans)
     context_only_ids = frozenset(context_only_evidence_ids)
     span_overrides = dict(table_cell_span_overrides or {})
     if not ordered:
@@ -166,6 +170,7 @@ def build_step2a_section(
         text_evidence=text_items,
         tables=tuple(tables),
         controlled_diagrams=frozen_diagrams,
+        controlled_diagram_anchor_spans=frozen_diagram_anchor_spans,
     )
 
 
@@ -250,6 +255,27 @@ def build_step2a_request(
     supplied_bindings = tuple(continuation_bindings)
     frozen_table_continuation_inputs = tuple(table_continuation_inputs)
     is_multipage = bool(frozen_additional_projections or supplied_bindings)
+    has_controlled_diagram_anchors = any(section.controlled_diagram_anchor_spans for section in frozen_sections)
+    if has_controlled_diagram_anchors and (
+        is_multipage
+        or continuation_review_sidecar is not None
+        or continuation_review_sidecar_path is not None
+        or frozen_table_continuation_inputs
+        or use_minimal_model_contract
+        or use_numeric_expression_grounding_contract
+        or use_single_role_anchor_contract
+        or use_deterministic_numeric_claim_contract
+        or use_table_continuation_contract
+        or use_table_coverage_obligation_contract
+        or use_table_coverage_obligation_context_contract
+        or use_table_stiffness_atomic_threshold_coverage_contract
+        or use_composition_numeric_occurrence_contract
+        or use_structural_index_occurrence_contract
+        or use_source_owned_structural_projection_contract
+    ):
+        # Fail-closed variant guard (checkpoint-A rule 8): only the single-page
+        # V24 base contract admits the quarantined controlled-diagram lane.
+        raise ValueError("controlled-diagram node anchors are admitted only by the single-page V24 base contract")
     if continuation_review_sidecar is None and continuation_review_sidecar_path is not None:
         continuation_review_sidecar = load_continuation_review_sidecar(continuation_review_sidecar_path)
     if continuation_review_sidecar is not None and continuation_review_sidecar_path is None:
@@ -299,7 +325,9 @@ def build_step2a_request(
         else ()
     )
     request_version = (
-        SOURCE_OWNED_STRUCTURAL_PROJECTION_STEP2A_REQUEST_VERSION
+        CONTROLLED_DIAGRAM_ANCHOR_STEP2A_REQUEST_VERSION
+        if has_controlled_diagram_anchors
+        else SOURCE_OWNED_STRUCTURAL_PROJECTION_STEP2A_REQUEST_VERSION
         if use_source_owned_structural_projection_contract
         else STRUCTURAL_INDEX_OCCURRENCE_STEP2A_REQUEST_VERSION
         if use_structural_index_occurrence_contract
@@ -338,7 +366,9 @@ def build_step2a_request(
         else STEP2A_REQUEST_VERSION
     )
     model_input_version = (
-        SOURCE_OWNED_STRUCTURAL_PROJECTION_STEP2A_MODEL_INPUT_VERSION
+        CONTROLLED_DIAGRAM_ANCHOR_STEP2A_MODEL_INPUT_VERSION
+        if has_controlled_diagram_anchors
+        else SOURCE_OWNED_STRUCTURAL_PROJECTION_STEP2A_MODEL_INPUT_VERSION
         if use_source_owned_structural_projection_contract
         else STRUCTURAL_INDEX_OCCURRENCE_STEP2A_MODEL_INPUT_VERSION
         if use_structural_index_occurrence_contract

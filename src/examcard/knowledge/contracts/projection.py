@@ -2,7 +2,7 @@
 from __future__ import annotations
 from enum import StrEnum
 
-from pydantic import Field, model_validator
+from pydantic import Field, model_serializer, model_validator
 
 from ...evidence.schema import EvidenceKind
 from ...materials.schema import PolicyDecision, SemanticRole, StrictModel
@@ -13,6 +13,7 @@ from .hashing import _canonical_sha256
 from .request_identity import _SHA256_PATTERN
 from .versions import (
     LEGACY_STEP2A_SEMANTIC_PROJECTION_VERSION,
+    PREVIOUS_STEP2A_SEMANTIC_PROJECTION_VERSION,
     STEP2A_SEMANTIC_PROJECTION_VERSION,
 )
 
@@ -128,6 +129,16 @@ class Step2ASemanticProjection(StrictModel):
     table_repair_sidecar_sha256: str | None = Field(default=None, pattern=_SHA256_PATTERN)
     controlled_diagrams: tuple[ReviewedStructuralDiagramInput, ...] = ()
     diagram_review_sidecar_sha256: str | None = Field(default=None, pattern=_SHA256_PATTERN)
+    controlled_diagram_anchor_spans: tuple[EvidenceAnchorSpan, ...] = ()
+
+    @model_serializer(mode="wrap")
+    def _serialize_without_empty_diagram_anchors(self, handler):
+        """Drop the quarantined-anchor key when empty: v4/v5 payloads and every
+        diagram-free dump stay byte-identical to the pre-v6 shape."""
+        data = handler(self)
+        if isinstance(data, dict) and not data.get("controlled_diagram_anchor_spans"):
+            data.pop("controlled_diagram_anchor_spans", None)
+        return data
 
     @property
     def fingerprint_sha256(self) -> str:
@@ -142,9 +153,12 @@ class Step2ASemanticProjection(StrictModel):
     def validate_projection(self) -> "Step2ASemanticProjection":
         if self.projection_version not in {
             LEGACY_STEP2A_SEMANTIC_PROJECTION_VERSION,
+            PREVIOUS_STEP2A_SEMANTIC_PROJECTION_VERSION,
             STEP2A_SEMANTIC_PROJECTION_VERSION,
         }:
             raise ValueError("semantic projection uses an incompatible version")
+        if self.controlled_diagram_anchor_spans and self.projection_version != STEP2A_SEMANTIC_PROJECTION_VERSION:
+            raise ValueError("controlled-diagram node anchors require the v6 projection contract")
         decision_ids = [decision.evidence_id for decision in self.decisions]
         if not self.decisions or len(decision_ids) != len(set(decision_ids)):
             raise ValueError("semantic projections require one policy decision for every source Evidence ID")
@@ -220,6 +234,32 @@ class Step2ASemanticProjection(StrictModel):
                 raise ValueError("controlled diagram anchors must have policy decisions")
             if any(ProjectionSelection.CONTROLLED_DIAGRAM_SUMMARY not in decisions[evidence_id].selections for evidence_id in diagram.source_evidence_ids):
                 raise ValueError("controlled diagram anchors must be explicitly marked in the projection")
+        if self.controlled_diagram_anchor_spans:
+            if not self.controlled_diagrams:
+                raise ValueError("controlled-diagram node anchors require a reviewed controlled diagram")
+            reviewed_node_ids = {
+                evidence_id
+                for diagram in self.controlled_diagrams
+                for node in diagram.nodes
+                for evidence_id in node.evidence_ids
+            }
+            quarantined_ids = [span.anchor_span_id for span in self.controlled_diagram_anchor_spans]
+            if len(quarantined_ids) != len(set(quarantined_ids)) or set(quarantined_ids) & set(span_ids):
+                raise ValueError("controlled-diagram node anchors must be unique and disjoint from selectable anchor spans")
+            for span in self.controlled_diagram_anchor_spans:
+                decision = decisions.get(span.parent_evidence_id)
+                if decision is None or span.parent_evidence_id not in reviewed_node_ids:
+                    raise ValueError("controlled-diagram node anchors must bind reviewed diagram-node Evidence")
+                if span.parent_evidence_kind != EvidenceKind.DIAGRAM_NODE or decision.source_kind != EvidenceKind.DIAGRAM_NODE:
+                    raise ValueError("controlled-diagram node anchors admit only diagram-node Evidence")
+                if span.source_manifest_sha256 != self.source_manifest_sha256:
+                    raise ValueError("controlled-diagram node anchors must bind the projection source manifest")
+                if span.content_policy_id != self.content_policy_id or span.content_policy_revision != self.content_policy_revision:
+                    raise ValueError("controlled-diagram node anchors must bind the projection Content Policy revision")
+                if span.content_policy_fingerprint_sha256 != self.content_policy_fingerprint_sha256:
+                    raise ValueError("controlled-diagram node anchors must bind the projection Content Policy fingerprint")
+                if span.policy_decision != decision.policy_decision:
+                    raise ValueError("controlled-diagram node anchor policy decision must equal the parent projection decision")
         expected_id = f"step2a-projection:{self.fingerprint_sha256[:24]}"
         if self.projection_id != expected_id:
             raise ValueError("semantic projection ID does not match its immutable content")

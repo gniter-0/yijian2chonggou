@@ -18,6 +18,7 @@ from .fact_engine import decide_policy
 from .contracts import (
     EvidenceAnchorSpan,
     ContinuationRecord,
+    PREVIOUS_STEP2A_SEMANTIC_PROJECTION_VERSION,
     ProjectionDecisionRecord,
     ProjectionSelection,
     ReviewedDiagramEdgeInput,
@@ -290,12 +291,19 @@ def build_step2a_semantic_projection(
     table_repair_sidecar: TableRepairReviewSidecar | None = None,
     table_repair_sidecar_path: Path | None = None,
     repository_root: Path | None = None,
+    mint_controlled_diagram_anchor_spans: bool = False,
 ) -> SemanticProjectionBuild:
     """Create a non-destructive Step 2A view from one immutable Evidence page.
 
     The derived projection records a decision for every source Evidence unit,
     while the LLM receives only direct policy-approved textual/table content and
     reviewed ``semantic_v2`` diagram summaries.
+
+    ``mint_controlled_diagram_anchor_spans`` opts in to the quarantined
+    controlled-diagram node-label anchor lane. It stays off by default so every
+    existing request family keeps building byte-stable payloads; only explicit
+    admission-doctrine consumers (and a future request family that declares the
+    lane) may enable it.
     """
     source_manifest_path = Path(source_manifest_path)
     if not source_manifest_path.is_file():
@@ -540,14 +548,72 @@ def build_step2a_semantic_projection(
                     source_manifest_sha256=source_manifest_sha256,
                 )
             )
+    # Controlled-diagram node-label lane (quarantined; never joins anchor_spans):
+    # only policy-included census diagram_node units bound by a reviewed sidecar
+    # node mint one whitespace-trimmed full-text span each, keep-first
+    # deduplicated in deterministic diagram -> node -> evidence_id order.
+    controlled_diagram_anchor_spans: list[EvidenceAnchorSpan] = []
+    minted_node_evidence_ids: set[str] = set()
+    for diagram in controlled_diagrams if mint_controlled_diagram_anchor_spans else ():
+        for node in diagram.nodes:
+            for evidence_id in node.evidence_ids:
+                if evidence_id in minted_node_evidence_ids:
+                    continue
+                unit = by_id.get(evidence_id)
+                if unit is None or unit.kind != EvidenceKind.DIAGRAM_NODE:
+                    continue
+                if policy_decisions[evidence_id].disposition != PolicyDisposition.INCLUDED:
+                    continue
+                label_text = unit.canonical_text
+                start, end = 0, len(label_text)
+                while start < end and label_text[start].isspace():
+                    start += 1
+                while end > start and label_text[end - 1].isspace():
+                    end -= 1
+                if start >= end:
+                    continue
+                minted_node_evidence_ids.add(evidence_id)
+                exact_text = label_text[start:end]
+                exact_text_sha256 = hashlib.sha256(exact_text.encode("utf-8")).hexdigest()
+                controlled_diagram_anchor_spans.append(
+                    EvidenceAnchorSpan(
+                        anchor_span_id=make_evidence_anchor_span_id(
+                            parent_evidence_id=unit.evidence_id,
+                            start=start,
+                            end=end,
+                            exact_text_sha256=exact_text_sha256,
+                            content_policy_fingerprint_sha256=policy_fingerprint,
+                            source_manifest_sha256=source_manifest_sha256,
+                        ),
+                        parent_evidence_id=unit.evidence_id,
+                        parent_evidence_kind=unit.kind,
+                        start=start,
+                        end=end,
+                        canonical_text=exact_text,
+                        exact_text_sha256=exact_text_sha256,
+                        content_policy_id=content_policy.policy_id,
+                        content_policy_revision=content_policy.revision,
+                        content_policy_fingerprint_sha256=policy_fingerprint,
+                        policy_decision=policy_decisions[unit.evidence_id],
+                        source_manifest_sha256=source_manifest_sha256,
+                    )
+                )
     continuation_records = _continuation_records(
         direct_units=direct_units,
         anchor_spans=tuple(anchor_spans),
         page_num=page.page_num,
         source_manifest_sha256=source_manifest_sha256,
     )
+    # Version literal is carried-lane conditional: plain builds keep the v5
+    # literal so every frozen human-signed artifact that pins projection_id
+    # (e.g. reviewed continuation sidecars) replays byte-identically; only a
+    # payload that actually carries the quarantined lane claims v6.
     projection_payload = {
-        "projection_version": STEP2A_SEMANTIC_PROJECTION_VERSION,
+        "projection_version": (
+            STEP2A_SEMANTIC_PROJECTION_VERSION
+            if controlled_diagram_anchor_spans
+            else PREVIOUS_STEP2A_SEMANTIC_PROJECTION_VERSION
+        ),
         "sample_id": sample_id,
         "page_num": page.page_num,
         "source_manifest_path": source_manifest_reference,
@@ -567,6 +633,11 @@ def build_step2a_semantic_projection(
         "controlled_diagrams": [diagram.model_dump(mode="json") for diagram in controlled_diagrams],
         "diagram_review_sidecar_sha256": sidecar_sha256,
     }
+    if controlled_diagram_anchor_spans:
+        # Mirror the model serializer: the key exists only when the lane minted.
+        projection_payload["controlled_diagram_anchor_spans"] = [
+            span.model_dump(mode="json") for span in controlled_diagram_anchor_spans
+        ]
     fingerprint = canonical_step2_sha256(projection_payload)
     projection = Step2ASemanticProjection(
         projection_id=f"step2a-projection:{fingerprint[:24]}",
@@ -578,11 +649,16 @@ def build_step2a_semantic_projection(
         controlled_diagrams=tuple(controlled_diagrams),
         context_only_evidence_ids=context_only_ids,
         table_cell_span_overrides=applied_cell_span_overrides,
+        controlled_diagram_anchor_spans=tuple(controlled_diagram_anchor_spans),
     )
     if set(section.evidence_ids) != (set(projection.direct_evidence_ids) | {evidence_id for diagram in projection.controlled_diagrams for evidence_id in diagram.source_evidence_ids}):
         raise ValueError("projected Step 2A section does not exactly match the semantic projection")
     if set(section.anchor_span_ids) != {span.anchor_span_id for span in projection.anchor_spans}:
         raise ValueError("projected Step 2A section does not exactly match the anchor-span projection")
+    if set(section.controlled_diagram_anchor_span_ids) != {
+        span.anchor_span_id for span in projection.controlled_diagram_anchor_spans
+    }:
+        raise ValueError("projected Step 2A section does not exactly match the controlled-diagram anchor lane")
     if set(section.context_only_evidence_ids) != set(projection.context_only_evidence_ids):
         raise ValueError("projected Step 2A section does not exactly match context-only Evidence")
     return SemanticProjectionBuild(projection=projection, section=section)

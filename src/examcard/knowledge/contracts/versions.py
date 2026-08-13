@@ -59,6 +59,12 @@ SOURCE_OWNED_STRUCTURAL_PROJECTION_STEP2A_REQUEST_VERSION = "step2a_contract_v23
 SOURCE_OWNED_STRUCTURAL_PROJECTION_STEP2A_PROMPT_VERSION = "step2a_prompt_v23_source_owned_structural_projection"
 
 
+CONTROLLED_DIAGRAM_ANCHOR_STEP2A_REQUEST_VERSION = "step2a_contract_v24_controlled_diagram_node_anchors"
+
+
+CONTROLLED_DIAGRAM_ANCHOR_STEP2A_MODEL_INPUT_VERSION = "step2a_model_input_v19_controlled_diagram_node_anchors"
+
+
 PREVIOUS_STEP2B_REQUEST_VERSION = "step2b_contract_v3_complete_table_grouping"
 
 
@@ -71,7 +77,10 @@ CONTINUATION_TITLE_PROJECTION_STEP2B_REQUEST_VERSION = "step2b_contract_v5_conti
 LEGACY_STEP2A_SEMANTIC_PROJECTION_VERSION = "step2a_semantic_projection_v4_complete_table_semantics"
 
 
-STEP2A_SEMANTIC_PROJECTION_VERSION = "step2a_semantic_projection_v5_table_atomic_continuation"
+PREVIOUS_STEP2A_SEMANTIC_PROJECTION_VERSION = "step2a_semantic_projection_v5_table_atomic_continuation"
+
+
+STEP2A_SEMANTIC_PROJECTION_VERSION = "step2a_semantic_projection_v6_controlled_diagram_node_anchors"
 
 
 EVIDENCE_ANCHOR_SPAN_VERSION = "evidence_anchor_span_v1"

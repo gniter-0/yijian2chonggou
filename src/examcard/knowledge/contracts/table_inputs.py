@@ -4,7 +4,7 @@ import hashlib
 from collections.abc import Iterable
 from enum import StrEnum
 
-from pydantic import Field, model_validator
+from pydantic import Field, model_serializer, model_validator
 
 from ...evidence.schema import BBox, EvidenceKind
 from ...materials.schema import StrictModel
@@ -461,6 +461,16 @@ class Step2ASectionInput(StrictModel):
     text_evidence: tuple[SectionTextInput, ...] = ()
     tables: tuple[StructuredTableInput, ...] = ()
     controlled_diagrams: tuple[ReviewedStructuralDiagramInput, ...] = ()
+    controlled_diagram_anchor_spans: tuple[EvidenceAnchorSpan, ...] = ()
+
+    @model_serializer(mode="wrap")
+    def _serialize_without_empty_diagram_anchors(self, handler):
+        """Drop the quarantined-anchor key when empty so diagram-free sections
+        and every pre-v6 stored payload keep their byte shape."""
+        data = handler(self)
+        if isinstance(data, dict) and not data.get("controlled_diagram_anchor_spans"):
+            data.pop("controlled_diagram_anchor_spans", None)
+        return data
 
     @model_validator(mode="after")
     def validate_section(self) -> "Step2ASectionInput":
@@ -503,6 +513,21 @@ class Step2ASectionInput(StrictModel):
         review_ids = [diagram.review_id for diagram in self.controlled_diagrams]
         if len(review_ids) != len(set(review_ids)):
             raise ValueError("section controlled diagram reviews must be unique")
+        if self.controlled_diagram_anchor_spans:
+            if not self.controlled_diagrams:
+                raise ValueError("section controlled-diagram node anchors require a controlled diagram")
+            reviewed_node_ids = {
+                evidence_id
+                for diagram in self.controlled_diagrams
+                for node in diagram.nodes
+                for evidence_id in node.evidence_ids
+            }
+            quarantined_ids = [span.anchor_span_id for span in self.controlled_diagram_anchor_spans]
+            if len(quarantined_ids) != len(set(quarantined_ids)) or set(quarantined_ids) & set(anchor_ids):
+                raise ValueError("section controlled-diagram node anchors must be unique and disjoint from selectable anchor spans")
+            for span in self.controlled_diagram_anchor_spans:
+                if span.parent_evidence_kind != EvidenceKind.DIAGRAM_NODE or span.parent_evidence_id not in reviewed_node_ids:
+                    raise ValueError("section controlled-diagram node anchors admit only reviewed diagram-node Evidence")
         return self
 
     @property
@@ -523,6 +548,10 @@ class Step2ASectionInput(StrictModel):
     @property
     def anchor_span_ids(self) -> tuple[str, ...]:
         return tuple(span.anchor_span_id for span in self.anchor_spans)
+
+    @property
+    def controlled_diagram_anchor_span_ids(self) -> tuple[str, ...]:
+        return tuple(span.anchor_span_id for span in self.controlled_diagram_anchor_spans)
 
 
 def _make_section_id(*, page_num: int, evidence_ids: Iterable[str]) -> str:

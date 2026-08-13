@@ -443,6 +443,10 @@ class V25Step2ARequest(StrictModel):
             ),
         }
         request_version, model_input_version, prompt_version = profile_versions[self.contract_profile]
+        if any(section.controlled_diagram_anchor_spans for section in self.sections):
+            # Fail-closed until a V25 version family explicitly declares the
+            # quarantined controlled-diagram anchor lane (follow-up card).
+            raise ValueError("V25 request families do not admit controlled-diagram node anchor spans yet")
         if self.identity.stage != Step2Stage.FACT_PLANNING or self.identity.request_version != request_version:
             raise ValueError("V25 Step 2A request identity does not match its contract profile")
         if self.model_input_version != model_input_version:
