@@ -73,6 +73,7 @@
 | `P3_T4b彩排_伪新考试全链实测报告_20260813.md` | **T4b 彩排总报告（T4 轨终局）**：一条命令链在 `exams/gonglu_golden5_rehearsal/` 全通至 `completed`——run 谱系（5 dry-run + a/a2/b/b2，护栏两次实弹：b 预检熔断 + 收口期 call-cap 拒付并发双跑）、终版账本 ≈$2.57、检查点①=release-bypass 豁免道（引 f62fd7b 审计）、检查点② 评审→重渲→微复审→两笔终审→二次摄取闭环（终盘 **A14/B2/C0=100% 可接受**，清单 14 approved/2 manual_review 携终审记录）；**彩排正向战果：拓出并修复驱动两处 resume 盲区**（检查点②摄取不可达 e60fbe8 + CLI skip-preflight 图像通道合并重做，均带回归测试与 live 验证），4 项改进项登记（终报归档制/预检先账后线/rejected 重渲道自动化/word-level+覆盖率门禁）；归属三段记（实现+执行=yijian2-5，监护+收口=yijian2-8，评审=yijian2-1，终审=yijian2-ready） |
 | `P3_总指挥交接台账_20260813.md` | 协同工作组「一建2重构」总指挥班次台账（终盘定稿）：十轨全景台账（承接/提交号/终态）、事件簿（前任总指挥僵尸窗口证据链、T4b 叠写裁决、两起租约漂移裁决准则、密钥回显披露、hub 版本坑位）、终盘记录（评分 8.9→9.5、下一轮改进清单五项、用户侧遗留关注项三条）——总指挥接任者第一读物 |
 | `P3_协同机制经验教训_20260813.md` | 协同机制经验教训总结（总指挥班后复盘）：八类失效模式实录 F1-F8（僵尸会话/卡死误报/租约漂移/截止重置/撞名/hub 能力缺失/本机 ACL 病/消息交错，各含实例与根因）、零产物损失的七道防线复盘、可复用打法 P1-P11（实际写手优先/双独立验证默认制/continue-not-redo/哨兵条款/台账入仓/评审人预定/诚实反压等）、hub 平台改进建议 H1-H7 |
+| `P3_改进2②_diagram族语料补齐_20260813.md` | 改进2-②：**B1-P4「figure-evidence 无文本主锚」已解**——「同页同源文本主锚」语义（caption/label 双道）落地 `migration/b1_echo_diagram_admission_materials.py`；四 diagram 提案普查 2 可锚（gonglu_62 主力 caption+4 label / gonglu_55 单 label 次选）2 不可锚（gonglu_41/01 图页无同源 span，待 V25 投影扩锚）；两卡检查点①物料五件套备齐（queue_sha256=`5e720821…`，每卡全保真+nodes-only 双 spec 草稿），nodes-only 件离线证明可过封印转换链至 r810 fixture；**勘察新发现 P4b**：r84 决策门拒带边 diagram（`contract_elements` 把无旗标 DiagramEdge 计入 fail-closed 旗标遍历，旧仓规范源 L1000-1031 逐行同款）——内核写面待正式派卡，拒绝行为已被真语料回归用例钉扎（7 离线测试全绿，零 live 花费） |
 
 ## docs/v2/（随迁历史资产，只读）
 
