@@ -43,6 +43,8 @@ LAYER_ORDER = (
     "testing",
     "admission_legacy_hash",
     "admission_fixtures",
+    "echo_release",  # P8 补链（echo-batch-release/1.0 家族）：纯数据契约，仅向后引用 admission 对
+
     # V25 现役声明 + RC1 运行时闭包（manifest v2 §二/§二-2），拓扑序追加：
     "v25_generic_contracts",
     "phase2r11_generic_five_golden",

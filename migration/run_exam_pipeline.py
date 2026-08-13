@@ -66,6 +66,15 @@ def _parse_args() -> argparse.Namespace:
     parser.add_argument("--step3-typed-fixture", type=Path, default=None)
     parser.add_argument("--step3-release-fixture", type=Path, default=None)
     parser.add_argument("--step4-handoff", type=Path, default=None)
+    parser.add_argument(
+        "--step4-source",
+        choices=("pilot-release", "echo-batch"),
+        default="pilot-release",
+        help="step4 bundle source (P8 bridge): pilot-release = r2242/r319 lane byte-unchanged; "
+        "echo-batch = echo-batch-release/1.0 + issued handoff via compilers.step4_echo_bridge",
+    )
+    parser.add_argument("--echo-release", type=Path, default=None, help="echo-batch release fixture json (--step4-source echo-batch)")
+    parser.add_argument("--echo-handoff", type=Path, default=None, help="issued echo-batch handoff json (--step4-source echo-batch)")
     parser.add_argument("--prompt-variant", choices=("v1", "v2"), default="v2")
     parser.add_argument("--diagram-review-sidecar", type=Path, default=None)
     parser.add_argument("--diagram-disposition-sidecar", type=Path, default=None)
@@ -402,6 +411,22 @@ def main() -> int:
 
         release_payload = yaml.safe_load(config.step3_release_fixture.read_text(encoding="utf-8"))
         providers["step4_card_count"] = len(release_payload.get("cards", ())) or 16
+
+    # ---- step4 装载接缝（P8 补链：echo 批新版本号道；pilot 路径零改动） ----------
+    if args.step4_source == "echo-batch":
+        if not (args.echo_release and args.echo_release.is_file()):
+            raise SystemExit("--step4-source echo-batch requires an existing --echo-release fixture json")
+        if not (args.echo_handoff and args.echo_handoff.is_file()):
+            raise SystemExit("--step4-source echo-batch requires an existing --echo-handoff json (issued by the review ingest gate)")
+        from examcard.compilers.step4_echo_bridge import load_step4_bundle_source
+
+        providers["step4_bundle_loader"] = lambda fixture_path, handoff_path: load_step4_bundle_source(
+            source="echo-batch", release_fixture_path=fixture_path, handoff_path=handoff_path
+        )
+        providers["step4_release_fixture"] = args.echo_release
+        providers["step4_handoff"] = args.echo_handoff
+        echo_release_payload = json.loads(args.echo_release.read_text(encoding="utf-8"))
+        providers["step4_card_count"] = len(echo_release_payload.get("cards", ())) or 1
 
     report, exit_code = orchestrate(config, providers)
     print(

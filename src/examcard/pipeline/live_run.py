@@ -1021,18 +1021,18 @@ def run_step4_stage(
     probe_price: float = 0.0,
     only_cards: set[int] | None = None,
     dry_run: bool = False,
+    bundle_loader: Callable[[Path, Path], tuple[Any, Any]] | None = None,
 ) -> dict[str, Any]:
-    """step4 出图编排（pilot 驱动结构吸收进库；PNG 存在即跳过 = 断点续跑）。"""
+    """step4 出图编排（pilot 驱动结构吸收进库；PNG 存在即跳过 = 断点续跑）。
+
+    ``bundle_loader``：装载接缝（P8 补链，echo_step4_bridge_design.md §3.4）——注入时以
+    ``(release_fixture_path, handoff_path) -> (bundle_view, input_view)`` 取代缺省的
+    r2242/r319 装载路径（echo 批走 `compilers.step4_echo_bridge.load_step4_bundle_source`）；
+    缺省行为逐字节不变，下游出图循环两路共用。
+    """
 
     import base64
 
-    import yaml
-
-    from ..compilers.step4_contract import derive_step4_bundle
-    from ..knowledge.contracts.admission_fixtures import (
-        Step3UnifiedReviewedReleaseFixture,
-        Step4PilotHandoffRefresh,
-    )
     from ..providers import build_image_profile, inspect_image_envelope, project_image_request
 
     fixture_path = Path(release_fixture_path)
@@ -1040,19 +1040,30 @@ def run_step4_stage(
     if not fixture_path.is_file():
         raise MissingUpstreamArtifact(f"step4 needs the reviewed release fixture: {fixture_path}")
     if not handoff_file.is_file():
-        raise MissingUpstreamArtifact(f"step4 needs the pilot handoff refresh: {handoff_file}")
-    fixture_bytes = fixture_path.read_bytes()
-    handoff_bytes = handoff_file.read_bytes()
-    import hashlib as _hashlib
+        raise MissingUpstreamArtifact(f"step4 needs the handoff manifest: {handoff_file}")
+    if bundle_loader is not None:
+        bundle, model_input = bundle_loader(fixture_path, handoff_file)
+    else:
+        import yaml
 
-    fixture = Step3UnifiedReviewedReleaseFixture.model_validate(yaml.safe_load(fixture_bytes.decode("utf-8")))
-    handoff = Step4PilotHandoffRefresh.model_validate_json(handoff_bytes.decode("utf-8"))
-    bundle, model_input, _request, _artifacts, _batch = derive_step4_bundle(
-        fixture,
-        handoff,
-        unified_fixture_sha256=_hashlib.sha256(fixture_bytes).hexdigest(),
-        handoff_sha256=_hashlib.sha256(handoff_bytes).hexdigest(),
-    )
+        from ..compilers.step4_contract import derive_step4_bundle
+        from ..knowledge.contracts.admission_fixtures import (
+            Step3UnifiedReviewedReleaseFixture,
+            Step4PilotHandoffRefresh,
+        )
+
+        fixture_bytes = fixture_path.read_bytes()
+        handoff_bytes = handoff_file.read_bytes()
+        import hashlib as _hashlib
+
+        fixture = Step3UnifiedReviewedReleaseFixture.model_validate(yaml.safe_load(fixture_bytes.decode("utf-8")))
+        handoff = Step4PilotHandoffRefresh.model_validate_json(handoff_bytes.decode("utf-8"))
+        bundle, model_input, _request, _artifacts, _batch = derive_step4_bundle(
+            fixture,
+            handoff,
+            unified_fixture_sha256=_hashlib.sha256(fixture_bytes).hexdigest(),
+            handoff_sha256=_hashlib.sha256(handoff_bytes).hexdigest(),
+        )
     profile = build_image_profile(model=image_model, image_width=image_width, image_height=image_height)
     storage.mkdir(parents=True, exist_ok=True)
     outcome: dict[str, Any] = {
@@ -1709,6 +1720,7 @@ def orchestrate(config: LiveRunConfig, providers: Mapping[str, Any]) -> tuple[Li
                 price_per_call=pricing.get("step4_image_call", 0.0),
                 probe_price=pricing.get("probe", 0.0),
                 dry_run=config.mode == "dry_run",
+                bundle_loader=providers.get("step4_bundle_loader"),
             )
             extras["step4"] = {key: value for key, value in outcome.items() if key != "cards"}
             extras["step4_cards"] = outcome.get("cards", [])

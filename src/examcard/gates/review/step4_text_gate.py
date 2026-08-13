@@ -59,6 +59,7 @@ __all__ = (
     "evaluate_card_transcript",
     "build_step4_text_gate_report",
     "extract_truths_from_release_fixture",
+    "extract_truths_from_echo_release",
     "resolve_card_image",
 )
 
@@ -178,6 +179,17 @@ def extract_truths_from_release_fixture(fixture: Any) -> dict[str, tuple[str, ..
         truths[str(card.source_card_id)] = tuple(card.expected_texts)
     if len(truths) != len(fixture.cards):
         raise ValueError("release fixture source_card_id values must be unique")
+    return truths
+
+
+def extract_truths_from_echo_release(fixture: Any) -> dict[str, tuple[str, ...]]:
+    """echo-batch-release/1.0 → {source_card_id: 真值行}（P8 桥 §3.5：与出图 prompt 同源）。"""
+
+    truths: dict[str, tuple[str, ...]] = {}
+    for card in fixture.cards:
+        truths[str(card.source_card_id)] = tuple(item.visible_text for item in card.visible_texts)
+    if len(truths) != len(fixture.cards):
+        raise ValueError("echo release source_card_id values must be unique")
     return truths
 
 
