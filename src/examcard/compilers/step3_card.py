@@ -640,54 +640,76 @@ def _fail_closed(case_id: str, expected: str, callback: Any) -> RegressionResult
 
 
 def build_regression_matrix(contracts: tuple[Step3CardContract, ...], model_input: Step3ModelInput, draft: DraftBundle, batch: BatchManifest) -> tuple[RegressionResult, ...]:
-    """15 条 fail-closed 回归（与旧仓 phase2r9 行为逐字节一致）。
+    """fail-closed 回归矩阵，呈现族感知（五族齐备批与旧仓 phase2r9 十五条逐字节一致）。
 
+    十一条通用探针恒定发射；四条「族适用」探针仅在批内存在可被真实变异的目标时
+    发射，否则跳过（不发射行，而非记假 caught）：
+
+    - `wrong-table-cell` / `missing-list-item` / `formula-token-loss`：需批内存在
+      对应呈现族契约。旧实现缺族时回退 `contracts[0]`——对空 `list_items` 删项、
+      对空 `token_refs` 清空均为无操作变异，探针被「unexpectedly accepted」（族缺
+      席假阳，P8 彩排 B1 三卡批复合 valid 即因此失败；独立验证记录级更正
+      aaef1e2/9dc5f89）；缺 table 族时更在构造变异载荷处抛 IndexError。
+    - `presentation-contract-mix`：改用首个非 table 契约做混族变异（`contracts[0]`
+      为 table 时旧实现强改 presentation="table" 是恒等变异，同类假阳）；全 table
+      批无混族可造，跳过。
+
+    r810 试点 fixture 五族齐备且首卡为 diagram，四条族探针全部发射且载荷不变，
+    矩阵输出与旧仓逐字节一致（migration/verify_compilers_parity 对拍面不变）。
     对 fixture 内容的既有假设保持原行为：`contracts[0]` 必须存在（空 fixture 在
-    compile 阶段即拒绝）；table/ordered_list/formula 变异用例在缺相应表达族时
-    回退 baseline 契约——此时 table 用例要求回退契约的 `table_cells` 非空，
-    否则按原实现抛 IndexError（r810 实际 fixture 五族齐备，不触发）。
+    compile 阶段即拒绝）。
     """
     baseline = contracts[0]
-    table = next((item for item in contracts if item.presentation == "table"), baseline)
-    ordered_list = next((item for item in contracts if item.presentation == "ordered_list"), baseline)
-    formula = next((item for item in contracts if item.presentation == "formula"), baseline)
     model_raw = model_input.cards[0].model_dump(mode="json")
     draft_raw = draft.artifacts[0].model_dump(mode="json")
     batch_raw = batch.model_dump(mode="json")
     duplicate_raw = baseline.model_dump(mode="json")
     duplicate_raw["display_elements"] = [*duplicate_raw["display_elements"], duplicate_raw["display_elements"][0]]
-    table_raw = table.model_dump(mode="json")
-    table_layout = table.layout.model_dump(mode="json")
-    table_layout["table_cells"] = [
-        {**table.layout.table_cells[0].model_dump(mode="json"), "element_id": "wrong:cell"},
-        *[item.model_dump(mode="json") for item in table.layout.table_cells[1:]],
-    ]
-    table_raw["layout"] = table_layout
-    list_raw = ordered_list.model_dump(mode="json")
-    list_layout = ordered_list.layout.model_dump(mode="json")
-    list_layout["list_items"] = [item.model_dump(mode="json") for item in ordered_list.layout.list_items[:-1]]
-    list_raw["layout"] = list_layout
-    formula_raw = formula.model_dump(mode="json")
-    formula_layout = formula.layout.model_dump(mode="json")
-    formula_layout["token_refs"] = []
-    formula_raw["layout"] = formula_layout
     results = [
         _fail_closed("unknown-field", "unknown-field-rejected", lambda: ModelCard.model_validate({**model_raw, "unknown_field": True})),
         _fail_closed("forbidden-model-key", "forbidden-key-rejected", lambda: ModelCard.model_validate({**model_raw, "card_key": "x"})),
         _fail_closed("truncated-source-text", "source-text-hash-rejected", lambda: DisplayElement.model_validate({**baseline.display_elements[0].model_dump(mode="json"), "text": baseline.display_elements[0].text[:-1]})),
         _fail_closed("duplicate-element", "duplicate-element-rejected", lambda: Step3CardContract.model_validate(duplicate_raw)),
-        _fail_closed("wrong-table-cell", "table-binding-rejected", lambda: Step3CardContract.model_validate(table_raw)),
-        _fail_closed("missing-list-item", "list-binding-rejected", lambda: Step3CardContract.model_validate(list_raw)),
-        _fail_closed("formula-token-loss", "formula-binding-rejected", lambda: Step3CardContract.model_validate(formula_raw)),
-        _fail_closed("relation-leakage", "relation-text-rejected", lambda: FakeArtifact.model_validate({**draft_raw, "relation_texts": ["display relation"]})),
-        _fail_closed("cross-sample-grouping", "cross-source-rejected", lambda: Step3CardContract.model_validate({**baseline.model_dump(mode="json"), "source_candidate_id": "candidate:cross-sample"})),
-        _fail_closed("presentation-contract-mix", "presentation-mix-rejected", lambda: LayoutContract.model_validate({**baseline.layout.model_dump(mode="json"), "presentation": "table"})),
-        _fail_closed("extra-visible-text", "extra-text-rejected", lambda: FakeArtifact.model_validate({**draft_raw, "extra_texts": ["extra"]})),
-        _fail_closed("old-provenance", "source-fixture-rejected", lambda: Step3CardContract.model_validate({**baseline.model_dump(mode="json"), "source_fixture_sha256": "0" * 64})),
-        _fail_closed("batch-upgrade", "batch-generation-rejected", lambda: BatchManifest.model_validate({**batch_raw, "batch_generation_authorized": True})),
-        _fail_closed("production-card", "production-boundary-rejected", lambda: BatchManifest.model_validate({**batch_raw, "production_cards_created": True})),
-        _fail_closed("model-input-mutation", "model-input-identity-rejected", lambda: Step3ModelInput.model_validate({**model_input.model_dump(mode="json"), "model_input_id": "step3-model-input:" + "0" * 24})),
     ]
+    table = next((item for item in contracts if item.presentation == "table"), None)
+    if table is not None:
+        table_raw = table.model_dump(mode="json")
+        table_layout = table.layout.model_dump(mode="json")
+        table_layout["table_cells"] = [
+            {**table.layout.table_cells[0].model_dump(mode="json"), "element_id": "wrong:cell"},
+            *[item.model_dump(mode="json") for item in table.layout.table_cells[1:]],
+        ]
+        table_raw["layout"] = table_layout
+        results.append(_fail_closed("wrong-table-cell", "table-binding-rejected", lambda: Step3CardContract.model_validate(table_raw)))
+    ordered_list = next((item for item in contracts if item.presentation == "ordered_list"), None)
+    if ordered_list is not None:
+        list_raw = ordered_list.model_dump(mode="json")
+        list_layout = ordered_list.layout.model_dump(mode="json")
+        list_layout["list_items"] = [item.model_dump(mode="json") for item in ordered_list.layout.list_items[:-1]]
+        list_raw["layout"] = list_layout
+        results.append(_fail_closed("missing-list-item", "list-binding-rejected", lambda: Step3CardContract.model_validate(list_raw)))
+    formula = next((item for item in contracts if item.presentation == "formula"), None)
+    if formula is not None:
+        formula_raw = formula.model_dump(mode="json")
+        formula_layout = formula.layout.model_dump(mode="json")
+        formula_layout["token_refs"] = []
+        formula_raw["layout"] = formula_layout
+        results.append(_fail_closed("formula-token-loss", "formula-binding-rejected", lambda: Step3CardContract.model_validate(formula_raw)))
+    results.append(_fail_closed("relation-leakage", "relation-text-rejected", lambda: FakeArtifact.model_validate({**draft_raw, "relation_texts": ["display relation"]})))
+    results.append(_fail_closed("cross-sample-grouping", "cross-source-rejected", lambda: Step3CardContract.model_validate({**baseline.model_dump(mode="json"), "source_candidate_id": "candidate:cross-sample"})))
+    mix_source = next((item for item in contracts if item.presentation != "table"), None)
+    if mix_source is not None:
+        mix_raw = {**mix_source.layout.model_dump(mode="json"), "presentation": "table"}
+        results.append(_fail_closed("presentation-contract-mix", "presentation-mix-rejected", lambda: LayoutContract.model_validate(mix_raw)))
+    results.extend(
+        [
+            _fail_closed("extra-visible-text", "extra-text-rejected", lambda: FakeArtifact.model_validate({**draft_raw, "extra_texts": ["extra"]})),
+            _fail_closed("old-provenance", "source-fixture-rejected", lambda: Step3CardContract.model_validate({**baseline.model_dump(mode="json"), "source_fixture_sha256": "0" * 64})),
+            _fail_closed("batch-upgrade", "batch-generation-rejected", lambda: BatchManifest.model_validate({**batch_raw, "batch_generation_authorized": True})),
+            _fail_closed("production-card", "production-boundary-rejected", lambda: BatchManifest.model_validate({**batch_raw, "production_cards_created": True})),
+            _fail_closed("model-input-mutation", "model-input-identity-rejected", lambda: Step3ModelInput.model_validate({**model_input.model_dump(mode="json"), "model_input_id": "step3-model-input:" + "0" * 24})),
+        ]
+    )
     return tuple(results)
 
 

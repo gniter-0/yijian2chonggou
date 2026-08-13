@@ -166,8 +166,9 @@ def make_reviewed_candidate(presentation: str) -> ReviewedCandidate:
     return _self_hashed(ReviewedCandidate, payload, "candidate_sha256")
 
 
-def make_reviewed_typed_evidence_fixture() -> ReviewedTypedEvidenceFixture:
-    candidates = tuple(make_reviewed_candidate(presentation) for presentation in PRESENTATIONS)
+def make_reviewed_typed_evidence_fixture(presentations: tuple[str, ...] = PRESENTATIONS) -> ReviewedTypedEvidenceFixture:
+    """缺省五族齐备（r810 形状）；传子集可构造 echo 混族批（如 B1 的 table/constraint/formula）。"""
+    candidates = tuple(make_reviewed_candidate(presentation) for presentation in presentations)
     payload = {
         "r89_admission_bundle_sha256": _hex("r89-bundle"),
         "authorization_manifest_sha256": _hex("authorization-manifest"),
