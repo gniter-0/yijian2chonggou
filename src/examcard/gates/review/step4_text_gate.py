@@ -15,12 +15,16 @@
 - **匹配单元 = 行**：真值 `expected_texts` 条目可含内嵌换行（一个可见元素跨多物理行），
   先按换行拆成真值行再配对；覆盖率分母 = 拆行后的真值行数（D2「整条元素漏渲染」
   ⇒ 其全部构成行落空，仍为 hard_fail）；
-- **reflow 容忍（A2 金标集口径：纯换行 reflow＝软分隔＝pass）**：四段式配对——
-  ① 精确配对（语义+标点 token 全等）；② reflow 修复：真值行 ↔ **相邻**未配对转写行
-  拼接（拆行向），或转写行 ↔ 相邻未配对真值行拼接（并行向），语义 token 全等即配对
-  （标点差记 warn）；③ 相似度贪心配对（真实差异行，产出 semantic/punct findings）；
-  ④ 余量 → line_missing / line_extra；
-- **行间顺序无关**：真值行与转写行按相似度贪心配对（表格卡行序视觉上可变）；
+- **reflow 容忍（A2 金标集口径：纯换行 reflow＝软分隔＝pass；R2 全序对齐，改进2-③）**：
+  三段式配对——① 精确配对（语义+标点 token 全等）；② **全序 LCS 对齐**（A2 校准 R2）：
+  未配对转写行按原始行序**全量**拼接成有序 token 流，逐真值元素（其未配对行拼接；
+  重复行标签有去标签备选形，两形取优）做 LCS 子序列匹配——无相邻窗口、无跨度上限，
+  行怎么碎/怎么并均不依赖窗口启发式；LCS 目标函数按（语义命中, 标点命中）字典序
+  最大化（标点绝不与语义争抢对位），差异区段含语义 token → semantic_diff（hard）、
+  仅标点 → 元素级 punct_diff（warn）；元素语义命中率 <50% 视为无对应（回落
+  line_missing，防垃圾对齐吞掉真漏渲）；③ 余量 → line_missing / line_extra；
+- **行间顺序无关**：① 精确配对本就无序；② 每元素各自在全量未消费流上重扫（元素间
+  乱序照样各找各的对位），仅元素**内部** token 顺序按 LCS 保序（行内错序＝真差异）；
 - **行内严格**：配对行内逐 token 比对——语义 token（CJK 字、拉丁字母数字串、比较/数学符
   ≤<>≥=±×∑ 与 %‰℃ 等单位记号）不一致 → hard_fail；仅标点 token（，。、；：？！""''（）
   及半角对应物等）差异 → warn；
@@ -40,7 +44,6 @@ from __future__ import annotations
 import hashlib
 import re
 import unicodedata
-from difflib import SequenceMatcher
 from typing import Any, Callable, Literal, Mapping, Sequence
 
 from pydantic import Field, model_validator
@@ -223,12 +226,12 @@ def _normalize_line(line: str) -> str:
     return unicodedata.normalize("NFKC", re.sub(r"\s+", "", line)).translate(_GLYPH_FOLD)
 
 
-def tokenize_visible_text(line: str) -> tuple[tuple[str, ...], tuple[str, ...]]:
-    """一行 → (语义 token 序列, 标点 token 序列)；空白丢弃，未知字符归语义面（保守从严）。"""
+def _tokenize_ordered(line: str) -> tuple[tuple[str, str], ...]:
+    """一行 → 有序 (kind, token) 流（kind ∈ {"sem","punct"}）；空白与布局记号丢弃，
+    未知字符归语义面（保守从严）。语义/标点字符集不相交，token 文本相等即同类同形。"""
 
     compact = _normalize_line(line)
-    semantic: list[str] = []
-    punct: list[str] = []
+    tokens: list[tuple[str, str]] = []
     cursor = 0
     while cursor < len(compact):
         match = _LAYOUT_TOKEN.match(compact, cursor)
@@ -237,18 +240,30 @@ def tokenize_visible_text(line: str) -> tuple[tuple[str, ...], tuple[str, ...]]:
             continue
         match = _SEMANTIC_TOKEN.match(compact, cursor)
         if match is not None:
-            semantic.append(match.group(0))
+            tokens.append(("sem", match.group(0)))
             cursor = match.end()
             continue
         match = _PUNCT_TOKEN.match(compact, cursor)
         if match is not None:
-            punct.append(match.group(0))
+            tokens.append(("punct", match.group(0)))
             cursor = match.end()
             continue
         # 未知字符按语义 token 计（宁可 hard 也不放过考点级差异）。
-        semantic.append(compact[cursor])
+        tokens.append(("sem", compact[cursor]))
         cursor += 1
-    return tuple(semantic), tuple(punct)
+    return tuple(tokens)
+
+
+def _split_ordered(ordered: Sequence[tuple[str, str]]) -> tuple[tuple[str, ...], tuple[str, ...]]:
+    semantic = tuple(text for kind, text in ordered if kind == "sem")
+    punct = tuple(text for kind, text in ordered if kind == "punct")
+    return semantic, punct
+
+
+def tokenize_visible_text(line: str) -> tuple[tuple[str, ...], tuple[str, ...]]:
+    """一行 → (语义 token 序列, 标点 token 序列)；空白丢弃，未知字符归语义面（保守从严）。"""
+
+    return _split_ordered(_tokenize_ordered(line))
 
 
 def compare_line(truth_line: str, transcript_line: str) -> TextGateFinding | None:
@@ -275,54 +290,56 @@ def compare_line(truth_line: str, transcript_line: str) -> TextGateFinding | Non
     return None
 
 
-_REFLOW_MAX_SPAN = 4  # 一个可见元素被 reflow 拆开时允许的最大相邻行数
+# 元素级 LCS 接受阈：语义命中率低于该值视为无对应（回落 line_missing，防垃圾对齐）。
+_LCS_MIN_SEMANTIC_HIT = 0.5
 
 
-def _similarity_pairs(
-    truth_indexes: Sequence[int],
-    transcript_indexes: Sequence[int],
-    truth_lines: Sequence[str],
-    transcript_lines: Sequence[str],
-) -> dict[int, int]:
-    """行间顺序无关贪心配对（相似度 ≥0.5 全对排序取最优）；输入为未配对下标集。"""
+def _lcs_align(
+    truth_seq: Sequence[tuple[str, str]],
+    got_seq: Sequence[tuple[str, str]],
+) -> list[tuple[str, int, int]]:
+    """全序 LCS 对齐（A2 校准 R2）：返回操作走带 [(op, t_pos, g_pos)]，op ∈ match/delete/insert，
+    delete=真值侧 token 无对位、insert=转写侧 token 无对位；走带按双侧原始顺序完整覆盖两序列。
 
-    scored: list[tuple[float, int, int]] = []
-    for t_index in truth_indexes:
-        truth_norm = unicodedata.normalize("NFKC", _normalize_line(truth_lines[t_index]))
-        for g_index in transcript_indexes:
-            got_norm = unicodedata.normalize("NFKC", _normalize_line(transcript_lines[g_index]))
-            ratio = SequenceMatcher(None, truth_norm, got_norm).ratio()
-            if ratio >= 0.5:
-                scored.append((ratio, t_index, g_index))
-    scored.sort(key=lambda item: (-item[0], item[1], item[2]))
-    pairs: dict[int, int] = {}
-    used: set[int] = set()
-    for _ratio, t_index, g_index in scored:
-        if t_index in pairs or g_index in used:
+    目标函数按（语义命中数, 标点命中数）**字典序**最大化——标点绝不与语义争抢对位；
+    回溯偏好 match > delete > insert，全程确定性（同分平局走固定分支）。
+    """
+
+    n, m = len(truth_seq), len(got_seq)
+    zero = (0, 0)
+    dp: list[list[tuple[int, int]]] = [[zero] * (m + 1) for _ in range(n + 1)]
+    for i in range(n - 1, -1, -1):
+        row = dp[i]
+        below = dp[i + 1]
+        token = truth_seq[i]
+        sem_gain = 1 if token[0] == "sem" else 0
+        punct_gain = 1 - sem_gain
+        for j in range(m - 1, -1, -1):
+            best = below[j] if below[j] >= row[j + 1] else row[j + 1]
+            if token == got_seq[j]:
+                diag = below[j + 1]
+                candidate = (diag[0] + sem_gain, diag[1] + punct_gain)
+                if candidate > best:
+                    best = candidate
+            row[j] = best
+    ops: list[tuple[str, int, int]] = []
+    i = j = 0
+    while i < n or j < m:
+        if i < n and j < m and truth_seq[i] == got_seq[j]:
+            sem_gain = 1 if truth_seq[i][0] == "sem" else 0
+            diag = dp[i + 1][j + 1]
+            if dp[i][j] == (diag[0] + sem_gain, diag[1] + (1 - sem_gain)):
+                ops.append(("match", i, j))
+                i += 1
+                j += 1
+                continue
+        if i < n and (j >= m or dp[i][j] == dp[i + 1][j]):
+            ops.append(("delete", i, j))
+            i += 1
             continue
-        pairs[t_index] = g_index
-        used.add(g_index)
-    return pairs
-
-
-def _consecutive_unmatched_runs(indexes: Sequence[int], unmatched: set[int], span: int) -> list[tuple[int, ...]]:
-    """在原始行序上取「全部未配对」的连续窗口（长度 2..span）。"""
-
-    runs: list[tuple[int, ...]] = []
-    ordered = [index for index in indexes if index in unmatched]
-    for start_pos, start in enumerate(ordered):
-        window = [start]
-        cursor = start
-        for follower in ordered[start_pos + 1 :]:
-            if follower != cursor + 1:
-                break
-            window.append(follower)
-            cursor = follower
-            if 2 <= len(window) <= span:
-                runs.append(tuple(window))
-            if len(window) >= span:
-                break
-    return runs
+        ops.append(("insert", i, j))
+        j += 1
+    return ops
 
 
 def evaluate_card_transcript(*, truth_lines: Sequence[str], transcript: str) -> tuple[Verdict, float, int, tuple[TextGateFinding, ...]]:
@@ -331,7 +348,7 @@ def evaluate_card_transcript(*, truth_lines: Sequence[str], transcript: str) -> 
     if not truth_lines:
         raise ValueError("truth_lines must not be empty")
     # 真值条目可含内嵌换行（一个元素跨多物理行）：拆成行级匹配单元（模块 docstring 口径），
-    # 保留行→元素归属（元素级 token 流对账需要，②′段）。
+    # 保留行→元素归属（元素级全序 LCS 对齐需要，②段）。
     truth_elements = [str(element) for element in truth_lines]
     expanded: list[str] = []
     element_of: list[int] = []
@@ -354,13 +371,16 @@ def evaluate_card_transcript(*, truth_lines: Sequence[str], transcript: str) -> 
         return "hard_fail", 0.0, 0, (finding,)
 
     findings: list[TextGateFinding] = []
-    truth_tokens = [tokenize_visible_text(line) for line in truth_lines]
-    got_tokens = [tokenize_visible_text(line) for line in transcript_lines]
+    truth_ordered = [_tokenize_ordered(line) for line in truth_lines]
+    got_ordered = [_tokenize_ordered(line) for line in transcript_lines]
+    truth_tokens = [_split_ordered(tokens) for tokens in truth_ordered]
+    got_tokens = [_split_ordered(tokens) for tokens in got_ordered]
 
     # 表格行标签合并等价（A2 #07 口径：重复行标签渲染为合并单元格＝语义等价重组＝pass）：
-    # 同元素内「LABEL | CONTENT」行的 LABEL 若与此前行重复，生成去标签备选形参与精确配对。
+    # 同元素内「LABEL | CONTENT」行的 LABEL 若与此前行重复，生成去标签备选形参与精确配对
+    # 与元素级全序对齐（两形取优）。
     label_pattern = re.compile(r"^([^|]{1,24}?)\s*\|\s*(.+)$")
-    alt_tokens: list[tuple[tuple[str, ...], tuple[str, ...]] | None] = []
+    alt_ordered: list[tuple[tuple[str, str], ...] | None] = []
     seen_labels: dict[int, set[str]] = {}
     for line, element_index in zip(truth_lines, element_of):
         match = label_pattern.match(line)
@@ -369,9 +389,10 @@ def evaluate_card_transcript(*, truth_lines: Sequence[str], transcript: str) -> 
             label = match.group(1).strip()
             seen = seen_labels.setdefault(element_index, set())
             if label in seen:
-                alternate = tokenize_visible_text(match.group(2).strip())
+                alternate = _tokenize_ordered(match.group(2).strip())
             seen.add(label)
-        alt_tokens.append(alternate)
+        alt_ordered.append(alternate)
+    alt_tokens = [_split_ordered(tokens) if tokens is not None else None for tokens in alt_ordered]
 
     open_truth = set(range(len(truth_lines)))
     open_transcript = set(range(len(transcript_lines)))
@@ -391,172 +412,149 @@ def evaluate_card_transcript(*, truth_lines: Sequence[str], transcript: str) -> 
             open_transcript.discard(g_index)
             matched += 1
 
-    # ── ② reflow 修复（A2 口径：纯换行 reflow＝软分隔）────────────────────
-    def _concat(tokens: Sequence[tuple[tuple[str, ...], tuple[str, ...]]], indexes: Sequence[int]) -> tuple[tuple[str, ...], tuple[str, ...]]:
-        semantic: list[str] = []
-        punct: list[str] = []
-        for index in indexes:
-            semantic.extend(tokens[index][0])
-            punct.extend(tokens[index][1])
-        return tuple(semantic), tuple(punct)
-
-    # 拆行向：真值行 ↔ 相邻未配对转写行拼接。
-    for t_index in sorted(open_truth):
-        candidate = None
-        for run in _consecutive_unmatched_runs(range(len(transcript_lines)), open_transcript, _REFLOW_MAX_SPAN):
-            semantic, punct = _concat(got_tokens, run)
-            if semantic == truth_tokens[t_index][0]:
-                candidate = (run, punct)
-                break
-        if candidate is None:
-            continue
-        run, punct = candidate
-        open_truth.discard(t_index)
-        open_transcript.difference_update(run)
-        matched += 1
-        if punct != truth_tokens[t_index][1]:
-            findings.append(
-                TextGateFinding(
-                    code="punct_diff",
-                    severity="warn",
-                    truth_line=truth_lines[t_index],
-                    transcript_line=" / ".join(transcript_lines[index] for index in run),
-                    detail="reflow-joined lines match semantically but punctuation diverges",
-                )
-            )
-
-    # 并行向：转写行 ↔ 相邻未配对真值行拼接。
-    for g_index in sorted(open_transcript):
-        candidate = None
-        for run in _consecutive_unmatched_runs(range(len(truth_lines)), open_truth, _REFLOW_MAX_SPAN):
-            semantic, punct = _concat(truth_tokens, run)
-            if semantic == got_tokens[g_index][0]:
-                candidate = (run, punct)
-                break
-        if candidate is None:
-            continue
-        run, punct = candidate
-        open_transcript.discard(g_index)
-        open_truth.difference_update(run)
-        matched += len(run)
-        if punct != got_tokens[g_index][1]:
-            findings.append(
-                TextGateFinding(
-                    code="punct_diff",
-                    severity="warn",
-                    truth_line=" / ".join(truth_lines[index] for index in run),
-                    transcript_line=transcript_lines[g_index],
-                    detail="merged truth lines match semantically but punctuation diverges",
-                )
-            )
-
-    # ── ②′ 元素级 token 流对账（跨换行点重排 + 内部缺陷共存的卡，#01-r1 形态）──
-    # 元素的构成行经 ①② 仍未全配对时：对「该元素未配对行拼接」与「相邻未配对转写行
-    # 拼接窗口」做相似度选窗（≥0.6），再在语义 token 流上跑 SequenceMatcher——
-    # replace/delete/insert 逐段产出 semantic_diff（hard），语义全等仅标点异则 punct_diff（warn）。
+    # ── ② 全序 LCS 对齐（A2 校准 R2，改进2-③：取代旧②相邻 reflow 窗/②′自适应窗/③相似度贪心）──
+    # 未配对转写行按原始行序**全量**拼接成有序 token 流；逐真值元素（其未配对行拼接，
+    # 重复行标签有去标签备选形，两形取优——A2 #07/R3 口径）在未消费流上做 LCS 子序列匹配：
+    # 无相邻窗口、无跨度上限、无窗口选择启发式。差异区段含语义 token → semantic_diff（hard），
+    # 仅标点 → 元素级 punct_diff（warn）；元素语义命中率 < 阈值视为无对应（回落 line_missing）。
     element_open: dict[int, list[int]] = {}
     for t_index in sorted(open_truth):
         element_open.setdefault(element_of[t_index], []).append(t_index)
+
+    stream: list[tuple[int, int, tuple[str, str]]] = []  # (转写行号, 行内 token 位, token)
+    for g_index in sorted(open_transcript):
+        for token_pos, token in enumerate(got_ordered[g_index]):
+            stream.append((g_index, token_pos, token))
+    consumed: set[tuple[int, int]] = set()
+
     for element_index in sorted(element_open):
         pending = element_open[element_index]
+        open_stream = [entry for entry in stream if (entry[0], entry[1]) not in consumed]
+        if not open_stream:
+            continue
+        got_seq = [entry[2] for entry in open_stream]
 
-        def _variant(use_alt: bool) -> tuple[str, tuple[str, ...], tuple[str, ...]]:
+        def _variant(use_alt: bool) -> tuple[str, list[tuple[str, str]]]:
             texts: list[str] = []
-            semantic: list[str] = []
-            punct: list[str] = []
+            tokens: list[tuple[str, str]] = []
             for index in pending:
-                if use_alt and alt_tokens[index] is not None:
+                if use_alt and alt_ordered[index] is not None:
                     stripped = label_pattern.match(truth_lines[index])
                     assert stripped is not None
                     texts.append(stripped.group(2).strip())
-                    tokens = alt_tokens[index]
+                    tokens.extend(alt_ordered[index])  # type: ignore[arg-type]
                 else:
                     texts.append(truth_lines[index])
-                    tokens = truth_tokens[index]
-                semantic.extend(tokens[0])
-                punct.extend(tokens[1])
-            return "".join(texts), tuple(semantic), tuple(punct)
+                    tokens.extend(truth_ordered[index])
+            return "".join(texts), tokens
 
-        # 重复行标签可去标签参与元素级对账（真转写「标签独立成行/合并单元格+自由折行」形态，
-        # A2 校准 R3 剩余项）：全形与去标签形两个候选取窗口相似度更高者。
         variants = [_variant(False)]
-        if any(alt_tokens[index] is not None for index in pending):
+        if any(alt_ordered[index] is not None for index in pending):
             variants.append(_variant(True))
-        best: tuple[float, tuple[int, ...], int] | None = None
-        ordered_open = sorted(open_transcript)
-        for variant_index, (truth_concat, _sem, _pun) in enumerate(variants):
-            truth_norm = unicodedata.normalize("NFKC", _normalize_line(truth_concat))
-            for start_pos in range(len(ordered_open)):
-                window: list[int] = []
-                cursor: int | None = None
-                for follower in ordered_open[start_pos:]:
-                    if cursor is not None and follower != cursor + 1:
-                        break
-                    window.append(follower)
-                    cursor = follower
-                    got_concat = "".join(transcript_lines[index] for index in window)
-                    got_norm = unicodedata.normalize("NFKC", _normalize_line(got_concat))
-                    ratio = SequenceMatcher(None, truth_norm, got_norm).ratio()
-                    if ratio >= 0.6 and (best is None or ratio > best[0]):
-                        best = (ratio, tuple(window), variant_index)
+
+        # 逐备选形全序对齐，取（hard 区段数, 总区段数, -语义命中）最小者；平局保全形（忠实优先）。
+        best: (
+            tuple[
+                tuple[int, int, int],
+                str,
+                list[tuple[str, str]],
+                list[list[tuple[str, int, int]]],
+                list[int],
+                list[int],
+            ]
+            | None
+        ) = None
+        for truth_concat, truth_seq in variants:
+            total_sem = sum(1 for kind, _text in truth_seq if kind == "sem")
+            ops = _lcs_align(truth_seq, got_seq)
+            match_g_positions = [j for op, _i, j in ops if op == "match"]
+            matched_sem = sum(1 for op, i, _j in ops if op == "match" and truth_seq[i][0] == "sem")
+            if matched_sem == 0 or (total_sem and matched_sem < total_sem * _LCS_MIN_SEMANTIC_HIT):
+                continue
+            span_first, span_last = match_g_positions[0], match_g_positions[-1]
+            # 走带过滤：match 全保留；delete（真值侧缺失）全保留；insert 仅计配对跨度内的
+            # （跨度外的转写余量归还给后续元素 / line_extra 面，不算进本元素的差异）。
+            regions: list[list[tuple[str, int, int]]] = []
+            current: list[tuple[str, int, int]] = []
+            in_span_inserts: list[int] = []
+            for op, i, j in ops:
+                if op == "match":
+                    if current:
+                        regions.append(current)
+                        current = []
+                    continue
+                if op == "insert":
+                    if j < span_first or j > span_last:
+                        continue
+                    in_span_inserts.append(j)
+                current.append((op, i, j))
+            if current:
+                regions.append(current)
+            hard_regions = sum(
+                1
+                for region in regions
+                if any(
+                    (truth_seq[i][0] if op == "delete" else got_seq[j][0]) == "sem"
+                    for op, i, j in region
+                )
+            )
+            score = (hard_regions, len(regions), -matched_sem)
+            if best is None or score < best[0]:
+                best = (score, truth_concat, truth_seq, regions, match_g_positions, in_span_inserts)
         if best is None:
             continue
-        _ratio, window_indexes, variant_index = best
-        truth_concat, truth_semantic, truth_punct = variants[variant_index]
-        got_semantic, got_punct = _concat(got_tokens, window_indexes)
-        matcher = SequenceMatcher(None, truth_semantic, got_semantic)
+        _score, truth_concat, truth_seq, regions, match_g_positions, in_span_inserts = best
+
         semantic_findings = 0
-        for opcode, i1, i2, j1, j2 in matcher.get_opcodes():
-            if opcode == "equal":
+        punct_mismatch = False
+        for region in regions:
+            deleted_sem = [truth_seq[i][1] for op, i, _j in region if op == "delete" and truth_seq[i][0] == "sem"]
+            inserted_sem = [got_seq[j][1] for op, _i, j in region if op == "insert" and got_seq[j][0] == "sem"]
+            if any(
+                (truth_seq[i][0] if op == "delete" else got_seq[j][0]) == "punct"
+                for op, i, j in region
+            ):
+                punct_mismatch = True
+            if not deleted_sem and not inserted_sem:
                 continue
+            opcode = "replace" if deleted_sem and inserted_sem else ("delete" if deleted_sem else "insert")
             semantic_findings += 1
             findings.append(
                 TextGateFinding(
                     code="semantic_diff",
                     severity="hard_fail",
-                    truth_line="".join(truth_semantic[i1:i2]) or None,
-                    transcript_line="".join(got_semantic[j1:j2]) or None,
+                    truth_line="".join(deleted_sem) or None,
+                    transcript_line="".join(inserted_sem) or None,
                     detail=(
-                        f"element-level token diff ({opcode}) inside truth element {element_index + 1}: "
-                        f"truth segment {list(truth_semantic[i1:i2])} vs transcript {list(got_semantic[j1:j2])}"
+                        f"full-order LCS token diff ({opcode}) inside truth element {element_index + 1}: "
+                        f"truth segment {deleted_sem} vs transcript {inserted_sem}"
                     ),
                 )
             )
-        if semantic_findings == 0 and truth_punct != got_punct:
+        if punct_mismatch:
+            span_first, span_last = match_g_positions[0], match_g_positions[-1]
+            got_span_text = "".join(got_seq[j][1] for j in range(span_first, span_last + 1))
             findings.append(
                 TextGateFinding(
                     code="punct_diff",
                     severity="warn",
                     truth_line=truth_concat[:80],
-                    transcript_line="".join(transcript_lines[index] for index in window_indexes)[:80],
-                    detail="element-level punctuation diverges (relined element, semantic tokens equal)",
+                    transcript_line=got_span_text[:80],
+                    detail=(
+                        "element-level punctuation also diverges alongside semantic diffs"
+                        if semantic_findings
+                        else "element-level punctuation diverges (full-order aligned element, semantic tokens equal)"
+                    ),
                 )
             )
-        elif semantic_findings > 0 and truth_punct != got_punct:
-            findings.append(
-                TextGateFinding(
-                    code="punct_diff",
-                    severity="warn",
-                    truth_line=truth_concat[:80],
-                    transcript_line="".join(transcript_lines[index] for index in window_indexes)[:80],
-                    detail="element-level punctuation also diverges alongside semantic diffs",
-                )
-            )
+        for j in match_g_positions:
+            consumed.add((open_stream[j][0], open_stream[j][1]))
+        for j in in_span_inserts:
+            consumed.add((open_stream[j][0], open_stream[j][1]))
         open_truth.difference_update(pending)
-        open_transcript.difference_update(window_indexes)
         matched += len(pending)
 
-    # ── ③ 相似度贪心配对（真实差异行）──────────────────────────────────
-    pairing = _similarity_pairs(sorted(open_truth), sorted(open_transcript), truth_lines, transcript_lines)
-    for t_index, g_index in pairing.items():
-        open_truth.discard(t_index)
-        open_transcript.discard(g_index)
-        matched += 1
-        finding = compare_line(truth_lines[t_index], transcript_lines[g_index])
-        if finding is not None:
-            findings.append(finding)
-
-    # ── ④ 余量 ────────────────────────────────────────────────────────
+    # ── ③ 余量 ────────────────────────────────────────────────────────
     for t_index in sorted(open_truth):
         findings.append(
             TextGateFinding(
@@ -567,6 +565,30 @@ def evaluate_card_transcript(*, truth_lines: Sequence[str], transcript: str) -> 
             )
         )
     for g_index in sorted(open_transcript):
+        line_tokens = got_ordered[g_index]
+        leftover = [token for token_pos, token in enumerate(line_tokens) if (g_index, token_pos) not in consumed]
+        if line_tokens and not leftover:
+            continue  # 整行 token 已被全序对齐消费（跨元素合并行也在此闭合）
+        if line_tokens and len(leftover) < len(line_tokens):
+            if all(kind == "punct" for kind, _text in leftover):
+                findings.append(
+                    TextGateFinding(
+                        code="punct_diff",
+                        severity="warn",
+                        transcript_line=transcript_lines[g_index],
+                        detail="transcript line carries stray punctuation beyond the full-order aligned content",
+                    )
+                )
+            else:
+                findings.append(
+                    TextGateFinding(
+                        code="line_extra",
+                        severity="warn",
+                        transcript_line="".join(text for _kind, text in leftover),
+                        detail="transcript tokens beyond expected visible texts within a partially aligned line (decoration tolerated as warn)",
+                    )
+                )
+            continue
         findings.append(
             TextGateFinding(
                 code="line_extra",
