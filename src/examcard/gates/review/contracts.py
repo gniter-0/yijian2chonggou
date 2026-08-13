@@ -11,6 +11,7 @@ from ...knowledge.contracts.admission_fixtures import (
     NOISE_MARKERS,
     ConstraintContract,
     DiagramContract,
+    DiagramEdge,
     FormulaContract,
     OrderedListContract,
     TableContract,
@@ -67,7 +68,12 @@ def validate_typed_contract_binding(decision: Any, queue_item: Any) -> None:
         page = source_pages.get(provenance.page_ref_id)
         if page is None or page.page != provenance.page or page.image_sha256 != provenance.image_sha256:
             raise ValueError("typed element crossed source page or image hash")
-        if (
+        # P4b：布局边特判蒸馏自 r87 规范源（phase2r87 L756-767）——边只核 layout_only，
+        # 文本元素维持 r84 六旗标缺省拒逐字不变（getattr 缺省 True 的 fail-closed 语义）。
+        if isinstance(element, DiagramEdge):
+            if not element.layout_only:
+                raise ValueError("diagram edge must remain layout-only")
+        elif (
             not getattr(element, "human_confirmed", True)
             or getattr(element, "ocr_derived", True)
             or getattr(element, "assertion_derived", True)

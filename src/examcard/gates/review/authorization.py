@@ -25,6 +25,7 @@ from pydantic import Field, model_validator
 from ...knowledge.contracts.admission_fixtures import (
     HASH_PATTERN,
     ID_PATTERN,
+    DiagramContract,
     ReviewedCandidate,
     ReviewedTypedEvidenceFixture,
     SourcePageBinding,
@@ -351,7 +352,15 @@ def assert_no_silent_upgrade(items: Iterable[DispositionProjectionItem]) -> None
 
 
 def source_text_snapshot(contract: Any) -> tuple[str, ...]:
-    """r810 `_source_texts` 定式：契约元素按存储序的原文快照（授权决策必带）。"""
+    """r810 `_source_texts` 定式：契约元素按存储序的原文快照（授权决策必带）。
+
+    diagram 随旧仓 nodes-only 语义（r89 L574-581 / r87 L719-728 / r810 L756 委托 r89）：
+    布局边无原文，快照只出节点文本。存储序取节点与旧仓「按 reading_order 排序」严格
+    等价——DiagramContract 校验器钉死节点存储序 == reading_order 连续 1..N
+    （admission_fixtures.py L224）。
+    """
+    if isinstance(contract, DiagramContract):
+        return tuple(node.text for node in contract.nodes)
     return tuple(element.text for element in contract_elements(contract))
 
 

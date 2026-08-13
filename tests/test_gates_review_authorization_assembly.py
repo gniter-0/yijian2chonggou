@@ -16,6 +16,7 @@ from typing import Any
 
 import pytest
 
+from examcard.compilers.step3_card import compile_reviewed_fixture
 from examcard.gates.review.authorization import (
     ProductionAuthorizationManifest,
     authorize_extraction_batch,
@@ -30,7 +31,11 @@ from examcard.gates.review.extraction import (
     make_manual_selection_spec,
 )
 from examcard.gates.review.queue import validate_queue_chain
-from examcard.knowledge.contracts.admission_fixtures import ReviewedTypedEvidenceFixture
+from examcard.gates.review.typed_evidence_export import (
+    ExplicitProductionAuthorization,
+    export_reviewed_typed_evidence_fixture,
+)
+from examcard.knowledge.contracts.admission_fixtures import DiagramContract, ReviewedTypedEvidenceFixture
 
 from tests.fixtures.admission_kernel import (
     ANCHOR_IDS,
@@ -68,6 +73,42 @@ def _batch():
             "presentation": "formula",
             "page_ref_id": "page:test:0001",
             "bindings": ({"source_role": "formula_token", "text": "E=mc^2"},),
+            "excluded_noise_kinds": ("watermark",),
+            "reviewer": "tester",
+            "notes": "explicit human source-page selection",
+            "recorded_at": "2026-08-13T00:00:00Z",
+        }
+    )
+    return extract_reviewed_fixture((source,), (spec,), identity_period="x1")
+
+
+def _diagram_batch():
+    """带边 diagram 提取批（P4b 六形态矩阵·形态 2 的装配输入）。"""
+    source = make_extraction_source(
+        subject_id=SUBJECT_ID,
+        record_id=RECORD_ID,
+        fact_id=FACT_ID,
+        evidence_id=EVIDENCE_ID,
+        presentation="diagram",
+        source_manifest_sha256=SOURCE_MANIFEST_SHA256,
+        anchor_ids=ANCHOR_IDS,
+        pages=(make_source_page(),),
+    )
+    spec = make_manual_selection_spec(
+        {
+            "selection_id": "selection:test:auth-diag-0001",
+            "subject_id": SUBJECT_ID,
+            "record_id": RECORD_ID,
+            "fact_id": FACT_ID,
+            "evidence_id": EVIDENCE_ID,
+            "presentation": "diagram",
+            "page_ref_id": "page:test:0001",
+            "bindings": (
+                {"source_role": "diagram_node", "text": "项目经理"},
+                {"source_role": "diagram_node", "text": "技术负责人"},
+                {"source_role": "diagram_node", "text": "施工员"},
+            ),
+            "diagram_edges": ((1, 2), (2, 3)),
             "excluded_noise_kinds": ("watermark",),
             "reviewer": "tester",
             "notes": "explicit human source-page selection",
@@ -170,6 +211,58 @@ class TestAuthorizeExtractionBatch:
                 reason="bad period grammar must fail",
                 recorded_at="2026-08-13T00:00:00Z",
             )
+
+
+class TestP4bEdgedDiagramAuthorization:
+    """P4b：带边 diagram 走完授权装配半程——快照 nodes-only 回归 + 边全保真 + 编译面直通。"""
+
+    def test_edged_diagram_snapshot_is_nodes_only(self) -> None:
+        batch = _diagram_batch()
+        bundle = authorize_extraction_batch(
+            batch,
+            identity_period="x1",
+            reviewer="tester",
+            reason="explicit production authorization of the edged diagram batch",
+            recorded_at="2026-08-13T00:00:00Z",
+        )
+        decision = bundle.authorization.decisions[0]
+        contract = decision.typed_contract
+        assert isinstance(contract, DiagramContract)
+        assert len(contract.nodes) == 3 and len(contract.edges) == 2
+        # nodes-only 回归钉（A 签裁量 (b)）：快照 == 按序节点文本，布局边不参与、无 AttributeError。
+        assert decision.source_text_snapshot == ("项目经理", "技术负责人", "施工员")
+        assert decision.source_text_snapshot == tuple(node.text for node in contract.nodes)
+        assert decision.source_text_snapshot == source_text_snapshot(contract)
+        # 边完整保真穿过严格摄取重建进 r810 fixture（契约逐字节同一）。
+        ingested_contract = bundle.fixture.candidates[0].typed_contract
+        assert ingested_contract.model_dump(mode="json") == contract.model_dump(mode="json")
+
+    def test_edged_diagram_fixture_compiles_to_step3_cards(self) -> None:
+        # 「可进 echo 正路」端到端冒烟（A 签裁量 (c)，只读使用编译面）：
+        # T4b 权威入口 → r810 fixture → compile_reviewed_fixture 直通，DiagramEdgeRef 齐备。
+        batch = _diagram_batch()
+        fixture = export_reviewed_typed_evidence_fixture(
+            released=batch.manifest.decisions,
+            queue_items_by_candidate={
+                decision.candidate_id: {item.queue_item_id: item for item in batch.queue_items}[
+                    decision.queue_item_id
+                ]
+                for decision in batch.manifest.decisions
+            },
+            queue_sha256=batch.queue_sha256,
+            authorization=ExplicitProductionAuthorization(
+                reviewer="tester",
+                reason="explicit production authorization of the edged diagram batch",
+                recorded_at="2026-08-13T00:00:00Z",
+                identity_period="x1",
+            ),
+        )
+        assert len(fixture.candidates[0].typed_contract.edges) == 2
+        compilation = compile_reviewed_fixture(fixture, source_fixture_sha256="a" * 64)
+        contract = compilation.contracts[0]
+        assert contract.presentation == "diagram"
+        assert len(contract.layout.diagram_edges) == 2
+        assert all(edge.provenance.fact_id == FACT_ID for edge in contract.layout.diagram_edges)
 
 
 def _read(path: Path) -> Any:

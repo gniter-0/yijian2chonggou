@@ -297,6 +297,20 @@ class TestExtractionAssembly:
         assert candidate.typed_contract_sha256 == batch.manifest.decisions[0].typed_contract_sha256
         assert candidate.source_decision_id == batch.manifest.decisions[0].decision_id
 
+    def test_edged_diagram_selection_passes_the_pipeline_p4b(self) -> None:
+        # P4b：带边 diagram 圈选全链无拒（门放行布局边）；快照/授权面见装配测试。
+        spec = _spec(
+            "diagram",
+            ({"text": "项目经理"}, {"text": "技术负责人"}, {"text": "施工员"}),
+            diagram_edges=((1, 2), (2, 3)),
+        )
+        batch = extract_reviewed_fixture((_source("diagram"),), (spec,), identity_period="x1")
+        assert batch.fixture.reviewed_candidate_count == 1
+        contract = batch.fixture.candidates[0].typed_contract
+        assert isinstance(contract, DiagramContract)
+        assert len(contract.nodes) == 3 and len(contract.edges) == 2
+        assert all(edge.layout_only for edge in contract.edges)
+
     def test_decision_passes_kernel_three_way_validation(self) -> None:
         spec = _spec("formula", ({"text": "E=mc^2"},))
         source = _source("formula")

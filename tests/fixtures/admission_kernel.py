@@ -10,6 +10,9 @@ from typing import Any, Literal
 from examcard.gates.review.decisions import HumanDecision, HumanDecisionManifest
 from examcard.gates.review.queue import ReviewQueueItemBase
 from examcard.knowledge.contracts.admission_fixtures import (
+    DiagramContract,
+    DiagramEdge,
+    DiagramNode,
     FormulaContract,
     FormulaToken,
     SourcePageBinding,
@@ -93,6 +96,46 @@ def make_formula_contract(provenance: TypedElementProvenance | None = None, text
     return hash_model_r8x(FormulaContract, {"tokens": (token,)}, "contract_sha256")  # type: ignore[return-value]
 
 
+def make_diagram_contract(
+    *,
+    node_texts: tuple[str, ...] = ("项目经理", "技术负责人"),
+    edges: tuple[tuple[int, int], ...] = ((1, 2),),
+    node_provenance: TypedElementProvenance | None = None,
+    edge_provenance: TypedElementProvenance | None = None,
+) -> DiagramContract:
+    """最小合法带边 diagram 契约（P4b）；node/edge provenance 可分别注入（越界钉扎用）。"""
+    bound_nodes = node_provenance or make_provenance()
+    bound_edges = edge_provenance or make_provenance()
+    nodes = tuple(
+        hash_model_r8x(
+            DiagramNode,
+            {
+                "element_id": f"element:test:node-{order:04d}",
+                "text": text,
+                "provenance": bound_nodes,
+                "text_sha256": text_hash(text),
+                "reading_order": order,
+            },
+            "element_sha256",
+        )
+        for order, text in enumerate(node_texts, start=1)
+    )
+    diagram_edges = tuple(
+        hash_model_r8x(
+            DiagramEdge,
+            {
+                "edge_id": f"edge:test:{index:04d}",
+                "source_node_id": nodes[source - 1].element_id,
+                "target_node_id": nodes[target - 1].element_id,
+                "provenance": bound_edges,
+            },
+            "edge_sha256",
+        )
+        for index, (source, target) in enumerate(edges, start=1)
+    )
+    return hash_model_r8x(DiagramContract, {"nodes": nodes, "edges": diagram_edges}, "contract_sha256")  # type: ignore[return-value]
+
+
 def make_queue_item(**overrides: Any) -> KernelQueueItem:
     payload: dict[str, Any] = {
         "queue_item_id": QUEUE_ITEM_ID,
@@ -115,7 +158,7 @@ def make_human_decision(
     disposition: str = "reviewed_candidate",
     candidate_id: str = CANDIDATE_ID,
     queue_sha256: str = "d" * 64,
-    contract: FormulaContract | None = None,
+    contract: FormulaContract | DiagramContract | None = None,
     **overrides: Any,
 ) -> HumanDecision:
     item = queue_item or make_queue_item()

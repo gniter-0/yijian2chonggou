@@ -4,14 +4,13 @@
 1. 图题定式单元用例（无语料依赖，处处可跑）；
 2. 真语料锚判定：gonglu_62（caption+label 五锚）/ gonglu_55（label 单锚）可锚，
    gonglu_41 / gonglu_01 fail-closed——正是 B1-P4 的普查终态钉扎；
-3. 「可进正路」类型级证明与残余断点钉扎（真语料 gonglu_62 卡）：
+3. 「可进正路」类型级证明（真语料 gonglu_62 卡）：
    - nodes-only 降级件走全须全尾封印转换链（AdmissionQueueItem 封印 →
      ExtractionSource + ManualSelectionSpec → extract_reviewed_fixture →
      export_reviewed_typed_evidence_fixture → r810 fixture）全程无拒；
-   - 全保真件（带边）被 r84 决策门拒于「unauthorized derivation or noise flag」——
-     P4b 取证钉扎：contract_elements 把无旗标的 DiagramEdge 计入 fail-closed 旗标遍历，
-     旧仓规范源逐行同款（phase2r84_selected_batch_human_decision_ingestion.py
-     L1000-1031、DiagramEdge L258-274），内核卡落地时本用例应当着修订。
+   - 全保真件（带边）同链通过性证明——P4b 内核卡落地件：r84 门按 r87 先例特判
+     放行 layout-only 布局边（原「unauthorized derivation or noise flag」拒绝钉扎
+     当着翻转为本证明），快照随旧仓 nodes-only 语义、布局边全保真进 r810 fixture。
    生产道真人环节（B2 签字 + b2_review 取证块 + 显式授权）不在本测试伪造，
    生产执行仍走 b1_echo_typed_fixture.py。
 
@@ -219,11 +218,38 @@ class TestConverterChainAdmissibility:
         assert all(node.provenance.anchor_ids == anchor_ids for node in contract.nodes)
         assert contract.nodes[0].text == "标后预算总费用"
 
-    def test_edged_draft_refused_by_r84_gate_p4b_pinned(self, tmp_path: Path) -> None:
-        # P4b 取证钉扎：带边 diagram 被决策门 fail-closed 拒（旧仓规范源同款语义）。
-        # 内核卡落地放行带边 diagram 时，本用例应当着修订为通过性证明。
+    def test_edged_draft_passes_the_sealed_chain_p4b_landed(self, tmp_path: Path) -> None:
+        # P4b 内核卡落地：全保真（带边）gonglu_62 件走通封印转换链——原「unauthorized
+        # derivation or noise flag」拒绝钉扎当着翻转为通过性证明（门按 r87 先例特判
+        # 放行 layout-only 边；快照 nodes-only 见授权装配合成用例）。
         from examcard.gates.review.extraction import extract_reviewed_fixture
+        from examcard.gates.review.typed_evidence_export import (
+            ExplicitProductionAuthorization,
+            export_reviewed_typed_evidence_fixture,
+        )
 
-        _queue_item, source, spec, _anchor_ids = self._gonglu62_chain_inputs(tmp_path, with_edges=True)
-        with pytest.raises(ValueError, match="unauthorized derivation or noise flag"):
-            extract_reviewed_fixture((source,), (spec,), identity_period="b1d")
+        _queue_item, source, spec, anchor_ids = self._gonglu62_chain_inputs(tmp_path, with_edges=True)
+        assert len(spec.diagram_edges) > 0  # 语料卡确携边（全保真件）
+        batch = extract_reviewed_fixture((source,), (spec,), identity_period="b1d")
+        queue_items_by_candidate = {
+            decision.candidate_id: {item.queue_item_id: item for item in batch.queue_items}[decision.queue_item_id]
+            for decision in batch.manifest.decisions
+        }
+        fixture = export_reviewed_typed_evidence_fixture(
+            released=batch.manifest.decisions,
+            queue_items_by_candidate=queue_items_by_candidate,
+            queue_sha256=batch.queue_sha256,
+            authorization=ExplicitProductionAuthorization(
+                reviewer="offline-admissibility-test",
+                reason="offline full-fidelity diagram admissibility proof after the P4b kernel card",
+                recorded_at="2026-08-13T00:00:00Z",
+                identity_period="b1d",
+            ),
+        )
+        assert fixture.reviewed_candidate_count == 1
+        contract = fixture.candidates[0].typed_contract
+        assert contract.presentation == "diagram"
+        assert len(contract.nodes) == 12
+        assert len(contract.edges) == len(spec.diagram_edges)
+        assert all(edge.layout_only for edge in contract.edges)
+        assert all(edge.provenance.anchor_ids == anchor_ids for edge in contract.edges)
