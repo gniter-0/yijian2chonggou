@@ -230,7 +230,7 @@ def assess_step2a_table_semantic_coverage(
         if len(complete) == 1:
             state = TableSemanticCoverageState.COMPLETE
             canonical_key = complete[0].proposal_key
-            candidate_keys = (canonical_key,)
+            candidate_keys: tuple[str, ...] = (canonical_key,)
             basis = "one composition Fact selected every immutable table-cell anchor span and therefore retains the full header, rows, and grid."
         elif len(complete) > 1:
             state = TableSemanticCoverageState.MULTIPLE_COMPOSITION_FACTS
@@ -324,7 +324,7 @@ def assess_step2a_table_atomic_subfacts(
             )
             if len(asserted) == 1:
                 state = TableAtomicSubfactCoverageState.COMPLETE
-                candidates = (asserted[0].proposal_key,)
+                candidates: tuple[str, ...] = (asserted[0].proposal_key,)
                 basis = "one non-composition Fact selects the required table cell anchor, has the required type, and retains the exact source rule in its assertion."
             elif len(asserted) > 1:
                 state = TableAtomicSubfactCoverageState.AMBIGUOUS
@@ -485,7 +485,7 @@ def assess_step2a_coverage_obligations(
         complete = tuple(proposal for proposal in fully_anchored if satisfies_semantics(proposal))
         if len(complete) == 1:
             state = CoverageObligationCoverageState.COMPLETE
-            candidates = (complete[0].proposal_key,)
+            candidates: tuple[str, ...] = (complete[0].proposal_key,)
             basis = "one Fact selected every required primary anchor span and satisfied the locally-derived obligation semantics."
         elif len(complete) > 1:
             state = CoverageObligationCoverageState.AMBIGUOUS

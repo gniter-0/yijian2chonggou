@@ -167,6 +167,11 @@ class TypedElementProvenance(StrictModel):
 
 
 class TypedTextBase(StrictModel):
+    # 判别式字段：下面五个子类各自把它收窄成自己的字面量，每处带一条
+    # `# type: ignore[assignment]`。mypy 按不变量看待属性覆盖，所以逐条报 assignment；
+    # 但 StrictModel 是 frozen=True，字段构造后只读，收窄在运行时是安全的，而 Python
+    # 类型系统目前没有「只读属性」可写——属工具限制，不是缺陷。不改成模块级
+    # disable_error_code，那会把本文件其余 assignment 检查一并关掉。
     schema_version: Literal["phase2r84_typed_text_base_v1"] = TYPED_TEXT_VERSION
     element_id: str = Field(pattern=ID_PATTERN)
     text: str = Field(min_length=1)
@@ -192,7 +197,7 @@ class TypedTextBase(StrictModel):
 
 
 class DiagramNode(TypedTextBase):
-    schema_version: Literal["phase2r84_diagram_node_v1"] = NODE_VERSION
+    schema_version: Literal["phase2r84_diagram_node_v1"] = NODE_VERSION  # type: ignore[assignment]
     source_role: Literal["diagram_node"] = "diagram_node"
     reading_order: int = Field(ge=1)
 
@@ -241,7 +246,7 @@ class DiagramContract(StrictModel):
 
 
 class TableCell(TypedTextBase):
-    schema_version: Literal["phase2r84_table_cell_v1"] = TABLE_CELL_VERSION
+    schema_version: Literal["phase2r84_table_cell_v1"] = TABLE_CELL_VERSION  # type: ignore[assignment]
     source_role: Literal["table_cell"] = "table_cell"
     row: int = Field(ge=1)
     column: int = Field(ge=1)
@@ -279,7 +284,7 @@ class TableContract(StrictModel):
 
 
 class OrderedListItem(TypedTextBase):
-    schema_version: Literal["phase2r84_ordered_list_item_v1"] = LIST_ITEM_VERSION
+    schema_version: Literal["phase2r84_ordered_list_item_v1"] = LIST_ITEM_VERSION  # type: ignore[assignment]
     source_role: Literal["ordered_list_item"] = "ordered_list_item"
     order: int = Field(ge=1)
     marker: str = ""
@@ -307,7 +312,7 @@ class OrderedListContract(StrictModel):
 
 
 class ConstraintToken(TypedTextBase):
-    schema_version: Literal["phase2r84_constraint_token_v1"] = CONSTRAINT_TOKEN_VERSION
+    schema_version: Literal["phase2r84_constraint_token_v1"] = CONSTRAINT_TOKEN_VERSION  # type: ignore[assignment]
     source_role: Literal["constraint_token"] = "constraint_token"
     token_order: int = Field(ge=1)
 
@@ -329,7 +334,7 @@ class ConstraintContract(StrictModel):
 
 
 class FormulaToken(TypedTextBase):
-    schema_version: Literal["phase2r84_formula_token_v1"] = FORMULA_TOKEN_VERSION
+    schema_version: Literal["phase2r84_formula_token_v1"] = FORMULA_TOKEN_VERSION  # type: ignore[assignment]
     source_role: Literal["formula_token"] = "formula_token"
     token_order: int = Field(ge=1)
 

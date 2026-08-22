@@ -4,7 +4,7 @@ import hashlib
 import re
 from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, TypedDict
 
 from ...evidence.layout import normalized_compare_text
 from ..schema import FactType
@@ -141,6 +141,13 @@ def derive_step2a_anchor_span_selection(
             SOURCE_OWNED_STRUCTURAL_PROJECTION_STEP2A_REQUEST_VERSION: Step2AV23ModelFactProposal,
         }.get(request.identity.request_version)
         is_minimal = expected_minimal_type is not None
+        # 注意这条 isinstance 的第二参是 `ModelMetaclass | None`（pydantic 模型类在 mypy
+        # 眼里是 ModelMetaclass），因此本行会报一条 arg-type，并且 mypy 会把 proposal 在
+        # 本行之后退化成 Any——那正好压住了循环体里约 50 条 union-attr。换句话说这条
+        # arg-type 是一块「盖子」：把它按正解修掉（例如把校验挪进独立函数、或给字典标
+        # `dict[str, type[Step2AFactProposal]]`），本文件立刻从 1 条涨到 51 条，露出的是
+        # 「某字段只在某些请求版本上存在」这一族真问题，需要按版本逐个收窄才能收口。
+        # 已实测两种改法都会掀开盖子，所以先保持现状、把盲区写在这里，不假装它不存在。
         if is_minimal and not isinstance(proposal, expected_minimal_type):
             raise ValueError("Step 2A model proposal shape does not match its immutable request version")
         if not is_minimal and isinstance(
@@ -657,6 +664,38 @@ class _TableStructuralIndexOccurrenceCandidate:
     occurrence: TableStructuralIndexOccurrenceReference
 
 
+# 下面两个 TypedDict 描述「一份 kwargs 同时喂给 occurrence_id 构造器和 occurrence 模型」
+# 这个复用姿态。以前这两处写成裸字典，被推成 dict[str, object]，`**` 解包进强类型形参时
+# mypy 无法按键分辨 str/int/tuple，于是每个形参各报一条 arg-type。键名与
+# occurrences.make_table_* 的形参逐字对齐；改那边的签名必须同步改这里，否则解包处直接报错。
+class _TableStructuralCellOccurrenceKwargs(TypedDict):
+    table_evidence_id: str
+    cell_evidence_id: str
+    page_num: int
+    row_index: int
+    column_index: int
+    row_span: int
+    col_span: int
+    cell_text_sha256: str
+    anchor_span_ids: tuple[str, ...]
+    source_manifest_sha256: str
+
+
+# make_table_structural_index_occurrence_id 与 make_table_numeric_occurrence_id 形参完全相同，
+# 共用一个形状。
+class _TableNumericOccurrenceKwargs(TypedDict):
+    table_evidence_id: str
+    cell_evidence_id: str
+    page_num: int
+    row_index: int
+    column_index: int
+    row_span: int
+    col_span: int
+    anchor_span_id: str
+    source_span: NumericSpanReference
+    source_manifest_sha256: str
+
+
 def _numeric_span_reference(text: str, start: int, end: int, *, parent_offset: int = 0) -> NumericSpanReference:
     return NumericSpanReference(
         start=start + parent_offset,
@@ -728,7 +767,7 @@ def _table_numeric_occurrence_sources(
                 page_nums.add(page_num)
                 manifest_sha256s.add(source_manifest_sha256)
                 cell_anchor_span_ids = tuple(span.anchor_span_id for span in cell.anchor_spans)
-                cell_occurrence_kwargs = {
+                cell_occurrence_kwargs: _TableStructuralCellOccurrenceKwargs = {
                     "table_evidence_id": table.table_evidence_id,
                     "cell_evidence_id": cell.evidence_id,
                     "page_num": page_num,
@@ -766,7 +805,7 @@ def _table_numeric_occurrence_sources(
                             token.end,
                             parent_offset=anchor_span.start,
                         )
-                        occurrence_kwargs = {
+                        occurrence_kwargs: _TableNumericOccurrenceKwargs = {
                             "table_evidence_id": table.table_evidence_id,
                             "cell_evidence_id": cell.evidence_id,
                             "page_num": page_num,
