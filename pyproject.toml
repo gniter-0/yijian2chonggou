@@ -140,11 +140,11 @@ ignore_missing_imports = true
 # 下面的条目逐条删掉（即改掉真问题），而不是把码集合往大里写。
 #
 # 基线实测（mypy 2.3.1 + pydantic 插件，--no-incremental，checked 127 source files）：
-# 首测 263 条 / 35 个模块；其中 v25_generic_contracts 那 58 条已按「正解」真修掉、
-# 条目也已从本清单删除，现测 205 条 / 34 个模块。按码分布：assignment 74、
-# attr-defined 74、arg-type 22、call-arg 12、union-attr 6、var-annotated 5、
-# prop-decorator 4、misc 3、index 2、call-overload 2、import-not-found 1
-# （operator、return-value 两族随那次修复一并清零）。
+# 首测 263 条 / 35 个模块。已按「正解」真修掉并从本清单删除条目的：
+# v25_generic_contracts 58 条、learning_fixture 28 条。现测 177 条 / 33 个模块，
+# 按码分布：assignment 71、attr-defined 51、arg-type 22、call-arg 12、union-attr 6、
+# prop-decorator 4、var-annotated 4、misc 2、call-overload 2、index 2、
+# import-not-found 1（operator、return-value 两族已随上述修复清零）。
 # 每个模块后面括号里的数字是它当时的条数，删条目时拿它对账。
 #
 # 成因逐族抽样核查过，没有一条是「访问模型上根本不存在的字段」那类真缺陷——那一类
@@ -191,13 +191,6 @@ module = [
     "examcard.knowledge.contracts.validation",        # 16
 ]
 disable_error_code = ["assignment", "attr-defined"]
-
-# 同形状 A + B。misc 是推导式的元素类型被判成第一次绑定的那个模型
-# （例：learning_fixture:719 List[Step2BCardProposal] 撞 List[Step2AFactProposal]）；
-# var-annotated 是空容器初始化没写注解。
-[[tool.mypy.overrides]]
-module = ["examcard.knowledge.learning_fixture"] # 28
-disable_error_code = ["assignment", "attr-defined", "misc", "var-annotated"]
 
 [[tool.mypy.overrides]]
 module = ["examcard.knowledge.contracts.step2a_request"] # 18

@@ -454,7 +454,7 @@ def validate_learning_fixture(
     registry_by_id = {sample.sample_id: sample for sample in registry.samples}
     if set(registry_by_id) != {sample.sample_id for sample in fixture.samples}:
         raise ValueError("learning fixture samples must exactly match the golden registry")
-    diagram_entries = ()
+    diagram_entries: tuple[DiagramReviewEntry, ...] = ()
     if diagram_sidecar_path is not None:
         diagram_entries = load_diagram_review_sidecar(diagram_sidecar_path).entries
 
@@ -670,83 +670,85 @@ def compare_learning_golden_page(
     used_cards: set[str] = set()
     card_alignments: list[LearningCardAlignment] = []
     actual_cards = step2b_response.proposals if step2b_response is not None else ()
-    for expected in expected_cards:
-        page_fact_keys = tuple(fact_key for fact_key in expected.primary_fact_keys if fact_key in expected_fact_keys)
+    for expected_card in expected_cards:
+        page_fact_keys = tuple(
+            fact_key for fact_key in expected_card.primary_fact_keys if fact_key in expected_fact_keys
+        )
         if any(fact_key not in matched_fact_ids for fact_key in page_fact_keys):
-            expected_title = _teaching_title_key(expected.title)
+            expected_title = _teaching_title_key(expected_card.title)
             fallback = [
                 card
                 for card in actual_cards
                 if card.proposal_key not in used_cards
-                and card.presentation == expected.presentation
+                and card.presentation == expected_card.presentation
                 and (
                     expected_title in _teaching_title_key(card.title)
                     or _teaching_title_key(card.title) in expected_title
                 )
             ]
             if len(fallback) == 1:
-                actual = fallback[0]
-                used_cards.add(actual.proposal_key)
+                actual_card = fallback[0]
+                used_cards.add(actual_card.proposal_key)
                 card_alignments.append(
                     LearningCardAlignment(
-                        card_key=expected.card_key,
-                        expected_title=expected.title,
-                        expected_presentation=expected.presentation,
+                        card_key=expected_card.card_key,
+                        expected_title=expected_card.title,
+                        expected_presentation=expected_card.presentation,
                         expected_fact_keys=page_fact_keys,
                         match_state="fact_dependency_drift",
-                        matched_proposal_key=actual.proposal_key,
-                        actual_title=actual.title,
-                        actual_presentation=actual.presentation,
-                        actual_primary_fact_ids=actual.primary_fact_ids,
-                        title_drift=_teaching_title_key(actual.title) != expected_title,
+                        matched_proposal_key=actual_card.proposal_key,
+                        actual_title=actual_card.title,
+                        actual_presentation=actual_card.presentation,
+                        actual_primary_fact_ids=actual_card.primary_fact_ids,
+                        title_drift=_teaching_title_key(actual_card.title) != expected_title,
                         grouping_drift=True,
-                        presentation_drift=actual.presentation != expected.presentation,
+                        presentation_drift=actual_card.presentation != expected_card.presentation,
                     )
                 )
                 continue
             card_alignments.append(
                 LearningCardAlignment(
-                    card_key=expected.card_key,
-                    expected_title=expected.title,
-                    expected_presentation=expected.presentation,
+                    card_key=expected_card.card_key,
+                    expected_title=expected_card.title,
+                    expected_presentation=expected_card.presentation,
                     expected_fact_keys=page_fact_keys,
                     match_state="missing_fact_dependency",
                 )
             )
             continue
         wanted_ids = {matched_fact_ids[fact_key] for fact_key in page_fact_keys}
-        candidates = [
+        card_candidates = [
             card
             for card in actual_cards
             if wanted_ids <= set(card.primary_fact_ids) and card.proposal_key not in used_cards
         ]
-        if len(candidates) != 1:
+        if len(card_candidates) != 1:
             card_alignments.append(
                 LearningCardAlignment(
-                    card_key=expected.card_key,
-                    expected_title=expected.title,
-                    expected_presentation=expected.presentation,
+                    card_key=expected_card.card_key,
+                    expected_title=expected_card.title,
+                    expected_presentation=expected_card.presentation,
                     expected_fact_keys=page_fact_keys,
-                    match_state="missing" if not candidates else "ambiguous",
+                    match_state="missing" if not card_candidates else "ambiguous",
                 )
             )
             continue
-        actual = candidates[0]
-        used_cards.add(actual.proposal_key)
+        actual_card = card_candidates[0]
+        used_cards.add(actual_card.proposal_key)
         card_alignments.append(
             LearningCardAlignment(
-                card_key=expected.card_key,
-                expected_title=expected.title,
-                expected_presentation=expected.presentation,
+                card_key=expected_card.card_key,
+                expected_title=expected_card.title,
+                expected_presentation=expected_card.presentation,
                 expected_fact_keys=page_fact_keys,
                 match_state="matched",
-                matched_proposal_key=actual.proposal_key,
-                actual_title=actual.title,
-                actual_presentation=actual.presentation,
-                actual_primary_fact_ids=actual.primary_fact_ids,
-                title_drift=_teaching_title_key(actual.title) != _teaching_title_key(expected.title),
-                grouping_drift=set(actual.primary_fact_ids) != wanted_ids,
-                presentation_drift=actual.presentation != expected.presentation,
+                matched_proposal_key=actual_card.proposal_key,
+                actual_title=actual_card.title,
+                actual_presentation=actual_card.presentation,
+                actual_primary_fact_ids=actual_card.primary_fact_ids,
+                title_drift=_teaching_title_key(actual_card.title) != _teaching_title_key(expected_card.title),
+                grouping_drift=set(actual_card.primary_fact_ids) != wanted_ids,
+                presentation_drift=actual_card.presentation != expected_card.presentation,
             )
         )
     extra_card_keys = tuple(card.proposal_key for card in actual_cards if card.proposal_key not in used_cards)
