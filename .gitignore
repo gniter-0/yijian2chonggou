@@ -8,8 +8,9 @@ dist/
 # 虚拟环境（uv sync 重建）
 .venv/
 
-# 测试产物（规范 T3：仓库相对产物统一收口于 .test-tmp/）
-.test-tmp/
+# 测试产物（规范 T3：仓库相对产物统一收口于 .test-tmp/）。通配到 .test-tmp*/ 是因为
+# 历史上跑过 --basetemp .test-tmp-xxx 的同级目录，原来的 `.test-tmp/` 匹配不到它们。
+.test-tmp*/
 .pytest_cache/
 .coverage
 htmlcov/
