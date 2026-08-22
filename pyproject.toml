@@ -9,17 +9,22 @@ authors = [{ name = "examcard maintainers" }]
 
 # 下限与 yijian2 requirements.txt 保持一致，上限由 uv.lock 固定。
 # 升级依赖：`uv add openai@latest`；同步本地：`uv sync`。
+#
+# 已删三项「零 import 声明」（原 12 项 → 现 9 项）：
+#   - flask：webui 是纯函数静态 HTML 渲染器，tests/test_webui_review_workbench.py
+#     里的 test_workbench_module_never_imports_flask_or_gates_upward 反而 AST 断言
+#     禁止 import flask（勘察实录 docs/prework/P3_webui勘察_20260812.md）。
+#   - matplotlib：utils/table_render 确定性表格渲染分支尚未落地，全仓零 import。
+#     conftest 的 T7 `MPLBACKEND=Agg` 留着不动——它是 setdefault，无依赖时是空守卫。
+#   - python-dotenv：T6 规定测试不自动加载 .env，live 密钥一律显式读环境变量。
+# 将来真要落 flask 路由或 table_render 渲染分支，再 `uv add` 加回并同步本文档口径。
 dependencies = [
     "PyMuPDF>=1.24.0",
     "openai>=1.30.0",
     "httpx>=0.27.0",
     "Pillow>=10.0.0",
     "PyYAML>=6.0",
-    "python-dotenv>=1.0.0",
-    "flask>=3.0.0",
     "pydantic>=2.7.0",
-    # utils/table_render 确定性表格渲染分支依赖（缺失时 step3/step4 优雅回退 AI 生图）
-    "matplotlib>=3.8.0",
     "rapidocr-onnxruntime>=1.4.4",
     "opencv-python>=4.10.0,<5",
     "numpy>=1.23.0",

@@ -1,6 +1,6 @@
 # exam-card-engine 文档总索引
 
-更新：2026-08-13（T5 文档沉淀：runbook §8 生产配方/中继矩阵/预检/.env 双通道成文 + 漂移核查 N1–N6 并入；engineering_skeleton §5 增 pytest 环境修复附注；新增 P3 引擎件速查）。上一轮：2026-08-12（P2·docs 重复件收拾 + 总索引；n11 总报告遗留项 5.4 已清理）。
+更新：2026-08-22（清依赖与文档：运行依赖 12→9 项，删掉 flask/matplotlib/python-dotenv 三项零 import 声明；webui 的 flask 陈述按实况纠正；`--basetemp` 由排障技巧升为强制条款 skeleton §4.1；requires-python 文档口径校正为 3.12）。上一轮：2026-08-13（T5 文档沉淀：runbook §8 生产配方/中继矩阵/预检/.env 双通道成文 + 漂移核查 N1–N6 并入；engineering_skeleton §5 增 pytest 环境修复附注；新增 P3 引擎件速查）。再上一轮：2026-08-12（P2·docs 重复件收拾 + 总索引；n11 总报告遗留项 5.4 已清理）。
 
 ## 目录分层约定
 
@@ -16,7 +16,7 @@
 
 | 文件 | 内容 |
 |---|---|
-| `engineering_skeleton.md` | 工程骨架规范：pyproject/十包布局与依赖方向、测试隔离 T1–T8、布局终裁登记（bc-888c6031 十包 + bc-9d82a196 common 六件扩容）；§5 附本机 pytest ACL 环境修复指引（管理员一行命令 + `--basetemp` 替代口径） |
+| `engineering_skeleton.md` | 工程骨架规范：pyproject/十包布局与依赖方向、测试隔离 T1–T8、布局终裁登记（bc-888c6031 十包 + bc-9d82a196 common 六件扩容）；**§4.1 `--basetemp` 强制条款**；§5.1 本机 pytest ACL 环境损伤病因与管理员一行修复命令 |
 | `extraction_manifest.md` | 迁移清单 v2：142 模块去向对账基准（含 8 条【A案】跨桶契约下沉注解） |
 | `stage2_migration_report.md` | 阶段 2 总集成验收（n11）：pytest 462 全绿、依赖守护、26/26 对账、遗留风险与下一步 |
 | `new_exam_onboarding_runbook.md` | 新考试（造价/消防）接入手册；§8 已成文 live 口径：生产配方四件套（5.6-sol/补强/流式/ResendPlan 重发）、两中继能力边界矩阵、`relay_preflight` 前置检查、`.env` 双通道键约定（配置在新仓）；已并入漂移核查 N1–N6 修订 |
@@ -126,4 +126,6 @@
 | bc-9d82a196（扩容终裁） | common 扩为六件 {hashing, gates, io, freeze, junit, schema}，签名落地即冻 | `engineering_skeleton.md` §3 |
 | bc-b8b9aca6（铁律×2） | 旧契约法定哈希逐字节随包搬运、禁入 common/hashing；yijian2 只读、产出路径纪律 | 各设计稿 §哈希条款 |
 | A 案（跨桶契约下沉） | 跨桶持久化数据契约唯一权威定义于 `knowledge/contracts/admission_fixtures.py`（+法定哈希搬运件 admission_legacy_hash.py） | 清单 v2 8 条【A案】注解；gates-review 稿 §4/§5 |
-| R1 | requires-python >= 3.11 | `engineering_skeleton.md` §2 |
+| R1（+ P0-1 再上调） | requires-python >= 3.12（历程 3.10 → 3.11 → 3.12；3.12 依据 PEP 701 嵌套 f-string） | `engineering_skeleton.md` §2 |
+| 清依赖（20260822） | 运行依赖 12 → 9 项：删 flask / matplotlib / python-dotenv 三项零 import 声明 | `engineering_skeleton.md` §2 + pyproject 注释 |
+| T3 附加条款（20260822） | pytest 一律显式 `--basetemp .test-tmp/<名字>`，含 CI 与文档示例 | `engineering_skeleton.md` §4.1 |

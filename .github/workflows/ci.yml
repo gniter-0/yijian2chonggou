@@ -74,7 +74,8 @@ jobs:
       # 棘轮，不许往下调；掉下去说明新代码没带测试。当前余量只有 0.5pp。
       # 覆盖率配置见 pyproject [tool.coverage.*]。
       #
-      # --basetemp 收进仓内 .test-tmp/（规范 T3）：与本地跑法逐字一致，产物位置可预期、
-      # 失败时可直接当 artifact 上传，也绕开某些机器上系统 TEMP 不可写的坑。
+      # --basetemp 收进仓内 .test-tmp/（规范 T3，强制条款见 docs/engineering_skeleton.md §4.1）：
+      # 与本地跑法逐字一致，产物位置可预期、失败时可直接当 artifact 上传，也绕开某些机器上
+      # 系统 TEMP 不可写的坑（本机 %TEMP%\pytest-of-* 已 ACL 损伤，裸跑上百条 ERROR）。
       - name: pytest（带覆盖率门槛）
         run: uv run pytest -q -rs --cov --cov-report=term-missing --cov-fail-under=75 --basetemp .test-tmp/ci
