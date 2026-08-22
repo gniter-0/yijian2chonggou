@@ -35,7 +35,7 @@ from __future__ import annotations
 
 import json
 from dataclasses import dataclass
-from typing import Any, Callable, Literal
+from typing import Any, Callable, Final, Literal
 
 from pydantic import Field, model_validator
 
@@ -84,15 +84,15 @@ __all__ = [
 
 # v2 版本号族：input 与 result 的顶层 schema_version 刻意不同——「模型把 input
 # 版本号错当 result 版本号回显」是实测已知失败模式，版本可辨性是判负的前提。
-INPUT_VERSION_V2 = "step3-response/2.0"
-RESULT_VERSION_V2 = "step3-response-result/2.0"
-RESULT_CARD_VERSION_V2 = "step3-response-draft-card/2.0"
-PROMPT_VERSION_V2 = "step3-response-prompt/2.0"
-GATE_VERSION_V2 = "step3-response-gate/2.0"
+INPUT_VERSION_V2: Final = "step3-response/2.0"
+RESULT_VERSION_V2: Final = "step3-response-result/2.0"
+RESULT_CARD_VERSION_V2: Final = "step3-response-draft-card/2.0"
+PROMPT_VERSION_V2: Final = "step3-response-prompt/2.0"
+GATE_VERSION_V2: Final = "step3-response-gate/2.0"
 
 # v2 解除三代表卡钉扎：五个表达族全部可发（v1 的 (table, ordered_list, formula)
 # 固定序属 v1 契约本体，原样留在 v1 模块）。
-SUPPORTED_PRESENTATIONS = ("diagram", "table", "ordered_list", "constraint", "formula")
+SUPPORTED_PRESENTATIONS: Final[tuple[Literal["diagram", "table", "ordered_list", "constraint", "formula"], ...]] = ("diagram", "table", "ordered_list", "constraint", "formula")
 
 HASH = r"^[0-9a-f]{64}$"
 ID = r"^[a-z0-9][a-z0-9._:-]{2,255}$"
@@ -106,7 +106,7 @@ _PresentationLiteral = Literal["diagram", "table", "ordered_list", "constraint",
 class SingleCardModelInput(StrictModel):
     """单卡模型输入：v1 卡对象的摊平投影（geometry 与逐卡 fixture 哈希除外，见模块头）。"""
 
-    schema_version: Literal[INPUT_VERSION_V2] = INPUT_VERSION_V2
+    schema_version: Literal["step3-response/2.0"] = INPUT_VERSION_V2
     model_input_id: str = Field(pattern=MODEL_INPUT_ID_V2)
     source_fixture_sha256: str = Field(pattern=HASH)
     contract_id: str = Field(pattern=CONTRACT_ID)
@@ -134,7 +134,7 @@ class SingleCardModelInput(StrictModel):
 
 
 class PromptContractV2(StrictModel):
-    schema_version: Literal[PROMPT_VERSION_V2] = PROMPT_VERSION_V2
+    schema_version: Literal["step3-response-prompt/2.0"] = PROMPT_VERSION_V2
     prompt_id: str = Field(pattern=PROMPT_ID_V2)
     allowed_presentations: tuple[_PresentationLiteral, ...] = SUPPORTED_PRESENTATIONS
     response_contract: Literal["exact-single-card-document-inside-exact-assistant-envelope"] = (
@@ -155,7 +155,7 @@ class PromptContractV2(StrictModel):
 class SingleCardDraftCard(StrictModel):
     """结果卡：输入七字段的逐字回显 + draft-only 处置（与 v1 结果卡同语义，去 geometry）。"""
 
-    schema_version: Literal[RESULT_CARD_VERSION_V2] = RESULT_CARD_VERSION_V2
+    schema_version: Literal["step3-response-draft-card/2.0"] = RESULT_CARD_VERSION_V2
     contract_id: str = Field(pattern=CONTRACT_ID)
     source_candidate_id: str = Field(pattern=ID)
     fact_ids: tuple[str, ...] = Field(min_length=1)
@@ -177,7 +177,7 @@ class SingleCardDraftCard(StrictModel):
 
 
 class SingleCardResponseDocument(StrictModel):
-    schema_version: Literal[RESULT_VERSION_V2] = RESULT_VERSION_V2
+    schema_version: Literal["step3-response-result/2.0"] = RESULT_VERSION_V2
     draft_cards: tuple[SingleCardDraftCard, ...] = Field(min_length=1, max_length=1)
 
 
@@ -189,14 +189,14 @@ RESULT_SCHEMA_V2: dict[str, Any] = strict_schema(SingleCardResponseDocument)
 
 
 class GateCheckV2(StrictModel):
-    schema_version: Literal[GATE_VERSION_V2] = GATE_VERSION_V2
+    schema_version: Literal["step3-response-gate/2.0"] = GATE_VERSION_V2
     check_id: str = Field(pattern=ID)
     passed: bool
     detail: str = Field(min_length=1)
 
 
 class SingleCardResponseGate(StrictModel):
-    schema_version: Literal[GATE_VERSION_V2] = GATE_VERSION_V2
+    schema_version: Literal["step3-response-gate/2.0"] = GATE_VERSION_V2
     valid: bool
     envelope_exact: bool
     content_text: bool
@@ -353,9 +353,10 @@ def _checks_v2(
     provenance_ok = binding_ok and card is not None and card.source_binding.fact_id in card.fact_ids
     serialized = "\n".join(element.source_text for element in card.visible_elements) if card is not None else ""
     relation_values = [
-        edge.relation
+        relation
         for edge in model_input.layout.diagram_edges
-        if getattr(edge, "relation", None)
+        # 同 step3_response：DiagramEdgeRef 无 relation 字段，封印测试已钉住。
+        if (relation := getattr(edge, "relation", None))
     ]
     relation_ok = not any(value in serialized for value in relation_values)
     values = {
@@ -393,7 +394,7 @@ def _checks_v2(
     checks = tuple(GateCheckV2(check_id=key, passed=value, detail=details[key]) for key, value in values.items())
     all_valid = all(values.values())
     failures.extend(key for key, value in values.items() if not value and key not in failures)
-    payload = {**values, "valid": all_valid, "checks": checks, "failure_codes": tuple(failures)}
+    payload: dict[str, Any] = {**values, "valid": all_valid, "checks": checks, "failure_codes": tuple(failures)}
     draft = SingleCardResponseGate.model_construct(**{**payload, "gate_sha256": "0" * 64})
     payload["gate_sha256"] = canonical_hash(draft.model_dump(mode="json", exclude={"schema_version", "gate_sha256"}))
     return SingleCardResponseGate.model_validate(payload)

@@ -23,7 +23,7 @@ from __future__ import annotations
 import hashlib
 import json
 from dataclasses import dataclass
-from typing import Any, Callable, Literal, Mapping, Sequence
+from typing import Any, Callable, Final, Literal, Mapping, Sequence
 
 from pydantic import Field, model_validator
 
@@ -73,24 +73,24 @@ __all__ = [
     "strict_schema",
 ]
 
-PHASE = "2R.9.2"
+PHASE: Final = "2R.9.2"
 # 历史机器报告的数据格式标识（参与既有 report_sha256）；仅作字符串常量，无 git 依赖。
-CHECKPOINT_COMMIT = "b73d261e06c878da46a05509f9154379b1437bf6"
-PRESENTATIONS = ("table", "ordered_list", "formula")
+CHECKPOINT_COMMIT: Final = "b73d261e06c878da46a05509f9154379b1437bf6"
+PRESENTATIONS: Final[tuple[Literal["table", "ordered_list", "formula"], ...]] = ("table", "ordered_list", "formula")
 
-INPUT_VERSION = "phase2r92_response_model_input_v1"
-INPUT_CARD_VERSION = "phase2r92_response_input_card_v1"
-PROMPT_VERSION = "phase2r92_response_prompt_v1"
+INPUT_VERSION: Final = "phase2r92_response_model_input_v1"
+INPUT_CARD_VERSION: Final = "phase2r92_response_input_card_v1"
+PROMPT_VERSION: Final = "phase2r92_response_prompt_v1"
 ENVELOPE_VERSION = "phase2r92_response_envelope_v1"
 MESSAGE_VERSION = "phase2r92_response_message_v1"
 CHOICE_VERSION = "phase2r92_response_choice_v1"
-RESULT_VERSION = "phase2r92_step3_result_v1"
-RESULT_CARD_VERSION = "phase2r92_step3_draft_card_v1"
-GATE_VERSION = "phase2r92_response_gate_v1"
-OFFLINE_GATE_VERSION = "phase2r92_offline_gate_v1"
-REPORT_VERSION = "phase2r92_machine_report_v1"
-ACCEPTANCE_VERSION = "phase2r92_acceptance_report_v1"
-REQUEST_VERSION = "phase2r92_offline_request_v1"
+RESULT_VERSION: Final = "phase2r92_step3_result_v1"
+RESULT_CARD_VERSION: Final = "phase2r92_step3_draft_card_v1"
+GATE_VERSION: Final = "phase2r92_response_gate_v1"
+OFFLINE_GATE_VERSION: Final = "phase2r92_offline_gate_v1"
+REPORT_VERSION: Final = "phase2r92_machine_report_v1"
+ACCEPTANCE_VERSION: Final = "phase2r92_acceptance_report_v1"
+REQUEST_VERSION: Final = "phase2r92_offline_request_v1"
 
 HASH = r"^[0-9a-f]{64}$"
 ID = r"^[a-z0-9][a-z0-9._:-]{2,255}$"
@@ -136,7 +136,7 @@ def sha256_text(value: str) -> str:
     return sha256_bytes(value.encode("utf-8"))
 
 
-def _hash_model(model_type: type[StrictModel], payload: dict[str, Any], field: str) -> StrictModel:
+def _hash_model[ModelT: StrictModel](model_type: type[ModelT], payload: dict[str, Any], field: str) -> ModelT:
     document = dict(payload)
     draft = model_type.model_construct(**{**document, field: "0" * 64})
     document[field] = canonical_hash(draft.model_dump(mode="json", exclude={"schema_version", field}))
@@ -152,7 +152,7 @@ def _collect_keys(value: Any) -> set[str]:
 
 
 class ResponseInputCard(StrictModel):
-    schema_version: Literal[INPUT_CARD_VERSION] = INPUT_CARD_VERSION
+    schema_version: Literal["phase2r92_response_input_card_v1"] = INPUT_CARD_VERSION
     contract_id: str = Field(pattern=CONTRACT_ID)
     source_candidate_id: str = Field(pattern=ID)
     fact_ids: tuple[str, ...] = Field(min_length=1)
@@ -177,7 +177,7 @@ class ResponseInputCard(StrictModel):
 
 
 class ResponseModelInput(StrictModel):
-    schema_version: Literal[INPUT_VERSION] = INPUT_VERSION
+    schema_version: Literal["phase2r92_response_model_input_v1"] = INPUT_VERSION
     model_input_id: str = Field(pattern=r"^step3-r92-model-input:[0-9a-f]{24}$")
     source_fixture_sha256: str = Field(pattern=HASH)
     cards: tuple[ResponseInputCard, ...] = Field(min_length=3, max_length=3)
@@ -200,7 +200,7 @@ class ResponseModelInput(StrictModel):
 
 
 class PromptContract(StrictModel):
-    schema_version: Literal[PROMPT_VERSION] = PROMPT_VERSION
+    schema_version: Literal["phase2r92_response_prompt_v1"] = PROMPT_VERSION
     prompt_id: str = Field(pattern=r"^step3-r92-prompt:[0-9a-f]{24}$")
     allowed_presentations: tuple[Literal["table", "ordered_list", "formula"], ...] = PRESENTATIONS
     response_contract: Literal["exact-model-document-inside-exact-assistant-envelope"] = "exact-model-document-inside-exact-assistant-envelope"
@@ -217,7 +217,7 @@ class PromptContract(StrictModel):
 
 
 class ResponseDraftCard(StrictModel):
-    schema_version: Literal[RESULT_CARD_VERSION] = RESULT_CARD_VERSION
+    schema_version: Literal["phase2r92_step3_draft_card_v1"] = RESULT_CARD_VERSION
     contract_id: str = Field(pattern=CONTRACT_ID)
     source_candidate_id: str = Field(pattern=ID)
     fact_ids: tuple[str, ...] = Field(min_length=1)
@@ -240,7 +240,7 @@ class ResponseDraftCard(StrictModel):
 
 
 class ResponseDocument(StrictModel):
-    schema_version: Literal[RESULT_VERSION] = RESULT_VERSION
+    schema_version: Literal["phase2r92_step3_result_v1"] = RESULT_VERSION
     draft_cards: tuple[ResponseDraftCard, ...] = Field(min_length=3, max_length=3)
 
     @model_validator(mode="after")
@@ -269,14 +269,14 @@ class ResponseEnvelope(StrictModel):
 
 
 class GateCheck(StrictModel):
-    schema_version: Literal[GATE_VERSION] = GATE_VERSION
+    schema_version: Literal["phase2r92_response_gate_v1"] = GATE_VERSION
     check_id: str = Field(pattern=ID)
     passed: bool
     detail: str = Field(min_length=1)
 
 
 class ResponseGate(StrictModel):
-    schema_version: Literal[GATE_VERSION] = GATE_VERSION
+    schema_version: Literal["phase2r92_response_gate_v1"] = GATE_VERSION
     valid: bool
     envelope_exact: bool
     content_text: bool
@@ -319,7 +319,7 @@ class ResponseGate(StrictModel):
 
 
 class OfflineGate(StrictModel):
-    schema_version: Literal[OFFLINE_GATE_VERSION] = OFFLINE_GATE_VERSION
+    schema_version: Literal["phase2r92_offline_gate_v1"] = OFFLINE_GATE_VERSION
     valid: bool
     step3_response_offline_ready: bool
     prior_freeze_valid: bool
@@ -352,21 +352,21 @@ class OfflineGate(StrictModel):
 
 
 class RequestIdentity(StrictModel):
-    schema_version: Literal[REQUEST_VERSION] = REQUEST_VERSION
+    schema_version: Literal["phase2r92_offline_request_v1"] = REQUEST_VERSION
     request_id: str = Field(pattern=r"^step3-r92-offline-request:[0-9a-f]{64}$")
     model_input_sha256: str = Field(pattern=HASH)
     prompt_sha256: str = Field(pattern=HASH)
     response_schema_sha256: str = Field(pattern=HASH)
     response_envelope_schema_sha256: str = Field(pattern=HASH)
     prior_failure_evidence_sha256: str = Field(pattern=HASH)
-    checkpoint_commit: Literal[CHECKPOINT_COMMIT] = CHECKPOINT_COMMIT
+    checkpoint_commit: Literal["b73d261e06c878da46a05509f9154379b1437bf6"] = CHECKPOINT_COMMIT
     network_calls: Literal[0] = 0
 
 
 class MachineReport(StrictModel):
-    schema_version: Literal[REPORT_VERSION] = REPORT_VERSION
-    phase: Literal[PHASE] = PHASE
-    checkpoint_commit: Literal[CHECKPOINT_COMMIT] = CHECKPOINT_COMMIT
+    schema_version: Literal["phase2r92_machine_report_v1"] = REPORT_VERSION
+    phase: Literal["2R.9.2"] = PHASE
+    checkpoint_commit: Literal["b73d261e06c878da46a05509f9154379b1437bf6"] = CHECKPOINT_COMMIT
     prior_freeze_sha256: str = Field(pattern=HASH)
     failure_evidence_sha256: str = Field(pattern=HASH)
     model_input_sha256: str = Field(pattern=HASH)
@@ -393,7 +393,7 @@ class MachineReport(StrictModel):
 
 
 class JUnitReceipt(StrictModel):
-    schema_version: Literal[ACCEPTANCE_VERSION] = ACCEPTANCE_VERSION
+    schema_version: Literal["phase2r92_acceptance_report_v1"] = ACCEPTANCE_VERSION
     label: Literal["targeted", "full"]
     path: str = Field(min_length=1)
     sha256: str = Field(pattern=HASH)
@@ -404,8 +404,8 @@ class JUnitReceipt(StrictModel):
 
 
 class AcceptanceReport(StrictModel):
-    schema_version: Literal[ACCEPTANCE_VERSION] = ACCEPTANCE_VERSION
-    phase: Literal[PHASE] = PHASE
+    schema_version: Literal["phase2r92_acceptance_report_v1"] = ACCEPTANCE_VERSION
+    phase: Literal["2R.9.2"] = PHASE
     offline_ready: Literal[True] = True
     all_tests_passed: bool
     receipts: tuple[JUnitReceipt, ...] = Field(min_length=2, max_length=2)
@@ -512,13 +512,18 @@ def _checks(model_input: ResponseModelInput, response: ResponseDocument | None, 
     binding_ok = bool(response) and tuple(item.source_binding for item in actual) == tuple(item.source_binding for item in expected)
     typed_ok = bool(response) and tuple((item.layout, item.geometry) for item in actual) == tuple((item.layout, item.geometry) for item in expected)
     provenance_ok = binding_ok and all(item.source_binding.fact_id in item.fact_ids for item in actual)
-    cross_sample_ok = bool(response) and len({item.source_candidate_id for item in actual}) == len(actual)
+    # 跨样本分组不变量由 ResponseDocument.validate_document 在严格解析期即拒绝（失败归入 result_schema），
+    # 此处不再重复计算；若要像 step4_contract 那样暴露独立的 no_cross_sample_grouping 检查项，
+    # 需为 ResponseGate 新增字段并升版 GATE_VERSION（gate_sha256 覆盖全部字段，须同步重算冻结件）。
     serialized = "\n".join(element.source_text for card in actual for element in card.visible_elements)
     relation_values = [
-        edge.relation
+        relation
         for card in expected
         for edge in card.layout.diagram_edges
-        if getattr(edge, "relation", None)
+        # DiagramEdgeRef 契约本身不带 relation 字段（封印测试
+        # test_r92_relation_text_absent_check_is_vacuous_by_construction 钉住该事实）；
+        # 这里保持 getattr 探测语义，改字段要连带升版并重算冻结哈希。
+        if (relation := getattr(edge, "relation", None))
     ]
     relation_ok = not any(value in serialized for value in relation_values)
     unknown_ok = not (set(_collect_keys(response.model_dump(mode="json")) & FORBIDDEN_KEYS) if response else set())
@@ -557,7 +562,7 @@ def _checks(model_input: ResponseModelInput, response: ResponseDocument | None, 
         ResponseGate,
         {**values, "valid": all_valid, "checks": checks, "failure_codes": tuple(failures)},
         "gate_sha256",
-    )  # type: ignore[return-value]
+    )
 
 
 def inspect_response(model_input: ResponseModelInput, body: bytes) -> ResponseInspection:
@@ -652,11 +657,12 @@ def build_regression_cases(model_input: ResponseModelInput) -> dict[str, bytes]:
     cases["wrapper_unknown_field"] = canonical_json({"choices": json.loads(valid)["choices"], "unknown_field": True})
     cases["content_non_text"] = canonical_json({"choices": [{"index": 0, "message": {"role": "assistant", "content": {}}}]})
     cases["content_invalid_json"] = canonical_json({"choices": [{"index": 0, "message": {"role": "assistant", "content": "{"}}]})
-    for name, mutate in (
+    top_level_mutations: tuple[tuple[str, Callable[[dict[str, Any]], object]], ...] = (
         ("result_schema_version_mismatch", lambda value: value.update({"schema_version": "wrong"})),
         ("result_missing_top_level", lambda value: value.pop("draft_cards")),
         ("result_unknown_top_level", lambda value: value.update({"unknown_field": True})),
-    ):
+    )
+    for name, mutate in top_level_mutations:
         changed = json.loads(json.dumps(document, ensure_ascii=False))
         mutate(changed)
         cases[name] = canonical_json({"choices": [{"index": 0, "message": {"role": "assistant", "content": json.dumps(changed, ensure_ascii=False, sort_keys=True)}}]})

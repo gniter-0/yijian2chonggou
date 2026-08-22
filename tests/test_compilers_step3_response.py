@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import pytest
 
-from examcard.compilers.step3_card import compile_reviewed_fixture
+from examcard.compilers.step3_card import ModelLayout, compile_reviewed_fixture
 from examcard.compilers.step3_response import (
     PRESENTATIONS,
     ResponseModelInput,
@@ -19,6 +19,7 @@ from examcard.compilers.step3_response import (
     ResponseDocument,
     ResponseEnvelope,
 )
+from examcard.knowledge.contracts.admission_fixtures import DiagramEdgeRef
 from tests.fixtures.compilers_synthetic import make_reviewed_typed_evidence_fixture
 
 SOURCE_SHA = "2" * 64
@@ -92,3 +93,29 @@ def test_request_identity_is_deterministic(model_input: ResponseModelInput) -> N
     assert first == second
     assert first.request_id.startswith("step3-r92-offline-request:")
     assert first.network_calls == 0
+
+
+def test_r92_relation_text_absent_check_is_vacuous_by_construction() -> None:
+    """封印：DiagramEdgeRef 不带关系措辞，故门禁项 relation_text_absent 恒真。
+
+    `_checks` 以 `getattr(edge, "relation", None)` 过滤 `layout.diagram_edges`，而
+    DiagramEdgeRef（admission_fixtures，extra=forbid）只有 edge_id / source_node_id /
+    target_node_id / provenance / layout_only / visible_text_authorized —— 没有任何
+    关系措辞字段，实例也长不出来。于是 relation_values 恒为空集、relation_ok 恒为
+    True：这条门禁永远绿，挡不住任何东西。对照 step4_contract 的 relation_layout_only
+    走 GenericSemanticEdge.layout_relation，那条才真的在比。
+
+    本测试钉住现状而不是掩盖它：一旦 DiagramEdgeRef 长出 relation（或 diagram_edges
+    换成带关系措辞的模型），这里立刻红，提醒把 step3_response / step3_response_v2 的
+    relation_values 真正接上；改判定要同步升版 GATE_VERSION（gate_sha256 覆盖全部
+    字段，须重算冻结件）。
+    """
+    assert DiagramEdgeRef.model_config.get("extra") == "forbid"
+    assert "relation" not in DiagramEdgeRef.model_fields
+    assert ModelLayout.model_fields["diagram_edges"].annotation == tuple[DiagramEdgeRef, ...]
+
+
+def test_r92_relation_text_absent_never_fires(model_input: ResponseModelInput) -> None:
+    """上一条封印的可观测后果：18 条回归变异里没有一条能把 relation_text_absent 打红。"""
+    fired = [name for name, body in build_regression_cases(model_input).items() if "relation_text_absent" in inspect_response(model_input, body).gate.failure_codes]
+    assert fired == [], f"relation_text_absent 竟被触发，封印失效：{fired}"
