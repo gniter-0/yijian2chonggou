@@ -379,7 +379,11 @@ def build_teaching_quality_gate(
     diagrams: Iterable[DiagramSemanticResult] = (),
     watermark_candidates: Iterable[SpatialWatermarkCandidate] = (),
 ) -> TeachingQualityGate:
-    results = [*titles, *tables, *granularities, *heading_only_facts, *diagrams]
+    # 五种结果模型的公共基类只有 StrictModel，而 StrictModel 上没有 status；不注解的话
+    # mypy 把列表元素推成 StrictModel，下面那句不带 isinstance 收窄的 item.status 就报
+    # attr-defined。五种模型各自都声明了 status: QualityStatus，如实写成联合即可，四处
+    # isinstance 收窄照旧生效。
+    results: list[TitleQualityResult | TableStructureResult | CardGranularityResult | HeadingOnlyFactResult | DiagramSemanticResult] = [*titles, *tables, *granularities, *heading_only_facts, *diagrams]
     return TeachingQualityGate(
         title_failures=sum(isinstance(item, TitleQualityResult) and item.status == QualityStatus.FAIL for item in results),
         table_structure_failures=sum(isinstance(item, TableStructureResult) and item.status == QualityStatus.FAIL for item in results),

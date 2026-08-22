@@ -644,7 +644,11 @@ class OpenAICompatibleStep2Transport:
                     "controlled_diagrams": diagrams,
                 }
             )
-        payload = {
+        # 逐步补键的 JSON 载荷：不注解的话 mypy 会按首个字面量把值类型收成
+        # Sequence[Collection[str]]，后面几处补键（reviewed_continuation_sidecar 等）本来
+        # 合法的赋值全报 assignment。本函数的返回声明就是 dict[str, Any]，这里如实写同一
+        # 个类型即可。
+        payload: dict[str, Any] = {
             "sample_id": request.sample_id,
             "material_profile_id": request.material_profile_id,
             "heading_only_allowed_anchor_span_ids": list(request.heading_only_allowed_anchor_span_ids),
@@ -1247,7 +1251,9 @@ class Step2OpenAIAdapter:
             if selection_errors:
                 conditions = None
                 numeric_derivation = None
-                coverage_obligation_forensics = ()
+                # 形状 B：空元组会被推成 tuple[()]，另一支路赋真值就报 assignment。
+                # 元素类型取自 Step2AExecutionRecord 同名字段的声明。
+                coverage_obligation_forensics: tuple[Step2ACoverageObligationForensic, ...] = ()
                 response = self._failed_a(
                     request,
                     Step2FailureState.GROUNDING_FAILED,
@@ -1340,15 +1346,18 @@ class Step2OpenAIAdapter:
             unknown_outcome = False if response_received else self._is_unknown_outcome(exc)
             outcome = Step2JournalOutcome.UNKNOWN_OUTCOME if unknown_outcome else Step2JournalOutcome.FAILED
             state = Step2FailureState.INVALID_RESPONSE if response_received else self._failure_state(exc, unknown_outcome=unknown_outcome)
-            raw_response_sha256 = _sha256(completion.content) if completion is not None else None
+            # 失败道另起一个可空的名字：try 道里同名量的首次绑定是 str（一定有 completion
+            # 才走到那里），这里的取值是 str | None，沿用同名就报 assignment。改名后收窄由
+            # 下面那句 is not None 承担，取值与控制流不变。
+            failure_raw_response_sha256 = _sha256(completion.content) if completion is not None else None
             rejected_response_forensics = (
                 self._rejected_response_forensics(
                     request=request,
-                    raw_response_sha256=raw_response_sha256,
+                    raw_response_sha256=failure_raw_response_sha256,
                     rejection_code="payload_schema_validation_failed",
                     error=exc,
                 )
-                if raw_response_sha256 is not None
+                if failure_raw_response_sha256 is not None
                 else None
             )
             response = self._failed_a(
@@ -1365,7 +1374,7 @@ class Step2OpenAIAdapter:
                 teaching_review=self._empty_review(basis="failed responses remain draft and do not promote reviews"),
                 provider_request_id=completion.provider_request_id if completion is not None else None,
                 http_status=completion.http_status if completion is not None else self._error_http_status(exc),
-                raw_response_sha256=raw_response_sha256,
+                raw_response_sha256=failure_raw_response_sha256,
                 rejected_response_forensics=rejected_response_forensics,
                 completed_at_utc=_utc_now(),
             )

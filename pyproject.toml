@@ -153,15 +153,17 @@ ignore_missing_imports = true
 # providers.base 3、evidence.fusion 3、phase2r14_v25_live 3、echo_release 2、
 # evidence.native 2、knowledge.projection 2、pipeline.run 2、request_helpers 2、
 # obligations 1、evidence.layout 1、phase2r142_v25_projection 1、planner.bridge 1、
-# pipeline.shadow 1）；另有两个模块被压薄但没清零：derivation 由 10 条压到 1 条，
-# step2a_builders 由 11 条压到 10 条。
-# 现测 26 条 / 7 个模块，按码分布：call-arg 12、assignment 5、prop-decorator 4、
-# call-overload 2、arg-type 1、attr-defined 1、import-not-found 1（union-attr、
-# var-annotated、index、misc 四族本轮清零；operator、return-value 两族早前已清零）。
-# 剩下的 26 条里 18 条是工具侧假阳性（model_construct 合成签名 12、@property 叠装饰器
-# 4、OpenAI SDK 重载 2），1 条是故意留的盖子（derivation:151），1 条是缺陷记账
-# （phase2r11 的 tools/ 死 import），只有 llm 的 5 条 assignment 与 quality 的 1 条
-# attr-defined 属于「改代码就能清掉」的存量。
+# pipeline.shadow 1）；另有四个模块被压薄但没清零：derivation 由 10 条压到 1 条、
+# step2a_builders 由 11 条压到 10 条、llm 由 7 条压到 2 条、quality 由 3 条压到 2 条。
+# 现测 20 条 / 7 个模块，按码分布：call-arg 12、prop-decorator 4、call-overload 2、
+# arg-type 1、import-not-found 1（assignment、attr-defined 两族本轮清零；union-attr、
+# var-annotated、index、misc 四族上一轮清零；operator、return-value 两族更早已清零）。
+# 到这里清单已经见底：剩下的 20 条里 18 条是工具侧假阳性（model_construct 合成签名 12、
+# @property 叠装饰器 4、OpenAI SDK 重载 2），1 条是故意留的盖子（derivation:151），
+# 1 条是缺陷记账（phase2r11 的 tools/ 死 import）——没有一条能靠补注解或改名清掉。
+# 想再往下削只有三条路：把 derivation 那 50 条按请求版本逐个收窄、给 phase2r11 的死函数
+# 定去留、以及在 transport 缝上采用 openai 的 TypedDict（ChatCompletionMessageParam /
+# ResponseFormatJSONSchema）换掉 dict[str, Any]。三条都是要先定方向的活，不是清理。
 # 每个模块后面括号里的数字是它当时的条数，删条目时拿它对账。
 #
 # 成因逐族抽样核查过，没有一条是「访问模型上根本不存在的字段」那类真缺陷——那一类
@@ -207,18 +209,22 @@ disable_error_code = ["call-arg"]
 module = ["examcard.knowledge.contracts.step2a_builders"] # 10
 disable_error_code = ["call-arg"]
 
-# call-overload 2 条是 OpenAI SDK 的
-# chat.completions.with_raw_response.create(...)：本仓按 dict 动态拼 response_format /
-# stream 等 kwargs，mypy 挑不到匹配的重载分支。
+# 只剩 call-overload 2 条：OpenAI SDK 的 chat.completions.with_raw_response.create(...)
+# 要的是 ChatCompletionMessageParam / ResponseFormatJSONSchema 这类 TypedDict，本仓按
+# dict[str, Any] 动态拼 messages 与 response_format，mypy 挑不到匹配的重载分支。原先另有
+# 5 条 assignment（model_payload 的载荷字典按首个字面量被收成 Sequence[Collection[str]]、
+# 空元组推成 tuple[()]、失败道复用 try 道的 sha256 名字）已按正解修掉。
 [[tool.mypy.overrides]]
-module = ["examcard.knowledge.llm"] # 7
-disable_error_code = ["assignment", "call-overload"]
+module = ["examcard.knowledge.llm"] # 2
+disable_error_code = ["call-overload"]
 
 # mypy 不支持 @property 之上再叠装饰器，而本仓用的正是 pydantic 的
 # `@computed_field` + `@property` 标准写法。这是 mypy 的已知限制，代码没有问题。
+# 原先那 1 条 attr-defined（五种结果模型混装的列表被推成公共基类 StrictModel）已按正解
+# 把元素类型如实写成联合后清掉。
 [[tool.mypy.overrides]]
-module = ["examcard.knowledge.quality"] # 3
-disable_error_code = ["attr-defined", "prop-decorator"]
+module = ["examcard.knowledge.quality"] # 2
+disable_error_code = ["prop-decorator"]
 
 [[tool.mypy.overrides]]
 module = ["examcard.knowledge.schema"] # 2
