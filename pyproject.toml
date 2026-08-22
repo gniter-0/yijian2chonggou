@@ -140,9 +140,11 @@ ignore_missing_imports = true
 # 下面的条目逐条删掉（即改掉真问题），而不是把码集合往大里写。
 #
 # 基线实测（mypy 2.3.1 + pydantic 插件，--no-incremental，checked 127 source files）：
-# 263 条 / 35 个模块。按码分布：attr-defined 115、assignment 86、arg-type 22、
-# call-arg 12、misc 6、union-attr 6、var-annotated 5、prop-decorator 4、index 2、
-# call-overload 2、operator 1、return-value 1、import-not-found 1。
+# 首测 263 条 / 35 个模块；其中 v25_generic_contracts 那 58 条已按「正解」真修掉、
+# 条目也已从本清单删除，现测 205 条 / 34 个模块。按码分布：assignment 74、
+# attr-defined 74、arg-type 22、call-arg 12、union-attr 6、var-annotated 5、
+# prop-decorator 4、misc 3、index 2、call-overload 2、import-not-found 1
+# （operator、return-value 两族随那次修复一并清零）。
 # 每个模块后面括号里的数字是它当时的条数，删条目时拿它对账。
 #
 # 成因逐族抽样核查过，没有一条是「访问模型上根本不存在的字段」那类真缺陷——那一类
@@ -189,17 +191,6 @@ module = [
     "examcard.knowledge.contracts.validation",        # 16
 ]
 disable_error_code = ["assignment", "attr-defined"]
-
-# 全仓最集中的一处：58 条。成因单一——validate_document 里连写了五六个
-# `for obligation in self.<各种>_obligations`，五种不同的 obligation 模型共用
-# `obligation` 这个名字，mypy 认死第一次绑定的 Step2ACoverageObligation，后面 41 处
-# 合法字段访问（anchors / source_table_id / source_cell_evidence_id …）全成
-# attr-defined。同源的还有 _table_by_id 返回类型写成 dict[str, object]（形状 C），
-# 由此多出 1 条 return-value 和若干 "object" has no attribute。
-# 正解：逐循环改名 + 收紧 _table_by_id 的返回类型，纯机械但要逐处核对语义。
-[[tool.mypy.overrides]]
-module = ["examcard.knowledge.contracts.v25_generic_contracts"] # 58
-disable_error_code = ["assignment", "attr-defined", "misc", "operator", "return-value"]
 
 # 同形状 A + B。misc 是推导式的元素类型被判成第一次绑定的那个模型
 # （例：learning_fixture:719 List[Step2BCardProposal] 撞 List[Step2AFactProposal]）；

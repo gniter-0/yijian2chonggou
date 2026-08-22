@@ -27,6 +27,7 @@ from . import (
     Step2DecoderConfig,
     Step2RequestIdentity,
     Step2Stage,
+    StructuredTableInput,
     canonical_step2_sha256,
     derive_step2a_coverage_obligation_input,
     make_step2_request_identity,
@@ -545,21 +546,23 @@ class V25Step2ARequest(StrictModel):
                 raise ValueError("V25 coverage context does not match its source-derived obligation")
             if any(anchor_id not in selectable for anchor_id in obligation.required_primary_anchor_span_ids):
                 raise ValueError("V25 coverage obligation cannot reference a non-selectable anchor")
-        for obligation in self.atomic_source_obligations:
-            if obligation.table_evidence_id not in _table_by_id(self.sections):
+        for atomic in self.atomic_source_obligations:
+            if atomic.table_evidence_id not in _table_by_id(self.sections):
                 raise ValueError("V25 atomic-source obligation must retain its containing source table")
-            if any(anchor_id not in selectable for anchor_id in obligation.required_primary_anchor_span_ids):
+            if any(anchor_id not in selectable for anchor_id in atomic.required_primary_anchor_span_ids):
                 raise ValueError("V25 atomic-source obligation cannot reference a non-selectable anchor")
-            if any(anchor.source_manifest_sha256 not in self.source_manifest_sha256s for anchor in obligation.anchors):
+            if any(anchor.source_manifest_sha256 not in self.source_manifest_sha256s for anchor in atomic.anchors):
                 raise ValueError("V25 atomic-source obligation must retain request-local source manifests")
-        for obligation in self.text_source_obligations:
-            if any(anchor_id not in selectable for anchor_id in obligation.required_primary_anchor_span_ids):
+        for text_obligation in self.text_source_obligations:
+            if any(anchor_id not in selectable for anchor_id in text_obligation.required_primary_anchor_span_ids):
                 raise ValueError("V25 text-source obligation cannot reference a non-selectable anchor")
-            if any(anchor.source_manifest_sha256 not in self.source_manifest_sha256s for anchor in obligation.anchors):
+            if any(
+                anchor.source_manifest_sha256 not in self.source_manifest_sha256s for anchor in text_obligation.anchors
+            ):
                 raise ValueError("V25 text-source obligation must retain request-local source manifests")
         tables = _table_by_id(self.sections)
-        for obligation in self.list_source_obligations:
-            table = tables.get(obligation.source_table_id)
+        for list_obligation in self.list_source_obligations:
+            table = tables.get(list_obligation.source_table_id)
             if table is None:
                 raise ValueError("V25 list-source obligation must retain its source table")
             cell = next(
@@ -567,21 +570,27 @@ class V25Step2ARequest(StrictModel):
                     item
                     for row in table.rows
                     for item in row.cells
-                    if item.evidence_id == obligation.source_cell_evidence_id
+                    if item.evidence_id == list_obligation.source_cell_evidence_id
                 ),
                 None,
             )
-            if cell is None or cell.row_index != obligation.source_row or cell.column_index != obligation.source_column:
+            if (
+                cell is None
+                or cell.row_index != list_obligation.source_row
+                or cell.column_index != list_obligation.source_column
+            ):
                 raise ValueError("V25 list-source obligation must retain its exact source table cell")
             cell_anchor_ids = {item.anchor_span_id for item in cell.anchor_spans}
-            if not set(obligation.required_primary_anchor_span_ids) <= cell_anchor_ids:
+            if not set(list_obligation.required_primary_anchor_span_ids) <= cell_anchor_ids:
                 raise ValueError("V25 list-source obligation cannot reference anchors outside its source cell")
-            if any(anchor_id not in selectable for anchor_id in obligation.required_primary_anchor_span_ids):
+            if any(anchor_id not in selectable for anchor_id in list_obligation.required_primary_anchor_span_ids):
                 raise ValueError("V25 list-source obligation cannot reference a non-selectable anchor")
-            if any(anchor.source_manifest_sha256 not in self.source_manifest_sha256s for anchor in obligation.anchors):
+            if any(
+                anchor.source_manifest_sha256 not in self.source_manifest_sha256s for anchor in list_obligation.anchors
+            ):
                 raise ValueError("V25 list-source obligation must retain request-local source manifests")
-            binding_ids = {item.binding_id for item in self.reviewed_continuation_bindings}
-            if not set(obligation.continuation_binding_ids) <= binding_ids:
+            reviewed_binding_ids = {item.binding_id for item in self.reviewed_continuation_bindings}
+            if not set(list_obligation.continuation_binding_ids) <= reviewed_binding_ids:
                 raise ValueError("V25 list-source obligation cannot claim an unreviewed continuation binding")
         payload = v25_step2a_request_payload(self)
         if self.identity.payload_sha256 != canonical_step2_sha256(payload):
@@ -952,7 +961,7 @@ def _section_anchor_map(sections: Iterable[Step2ASectionInput]) -> dict[str, Evi
     return spans
 
 
-def _table_by_id(sections: Iterable[Step2ASectionInput]) -> dict[str, object]:
+def _table_by_id(sections: Iterable[Step2ASectionInput]) -> dict[str, StructuredTableInput]:
     tables = {table.table_evidence_id: table for section in sections for table in section.tables}
     if len(tables) != sum(len(section.tables) for section in sections):
         raise ValueError("V25 source tables must be globally unique")
@@ -982,6 +991,10 @@ def _v25_contexts(
         if len(anchors) != len(obligation.required_primary_anchor_span_ids):
             raise ValueError("V25 coverage obligation cannot resolve every source anchor")
         table = tables.get(obligation.table_evidence_id or "")
+        complete_table = obligation.kind == Step2ACoverageObligationKind.COMPLETE_TABLE_COMPOSITION
+        if complete_table and table is None:
+            raise ValueError("V25 complete-table-composition obligation must retain its source table geometry")
+        geometry = table if complete_table else None
         payload = {
             "obligation_id": obligation.obligation_id,
             "kind": obligation.kind.value,
@@ -989,8 +1002,8 @@ def _v25_contexts(
             "required_primary_anchor_span_ids": list(obligation.required_primary_anchor_span_ids),
             "requires_all_items": obligation.requires_all_items,
             "table_evidence_id": obligation.table_evidence_id,
-            "table_row_count": table.row_count if obligation.kind == Step2ACoverageObligationKind.COMPLETE_TABLE_COMPOSITION else None,
-            "table_column_count": table.column_count if obligation.kind == Step2ACoverageObligationKind.COMPLETE_TABLE_COMPOSITION else None,
+            "table_row_count": geometry.row_count if geometry is not None else None,
+            "table_column_count": geometry.column_count if geometry is not None else None,
             "anchors": [item.model_dump(mode="json") for item in anchors],
         }
         contexts.append(V25CoverageObligationContext(context_id=_v25_id("v25-coverage-context", payload), **payload))
@@ -1391,102 +1404,107 @@ def assess_v25_step2a_response(
             failures.append(f"{obligation.obligation_id}:incomplete_anchor")
         else:
             failures.append(f"{obligation.obligation_id}:missing_fact")
-    for obligation in request.atomic_source_obligations:
-        required = set(obligation.required_primary_anchor_span_ids)
-        same_type = [
+    for atomic in request.atomic_source_obligations:
+        required = set(atomic.required_primary_anchor_span_ids)
+        atomic_candidates = [
             proposal
             for proposal, selected in selected_by_proposal
-            if proposal.fact_type == obligation.expected_fact_type
+            if proposal.fact_type == atomic.expected_fact_type
         ]
-        exact = [proposal for proposal in same_type if set(proposal.primary_anchor_span_ids) == required]
-        supersets = [proposal for proposal in same_type if required < set(proposal.primary_anchor_span_ids)]
-        subsets = [proposal for proposal in same_type if set(proposal.primary_anchor_span_ids) < required]
-        if len(exact) == 1:
-            assertion = normalized_compare_text(exact[0].assertion)
-            expected_assertion = normalized_compare_text(obligation.required_source_assertion)
+        atomic_exact = [item for item in atomic_candidates if set(item.primary_anchor_span_ids) == required]
+        atomic_supersets = [item for item in atomic_candidates if required < set(item.primary_anchor_span_ids)]
+        atomic_subsets = [item for item in atomic_candidates if set(item.primary_anchor_span_ids) < required]
+        if len(atomic_exact) == 1:
+            assertion = normalized_compare_text(atomic_exact[0].assertion)
+            expected_assertion = normalized_compare_text(atomic.required_source_assertion)
             if expected_assertion not in assertion:
-                failures.append(f"{obligation.obligation_id}:assertion_incomplete")
+                failures.append(f"{atomic.obligation_id}:assertion_incomplete")
             elif any(
                 normalized_compare_text(expression.value) not in assertion
-                for expression in obligation.numeric_expressions
+                for expression in atomic.numeric_expressions
             ):
-                failures.append(f"{obligation.obligation_id}:numeric_expression_missing")
-            elif any(operator.value not in exact[0].assertion for operator in obligation.required_condition_operators):
-                failures.append(f"{obligation.obligation_id}:condition_operator_missing")
+                failures.append(f"{atomic.obligation_id}:numeric_expression_missing")
+            elif any(
+                operator.value not in atomic_exact[0].assertion for operator in atomic.required_condition_operators
+            ):
+                failures.append(f"{atomic.obligation_id}:condition_operator_missing")
             else:
                 complete += 1
-        elif len(exact) > 1:
-            failures.append(f"{obligation.obligation_id}:duplicate_obligation_fact")
-        elif supersets:
-            failures.append(f"{obligation.obligation_id}:extra_anchor")
-        elif subsets:
-            failures.append(f"{obligation.obligation_id}:incomplete_anchor")
+        elif len(atomic_exact) > 1:
+            failures.append(f"{atomic.obligation_id}:duplicate_obligation_fact")
+        elif atomic_supersets:
+            failures.append(f"{atomic.obligation_id}:extra_anchor")
+        elif atomic_subsets:
+            failures.append(f"{atomic.obligation_id}:incomplete_anchor")
         else:
-            failures.append(f"{obligation.obligation_id}:missing_fact")
-    for obligation in request.text_source_obligations:
-        required = set(obligation.required_primary_anchor_span_ids)
-        same_type = [
+            failures.append(f"{atomic.obligation_id}:missing_fact")
+    for text_obligation in request.text_source_obligations:
+        required = set(text_obligation.required_primary_anchor_span_ids)
+        text_candidates = [
             proposal
             for proposal, selected in selected_by_proposal
-            if proposal.fact_type == obligation.expected_fact_type
+            if proposal.fact_type == text_obligation.expected_fact_type
         ]
-        exact = [proposal for proposal in same_type if set(proposal.primary_anchor_span_ids) == required]
-        supersets = [proposal for proposal in same_type if required < set(proposal.primary_anchor_span_ids)]
-        subsets = [proposal for proposal in same_type if set(proposal.primary_anchor_span_ids) < required]
-        if len(exact) == 1:
-            assertion = normalized_compare_text(exact[0].assertion)
-            expected_assertion = normalized_compare_text(obligation.model_assertion)
+        text_exact = [item for item in text_candidates if set(item.primary_anchor_span_ids) == required]
+        text_supersets = [item for item in text_candidates if required < set(item.primary_anchor_span_ids)]
+        text_subsets = [item for item in text_candidates if set(item.primary_anchor_span_ids) < required]
+        if len(text_exact) == 1:
+            assertion = normalized_compare_text(text_exact[0].assertion)
+            expected_assertion = normalized_compare_text(text_obligation.model_assertion)
             if expected_assertion not in assertion:
-                failures.append(f"{obligation.obligation_id}:assertion_incomplete")
+                failures.append(f"{text_obligation.obligation_id}:assertion_incomplete")
             elif any(
                 normalized_compare_text(expression.value) not in assertion
-                for expression in obligation.numeric_expressions
+                for expression in text_obligation.numeric_expressions
             ):
-                failures.append(f"{obligation.obligation_id}:numeric_expression_missing")
-            elif any(operator.value not in exact[0].assertion for operator in obligation.required_condition_operators):
-                failures.append(f"{obligation.obligation_id}:condition_operator_missing")
+                failures.append(f"{text_obligation.obligation_id}:numeric_expression_missing")
+            elif any(
+                operator.value not in text_exact[0].assertion
+                for operator in text_obligation.required_condition_operators
+            ):
+                failures.append(f"{text_obligation.obligation_id}:condition_operator_missing")
             else:
                 complete += 1
-        elif len(exact) > 1:
-            failures.append(f"{obligation.obligation_id}:duplicate_obligation_fact")
-        elif supersets:
-            failures.append(f"{obligation.obligation_id}:extra_anchor")
-        elif subsets:
-            failures.append(f"{obligation.obligation_id}:incomplete_anchor")
+        elif len(text_exact) > 1:
+            failures.append(f"{text_obligation.obligation_id}:duplicate_obligation_fact")
+        elif text_supersets:
+            failures.append(f"{text_obligation.obligation_id}:extra_anchor")
+        elif text_subsets:
+            failures.append(f"{text_obligation.obligation_id}:incomplete_anchor")
         else:
-            failures.append(f"{obligation.obligation_id}:missing_fact")
-    for obligation in request.list_source_obligations:
-        required = set(obligation.required_primary_anchor_span_ids)
-        same_type = [
+            failures.append(f"{text_obligation.obligation_id}:missing_fact")
+    for list_obligation in request.list_source_obligations:
+        required = set(list_obligation.required_primary_anchor_span_ids)
+        list_candidates = [
             proposal
             for proposal, selected in selected_by_proposal
-            if proposal.fact_type == obligation.expected_fact_type
+            if proposal.fact_type == list_obligation.expected_fact_type
         ]
-        exact = [proposal for proposal in same_type if set(proposal.primary_anchor_span_ids) == required]
-        supersets = [proposal for proposal in same_type if required < set(proposal.primary_anchor_span_ids)]
-        subsets = [proposal for proposal in same_type if set(proposal.primary_anchor_span_ids) < required]
-        if len(exact) == 1:
-            assertion = normalized_compare_text(exact[0].assertion)
-            expected_assertion = normalized_compare_text(obligation.model_assertion)
+        list_exact = [item for item in list_candidates if set(item.primary_anchor_span_ids) == required]
+        list_supersets = [item for item in list_candidates if required < set(item.primary_anchor_span_ids)]
+        list_subsets = [item for item in list_candidates if set(item.primary_anchor_span_ids) < required]
+        if len(list_exact) == 1:
+            assertion = normalized_compare_text(list_exact[0].assertion)
+            expected_assertion = normalized_compare_text(list_obligation.model_assertion)
             if expected_assertion not in assertion:
-                failures.append(f"{obligation.obligation_id}:assertion_incomplete")
-            elif tuple(exact[0].primary_anchor_span_ids) != obligation.required_primary_anchor_span_ids:
-                failures.append(f"{obligation.obligation_id}:anchor_order_mismatch")
-            elif obligation.continuation_state == "local_only" and any(
-                marker in exact[0].assertion.lower()
+                failures.append(f"{list_obligation.obligation_id}:assertion_incomplete")
+            elif tuple(list_exact[0].primary_anchor_span_ids) != list_obligation.required_primary_anchor_span_ids:
+                failures.append(f"{list_obligation.obligation_id}:anchor_order_mismatch")
+            elif list_obligation.continuation_state == "local_only" and any(
+                marker in list_exact[0].assertion.lower()
                 for marker in ("跨页", "续页", "cross-page", "continuation")
             ):
-                failures.append(f"{obligation.obligation_id}:unreviewed_cross_page_claim")
+                failures.append(f"{list_obligation.obligation_id}:unreviewed_cross_page_claim")
             else:
                 complete += 1
-        elif len(exact) > 1:
-            failures.append(f"{obligation.obligation_id}:duplicate_obligation_fact")
-        elif supersets:
-            failures.append(f"{obligation.obligation_id}:extra_anchor")
-        elif subsets:
-            failures.append(f"{obligation.obligation_id}:incomplete_anchor")
+        elif len(list_exact) > 1:
+            failures.append(f"{list_obligation.obligation_id}:duplicate_obligation_fact")
+        elif list_supersets:
+            failures.append(f"{list_obligation.obligation_id}:extra_anchor")
+        elif list_subsets:
+            failures.append(f"{list_obligation.obligation_id}:incomplete_anchor")
         else:
-            failures.append(f"{obligation.obligation_id}:missing_fact")
+            failures.append(f"{list_obligation.obligation_id}:missing_fact")
     obligation_count = (
         len(request.coverage_obligations)
         + len(request.atomic_source_obligations)
@@ -1531,31 +1549,31 @@ def build_v25_source_fake_response(*, request: V25Step2ARequest) -> V25Step2ARes
                 primary_anchor_span_ids=obligation.required_primary_anchor_span_ids,
             )
         )
-    for obligation in request.atomic_source_obligations:
+    for atomic in request.atomic_source_obligations:
         proposals.append(
             V25Step2AModelFactProposal(
-                fact_type=obligation.expected_fact_type,
-                label=_label_from_source(obligation.required_source_assertion),
-                assertion=obligation.required_source_assertion,
-                primary_anchor_span_ids=obligation.required_primary_anchor_span_ids,
+                fact_type=atomic.expected_fact_type,
+                label=_label_from_source(atomic.required_source_assertion),
+                assertion=atomic.required_source_assertion,
+                primary_anchor_span_ids=atomic.required_primary_anchor_span_ids,
             )
         )
-    for obligation in request.text_source_obligations:
+    for text_obligation in request.text_source_obligations:
         proposals.append(
             V25Step2AModelFactProposal(
-                fact_type=obligation.expected_fact_type,
-                label=_label_from_source(obligation.model_assertion),
-                assertion=obligation.model_assertion,
-                primary_anchor_span_ids=obligation.required_primary_anchor_span_ids,
+                fact_type=text_obligation.expected_fact_type,
+                label=_label_from_source(text_obligation.model_assertion),
+                assertion=text_obligation.model_assertion,
+                primary_anchor_span_ids=text_obligation.required_primary_anchor_span_ids,
             )
         )
-    for obligation in request.list_source_obligations:
+    for list_obligation in request.list_source_obligations:
         proposals.append(
             V25Step2AModelFactProposal(
-                fact_type=obligation.expected_fact_type,
-                label=_label_from_source(obligation.model_assertion),
-                assertion=obligation.model_assertion,
-                primary_anchor_span_ids=obligation.required_primary_anchor_span_ids,
+                fact_type=list_obligation.expected_fact_type,
+                label=_label_from_source(list_obligation.model_assertion),
+                assertion=list_obligation.model_assertion,
+                primary_anchor_span_ids=list_obligation.required_primary_anchor_span_ids,
             )
         )
     direct_candidates = [
@@ -1642,7 +1660,7 @@ def derive_v25b_grouping_obligations(
         kind, presentation = _SOURCE_FAMILY_PRESENTATION[binding.family_kind]
         table_ids = tuple(dict.fromkeys(table_id for fact in members for table_id in fact.source_table_ids))
         table_id = table_ids[0] if binding.family_kind == V25BSourceFamilyKind.TABLE_CLASSIFICATION and len(table_ids) == 1 else None
-        topic_key = _v25_id("source-topic", {"family_id": binding.family_id, "source_manifest_sha256s": binding.source_manifest_sha256s})
+        topic_key: str | None = _v25_id("source-topic", {"family_id": binding.family_id, "source_manifest_sha256s": binding.source_manifest_sha256s})
         if kind == V25BGroupingKind.STANDALONE:
             table_id = None
             topic_key = None
@@ -1652,19 +1670,19 @@ def derive_v25b_grouping_obligations(
     for fact in frozen:
         if fact.fact_id not in consumed and len(fact.source_table_ids) == 1:
             by_table[fact.source_table_ids[0]].append(fact)
-    for table_id, members in sorted(by_table.items()):
+    for table_id, table_members in sorted(by_table.items()):
         topic_key = _v25_id("source-topic", {"source_table_id": table_id})
-        compositions = [item for item in members if item.fact_type == FactType.COMPOSITION]
+        compositions = [item for item in table_members if item.fact_type == FactType.COMPOSITION]
         for fact in compositions:
             groups.append((V25BGroupingKind.TABLE_COMPOSITION, (fact,), CardPresentation.TABLE, table_id, topic_key))
             consumed.add(fact.fact_id)
         conditions = tuple(
             item
-            for item in members
+            for item in table_members
             if item.fact_type in {FactType.CONDITION, FactType.EXCEPTION} and item.fact_id not in consumed
         )
         thresholds = tuple(
-            item for item in members if item.fact_type == FactType.THRESHOLD and item.fact_id not in consumed
+            item for item in table_members if item.fact_type == FactType.THRESHOLD and item.fact_id not in consumed
         )
         if conditions:
             rule_members = (*conditions, *thresholds)
