@@ -1,7 +1,6 @@
 """Persisted V2 Step 2A adapter tests for the anchor-span contract."""
 from __future__ import annotations
 
-import hashlib
 import json
 from pathlib import Path
 

@@ -8,7 +8,7 @@ knowledge/contracts/admission_fixtures，本模块向下 import 并原样转发�
 """
 from __future__ import annotations
 
-from typing import Literal, Sequence
+from typing import Final, Literal, Sequence
 
 from pydantic import Field, model_validator
 
@@ -20,6 +20,7 @@ from ...knowledge.contracts.admission_fixtures import (
 from ...knowledge.contracts.admission_legacy_hash import canonical_hash, hash_model_r8x
 from ...materials.schema import StrictModel
 from .decisions import HumanDecision
+from .queue import QueueItemLike
 
 __all__ = (
     "REVIEWED_FIXTURE_VERSION",
@@ -30,7 +31,7 @@ __all__ = (
     "build_reviewed_fixture",
 )
 
-REVIEWED_FIXTURE_VERSION = "phase2r84_reviewed_typed_evidence_fixture_v1"
+REVIEWED_FIXTURE_VERSION: Final = "phase2r84_reviewed_typed_evidence_fixture_v1"
 
 
 class ReviewedFixture(StrictModel):
@@ -59,7 +60,7 @@ class ReviewedFixture(StrictModel):
         return self
 
 
-def build_reviewed_candidate(queue_item: object, candidate_id: str, decision: HumanDecision) -> ReviewedCandidate:
+def build_reviewed_candidate(queue_item: QueueItemLike, candidate_id: str, decision: HumanDecision) -> ReviewedCandidate:
     """r84 `_reviewed_candidate` 定式：只有已通过严格摄取校验的 reviewed 决策可以调用。"""
     if decision.disposition != "reviewed_candidate":
         raise ValueError("only reviewed decisions can build a reviewed candidate")
@@ -81,7 +82,7 @@ def build_reviewed_candidate(queue_item: object, candidate_id: str, decision: Hu
         "reviewed_candidate": True,
         "fixture_authorized": True,
     }
-    return hash_model_r8x(ReviewedCandidate, payload, "candidate_sha256")  # type: ignore[return-value]
+    return hash_model_r8x(ReviewedCandidate, payload, "candidate_sha256")
 
 
 def build_reviewed_fixture(queue_sha256: str, candidates: Sequence[ReviewedCandidate]) -> ReviewedFixture:
@@ -95,4 +96,4 @@ def build_reviewed_fixture(queue_sha256: str, candidates: Sequence[ReviewedCandi
         "step3_authorized": False,
         "step4_authorized": False,
     }
-    return hash_model_r8x(ReviewedFixture, payload, "fixture_sha256")  # type: ignore[return-value]
+    return hash_model_r8x(ReviewedFixture, payload, "fixture_sha256")

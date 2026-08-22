@@ -12,25 +12,25 @@ manual_review→PostReviewItem；全量 AdmissionAudit 汇总为会话审计）�
 """
 from __future__ import annotations
 
-from typing import Literal, Mapping, Sequence
+from typing import Final, Literal, Mapping, Sequence
 
 from pydantic import Field, StrictBool, StrictInt, StrictStr, model_validator
 
 from ...knowledge.contracts.admission_legacy_hash import canonical_hash_r10x, hash_model_r10x
 from ...materials.schema import StrictModel
 
-BINDING_VERSION = "phase2r11101_source_image_binding_v1"
-DECISION_VERSION = "phase2r11101_human_review_decision_v1"
-MANIFEST_VERSION = "phase2r11101_production_authorization_manifest_v1"
-FIXTURE_VERSION = "phase2r11101_reviewed_image_fixture_v1"
-QUEUE_VERSION = "phase2r11101_post_review_queue_v1"
-AUDIT_VERSION = "phase2r11101_admission_audit_v1"
+BINDING_VERSION: Final = "phase2r11101_source_image_binding_v1"
+DECISION_VERSION: Final = "phase2r11101_human_review_decision_v1"
+MANIFEST_VERSION: Final = "phase2r11101_production_authorization_manifest_v1"
+FIXTURE_VERSION: Final = "phase2r11101_reviewed_image_fixture_v1"
+QUEUE_VERSION: Final = "phase2r11101_post_review_queue_v1"
+AUDIT_VERSION: Final = "phase2r11101_admission_audit_v1"
 
 HASH = r"^[0-9a-f]{64}$"
 CARD_ID = r"^step3-card-contract:[0-9a-f]{24}$"
 IMAGE_PATH = r"^images/step4-card-[0-9a-f]{24}\.png$"
-IMAGE_WIDTH = 1024
-IMAGE_HEIGHT = 1536
+IMAGE_WIDTH: Final = 1024
+IMAGE_HEIGHT: Final = 1536
 IMAGE_PRESENTATIONS: tuple[str, ...] = ("table", "ordered_list", "formula")
 
 
@@ -294,7 +294,7 @@ def image_binding_decision(
         "provenance_sha256": binding.provenance_sha256,
         "geometry_sha256": binding.geometry_sha256,
     }
-    return hash_model_r10x(HumanReviewDecision, payload, "decision_sha256")  # type: ignore[return-value]
+    return hash_model_r10x(HumanReviewDecision, payload, "decision_sha256")
 
 
 def build_image_manifest(
@@ -318,14 +318,14 @@ def build_image_manifest(
         "decisions": decisions,
         "decision_count": 3,
     }
-    return hash_model_r10x(ProductionAuthorizationManifest, payload, "manifest_sha256")  # type: ignore[return-value]
+    return hash_model_r10x(ProductionAuthorizationManifest, payload, "manifest_sha256")
 
 
 def _reviewed_card(binding: SourceImageBinding, decision: HumanReviewDecision) -> ReviewedImageCard:
     """r11101 `_reviewed_card` 定式（字段清单与文案逐字保真，黄金重放对齐）。"""
     if decision.disposition != "approved" or not decision.explicit_human_authorization:
         raise ValueError("only explicitly approved images may enter reviewed fixture")
-    return hash_model_r10x(  # type: ignore[return-value]
+    return hash_model_r10x(
         ReviewedImageCard,
         {
             "source_card_id": binding.source_card_id, "presentation": binding.presentation,
@@ -343,7 +343,7 @@ def _reviewed_card(binding: SourceImageBinding, decision: HumanReviewDecision) -
 
 
 def _post_review_item(binding: SourceImageBinding, decision: HumanReviewDecision) -> PostReviewItem:
-    return hash_model_r10x(  # type: ignore[return-value]
+    return hash_model_r10x(
         PostReviewItem,
         {
             "source_card_id": binding.source_card_id,
@@ -383,7 +383,7 @@ def admit_images(
         else:
             queue.append(_post_review_item(binding, decision))
         audits.append(
-            hash_model_r10x(  # type: ignore[arg-type]
+            hash_model_r10x(
                 AdmissionAudit,
                 {
                     "input_freeze_sha256": freeze_sha256,
@@ -404,7 +404,7 @@ def admit_images(
         )
     fixture = None
     if cards:
-        fixture = hash_model_r10x(  # type: ignore[assignment]
+        fixture = hash_model_r10x(
             ReviewedImageFixture,
             {
                 "input_freeze_sha256": freeze_sha256,
@@ -432,4 +432,4 @@ def admit_images(
         },
         "audit_sha256",
     )
-    return fixture, tuple(queue), session  # type: ignore[return-value]
+    return fixture, tuple(queue), session

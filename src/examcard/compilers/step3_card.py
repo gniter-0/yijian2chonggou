@@ -17,7 +17,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any, Literal, Sequence
+from typing import Any, Final, Literal, Sequence
 
 from pydantic import Field, model_validator
 
@@ -77,17 +77,17 @@ __all__ = [
     "compile_reviewed_fixture",
 ]
 
-PHASE = "2R.9"
+PHASE: Final = "2R.9"
 SOURCE_FIXTURE_VERSION = "phase2r810_reviewed_typed_evidence_fixture_v1"
-MODEL_INPUT_VERSION = "phase2r9_step3_model_input_v1"
-PROMPT_VERSION = "phase2r9_step3_prompt_contract_v1"
-REQUEST_VERSION = "phase2r9_step3_offline_request_v1"
-BATCH_VERSION = "phase2r9_step3_batch_manifest_v1"
-GATE_VERSION = "phase2r9_step3_offline_gate_v1"
-REGRESSION_VERSION = "phase2r9_step3_regression_result_v1"
-REPORT_VERSION = "phase2r9_step3_report_v1"
+MODEL_INPUT_VERSION: Final = "phase2r9_step3_model_input_v1"
+PROMPT_VERSION: Final = "phase2r9_step3_prompt_contract_v1"
+REQUEST_VERSION: Final = "phase2r9_step3_offline_request_v1"
+BATCH_VERSION: Final = "phase2r9_step3_batch_manifest_v1"
+GATE_VERSION: Final = "phase2r9_step3_offline_gate_v1"
+REGRESSION_VERSION: Final = "phase2r9_step3_regression_result_v1"
+REPORT_VERSION: Final = "phase2r9_step3_report_v1"
 
-PRESENTATIONS = ("diagram", "table", "ordered_list", "constraint", "formula")
+PRESENTATIONS: Final[tuple[Literal["diagram", "table", "ordered_list", "constraint", "formula"], ...]] = ("diagram", "table", "ordered_list", "constraint", "formula")
 DISPLAY_ROLES = ("diagram_node", "table_cell", "ordered_list_item", "constraint_token", "formula_token")
 HASH = r"^[0-9a-f]{64}$"
 ID = r"^[a-z0-9][a-z0-9._:-]{2,255}$"
@@ -114,7 +114,7 @@ FORBIDDEN_KEYS = frozenset(
 )
 
 
-def _hash_model(model_type: type[StrictModel], payload: dict[str, Any], field: str) -> StrictModel:
+def _hash_model[ModelT: StrictModel](model_type: type[ModelT], payload: dict[str, Any], field: str) -> ModelT:
     # r9 自有 builder，逐字节原样（不排除 schema_version；r9 的调用载荷不含该键）
     payload = dict(payload)
     payload[field] = canonical_hash({key: value for key, value in payload.items() if key != field})
@@ -171,7 +171,7 @@ class ModelLayout(StrictModel):
 
 
 class ModelCard(StrictModel):
-    schema_version: Literal[MODEL_INPUT_VERSION] = MODEL_INPUT_VERSION
+    schema_version: Literal["phase2r9_step3_model_input_v1"] = MODEL_INPUT_VERSION
     source_fixture_sha256: str = Field(pattern=HASH)
     presentation: Literal["diagram", "table", "ordered_list", "constraint", "formula"]
     source_binding: ModelSourceBinding
@@ -189,7 +189,7 @@ class ModelCard(StrictModel):
 
 
 class Step3ModelInput(StrictModel):
-    schema_version: Literal[MODEL_INPUT_VERSION] = MODEL_INPUT_VERSION
+    schema_version: Literal["phase2r9_step3_model_input_v1"] = MODEL_INPUT_VERSION
     model_input_id: str = Field(pattern=MODEL_ID)
     source_fixture_sha256: str = Field(pattern=HASH)
     cards: tuple[ModelCard, ...] = Field(min_length=1)
@@ -208,7 +208,7 @@ class Step3ModelInput(StrictModel):
 
 
 class PromptContract(StrictModel):
-    schema_version: Literal[PROMPT_VERSION] = PROMPT_VERSION
+    schema_version: Literal["phase2r9_step3_prompt_contract_v1"] = PROMPT_VERSION
     prompt_id: str = Field(pattern=r"^step3-prompt:[0-9a-f]{24}$")
     source_fixture_sha256: str = Field(pattern=HASH)
     allowed_presentations: tuple[Literal["diagram", "table", "ordered_list", "constraint", "formula"], ...] = PRESENTATIONS
@@ -231,7 +231,7 @@ class PromptContract(StrictModel):
 
 
 class OfflineRequestPlan(StrictModel):
-    schema_version: Literal[REQUEST_VERSION] = REQUEST_VERSION
+    schema_version: Literal["phase2r9_step3_offline_request_v1"] = REQUEST_VERSION
     request_id: str = Field(pattern=REQUEST_ID)
     model_input_id: str = Field(pattern=MODEL_ID)
     prompt_id: str = Field(pattern=r"^step3-prompt:[0-9a-f]{24}$")
@@ -243,7 +243,7 @@ class OfflineRequestPlan(StrictModel):
 
 
 class DraftBundle(StrictModel):
-    schema_version: Literal[DRAFT_VERSION] = DRAFT_VERSION
+    schema_version: Literal["phase2r9_step3_deterministic_draft_v1"] = DRAFT_VERSION
     source_fixture_sha256: str = Field(pattern=HASH)
     artifacts: tuple[FakeArtifact, ...] = Field(min_length=1)
     artifact_count: int = Field(ge=1)
@@ -269,8 +269,8 @@ class PresentationCounts(StrictModel):
 
 
 class BatchManifest(StrictModel):
-    schema_version: Literal[BATCH_VERSION] = BATCH_VERSION
-    phase: Literal[PHASE] = PHASE
+    schema_version: Literal["phase2r9_step3_batch_manifest_v1"] = BATCH_VERSION
+    phase: Literal["2R.9"] = PHASE
     source_fixture_sha256: str = Field(pattern=HASH)
     contract_ids: tuple[str, ...] = Field(min_length=1)
     card_contract_count: int = Field(ge=1)
@@ -306,8 +306,8 @@ class GateCheck(StrictModel):
 
 
 class OfflineGate(StrictModel):
-    schema_version: Literal[GATE_VERSION] = GATE_VERSION
-    phase: Literal[PHASE] = PHASE
+    schema_version: Literal["phase2r9_step3_offline_gate_v1"] = GATE_VERSION
+    phase: Literal["2R.9"] = PHASE
     valid: bool
     source_fixture_authorized: bool
     source_contracts_valid: bool
@@ -333,7 +333,7 @@ class OfflineGate(StrictModel):
 
 
 class RegressionResult(StrictModel):
-    schema_version: Literal[REGRESSION_VERSION] = REGRESSION_VERSION
+    schema_version: Literal["phase2r9_step3_regression_result_v1"] = REGRESSION_VERSION
     case_id: str = Field(pattern=ID)
     expected_failure_code: str = Field(pattern=ID)
     caught: bool
@@ -349,7 +349,7 @@ class RegressionResult(StrictModel):
 
 class Readiness(StrictModel):
     schema_version: Literal["phase2r9_readiness_v1"] = "phase2r9_readiness_v1"
-    phase: Literal[PHASE] = PHASE
+    phase: Literal["2R.9"] = PHASE
     valid: bool
     generic_step3_offline_ready: bool
     card_contract_count: int = Field(ge=1)
@@ -362,7 +362,7 @@ class Readiness(StrictModel):
 
 class Artifacts(StrictModel):
     schema_version: Literal["phase2r9_artifacts_v1"] = "phase2r9_artifacts_v1"
-    phase: Literal[PHASE] = PHASE
+    phase: Literal["2R.9"] = PHASE
     source_fixture_sha256: str = Field(pattern=HASH)
     source_mutations: Literal[0] = 0
     network_calls: Literal[0] = 0
@@ -376,8 +376,8 @@ class Artifacts(StrictModel):
 
 
 class Report(StrictModel):
-    schema_version: Literal[REPORT_VERSION] = REPORT_VERSION
-    phase: Literal[PHASE] = PHASE
+    schema_version: Literal["phase2r9_step3_report_v1"] = REPORT_VERSION
+    phase: Literal["2R.9"] = PHASE
     disposition: Literal["accepted_offline"] = "accepted_offline"
     source_fixture_sha256: str = Field(pattern=HASH)
     card_contract_count: int = Field(ge=1)
@@ -458,19 +458,19 @@ def _layout_from_contract(raw: dict[str, Any]) -> tuple[tuple[DisplayElement, ..
     presentation = raw["presentation"]
     if presentation == "table":
         cells = tuple(_display(cell, "table_cell", cell["reading_order"]) for cell in raw.get("cells", ()))
-        refs = tuple(TableCellRef.model_validate({key: cell[key] for key in ("element_id", "row", "column", "row_span", "column_span", "reading_order")}) for cell in raw["cells"])
-        return cells, LayoutContract(presentation=presentation, table_rows=raw["rows"], table_columns=raw["columns"], table_cells=refs)
+        cell_refs = tuple(TableCellRef.model_validate({key: cell[key] for key in ("element_id", "row", "column", "row_span", "column_span", "reading_order")}) for cell in raw["cells"])
+        return cells, LayoutContract(presentation=presentation, table_rows=raw["rows"], table_columns=raw["columns"], table_cells=cell_refs)
     if presentation == "ordered_list":
         items = tuple(_display(item, "ordered_list_item", item["order"]) for item in raw.get("items", ()))
-        refs = tuple(ListItemRef.model_validate({"element_id": item["element_id"], "order": item["order"], "marker": item["marker"]}) for item in raw["items"])
-        return items, LayoutContract(presentation=presentation, list_items=refs)
+        list_refs = tuple(ListItemRef.model_validate({"element_id": item["element_id"], "order": item["order"], "marker": item["marker"]}) for item in raw["items"])
+        return items, LayoutContract(presentation=presentation, list_items=list_refs)
     if presentation in {"constraint", "formula"}:
         role = "constraint_token" if presentation == "constraint" else "formula_token"
         tokens = tuple(_display(token, role, token["token_order"]) for token in raw.get("tokens", ()))
-        refs = tuple(TokenRef.model_validate({"element_id": token["element_id"], "token_order": token["token_order"]}) for token in raw["tokens"])
+        token_refs = tuple(TokenRef.model_validate({"element_id": token["element_id"], "token_order": token["token_order"]}) for token in raw["tokens"])
         if presentation == "constraint":
-            return tokens, LayoutContract(presentation=presentation, constraint_blocks=refs)
-        return tokens, LayoutContract(presentation=presentation, token_refs=refs)
+            return tokens, LayoutContract(presentation=presentation, constraint_blocks=token_refs)
+        return tokens, LayoutContract(presentation=presentation, token_refs=token_refs)
     if presentation == "diagram":
         nodes = tuple(_display(node, "diagram_node", node["reading_order"]) for node in raw.get("nodes", ()))
         node_refs = tuple(DiagramNodeRef(element_id=node["element_id"], reading_order=node["reading_order"]) for node in raw["nodes"])
@@ -802,7 +802,7 @@ def compile_reviewed_fixture(fixture: ReviewedTypedEvidenceFixture, *, source_fi
         "regression_count": len(regressions),
         "regression_caught_count": sum(item.caught for item in regressions),
     }
-    report = _hash_model(Report, report_payload, "report_sha256")  # type: ignore[assignment]
+    report = _hash_model(Report, report_payload, "report_sha256")
     return Step3Compilation(
         source_fixture_sha256=source_fixture_sha256,
         source_fixture=fixture,

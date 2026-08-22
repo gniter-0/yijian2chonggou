@@ -11,7 +11,7 @@ bc-b8b9aca6）。
 """
 from __future__ import annotations
 
-from typing import Any, Literal, Mapping, Sequence
+from typing import Any, Final, Literal, Mapping, Sequence
 
 from pydantic import Field, model_validator
 
@@ -26,8 +26,8 @@ __all__ = (
     "build_batch_image_authorization",
 )
 
-BATCH_IMAGE_DECISION_VERSION = "image-admission-decision/2.0"
-BATCH_IMAGE_MANIFEST_VERSION = "image-admission-manifest/2.0"
+BATCH_IMAGE_DECISION_VERSION: Final = "image-admission-decision/2.0"
+BATCH_IMAGE_MANIFEST_VERSION: Final = "image-admission-manifest/2.0"
 
 _ID = r"^[a-z0-9][a-z0-9._:-]{2,255}$"
 
@@ -106,4 +106,4 @@ def build_batch_image_authorization(rows: Sequence[Mapping[str, Any]]) -> BatchI
         "rejected_count": sum(1 for item in decisions if item.disposition == "rejected"),
         "manual_review_count": sum(1 for item in decisions if item.disposition == "manual_review"),
     }
-    return hash_model(BatchImageAuthorizationManifest, manifest_payload, "manifest_sha256")  # type: ignore[return-value]
+    return hash_model(BatchImageAuthorizationManifest, manifest_payload, "manifest_sha256")

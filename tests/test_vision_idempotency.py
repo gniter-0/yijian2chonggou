@@ -1,7 +1,6 @@
 """Contracts for relay idempotency headers used by Phase 3B.1.3."""
 from __future__ import annotations
 
-from pathlib import Path
 from types import SimpleNamespace
 
 

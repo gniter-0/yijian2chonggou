@@ -26,14 +26,21 @@ T4b 编排主体（设计稿 `docs/design/live_pipeline_driver_design.md`，含 
 from __future__ import annotations
 
 import json
+import random
 import re
+import string
 from collections.abc import Callable, Mapping
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from datetime import UTC, datetime
-from hashlib import sha256
 from pathlib import Path
-from typing import Any
+from typing import Any, Literal, Sequence
 
+from pydantic import Field, model_validator
+
+from ..common.freeze import build_freeze
+from ..common.hashing import SHA256_HEX, canonical_hash, hash_model
+from ..common.io import atomic_write_json, read_json
+from ..materials.schema import StrictModel
 from .shadow_wiring import load_env_file
 
 _REPO_ROOT = Path(__file__).resolve().parents[3]
@@ -183,20 +190,6 @@ class ResendPlan:
 # 决策构建器一律注入（provider-injection，与 pipeline/run.py 同哲学），
 # 故全部函数可用伪 transport 离线测试；src 决不 import migration。
 # ===========================================================================
-
-import json
-import random
-import string
-from dataclasses import dataclass
-from datetime import UTC, datetime
-from typing import Any, Callable, Iterable, Literal, Mapping, Sequence
-
-from pydantic import Field, model_validator
-
-from ..common.freeze import build_freeze
-from ..common.hashing import SHA256_HEX, canonical_hash, hash_model
-from ..common.io import atomic_write_json, read_json
-from ..materials.schema import StrictModel
 
 LIVE_STAGES: tuple[str, ...] = ("step1", "step2a", "step2b", "step3", "step4")
 LIVE_STAGE_REPORT_VERSION = "examcard_live_stage_report_v1"

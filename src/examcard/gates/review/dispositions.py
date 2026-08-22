@@ -58,7 +58,7 @@ def derive_admission_basis(disposition: str | None, *, browser_demo: bool) -> st
 
 
 def count_dispositions(values: Iterable[str]) -> dict[str, int]:
-    counts = {state: 0 for state in DISPOSITIONS}
+    counts: dict[str, int] = {state: 0 for state in DISPOSITIONS}
     for value in values:
         if value not in counts:
             raise ValueError(f"unknown disposition: {value}")

@@ -4,7 +4,7 @@ from __future__ import annotations
 import hashlib
 from enum import StrEnum
 from pathlib import Path
-from typing import Any, Mapping
+from typing import Any, Final, Mapping
 
 from pydantic import Field, model_validator
 
@@ -21,7 +21,6 @@ from . import (
 from ..quality import QualityStatus, TitleQualityResult, assess_title_quality
 from .v25_generic_contracts import (
     V25BSourceFamilyBinding,
-    V25BStep2BResultPayload,
     V25FactReviewState,
     V25Step2AContractProfile,
     V25Step2AGate,
@@ -34,9 +33,9 @@ from .v25_generic_contracts import (
 )
 
 
-PHASE = "2R.1.4.2"
+PHASE: Final = "2R.1.4.2"
 PROJECTION_VERSION = "v25_response_golden_projection_v1"
-SCHEMA_VERSION = "phase2r142_projection_schema_v1"
+SCHEMA_VERSION: Final = "phase2r142_projection_schema_v1"
 FROZEN_PHASE2R141_STORAGE = Path("data/semantic_llm_v2/gonglu_phase2r141_v25b_recovery_live_run1")
 _SHA256_PATTERN = r"^[0-9a-f]{64}$"
 _OFFLINE_RELAY = "https://offline.invalid/phase2r142"
@@ -454,7 +453,11 @@ def _projection_from_proposal(
 ):
     selected = proposal.primary_anchor_span_ids
     evidence_ids = tuple(dict.fromkeys(spans[item].parent_evidence_id for item in selected))
-    manifests = tuple(dict.fromkeys(spans[item].source_manifest_sha256 for item in selected))
+    # 待定项（审计遗留）：算出的清单指纹并未喂进下方 _stable_id，而紧邻的
+    # evidence_ids 是喂了的，疑似抽包时漏接一个溯源成分。补接会改变
+    # topic_key/fact_id 的派生值并牵动全部金标，须由负责人裁定后连同金标一并改，
+    # 故此处保留计算并显式标注，不做静默删除。
+    manifests = tuple(dict.fromkeys(spans[item].source_manifest_sha256 for item in selected))  # noqa: F841
     proposal_sha256 = canonical_step2_sha256(proposal.model_dump(mode="json"))
     topic_key = _stable_id(
         "source-topic",

@@ -27,7 +27,6 @@ from examcard.knowledge.contracts.admission_fixtures import ReviewedTypedEvidenc
 from tests.fixtures.admission_kernel import (
     ANCHOR_IDS,
     EVIDENCE_ID,
-    FACT_ID,
     RECORD_ID,
     SOURCE_MANIFEST_SHA256,
     SUBJECT_ID,

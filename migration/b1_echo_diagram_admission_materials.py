@@ -303,7 +303,6 @@ def main() -> int:
 
     for case in selected_cases:
         sample_id = case["sample_id"]
-        fact = case["_fact"]
         diagram = case["_diagram"]
         proposal = case["_proposal"]
         resolution = case["resolution"]

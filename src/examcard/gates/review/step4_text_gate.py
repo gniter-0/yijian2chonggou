@@ -44,7 +44,7 @@ from __future__ import annotations
 import hashlib
 import re
 import unicodedata
-from typing import Any, Callable, Literal, Mapping, Sequence
+from typing import Any, Callable, Final, Literal, Mapping, Sequence
 
 from pydantic import Field, model_validator
 
@@ -66,7 +66,7 @@ __all__ = (
     "resolve_card_image",
 )
 
-STEP4_TEXT_GATE_VERSION = "step4-text-gate-report/1.1"
+STEP4_TEXT_GATE_VERSION: Final = "step4-text-gate-report/1.1"
 
 # 语义 token：CJK / 拉丁字母数字串 / 数值（含小数与百分比）/ 比较与数学符号（考点级，D2 符号谱系）。
 _SEMANTIC_TOKEN = re.compile(
@@ -404,8 +404,9 @@ def evaluate_card_transcript(*, truth_lines: Sequence[str], transcript: str) -> 
         got_by_tokens.setdefault(got_tokens[g_index], []).append(g_index)
     for t_index in sorted(open_truth):
         bucket = got_by_tokens.get(truth_tokens[t_index])
-        if not bucket and alt_tokens[t_index] is not None:
-            bucket = got_by_tokens.get(alt_tokens[t_index])
+        alt = alt_tokens[t_index]
+        if not bucket and alt is not None:
+            bucket = got_by_tokens.get(alt)
         if bucket:
             g_index = bucket.pop(0)
             open_truth.discard(t_index)
@@ -651,7 +652,7 @@ def build_step4_text_gate_report(
             "matched_line_count": matched,
             "findings": tuple(findings),
         }
-        verdicts.append(hash_model(TextGateCardVerdict, payload, "card_sha256"))  # type: ignore[arg-type]
+        verdicts.append(hash_model(TextGateCardVerdict, payload, "card_sha256"))
     report_payload = {
         "run_dir": run_dir,
         "truth_fixture_path": truth_fixture_path,
@@ -667,4 +668,4 @@ def build_step4_text_gate_report(
             else ("warn" if any(item.verdict == "warn" for item in verdicts) else "pass")
         ),
     }
-    return hash_model(Step4TextGateReport, report_payload, "report_sha256")  # type: ignore[return-value]
+    return hash_model(Step4TextGateReport, report_payload, "report_sha256")

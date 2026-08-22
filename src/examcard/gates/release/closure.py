@@ -25,7 +25,7 @@ from __future__ import annotations
 import json
 import re
 from dataclasses import dataclass
-from typing import Any, Literal, Mapping
+from typing import Any, Final, Literal, Mapping
 
 from pydantic import Field, model_validator
 
@@ -60,23 +60,23 @@ __all__ = [
     "submit_non_authoritative_candidate",
 ]
 
-PHASE = "2R.9.8"
+PHASE: Final = "2R.9.8"
 
-FREEZE_VERSION = "phase2r98_r97_freeze_v1"
-OPAQUE_FAILURE_VERSION = "phase2r98_opaque_r97_failure_evidence_v1"
-AUTHORITY_VERSION = "phase2r98_step3_authority_policy_v1"
-ALIGNMENT_VERSION = "phase2r98_r96_source_contract_alignment_v1"
-CANDIDATE_VERSION = "phase2r98_non_authoritative_model_candidate_v1"
-CANDIDATE_AUDIT_VERSION = "phase2r98_non_authoritative_candidate_audit_v1"
-GATE_CHECK_VERSION = "phase2r98_gate_check_v1"
-GATE_VERSION = "phase2r98_offline_gate_v1"
-REGRESSION_VERSION = "phase2r98_regression_result_v1"
-REPORT_VERSION = "phase2r98_machine_report_v1"
-ACCEPTANCE_VERSION = "phase2r98_acceptance_report_v1"
+FREEZE_VERSION: Final = "phase2r98_r97_freeze_v1"
+OPAQUE_FAILURE_VERSION: Final = "phase2r98_opaque_r97_failure_evidence_v1"
+AUTHORITY_VERSION: Final = "phase2r98_step3_authority_policy_v1"
+ALIGNMENT_VERSION: Final = "phase2r98_r96_source_contract_alignment_v1"
+CANDIDATE_VERSION: Final = "phase2r98_non_authoritative_model_candidate_v1"
+CANDIDATE_AUDIT_VERSION: Final = "phase2r98_non_authoritative_candidate_audit_v1"
+GATE_CHECK_VERSION: Final = "phase2r98_gate_check_v1"
+GATE_VERSION: Final = "phase2r98_offline_gate_v1"
+REGRESSION_VERSION: Final = "phase2r98_regression_result_v1"
+REPORT_VERSION: Final = "phase2r98_machine_report_v1"
+ACCEPTANCE_VERSION: Final = "phase2r98_acceptance_report_v1"
 
 HASH = r"^[0-9a-f]{64}$"
 CONTRACT_ID = r"^step3-card-contract:[0-9a-f]{24}$"
-PRESENTATIONS = ("table", "ordered_list", "formula")
+PRESENTATIONS: Final[tuple[Literal["table", "ordered_list", "formula"], ...]] = ("table", "ordered_list", "formula")
 
 # gonglu 试点 v1 钉扎：R8.10 六个 reviewed 候选（门禁 r8-reviewed-fixture 检查的期望值）
 DEFAULT_EXPECTED_CARD_COUNT = 6
@@ -97,7 +97,7 @@ def canonical_json(value: Any) -> bytes:
     return json.dumps(_jsonable(value), ensure_ascii=False, sort_keys=True, separators=(",", ":")).encode("utf-8")
 
 
-def _hash_model(model_type: type[StrictModel], payload: dict[str, Any], field: str) -> StrictModel:
+def _hash_model[ModelT: StrictModel](model_type: type[ModelT], payload: dict[str, Any], field: str) -> ModelT:
     document = dict(payload)
     draft = model_type.model_construct(**{**document, field: "0" * 64})
     document[field] = canonical_hash(draft.model_dump(mode="json", exclude={"schema_version", field}))
@@ -105,15 +105,15 @@ def _hash_model(model_type: type[StrictModel], payload: dict[str, Any], field: s
 
 
 class FrozenArtifact(StrictModel):
-    schema_version: Literal[FREEZE_VERSION] = FREEZE_VERSION
+    schema_version: Literal["phase2r98_r97_freeze_v1"] = FREEZE_VERSION
     path: str = Field(min_length=1)
     bytes: int = Field(gt=0)
     sha256: str = Field(pattern=HASH)
 
 
 class R97Freeze(StrictModel):
-    schema_version: Literal[FREEZE_VERSION] = FREEZE_VERSION
-    phase: Literal[PHASE] = PHASE
+    schema_version: Literal["phase2r98_r97_freeze_v1"] = FREEZE_VERSION
+    phase: Literal["2R.9.8"] = PHASE
     artifacts: tuple[FrozenArtifact, ...] = Field(min_length=1)
     artifact_count: int = Field(gt=0)
     aggregate_sha256: str = Field(pattern=HASH)
@@ -133,7 +133,7 @@ class R97Freeze(StrictModel):
 class OpaqueFailureEvidence(StrictModel):
     """Hashes and Gate facts only.  The R9.7 provider body is never loaded."""
 
-    schema_version: Literal[OPAQUE_FAILURE_VERSION] = OPAQUE_FAILURE_VERSION
+    schema_version: Literal["phase2r98_opaque_r97_failure_evidence_v1"] = OPAQUE_FAILURE_VERSION
     source_phase: Literal["2R.9.7"] = "2R.9.7"
     machine_report_sha256: str = Field(pattern=HASH)
     business_record_sha256: str = Field(pattern=HASH)
@@ -150,8 +150,8 @@ class OpaqueFailureEvidence(StrictModel):
 
 
 class AuthorityPolicy(StrictModel):
-    schema_version: Literal[AUTHORITY_VERSION] = AUTHORITY_VERSION
-    phase: Literal[PHASE] = PHASE
+    schema_version: Literal["phase2r98_step3_authority_policy_v1"] = AUTHORITY_VERSION
+    phase: Literal["2R.9.8"] = PHASE
     draft_authority: Literal["local_deterministic_compiler"] = "local_deterministic_compiler"
     model_role: Literal["non_authoritative_candidate_only"] = "non_authoritative_candidate_only"
     model_can_mutate_draft: Literal[False] = False
@@ -168,7 +168,7 @@ class AuthorityPolicy(StrictModel):
 
 
 class R96SourceContractAlignment(StrictModel):
-    schema_version: Literal[ALIGNMENT_VERSION] = ALIGNMENT_VERSION
+    schema_version: Literal["phase2r98_r96_source_contract_alignment_v1"] = ALIGNMENT_VERSION
     source_path: str = Field(min_length=1)
     source_sha256: str = Field(pattern=HASH)
     contract_ids: tuple[str, str, str]
@@ -185,7 +185,7 @@ class R96SourceContractAlignment(StrictModel):
 
 
 class NonAuthoritativeModelCandidate(StrictModel):
-    schema_version: Literal[CANDIDATE_VERSION] = CANDIDATE_VERSION
+    schema_version: Literal["phase2r98_non_authoritative_model_candidate_v1"] = CANDIDATE_VERSION
     candidate_sha256: str = Field(pattern=HASH)
     claimed_contract_ids: tuple[str, ...] = ()
     proposed_payload_sha256: str = Field(pattern=HASH)
@@ -193,7 +193,7 @@ class NonAuthoritativeModelCandidate(StrictModel):
 
 
 class CandidateAudit(StrictModel):
-    schema_version: Literal[CANDIDATE_AUDIT_VERSION] = CANDIDATE_AUDIT_VERSION
+    schema_version: Literal["phase2r98_non_authoritative_candidate_audit_v1"] = CANDIDATE_AUDIT_VERSION
     candidate_sha256: str = Field(pattern=HASH)
     disposition: Literal["ignored_non_authoritative"] = "ignored_non_authoritative"
     draft_mutated: Literal[False] = False
@@ -203,14 +203,14 @@ class CandidateAudit(StrictModel):
 
 
 class GateCheck(StrictModel):
-    schema_version: Literal[GATE_CHECK_VERSION] = GATE_CHECK_VERSION
+    schema_version: Literal["phase2r98_gate_check_v1"] = GATE_CHECK_VERSION
     check_id: str = Field(min_length=3, pattern=r"^[a-z0-9][a-z0-9._:-]+$")
     passed: bool
     detail: str = Field(min_length=1)
 
 
 class PresentationCounts(StrictModel):
-    schema_version: Literal[REPORT_VERSION] = REPORT_VERSION
+    schema_version: Literal["phase2r98_machine_report_v1"] = REPORT_VERSION
     diagram: int = Field(ge=0)
     table: int = Field(ge=0)
     ordered_list: int = Field(ge=0)
@@ -219,8 +219,8 @@ class PresentationCounts(StrictModel):
 
 
 class OfflineGate(StrictModel):
-    schema_version: Literal[GATE_VERSION] = GATE_VERSION
-    phase: Literal[PHASE] = PHASE
+    schema_version: Literal["phase2r98_offline_gate_v1"] = GATE_VERSION
+    phase: Literal["2R.9.8"] = PHASE
     valid: bool
     r97_freeze_valid: bool
     opaque_failure_evidence_only: bool
@@ -262,7 +262,7 @@ class OfflineGate(StrictModel):
 
 
 class RegressionResult(StrictModel):
-    schema_version: Literal[REGRESSION_VERSION] = REGRESSION_VERSION
+    schema_version: Literal["phase2r98_regression_result_v1"] = REGRESSION_VERSION
     case_id: str = Field(min_length=3, pattern=r"^[a-z0-9][a-z0-9._:-]+$")
     expected_failure: str = Field(min_length=1)
     caught: bool
@@ -278,8 +278,8 @@ class RegressionResult(StrictModel):
 
 
 class MachineReport(StrictModel):
-    schema_version: Literal[REPORT_VERSION] = REPORT_VERSION
-    phase: Literal[PHASE] = PHASE
+    schema_version: Literal["phase2r98_machine_report_v1"] = REPORT_VERSION
+    phase: Literal["2R.9.8"] = PHASE
     freeze: R97Freeze
     opaque_failure: OpaqueFailureEvidence
     authority: AuthorityPolicy
@@ -302,7 +302,7 @@ class MachineReport(StrictModel):
 
 
 class JUnitReceipt(StrictModel):
-    schema_version: Literal[ACCEPTANCE_VERSION] = ACCEPTANCE_VERSION
+    schema_version: Literal["phase2r98_acceptance_report_v1"] = ACCEPTANCE_VERSION
     label: Literal["targeted", "full"]
     sha256: str = Field(pattern=HASH)
     tests: int = Field(ge=0)
@@ -312,8 +312,8 @@ class JUnitReceipt(StrictModel):
 
 
 class AcceptanceReport(StrictModel):
-    schema_version: Literal[ACCEPTANCE_VERSION] = ACCEPTANCE_VERSION
-    phase: Literal[PHASE] = PHASE
+    schema_version: Literal["phase2r98_acceptance_report_v1"] = ACCEPTANCE_VERSION
+    phase: Literal["2R.9.8"] = PHASE
     accepted: bool
     machine_report_sha256: str = Field(pattern=HASH)
     receipts: tuple[JUnitReceipt, JUnitReceipt]
@@ -399,20 +399,15 @@ def _fail_closed(case_id: str, expected_failure: str, callback: Any) -> Regressi
 
 def build_regression_matrix(bundle: DeterministicReleaseBundle, authority: AuthorityPolicy) -> tuple[RegressionResult, ...]:
     baseline = bundle.model_dump(mode="json")
-    first = baseline["cards"][0]
 
     def mutate(path: tuple[Any, ...], value: Any) -> dict[str, Any]:
-        copy = json.loads(json.dumps(baseline, ensure_ascii=False))
+        copy: dict[str, Any] = json.loads(json.dumps(baseline, ensure_ascii=False))
         target: Any = copy
         for key in path[:-1]:
             target = target[key]
         target[path[-1]] = value
         return copy
 
-    candidate = NonAuthoritativeModelCandidate(
-        candidate_sha256="1" * 64, proposed_payload_sha256="2" * 64,
-        claimed_contract_ids=(first["contract"]["contract_id"],),
-    )
     return (
         _fail_closed("unknown-field", "unknown_field", lambda: DeterministicReleaseBundle.model_validate({**baseline, "unknown_field": True})),
         _fail_closed("missing-card", "missing_card", lambda: DeterministicReleaseBundle.model_validate({**baseline, "cards": baseline["cards"][:-1]})),

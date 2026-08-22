@@ -12,7 +12,7 @@ HumanDecision / HumanDecisionManifest 是「严格摄取」的唯一权威输入
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Literal
+from typing import Final, Literal
 
 from pydantic import Field, model_validator
 
@@ -24,9 +24,10 @@ from ...knowledge.contracts.admission_fixtures import (
 )
 from ...knowledge.contracts.admission_legacy_hash import canonical_hash, hash_model_r8x
 from ...materials.schema import StrictModel
+from .queue import QueueItemLike
 
-HUMAN_DECISION_VERSION = "phase2r84_human_decision_v1"
-HUMAN_MANIFEST_VERSION = "phase2r84_human_decision_manifest_v1"
+HUMAN_DECISION_VERSION: Final = "phase2r84_human_decision_v1"
+HUMAN_MANIFEST_VERSION: Final = "phase2r84_human_decision_manifest_v1"
 
 DECISION_IDENTITY_PREFIX = "decision:r84:human:"
 MANIFEST_IDENTITY_PREFIX = "manifest:r84:human:"
@@ -129,7 +130,7 @@ def empty_human_manifest(queue_sha256: str) -> HumanDecisionManifest:
         "decisions": (),
         "decision_count": 0,
     }
-    return hash_model_r8x(HumanDecisionManifest, payload, "manifest_sha256")  # type: ignore[return-value]
+    return hash_model_r8x(HumanDecisionManifest, payload, "manifest_sha256")
 
 
 def load_human_manifest(path: Path | None, queue_sha256: str) -> HumanDecisionManifest:
@@ -142,7 +143,7 @@ def load_human_manifest(path: Path | None, queue_sha256: str) -> HumanDecisionMa
     return manifest
 
 
-def validate_human_decision(decision: HumanDecision, queue_item: object, candidate: object) -> None:
+def validate_human_decision(decision: HumanDecision, queue_item: QueueItemLike, candidate: object) -> None:
     """决策-队列项-候选三方绑定校验（r84 严格摄取语义，队列/候选侧鸭子类型化）。"""
     from .contracts import validate_typed_contract_binding
 

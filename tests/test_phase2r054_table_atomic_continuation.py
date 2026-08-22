@@ -16,7 +16,6 @@ from examcard.knowledge.schema import CompletenessMode, FactType
 from examcard.knowledge.contracts import (
     ModelNumericClaim,
     NumericTokenClass,
-    Step2AFactProposal,
     Step2AModelFactProposal,
     Step2AResponse,
     Step2ResultState,

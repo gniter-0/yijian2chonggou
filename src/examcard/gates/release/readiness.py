@@ -438,6 +438,14 @@ def _string(value: object, *, field: str) -> str:
     return value
 
 
+def _int(value: object, *, field: str) -> int:
+    # 报表里该位缺失时（None）原先直接 int(None) 抛 TypeError，信息不含字段名；
+    # 这里与 _string/_mapping 对齐成 fail-closed 的 ValueError。
+    if not isinstance(value, (int, str)):
+        raise ValueError(f"expected integer for {field}")
+    return int(value)
+
+
 def _strings(value: object, *, field: str) -> tuple[str, ...]:
     if not isinstance(value, list) or not all(isinstance(item, str) and item for item in value):
         raise ValueError(f"expected non-empty-string list for {field}")
@@ -446,12 +454,12 @@ def _strings(value: object, *, field: str) -> tuple[str, ...]:
 
 def _collect_forbidden_keys(value: object) -> set[str]:
     if isinstance(value, Mapping):
-        found = set(value).intersection(_FORBIDDEN_MODEL_INPUT_KEYS)
+        found: set[str] = set(value).intersection(_FORBIDDEN_MODEL_INPUT_KEYS)
         for nested in value.values():
             found.update(_collect_forbidden_keys(nested))
         return found
     if isinstance(value, list):
-        found: set[str] = set()
+        found = set()
         for nested in value:
             found.update(_collect_forbidden_keys(nested))
         return found
@@ -595,7 +603,7 @@ def _fact_dispositions(report: Mapping[str, Any]) -> tuple[Phase2R15FactDisposit
         item = _mapping(audit, field="proposal audit")
         result.append(
             Phase2R15FactDisposition(
-                proposal_index=int(item.get("proposal_index")),
+                proposal_index=_int(item.get("proposal_index"), field="proposal index"),
                 fact_type=_string(item.get("fact_type"), field="proposal fact type"),
                 model_label_sha256=_string(item.get("model_label_sha256"), field="proposal label hash"),
                 disposition=_string(item.get("disposition"), field="proposal disposition"),

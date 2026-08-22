@@ -10,13 +10,54 @@ canonical_hash([item.model_dump(mode="json") for item in items])，走 admission
 """
 from __future__ import annotations
 
-from typing import Any, Iterable, Literal, Sequence
+from typing import Any, Final, Iterable, Literal, Protocol, Sequence
 
 from pydantic import Field, model_validator
 
 from ...knowledge.contracts.admission_fixtures import HASH_PATTERN, ID_PATTERN, SourcePageBinding
 from ...knowledge.contracts.admission_legacy_hash import canonical_hash
 from ...materials.schema import StrictModel
+
+
+class QueueItemLike(Protocol):
+    """队列项的结构契约：把决策/审计/fixture 三处「鸭子类型化」写成可校验的形状。
+
+    这三处判定既要吃 `ReviewQueueItemBase` 子类，也要吃 `AdmissionQueueItem`——两族
+    字段一致却没有共同基类（各自独立钉扎 schema_version 字面量）。名义类型对不上，
+    于是原先退回 `object`，代价是这些函数体内每一次字段访问都脱离类型检查（打错
+    字段名要等运行时才炸）。这里只声明判定真正读取的字段，按结构约束。
+
+    一律声明成只读 property：`StrictModel` 是 frozen 模型，pydantic 插件把字段暴露
+    为只读属性；协议若写成可写变量，结构匹配会以「expected settable variable」失败。
+    只读也更贴事实——判定方只读不写。
+    """
+
+    @property
+    def queue_item_id(self) -> str: ...
+
+    @property
+    def subject_id(self) -> str: ...
+
+    @property
+    def record_id(self) -> str: ...
+
+    @property
+    def fact_id(self) -> str: ...
+
+    @property
+    def evidence_id(self) -> str: ...
+
+    @property
+    def presentation(self) -> Literal["diagram", "table", "ordered_list", "constraint", "formula"]: ...
+
+    @property
+    def source_manifest_sha256(self) -> str: ...
+
+    @property
+    def anchor_ids(self) -> tuple[str, ...]: ...
+
+    @property
+    def pages(self) -> tuple[SourcePageBinding, ...]: ...
 
 
 def queue_sha256(items: Sequence[Any]) -> str:
@@ -54,8 +95,8 @@ def validate_queue_chain(expected_queue_sha256: str, bound_objects: Iterable[Any
             raise ValueError("object crossed queue hash chain")
 
 
-QUEUE_ITEM_VERSION = "phase2r84_admission_queue_item_v1"
-MANUAL_QUEUE_VERSION = "phase2r84_manual_review_queue_v1"
+QUEUE_ITEM_VERSION: Final = "phase2r84_admission_queue_item_v1"
+MANUAL_QUEUE_VERSION: Final = "phase2r84_manual_review_queue_v1"
 
 
 class AdmissionQueueItem(StrictModel):

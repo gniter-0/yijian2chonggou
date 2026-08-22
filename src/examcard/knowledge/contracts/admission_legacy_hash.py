@@ -48,7 +48,7 @@ def text_hash(value: str) -> str:
     return hashlib.sha256(value.encode("utf-8")).hexdigest()
 
 
-def hash_model_r8x(model_type: type[StrictModel], payload: dict[str, Any], field_name: str) -> StrictModel:
+def hash_model_r8x[ModelT: StrictModel](model_type: type[ModelT], payload: dict[str, Any], field_name: str) -> ModelT:
     raw = dict(payload)
     for name, field in model_type.model_fields.items():
         if name in raw or field.is_required():
@@ -99,7 +99,7 @@ def canonical_hash_r10x(value: Any) -> str:
     return hashlib.sha256(encoded).hexdigest()
 
 
-def hash_model_r102(model_type: type[StrictModel], payload: Mapping[str, Any], field: str) -> StrictModel:
+def hash_model_r102[ModelT: StrictModel](model_type: type[ModelT], payload: Mapping[str, Any], field: str) -> ModelT:
     document = dict(payload)
     for name, definition in model_type.model_fields.items():
         if name in document or definition.is_required():
@@ -109,7 +109,7 @@ def hash_model_r102(model_type: type[StrictModel], payload: Mapping[str, Any], f
     return model_type.model_validate(document)
 
 
-def hash_model_r10x(model_type: type[StrictModel], payload: dict[str, Any], field: str) -> StrictModel:
+def hash_model_r10x[ModelT: StrictModel](model_type: type[ModelT], payload: dict[str, Any], field: str) -> ModelT:
     document = dict(payload)
     draft = model_type.model_construct(**{**document, field: "0" * 64})
     document[field] = canonical_hash_r10x(draft.model_dump(mode="json", exclude={"schema_version", field}))

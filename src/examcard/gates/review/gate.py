@@ -8,7 +8,7 @@ failure_codes 定式继承自已冻结的 common.gates.GateBase；封印走 comm
 """
 from __future__ import annotations
 
-from typing import Literal, Mapping
+from typing import Final, Literal, Mapping
 
 from pydantic import Field, model_validator
 
@@ -17,8 +17,8 @@ from ...common.hashing import SHA256_HEX, canonical_hash, hash_model
 from ...materials.schema import StrictModel
 from .dispositions import count_dispositions
 
-OFFLINE_GATE_VERSION = "examcard_review_offline_gate_v1"
-READINESS_VERSION = "examcard_review_admission_readiness_v1"
+OFFLINE_GATE_VERSION: Final = "examcard_review_offline_gate_v1"
+READINESS_VERSION: Final = "examcard_review_admission_readiness_v1"
 
 
 class ReviewOfflineGate(GateBase):

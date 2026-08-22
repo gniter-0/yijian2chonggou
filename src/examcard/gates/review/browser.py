@@ -10,7 +10,7 @@ bc-b8b9aca6 使用 common 底座（新产出域）；classify_browser_decision �
 """
 from __future__ import annotations
 
-from typing import Any, Callable, Iterable, Literal, Mapping, Sequence
+from typing import Any, Callable, Final, Iterable, Literal, Mapping, Sequence
 
 from pydantic import Field, model_validator
 
@@ -18,13 +18,13 @@ from ...common.hashing import SHA256_HEX, canonical_hash, hash_model
 from ...materials.schema import StrictModel
 from .dispositions import count_dispositions
 
-RAW_DECISION_VERSION = "examcard_review_raw_decision_v1"
-RAW_MANIFEST_VERSION = "examcard_review_raw_draft_manifest_v1"
-PROGRESS_ENTRY_VERSION = "examcard_review_progress_entry_v1"
-PROGRESS_VERSION = "examcard_review_progress_v1"
+RAW_DECISION_VERSION: Final = "examcard_review_raw_decision_v1"
+RAW_MANIFEST_VERSION: Final = "examcard_review_raw_draft_manifest_v1"
+PROGRESS_ENTRY_VERSION: Final = "examcard_review_progress_entry_v1"
+PROGRESS_VERSION: Final = "examcard_review_progress_v1"
 
-PENDING_DECISION_HASH = "browser-export-pending-cli-hash"
-PENDING_MANIFEST_HASH = "raw-review-draft-pending-normalization"
+PENDING_DECISION_HASH: Final = "browser-export-pending-cli-hash"
+PENDING_MANIFEST_HASH: Final = "raw-review-draft-pending-normalization"
 
 _ID = r"^[a-z0-9][a-z0-9._:-]{2,255}$"
 

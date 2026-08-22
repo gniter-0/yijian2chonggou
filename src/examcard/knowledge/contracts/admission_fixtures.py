@@ -11,7 +11,7 @@ from __future__ import annotations
 import re
 from enum import StrEnum
 from pathlib import Path
-from typing import Annotated, Literal
+from typing import Annotated, Final, Literal
 
 from pydantic import Field, model_validator
 
@@ -36,28 +36,28 @@ NOISE_MARKERS = (
     "荣胜教育",
     "www.",
 )
-SOURCE_PAGE_VERSION = "phase2r84_source_page_binding_v1"
-PROVENANCE_VERSION = "phase2r84_typed_element_provenance_v1"
-TYPED_TEXT_VERSION = "phase2r84_typed_text_base_v1"
-NODE_VERSION = "phase2r84_diagram_node_v1"
-EDGE_VERSION = "phase2r84_diagram_edge_v1"
-DIAGRAM_VERSION = "phase2r84_diagram_contract_v1"
-TABLE_CELL_VERSION = "phase2r84_table_cell_v1"
-TABLE_VERSION = "phase2r84_table_contract_v1"
-LIST_ITEM_VERSION = "phase2r84_ordered_list_item_v1"
-LIST_VERSION = "phase2r84_ordered_list_contract_v1"
-CONSTRAINT_TOKEN_VERSION = "phase2r84_constraint_token_v1"
-CONSTRAINT_VERSION = "phase2r84_constraint_contract_v1"
-FORMULA_TOKEN_VERSION = "phase2r84_formula_token_v1"
-FORMULA_VERSION = "phase2r84_formula_contract_v1"
-REVIEWED_CANDIDATE_VERSION = "phase2r84_reviewed_typed_evidence_candidate_v1"
+SOURCE_PAGE_VERSION: Final = "phase2r84_source_page_binding_v1"
+PROVENANCE_VERSION: Final = "phase2r84_typed_element_provenance_v1"
+TYPED_TEXT_VERSION: Final = "phase2r84_typed_text_base_v1"
+NODE_VERSION: Final = "phase2r84_diagram_node_v1"
+EDGE_VERSION: Final = "phase2r84_diagram_edge_v1"
+DIAGRAM_VERSION: Final = "phase2r84_diagram_contract_v1"
+TABLE_CELL_VERSION: Final = "phase2r84_table_cell_v1"
+TABLE_VERSION: Final = "phase2r84_table_contract_v1"
+LIST_ITEM_VERSION: Final = "phase2r84_ordered_list_item_v1"
+LIST_VERSION: Final = "phase2r84_ordered_list_contract_v1"
+CONSTRAINT_TOKEN_VERSION: Final = "phase2r84_constraint_token_v1"
+CONSTRAINT_VERSION: Final = "phase2r84_constraint_contract_v1"
+FORMULA_TOKEN_VERSION: Final = "phase2r84_formula_token_v1"
+FORMULA_VERSION: Final = "phase2r84_formula_contract_v1"
+REVIEWED_CANDIDATE_VERSION: Final = "phase2r84_reviewed_typed_evidence_candidate_v1"
 
 # --- phase2r810 (FIXTURE_VERSION renamed with phase prefix) ---
-R810_FIXTURE_VERSION = "phase2r810_reviewed_typed_evidence_fixture_v1"
+R810_FIXTURE_VERSION: Final = "phase2r810_reviewed_typed_evidence_fixture_v1"
 
 # --- phase2r9 Step3 card-contract family ---
-CONTRACT_VERSION = "phase2r9_step3_card_contract_v1"
-DRAFT_VERSION = "phase2r9_step3_deterministic_draft_v1"
+CONTRACT_VERSION: Final = "phase2r9_step3_card_contract_v1"
+DRAFT_VERSION: Final = "phase2r9_step3_deterministic_draft_v1"
 HASH = r"^[0-9a-f]{64}$"
 ID = r"^[a-z0-9][a-z0-9._:-]{2,255}$"
 SOURCE_CANDIDATE = r"^candidate:[a-z0-9][a-z0-9._:-]{2,255}$"
@@ -65,16 +65,16 @@ CONTRACT_ID = r"^step3-card-contract:[0-9a-f]{24}$"
 FORBIDDEN_TEXT = ("watermark", "水印", "evidence-only", "evidence_only", "brand mark")
 
 # --- phase2r98 deterministic draft / release bundle ---
-DRAFT_CARD_VERSION = "phase2r98_deterministic_draft_card_v1"
-RELEASE_VERSION = "phase2r98_deterministic_release_bundle_v1"
+DRAFT_CARD_VERSION: Final = "phase2r98_deterministic_draft_card_v1"
+RELEASE_VERSION: Final = "phase2r98_deterministic_release_bundle_v1"
 
 # --- phase2r10 reviewed Step 3 admission (FIXTURE_VERSION renamed) ---
-DECISION_VERSION = "phase2r10_step3_production_human_decision_v1"
-REVIEWED_CARD_VERSION = "phase2r10_reviewed_step3_card_v1"
-R10_FIXTURE_VERSION = "phase2r10_reviewed_step3_fixture_v1"
+DECISION_VERSION: Final = "phase2r10_step3_production_human_decision_v1"
+REVIEWED_CARD_VERSION: Final = "phase2r10_reviewed_step3_card_v1"
+R10_FIXTURE_VERSION: Final = "phase2r10_reviewed_step3_fixture_v1"
 
 # --- phase2r103 empty refusal-form fixture (FIXTURE_VERSION renamed) ---
-R103_FIXTURE_VERSION = "phase2r103_reviewed_step3_fixture_v1"
+R103_FIXTURE_VERSION: Final = "phase2r103_reviewed_step3_fixture_v1"
 
 # --- shared release-fixture patterns (phase2r22/r2241/r2242 values coincide) ---
 _SHA256_PATTERN = r"^[0-9a-f]{64}$"
@@ -96,23 +96,23 @@ SOURCE_PHASE2241_FIXTURE = Path(
 )
 REVIEWER = "codex_operator_phase2r2242_step3_release_merge_audit"
 REVIEWED_AT_UTC = "2026-07-30T23:00:00Z"
-EXPECTED_FACT_COUNT = 28
-EXPECTED_CARD_COUNT = 16
-EXPECTED_DISPLAY_TEXT_COUNT = 52
-EXPECTED_SEMANTIC_EDGE_COUNT = 24
+EXPECTED_FACT_COUNT: Final = 28
+EXPECTED_CARD_COUNT: Final = 16
+EXPECTED_DISPLAY_TEXT_COUNT: Final = 52
+EXPECTED_SEMANTIC_EDGE_COUNT: Final = 24
 EXPECTED_ORIGINAL_CARD_COUNT = 8
 EXPECTED_REMEDIATION_CARD_COUNT = 8
 
 # --- phase2r104 admission run-evidence family (constants gain R104_ prefixes;
 # string values untouched) ---
-R104_PHASE = "2R.10.4"
-R104_FREEZE_VERSION = "phase2r104_prior_freeze_v1"
-R104_GATE_CHECK_VERSION = "phase2r104_gate_check_v1"
-R104_GATE_VERSION = "phase2r104_offline_gate_v1"
-R104_ACCEPTANCE_VERSION = "phase2r104_acceptance_report_v1"
+R104_PHASE: Final = "2R.10.4"
+R104_FREEZE_VERSION: Final = "phase2r104_prior_freeze_v1"
+R104_GATE_CHECK_VERSION: Final = "phase2r104_gate_check_v1"
+R104_GATE_VERSION: Final = "phase2r104_offline_gate_v1"
+R104_ACCEPTANCE_VERSION: Final = "phase2r104_acceptance_report_v1"
 
 # --- phase2r319 Step 4 pilot handoff ---
-HANDOFF_VERSION = "step4_pilot_handoff_refresh_r319_v1"
+HANDOFF_VERSION: Final = "step4_pilot_handoff_refresh_r319_v1"
 SOURCE_R316_RUN = Path("data/semantic_llm_v2/phase2r316_step4_card3_reviewed_image_fixture_run1")
 SOURCE_R316_HANDOFF = SOURCE_R316_RUN / "step4-pilot-handoff-refresh.json"
 _SHA = r"^[0-9a-f]{64}$"
@@ -120,7 +120,7 @@ _CARD = r"^v25-release-card:[0-9a-f]{24}$"
 
 
 class SourcePageBinding(StrictModel):
-    schema_version: Literal[SOURCE_PAGE_VERSION] = SOURCE_PAGE_VERSION
+    schema_version: Literal["phase2r84_source_page_binding_v1"] = SOURCE_PAGE_VERSION
     page_ref_id: str = Field(pattern=ID_PATTERN)
     page: int = Field(ge=1)
     source_file: str = Field(min_length=1)
@@ -140,7 +140,7 @@ class SourcePageBinding(StrictModel):
 
 
 class TypedElementProvenance(StrictModel):
-    schema_version: Literal[PROVENANCE_VERSION] = PROVENANCE_VERSION
+    schema_version: Literal["phase2r84_typed_element_provenance_v1"] = PROVENANCE_VERSION
     subject_id: str = Field(pattern=ID_PATTERN)
     record_id: str = Field(pattern=ID_PATTERN)
     fact_id: str = Field(pattern=ID_PATTERN)
@@ -160,7 +160,7 @@ class TypedElementProvenance(StrictModel):
 
 
 class TypedTextBase(StrictModel):
-    schema_version: Literal[TYPED_TEXT_VERSION] = TYPED_TEXT_VERSION
+    schema_version: Literal["phase2r84_typed_text_base_v1"] = TYPED_TEXT_VERSION
     element_id: str = Field(pattern=ID_PATTERN)
     text: str = Field(min_length=1)
     provenance: TypedElementProvenance
@@ -185,13 +185,13 @@ class TypedTextBase(StrictModel):
 
 
 class DiagramNode(TypedTextBase):
-    schema_version: Literal[NODE_VERSION] = NODE_VERSION
+    schema_version: Literal["phase2r84_diagram_node_v1"] = NODE_VERSION
     source_role: Literal["diagram_node"] = "diagram_node"
     reading_order: int = Field(ge=1)
 
 
 class DiagramEdge(StrictModel):
-    schema_version: Literal[EDGE_VERSION] = EDGE_VERSION
+    schema_version: Literal["phase2r84_diagram_edge_v1"] = EDGE_VERSION
     edge_id: str = Field(pattern=ID_PATTERN)
     source_node_id: str = Field(pattern=ID_PATTERN)
     target_node_id: str = Field(pattern=ID_PATTERN)
@@ -210,7 +210,7 @@ class DiagramEdge(StrictModel):
 
 
 class DiagramContract(StrictModel):
-    schema_version: Literal[DIAGRAM_VERSION] = DIAGRAM_VERSION
+    schema_version: Literal["phase2r84_diagram_contract_v1"] = DIAGRAM_VERSION
     presentation: Literal["diagram"] = "diagram"
     nodes: tuple[DiagramNode, ...] = Field(min_length=1)
     edges: tuple[DiagramEdge, ...] = ()
@@ -234,7 +234,7 @@ class DiagramContract(StrictModel):
 
 
 class TableCell(TypedTextBase):
-    schema_version: Literal[TABLE_CELL_VERSION] = TABLE_CELL_VERSION
+    schema_version: Literal["phase2r84_table_cell_v1"] = TABLE_CELL_VERSION
     source_role: Literal["table_cell"] = "table_cell"
     row: int = Field(ge=1)
     column: int = Field(ge=1)
@@ -244,7 +244,7 @@ class TableCell(TypedTextBase):
 
 
 class TableContract(StrictModel):
-    schema_version: Literal[TABLE_VERSION] = TABLE_VERSION
+    schema_version: Literal["phase2r84_table_contract_v1"] = TABLE_VERSION
     presentation: Literal["table"] = "table"
     rows: int = Field(gt=0)
     columns: int = Field(gt=0)
@@ -272,14 +272,14 @@ class TableContract(StrictModel):
 
 
 class OrderedListItem(TypedTextBase):
-    schema_version: Literal[LIST_ITEM_VERSION] = LIST_ITEM_VERSION
+    schema_version: Literal["phase2r84_ordered_list_item_v1"] = LIST_ITEM_VERSION
     source_role: Literal["ordered_list_item"] = "ordered_list_item"
     order: int = Field(ge=1)
     marker: str = ""
 
 
 class OrderedListContract(StrictModel):
-    schema_version: Literal[LIST_VERSION] = LIST_VERSION
+    schema_version: Literal["phase2r84_ordered_list_contract_v1"] = LIST_VERSION
     presentation: Literal["ordered_list"] = "ordered_list"
     items: tuple[OrderedListItem, ...] = Field(min_length=1)
     continuation_binding_ids: tuple[str, ...] = ()
@@ -300,13 +300,13 @@ class OrderedListContract(StrictModel):
 
 
 class ConstraintToken(TypedTextBase):
-    schema_version: Literal[CONSTRAINT_TOKEN_VERSION] = CONSTRAINT_TOKEN_VERSION
+    schema_version: Literal["phase2r84_constraint_token_v1"] = CONSTRAINT_TOKEN_VERSION
     source_role: Literal["constraint_token"] = "constraint_token"
     token_order: int = Field(ge=1)
 
 
 class ConstraintContract(StrictModel):
-    schema_version: Literal[CONSTRAINT_VERSION] = CONSTRAINT_VERSION
+    schema_version: Literal["phase2r84_constraint_contract_v1"] = CONSTRAINT_VERSION
     presentation: Literal["constraint"] = "constraint"
     tokens: tuple[ConstraintToken, ...] = Field(min_length=1)
     contract_sha256: str = Field(pattern=HASH_PATTERN)
@@ -322,13 +322,13 @@ class ConstraintContract(StrictModel):
 
 
 class FormulaToken(TypedTextBase):
-    schema_version: Literal[FORMULA_TOKEN_VERSION] = FORMULA_TOKEN_VERSION
+    schema_version: Literal["phase2r84_formula_token_v1"] = FORMULA_TOKEN_VERSION
     source_role: Literal["formula_token"] = "formula_token"
     token_order: int = Field(ge=1)
 
 
 class FormulaContract(StrictModel):
-    schema_version: Literal[FORMULA_VERSION] = FORMULA_VERSION
+    schema_version: Literal["phase2r84_formula_contract_v1"] = FORMULA_VERSION
     presentation: Literal["formula"] = "formula"
     tokens: tuple[FormulaToken, ...] = Field(min_length=1)
     contract_sha256: str = Field(pattern=HASH_PATTERN)
@@ -350,7 +350,7 @@ TypedContract = Annotated[
 
 
 class ReviewedCandidate(StrictModel):
-    schema_version: Literal[REVIEWED_CANDIDATE_VERSION] = REVIEWED_CANDIDATE_VERSION
+    schema_version: Literal["phase2r84_reviewed_typed_evidence_candidate_v1"] = REVIEWED_CANDIDATE_VERSION
     candidate_id: str = Field(pattern=ID_PATTERN)
     queue_item_id: str = Field(pattern=ID_PATTERN)
     subject_id: str = Field(pattern=ID_PATTERN)
@@ -383,7 +383,7 @@ class ReviewedCandidate(StrictModel):
 
 
 class ReviewedTypedEvidenceFixture(StrictModel):
-    schema_version: Literal[R810_FIXTURE_VERSION] = R810_FIXTURE_VERSION
+    schema_version: Literal["phase2r810_reviewed_typed_evidence_fixture_v1"] = R810_FIXTURE_VERSION
     r89_admission_bundle_sha256: str = Field(pattern=HASH_PATTERN)
     authorization_manifest_sha256: str = Field(pattern=HASH_PATTERN)
     exported_r84_manifest_sha256: str = Field(pattern=HASH_PATTERN)
@@ -556,7 +556,7 @@ class GeometryConstraints(StrictModel):
 
 
 class Step3CardContract(StrictModel):
-    schema_version: Literal[CONTRACT_VERSION] = CONTRACT_VERSION
+    schema_version: Literal["phase2r9_step3_card_contract_v1"] = CONTRACT_VERSION
     contract_id: str = Field(pattern=CONTRACT_ID)
     source_candidate_id: str = Field(pattern=SOURCE_CANDIDATE)
     fact_ids: tuple[str, ...] = Field(min_length=1)
@@ -602,7 +602,7 @@ class Step3CardContract(StrictModel):
 
 
 class FakeArtifact(StrictModel):
-    schema_version: Literal[DRAFT_VERSION] = DRAFT_VERSION
+    schema_version: Literal["phase2r9_step3_deterministic_draft_v1"] = DRAFT_VERSION
     contract_id: str = Field(pattern=CONTRACT_ID)
     presentation: Literal["diagram", "table", "ordered_list", "constraint", "formula"]
     rendered_element_ids: tuple[str, ...] = Field(min_length=1)
@@ -625,7 +625,7 @@ class FakeArtifact(StrictModel):
 
 
 class DraftBundle(StrictModel):
-    schema_version: Literal[DRAFT_VERSION] = DRAFT_VERSION
+    schema_version: Literal["phase2r9_step3_deterministic_draft_v1"] = DRAFT_VERSION
     source_fixture_sha256: str = Field(pattern=HASH)
     artifacts: tuple[FakeArtifact, ...] = Field(min_length=1)
     artifact_count: int = Field(ge=1)
@@ -638,7 +638,7 @@ class DraftBundle(StrictModel):
 
 
 class DeterministicDraftCard(StrictModel):
-    schema_version: Literal[DRAFT_CARD_VERSION] = DRAFT_CARD_VERSION
+    schema_version: Literal["phase2r98_deterministic_draft_card_v1"] = DRAFT_CARD_VERSION
     contract: Step3CardContract
     artifact: FakeArtifact
     draft_state: Literal["draft_manual_review"] = "draft_manual_review"
@@ -658,7 +658,7 @@ class DeterministicDraftCard(StrictModel):
 
 
 class DeterministicReleaseBundle(StrictModel):
-    schema_version: Literal[RELEASE_VERSION] = RELEASE_VERSION
+    schema_version: Literal["phase2r98_deterministic_release_bundle_v1"] = RELEASE_VERSION
     source_fixture_sha256: str = Field(pattern=HASH)
     source_fixture_path: str = Field(min_length=1)
     r9_draft_sha256: str = Field(pattern=HASH)
@@ -689,7 +689,7 @@ class DeterministicReleaseBundle(StrictModel):
 
 
 class Step3HumanDecision(StrictModel):
-    schema_version: Literal[DECISION_VERSION] = DECISION_VERSION
+    schema_version: Literal["phase2r10_step3_production_human_decision_v1"] = DECISION_VERSION
     decision_id: str = Field(pattern=r"^step3-human-decision:[0-9a-f]{24}$")
     queue_item_id: str = Field(pattern=r"^step3-review-queue:[0-9a-f]{24}$")
     queue_sha256: str = Field(pattern=HASH)
@@ -734,7 +734,7 @@ class Step3HumanDecision(StrictModel):
 
 
 class ReviewedStep3Card(StrictModel):
-    schema_version: Literal[REVIEWED_CARD_VERSION] = REVIEWED_CARD_VERSION
+    schema_version: Literal["phase2r10_reviewed_step3_card_v1"] = REVIEWED_CARD_VERSION
     queue_item_id: str = Field(pattern=r"^step3-review-queue:[0-9a-f]{24}$")
     contract: Step3CardContract
     artifact: DeterministicDraftCard
@@ -755,7 +755,7 @@ class ReviewedStep3Card(StrictModel):
 
 
 class ReviewedStep3Fixture(StrictModel):
-    schema_version: Literal[R10_FIXTURE_VERSION] = R10_FIXTURE_VERSION
+    schema_version: Literal["phase2r10_reviewed_step3_fixture_v1"] = R10_FIXTURE_VERSION
     source_fixture_sha256: str = Field(pattern=HASH)
     deterministic_release_sha256: str = Field(pattern=HASH)
     decision_manifest_sha256: str = Field(pattern=HASH)
@@ -781,7 +781,7 @@ class ReviewedStep3Fixture(StrictModel):
 
 
 class ReviewedStep3FixtureR103(StrictModel):
-    schema_version: Literal[R103_FIXTURE_VERSION] = R103_FIXTURE_VERSION
+    schema_version: Literal["phase2r103_reviewed_step3_fixture_v1"] = R103_FIXTURE_VERSION
     source_raw_draft_sha256: str = Field(pattern=HASH)
     source_queue_sha256: str = Field(pattern=HASH)
     source_typed_evidence_sha256: str = Field(pattern=HASH)
@@ -1033,7 +1033,7 @@ class Step3UnifiedReviewedReleaseFixture(StrictModel):
 
 
 class FrozenArtifact(StrictModel):
-    schema_version: Literal[R104_FREEZE_VERSION] = R104_FREEZE_VERSION
+    schema_version: Literal["phase2r104_prior_freeze_v1"] = R104_FREEZE_VERSION
     path: str = Field(min_length=1)
     role: Literal["r102_run", "r103_run", "code", "schema", "report", "source_queue"]
     bytes: int = Field(gt=0)
@@ -1041,8 +1041,8 @@ class FrozenArtifact(StrictModel):
 
 
 class PriorFreeze(StrictModel):
-    schema_version: Literal[R104_FREEZE_VERSION] = R104_FREEZE_VERSION
-    phase: Literal[R104_PHASE] = R104_PHASE
+    schema_version: Literal["phase2r104_prior_freeze_v1"] = R104_FREEZE_VERSION
+    phase: Literal["2R.10.4"] = R104_PHASE
     artifacts: tuple[FrozenArtifact, ...] = Field(min_length=1)
     artifact_count: int = Field(gt=0)
     aggregate_sha256: str = Field(pattern=HASH)
@@ -1065,15 +1065,15 @@ class PriorFreeze(StrictModel):
 
 
 class GateCheck(StrictModel):
-    schema_version: Literal[R104_GATE_CHECK_VERSION] = R104_GATE_CHECK_VERSION
+    schema_version: Literal["phase2r104_gate_check_v1"] = R104_GATE_CHECK_VERSION
     check_id: str = Field(min_length=3)
     passed: bool
     detail: str = Field(min_length=3)
 
 
 class OfflineGate(StrictModel):
-    schema_version: Literal[R104_GATE_VERSION] = R104_GATE_VERSION
-    phase: Literal[R104_PHASE] = R104_PHASE
+    schema_version: Literal["phase2r104_offline_gate_v1"] = R104_GATE_VERSION
+    phase: Literal["2R.10.4"] = R104_PHASE
     valid: bool
     frozen_inputs_valid: bool
     raw_manifest_valid: bool
@@ -1107,7 +1107,7 @@ class OfflineGate(StrictModel):
 
 
 class JUnitReceipt(StrictModel):
-    schema_version: Literal[R104_ACCEPTANCE_VERSION] = R104_ACCEPTANCE_VERSION
+    schema_version: Literal["phase2r104_acceptance_report_v1"] = R104_ACCEPTANCE_VERSION
     label: Literal["targeted", "full"]
     sha256: str = Field(pattern=HASH)
     tests: int = Field(ge=1)
@@ -1117,8 +1117,8 @@ class JUnitReceipt(StrictModel):
 
 
 class AcceptanceReport(StrictModel):
-    schema_version: Literal[R104_ACCEPTANCE_VERSION] = R104_ACCEPTANCE_VERSION
-    phase: Literal[R104_PHASE] = R104_PHASE
+    schema_version: Literal["phase2r104_acceptance_report_v1"] = R104_ACCEPTANCE_VERSION
+    phase: Literal["2R.10.4"] = R104_PHASE
     accepted: bool
     report_sha256: str = Field(pattern=HASH)
     receipts: tuple[JUnitReceipt, JUnitReceipt]
@@ -1196,7 +1196,7 @@ class Step4PilotCardDispositionR319(StrictModel):
 
 
 class Step4PilotHandoffRefresh(StrictModel):
-    schema_version: Literal[HANDOFF_VERSION] = HANDOFF_VERSION
+    schema_version: Literal["step4_pilot_handoff_refresh_r319_v1"] = HANDOFF_VERSION
     manifest_id: str = Field(pattern=r"^step4-pilot-handoff-r319:[0-9a-f]{24}$")
     source_r316_handoff_path: Literal[SOURCE_R316_HANDOFF.as_posix()] = SOURCE_R316_HANDOFF.as_posix()
     source_r316_handoff_sha256: str = Field(pattern=_SHA)

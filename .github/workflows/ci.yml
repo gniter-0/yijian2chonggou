@@ -1,0 +1,77 @@
+name: CI
+
+# 本仓是"字节权威"仓库：金标/夹具/canonical 哈希锚定工作区字节，.gitattributes
+# 全路径 -text 禁止任何行尾转换。因此 CI 的价值不只是跑测试，而是把这份纪律从
+# "靠人记得手跑 pytest"变成机器强制。
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    name: lint + tests (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      # 两个 OS 互不熔断：跨平台字节一致性正是 -text 要保证的东西，出问题要看得见。
+      fail-fast: false
+      matrix:
+        os: [windows-latest, ubuntu-latest]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # evidence/visual.py 顶层 import cv2（opencv-python 非 headless 版），
+      # Linux 上需要 libGL 才能加载。
+      - name: 安装 OpenCV 运行库（仅 Linux）
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends libgl1 libglib2.0-0
+
+      - name: 安装 uv（版本固定）
+        uses: astral-sh/setup-uv@v7
+        with:
+          version: "0.11.12"
+          enable-cache: true
+
+      # --locked：pyproject 与 uv.lock 不一致就直接失败，禁止隐式改锁。
+      # Python 版本由 .python-version（3.12）决定，uv 自行取用。
+      - name: 按锁文件安装依赖
+        run: uv sync --locked
+
+      - name: ruff
+        run: uv run ruff check src tests migration
+
+      # mypy 暂不入门禁，但原因已经变了：`Literal[模块级常量]` 的惯用法冲突已裁决并改写
+      # 完毕（155 处 → 0，见 refactor(types) 那次提交），gates/compilers 严格档实测清零：
+      #   mypy src/examcard/gates src/examcard/compilers --follow-imports=silent
+      #   -> Success: no issues found in 32 source files
+      # 挡路的是剩下的宽松档：全仓 265 条 / 35 个文件，其中 240 条在 knowledge/，
+      # attr-defined 115 + assignment 86 占了大头（抽样看多是同名变量在两个循环里
+      # 复用不同模型类型，属机械问题）。红着的步骤等于没有步骤，所以先不挂；等边界
+      # 定了（清零，或在 [tool.mypy] 里带一份只许缩短的逐模块豁免清单）再补一步
+      # `uv run mypy`。
+
+      # -rs 打印跳过原因：旧仓金标语料不在 CI 上，92 个回放用例会整体跳过，
+      # conftest 会在摘要里响亮报数。若哪天 CI 能拿到语料，设
+      # EXAMCARD_LEGACY_ROOT 指向 yijian2，并置 EXAMCARD_REQUIRE_LEGACY_CORPUS=1
+      # 把"语料缺席"从跳过升级为收集期失败。
+      #
+      # --cov-fail-under=75：基线实测 75.5%（分支覆盖，21017 条语句漏 4018；
+      # 714 passed / 9 skipped，带覆盖率约 95s）。门槛只许往上棘轮，不许往下调；
+      # 掉下去说明新代码没带测试。当前余量只有 0.5pp。覆盖率配置见 pyproject [tool.coverage.*]。
+      #
+      # --basetemp 收进仓内 .test-tmp/（规范 T3）：与本地跑法逐字一致，产物位置可预期、
+      # 失败时可直接当 artifact 上传，也绕开某些机器上系统 TEMP 不可写的坑。
+      - name: pytest（带覆盖率门槛）
+        run: uv run pytest -q -rs --cov --cov-report=term-missing --cov-fail-under=75 --basetemp .test-tmp/ci

@@ -39,7 +39,6 @@ from ..diagram.sidecar import (
 )
 from ..learning_fixture import (
     LearningGoldenFixture,
-    LearningReview,
     LearningReviewState,
     load_learning_golden_fixture,
     validate_learning_fixture,
@@ -426,7 +425,6 @@ def _build_continuation_sidecar(*, repository_root: Path, diagram_sidecar: Diagr
     if marker is None:
         raise ValueError("gonglu_24 page 1 no longer exposes the reviewed continuation marker")
     source_spans = {item.anchor_span_id: item for item in source.section.anchor_spans}
-    adjacent_spans = {item.anchor_span_id: item for item in adjacent.section.anchor_spans}
     marker_tokens = tuple(item.anchor_span_id for item in source_spans.values() if item.anchor_span_id in marker.anchor_span_ids and item.canonical_text == "↓")
     if not marker_tokens:
         raise ValueError("page-1 continuation marker must retain its visible down-arrow span")

@@ -274,7 +274,6 @@ def main() -> int:
                 max_retries=0,
                 default_headers={"User-Agent": env["OPENAI_USER_AGENT"]} if env.get("OPENAI_USER_AGENT") else None,
             )
-            outcome = "failed"
             http_status: int | None = 200
             error_type: str | None = None
             content = ""

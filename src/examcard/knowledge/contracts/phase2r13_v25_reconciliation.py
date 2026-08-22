@@ -7,10 +7,8 @@ from __future__ import annotations
 
 import hashlib
 import json
-from collections import defaultdict
 from enum import StrEnum
 from pathlib import Path
-from typing import Iterable
 
 import yaml
 from pydantic import Field, model_validator
@@ -24,7 +22,7 @@ from ...materials.schema import StrictModel
 from ..continuation.review import load_continuation_review_sidecar
 from ..diagram.disposition import load_diagram_disposition_sidecar
 from ..diagram.sidecar import DiagramSemanticContractVersion, load_diagram_review_sidecar
-from ..learning_fixture import LearningGoldenFixture, LearningReviewState, load_learning_golden_fixture
+from ..learning_fixture import LearningReviewState, load_learning_golden_fixture
 from .phase2r12_v25_golden_review import (
     _ADJACENT_PAGE2_MANIFEST,
     _EVIDENCE_ROOT,

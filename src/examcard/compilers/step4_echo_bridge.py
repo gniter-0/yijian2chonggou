@@ -18,7 +18,7 @@ from __future__ import annotations
 import hashlib
 import json
 from pathlib import Path
-from typing import Any, Literal, Mapping, Sequence
+from typing import TYPE_CHECKING, Any, Literal, Mapping, Sequence
 
 from pydantic import Field, model_validator
 
@@ -35,6 +35,10 @@ from ..knowledge.contracts.echo_release import (
     load_echo_handoff,
     load_echo_release_fixture,
 )
+
+if TYPE_CHECKING:
+    # 仅供注解：运行时仍走函数内延迟导入，避免与 step3_card / step4_contract 成环。
+    from .step3_card import Step3Compilation
 
 __all__ = (
     "EchoStep4Bundle",
@@ -105,7 +109,7 @@ def derive_step4_bundle_echo(
             sorted(item.card_index for item in handoff.cards if item.disposition == "reviewed")
         ),
     }
-    encoded = {**payload, "cards": tuple(card.model_dump(mode="json") for card in payload["cards"])}
+    encoded = {**payload, "cards": tuple(card.model_dump(mode="json") for card in release.cards)}
     bundle = EchoStep4Bundle.model_validate({**payload, "bundle_sha256": canonical_hash(encoded)})
     fact_ids = {fact_id for card in release.cards for fact_id in card.fact_ids}
     return bundle, EchoStep4InputView(fact_count=len(fact_ids))
@@ -146,10 +150,10 @@ def load_step4_bundle_source(
         )
         return bundle, model_input
     release = load_echo_release_fixture(fixture_path)
-    handoff = load_echo_handoff(handoff_file)
+    echo_handoff = load_echo_handoff(handoff_file)
     return derive_step4_bundle_echo(
         release,
-        handoff,
+        echo_handoff,
         release_sha256=hashlib.sha256(fixture_bytes).hexdigest(),
         handoff_sha256=hashlib.sha256(handoff_bytes).hexdigest(),
     )
@@ -168,7 +172,7 @@ def _atomic_write_json(path: Path, payload: object) -> None:
     temporary.replace(path)
 
 
-def _compile_contracts(typed_fixture_path: Path):
+def _compile_contracts(typed_fixture_path: Path) -> tuple[str, Step3Compilation]:
     from ..knowledge.contracts.admission_fixtures import ReviewedTypedEvidenceFixture
     from .step3_card import compile_reviewed_fixture
 

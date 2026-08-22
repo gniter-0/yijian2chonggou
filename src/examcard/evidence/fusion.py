@@ -1,7 +1,6 @@
 """Fuse native spans, OCR observations, layout structures and visual review results."""
 from __future__ import annotations
 
-from collections import Counter
 from difflib import SequenceMatcher
 from pathlib import Path
 from typing import Iterable

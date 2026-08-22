@@ -25,7 +25,7 @@ import hashlib
 import json
 import re
 from dataclasses import dataclass
-from typing import Any, Literal
+from typing import Any, Final, Iterator, Literal
 
 from pydantic import Field, model_validator
 
@@ -81,22 +81,22 @@ __all__ = [
     "derive_step4_bundle",
 ]
 
-PHASE = "2R.4"
-SCHEMA_VERSION = "phase2r4_step4_generic_source_derived_contract_compiler_v1"
-CONTRACT_BUNDLE_VERSION = "step4_generic_contract_bundle_v1"
-MODEL_INPUT_VERSION = "step4_generic_model_input_v1"
-PROMPT_VERSION = "step4_generic_prompt_contract_v1"
-REQUEST_VERSION = "step4_generic_offline_request_v1"
-FAKE_ARTIFACT_VERSION = "step4_generic_fake_artifact_manifest_v1"
-CACHE_VERSION = "step4_generic_cache_v1"
-JOURNAL_VERSION = "step4_generic_journal_v1"
-BATCH_VERSION = "step4_generic_batch_manifest_v1"
-GATE_VERSION = "step4_generic_batch_offline_gate_v1"
-REGRESSION_VERSION = "step4_generic_regression_result_v1"
-REPORT_VERSION = "phase2r4_step4_generic_report_v1"
+PHASE: Final = "2R.4"
+SCHEMA_VERSION: Final = "phase2r4_step4_generic_source_derived_contract_compiler_v1"
+CONTRACT_BUNDLE_VERSION: Final = "step4_generic_contract_bundle_v1"
+MODEL_INPUT_VERSION: Final = "step4_generic_model_input_v1"
+PROMPT_VERSION: Final = "step4_generic_prompt_contract_v1"
+REQUEST_VERSION: Final = "step4_generic_offline_request_v1"
+FAKE_ARTIFACT_VERSION: Final = "step4_generic_fake_artifact_manifest_v1"
+CACHE_VERSION: Final = "step4_generic_cache_v1"
+JOURNAL_VERSION: Final = "step4_generic_journal_v1"
+BATCH_VERSION: Final = "step4_generic_batch_manifest_v1"
+GATE_VERSION: Final = "step4_generic_batch_offline_gate_v1"
+REGRESSION_VERSION: Final = "step4_generic_regression_result_v1"
+REPORT_VERSION: Final = "phase2r4_step4_generic_report_v1"
 
-OUTPUT_WIDTH = 1536
-OUTPUT_HEIGHT = 1024
+OUTPUT_WIDTH: Final = 1536
+OUTPUT_HEIGHT: Final = 1024
 _SHA = r"^[0-9a-f]{64}$"
 _FACT = r"^fact:[0-9a-f]{24}$"
 _CARD = r"^v25-release-card:[0-9a-f]{24}$"
@@ -141,8 +141,8 @@ TOKEN_PATTERN = re.compile(r"[A-Za-z]+[A-Za-z0-9%]*|[0-9]+(?:\.[0-9]+)?(?:[A-Za-
 
 # 冻结表本体（FROZEN_R33_R319_HASHES）与 audit_frozen_history 留旧仓；此二整数为
 # FreezeAudit/Report 数据模型的 Literal 载荷（装载校验历史产物所需）。
-FROZEN_ARTIFACT_COUNT = 501
-HISTORICAL_IDENTITY_COUNT = 19
+FROZEN_ARTIFACT_COUNT: Final = 501
+HISTORICAL_IDENTITY_COUNT: Final = 19
 
 
 def _sha256(value: bytes) -> str:
@@ -169,12 +169,12 @@ class Phase2R4FrozenArtifact(StrictModel):
 class Phase2R4FreezeAudit(StrictModel):
     schema_version: Literal["phase2r4_freeze_audit_v1"] = "phase2r4_freeze_audit_v1"
     valid: bool
-    artifact_count: Literal[FROZEN_ARTIFACT_COUNT] = FROZEN_ARTIFACT_COUNT
+    artifact_count: Literal[501] = FROZEN_ARTIFACT_COUNT
     artifacts: tuple[Phase2R4FrozenArtifact, ...] = Field(
         min_length=FROZEN_ARTIFACT_COUNT, max_length=FROZEN_ARTIFACT_COUNT
     )
     aggregate_sha256: str = Field(pattern=_SHA)
-    historical_identity_count: Literal[HISTORICAL_IDENTITY_COUNT] = HISTORICAL_IDENTITY_COUNT
+    historical_identity_count: Literal[19] = HISTORICAL_IDENTITY_COUNT
     historical_identity_set_sha256: str = Field(pattern=_SHA)
     failure_codes: tuple[str, ...] = ()
 
@@ -319,8 +319,8 @@ class GenericTokenBinding(StrictModel):
 
 
 class GenericGeometry(StrictModel):
-    width: Literal[OUTPUT_WIDTH] = OUTPUT_WIDTH
-    height: Literal[OUTPUT_HEIGHT] = OUTPUT_HEIGHT
+    width: Literal[1536] = OUTPUT_WIDTH
+    height: Literal[1024] = OUTPUT_HEIGHT
     contract_kind: Literal[
         "table_grid", "ordered_list_rows", "diagram_nodes_edges", "constraint_blocks", "formula_blocks"
     ]
@@ -332,7 +332,7 @@ class GenericGeometry(StrictModel):
 
 
 class GenericCardContract(StrictModel):
-    schema_version: Literal[CONTRACT_BUNDLE_VERSION] = CONTRACT_BUNDLE_VERSION
+    schema_version: Literal["step4_generic_contract_bundle_v1"] = CONTRACT_BUNDLE_VERSION
     job_id: str = Field(pattern=_JOB)
     card_index: int = Field(ge=1, le=EXPECTED_CARD_COUNT)
     source_card_id: str = Field(pattern=_CARD)
@@ -389,25 +389,25 @@ class GenericCardContract(StrictModel):
 
 
 class Phase2R4ContractBundle(StrictModel):
-    schema_version: Literal[CONTRACT_BUNDLE_VERSION] = CONTRACT_BUNDLE_VERSION
+    schema_version: Literal["step4_generic_contract_bundle_v1"] = CONTRACT_BUNDLE_VERSION
     source_unified_fixture_sha256: str = Field(pattern=_SHA)
     source_r319_handoff_sha256: str = Field(pattern=_SHA)
     cards: tuple[GenericCardContract, ...] = Field(min_length=EXPECTED_CARD_COUNT, max_length=EXPECTED_CARD_COUNT)
-    card_count: Literal[EXPECTED_CARD_COUNT] = EXPECTED_CARD_COUNT
-    fact_count: Literal[EXPECTED_FACT_COUNT] = EXPECTED_FACT_COUNT
-    visible_text_count: Literal[EXPECTED_DISPLAY_TEXT_COUNT] = EXPECTED_DISPLAY_TEXT_COUNT
-    semantic_edge_count: Literal[EXPECTED_SEMANTIC_EDGE_COUNT] = EXPECTED_SEMANTIC_EDGE_COUNT
+    card_count: Literal[16] = EXPECTED_CARD_COUNT
+    fact_count: Literal[28] = EXPECTED_FACT_COUNT
+    visible_text_count: Literal[52] = EXPECTED_DISPLAY_TEXT_COUNT
+    semantic_edge_count: Literal[24] = EXPECTED_SEMANTIC_EDGE_COUNT
 
 
 class Phase2R4ModelInput(StrictModel):
-    schema_version: Literal[MODEL_INPUT_VERSION] = MODEL_INPUT_VERSION
+    schema_version: Literal["step4_generic_model_input_v1"] = MODEL_INPUT_VERSION
     model_input_id: str = Field(pattern=_MODEL_INPUT)
     source_unified_fixture_sha256: str = Field(pattern=_SHA)
     source_r319_handoff_sha256: str = Field(pattern=_SHA)
-    card_count: Literal[EXPECTED_CARD_COUNT] = EXPECTED_CARD_COUNT
-    fact_count: Literal[EXPECTED_FACT_COUNT] = EXPECTED_FACT_COUNT
-    visible_text_count: Literal[EXPECTED_DISPLAY_TEXT_COUNT] = EXPECTED_DISPLAY_TEXT_COUNT
-    semantic_edge_count: Literal[EXPECTED_SEMANTIC_EDGE_COUNT] = EXPECTED_SEMANTIC_EDGE_COUNT
+    card_count: Literal[16] = EXPECTED_CARD_COUNT
+    fact_count: Literal[28] = EXPECTED_FACT_COUNT
+    visible_text_count: Literal[52] = EXPECTED_DISPLAY_TEXT_COUNT
+    semantic_edge_count: Literal[24] = EXPECTED_SEMANTIC_EDGE_COUNT
     cards: tuple[GenericCardContract, ...] = Field(min_length=EXPECTED_CARD_COUNT, max_length=EXPECTED_CARD_COUNT)
 
     @model_validator(mode="after")
@@ -427,7 +427,7 @@ class Phase2R4ModelInput(StrictModel):
 
 
 class Phase2R4PromptContract(StrictModel):
-    schema_version: Literal[PROMPT_VERSION] = PROMPT_VERSION
+    schema_version: Literal["step4_generic_prompt_contract_v1"] = PROMPT_VERSION
     instructions: tuple[str, ...] = (
         "Render only the supplied source-owned visible_text values verbatim.",
         "Use semantic layout edges for placement only; never render their relation values as visible text.",
@@ -443,20 +443,20 @@ class Phase2R4PromptContract(StrictModel):
 
 
 class Phase2R4Request(StrictModel):
-    schema_version: Literal[REQUEST_VERSION] = REQUEST_VERSION
+    schema_version: Literal["step4_generic_offline_request_v1"] = REQUEST_VERSION
     request_id: str = Field(pattern=_REQUEST)
     backend: Literal["deterministic_fake_image_backend_r4_v1"] = "deterministic_fake_image_backend_r4_v1"
     model_input: Phase2R4ModelInput
     prompt_contract: Phase2R4PromptContract
-    cache_version: Literal[CACHE_VERSION] = CACHE_VERSION
-    journal_version: Literal[JOURNAL_VERSION] = JOURNAL_VERSION
+    cache_version: Literal["step4_generic_cache_v1"] = CACHE_VERSION
+    journal_version: Literal["step4_generic_journal_v1"] = JOURNAL_VERSION
     real_http_call_budget: Literal[0] = 0
     real_image_generation_authorized: Literal[False] = False
     batch_generation_authorized: Literal[False] = False
 
 
 class Phase2R4FakeArtifact(StrictModel):
-    schema_version: Literal[FAKE_ARTIFACT_VERSION] = FAKE_ARTIFACT_VERSION
+    schema_version: Literal["step4_generic_fake_artifact_manifest_v1"] = FAKE_ARTIFACT_VERSION
     artifact_id: str = Field(pattern=r"^step4-generic-fake-artifact:[0-9a-f]{24}$")
     job_id: str = Field(pattern=_JOB)
     card_index: int = Field(ge=1, le=EXPECTED_CARD_COUNT)
@@ -470,8 +470,8 @@ class Phase2R4FakeArtifact(StrictModel):
     rendered_semantic_edge_sha256s: tuple[str, ...] = ()
     rendered_token_sha256s: tuple[str, ...] = ()
     output_filename: str = Field(pattern=_FAKE_FILENAME)
-    width: Literal[OUTPUT_WIDTH] = OUTPUT_WIDTH
-    height: Literal[OUTPUT_HEIGHT] = OUTPUT_HEIGHT
+    width: Literal[1536] = OUTPUT_WIDTH
+    height: Literal[1024] = OUTPUT_HEIGHT
     simulated_image_sha256: str = Field(pattern=_SHA)
     artifact_contract_sha256: str = Field(pattern=_SHA)
     materialized: Literal[False] = False
@@ -479,11 +479,11 @@ class Phase2R4FakeArtifact(StrictModel):
 
 
 class Phase2R4FakeArtifactManifest(StrictModel):
-    schema_version: Literal[FAKE_ARTIFACT_VERSION] = FAKE_ARTIFACT_VERSION
+    schema_version: Literal["step4_generic_fake_artifact_manifest_v1"] = FAKE_ARTIFACT_VERSION
     request_id: str = Field(pattern=_REQUEST)
     request_sha256: str = Field(pattern=_SHA)
     artifacts: tuple[Phase2R4FakeArtifact, ...] = Field(min_length=EXPECTED_CARD_COUNT, max_length=EXPECTED_CARD_COUNT)
-    artifact_count: Literal[EXPECTED_CARD_COUNT] = EXPECTED_CARD_COUNT
+    artifact_count: Literal[16] = EXPECTED_CARD_COUNT
     materialized_file_count: Literal[0] = 0
     real_image_count: Literal[0] = 0
     aggregate_sha256: str = Field(pattern=_SHA)
@@ -498,7 +498,7 @@ class Phase2R4FakeArtifactManifest(StrictModel):
 
 
 class Phase2R4CacheRecord(StrictModel):
-    schema_version: Literal[CACHE_VERSION] = CACHE_VERSION
+    schema_version: Literal["step4_generic_cache_v1"] = CACHE_VERSION
     cache_key: str = Field(pattern=_SHA)
     request_id: str = Field(pattern=_REQUEST)
     request_sha256: str = Field(pattern=_SHA)
@@ -509,13 +509,13 @@ class Phase2R4CacheRecord(StrictModel):
 
 
 class Phase2R4JournalRecord(StrictModel):
-    schema_version: Literal[JOURNAL_VERSION] = JOURNAL_VERSION
+    schema_version: Literal["step4_generic_journal_v1"] = JOURNAL_VERSION
     event: Literal["generic_offline_batch_compilation_completed"] = "generic_offline_batch_compilation_completed"
     request_id: str = Field(pattern=_REQUEST)
     request_sha256: str = Field(pattern=_SHA)
     gate_sha256: str = Field(pattern=_SHA)
-    card_count: Literal[EXPECTED_CARD_COUNT] = EXPECTED_CARD_COUNT
-    fact_count: Literal[EXPECTED_FACT_COUNT] = EXPECTED_FACT_COUNT
+    card_count: Literal[16] = EXPECTED_CARD_COUNT
+    fact_count: Literal[28] = EXPECTED_FACT_COUNT
     network_calls: Literal[0] = 0
     image_api_calls: Literal[0] = 0
     real_images_generated: Literal[0] = 0
@@ -538,12 +538,12 @@ class Phase2R4BatchEntry(StrictModel):
 
 
 class Phase2R4BatchManifest(StrictModel):
-    schema_version: Literal[BATCH_VERSION] = BATCH_VERSION
+    schema_version: Literal["step4_generic_batch_manifest_v1"] = BATCH_VERSION
     manifest_id: str = Field(pattern=r"^step4-generic-batch:[0-9a-f]{24}$")
     source_unified_fixture_sha256: str = Field(pattern=_SHA)
     source_r319_handoff_sha256: str = Field(pattern=_SHA)
     cards: tuple[Phase2R4BatchEntry, ...] = Field(min_length=EXPECTED_CARD_COUNT, max_length=EXPECTED_CARD_COUNT)
-    card_count: Literal[EXPECTED_CARD_COUNT] = EXPECTED_CARD_COUNT
+    card_count: Literal[16] = EXPECTED_CARD_COUNT
     prior_reviewed_card_count: Literal[4] = 4
     offline_compiled_card_count: Literal[12] = 12
     batch_generation_authorized: Literal[False] = False
@@ -564,7 +564,7 @@ class Phase2R4BatchManifest(StrictModel):
 
 
 class Phase2R4OfflineGate(StrictModel):
-    schema_version: Literal[GATE_VERSION] = GATE_VERSION
+    schema_version: Literal["step4_generic_batch_offline_gate_v1"] = GATE_VERSION
     valid: bool
     freeze_valid: bool
     source_fixture_valid: bool
@@ -614,7 +614,7 @@ class Phase2R4OfflineGate(StrictModel):
 
 
 class Phase2R4RegressionResult(StrictModel):
-    schema_version: Literal[REGRESSION_VERSION] = REGRESSION_VERSION
+    schema_version: Literal["step4_generic_regression_result_v1"] = REGRESSION_VERSION
     case_id: str = Field(min_length=2)
     expected_failure_codes: tuple[str, ...] = Field(min_length=1)
     observed_failure_codes: tuple[str, ...] = Field(min_length=1)
@@ -628,8 +628,8 @@ class Phase2R4RegressionResult(StrictModel):
 
 
 class Phase2R4Report(StrictModel):
-    schema_version: Literal[REPORT_VERSION] = REPORT_VERSION
-    phase: Literal[PHASE] = PHASE
+    schema_version: Literal["phase2r4_step4_generic_report_v1"] = REPORT_VERSION
+    phase: Literal["2R.4"] = PHASE
     generated_at_utc: str = Field(min_length=20)
     freeze_audit: Phase2R4FreezeAudit
     contract_bundle_sha256: str = Field(pattern=_SHA)
@@ -825,7 +825,7 @@ def _derive_card(*, source: Step3MergedReviewedReleaseCard, source_fixture_sha25
     nodes = tuple(item.semantic_node_id for item in visible if item.semantic_node_id is not None)
     tables = tuple(_derive_table(item) for item in source.display_text_provenance) if render_presentation == "table" else ()
     lists = tuple(contract for item in source.display_text_provenance if (contract := _derive_list(item)) is not None) if render_presentation == "ordered_list" else ()
-    tokens = ()
+    tokens: tuple[GenericTokenBinding, ...] = ()
     if render_presentation in {"constraint", "formula"}:
         tokens = tuple(
             GenericTokenBinding(
@@ -1029,7 +1029,7 @@ def derive_step4_bundle(
     return bundle, model_input, request, artifacts, batch
 
 
-def _walk_mappings(value: Any):
+def _walk_mappings(value: Any) -> Iterator[dict[str, Any]]:
     if isinstance(value, dict):
         yield value
         for child in value.values():

@@ -10,7 +10,7 @@ from __future__ import annotations
 import hashlib
 import json
 import os
-from collections.abc import Callable, Iterable, Mapping
+from collections.abc import Callable, Mapping
 from datetime import UTC, datetime
 from enum import StrEnum
 from pathlib import Path
@@ -19,10 +19,8 @@ from typing import Any, Protocol
 from openai import APIConnectionError, APIStatusError, APITimeoutError, OpenAI
 from pydantic import Field, ValidationError, model_validator
 
-from ..evidence.layout import normalized_compare_text
 from ..materials.schema import StrictModel
 
-from .schema import FactType
 from .contracts import (
     ContractValidationReport,
     DETERMINISTIC_NUMERIC_CLAIM_STEP2A_REQUEST_VERSION,
@@ -33,9 +31,7 @@ from .contracts import (
     COMPOSITION_NUMERIC_OCCURRENCE_STEP2A_REQUEST_VERSION,
     STRUCTURAL_INDEX_OCCURRENCE_STEP2A_REQUEST_VERSION,
     SOURCE_OWNED_STRUCTURAL_PROJECTION_STEP2A_REQUEST_VERSION,
-    FactSummaryInput,
     Step2AFailure,
-    Step2AFactProposal,
     Step2ARequest,
     Step2AResponse,
     Step2AConditionClaimAudit,

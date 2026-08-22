@@ -12,7 +12,6 @@ from examcard.evidence.schema import PageEvidence
 from examcard.knowledge.continuation.review import (
     ContinuationLearningGoldenFixture,
     ContinuationMarkerDisposition,
-    ContinuationReviewState,
     assess_continuation_learning_golden,
     load_continuation_review_sidecar,
     make_continuation_review_sidecar_id,

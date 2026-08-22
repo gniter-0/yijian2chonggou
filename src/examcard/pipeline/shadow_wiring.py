@@ -15,7 +15,7 @@ from __future__ import annotations
 
 import re
 from pathlib import Path
-from typing import Any, Callable, Mapping
+from typing import Any, Callable
 
 from ..common.io import atomic_write_json, read_json
 from ..evidence.engine_types import VisualReviewHint

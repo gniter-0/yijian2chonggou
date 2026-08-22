@@ -36,7 +36,7 @@ from __future__ import annotations
 
 import re
 from dataclasses import dataclass
-from typing import Any, Literal, Sequence
+from typing import Any, Final, Literal, Sequence
 
 from pydantic import Field, model_validator
 
@@ -102,10 +102,10 @@ __all__ = (
     "mark_reviewed",
 )
 
-EXTRACTION_SOURCE_VERSION = "examcard_extraction_source_v1"
-MANUAL_BINDING_SPEC_VERSION = "examcard_manual_binding_spec_v1"
-MANUAL_SELECTION_SPEC_VERSION = "examcard_manual_selection_spec_v1"
-EXTRACTION_QUEUE_ITEM_VERSION = "examcard_extraction_queue_item_v1"
+EXTRACTION_SOURCE_VERSION: Final = "examcard_extraction_source_v1"
+MANUAL_BINDING_SPEC_VERSION: Final = "examcard_manual_binding_spec_v1"
+MANUAL_SELECTION_SPEC_VERSION: Final = "examcard_manual_selection_spec_v1"
+EXTRACTION_QUEUE_ITEM_VERSION: Final = "examcard_extraction_queue_item_v1"
 
 # r8 `expected_role` 定式：呈现 ↔ 元素角色一一对应。
 ROLE_BY_PRESENTATION: dict[str, str] = {
@@ -329,7 +329,7 @@ def make_source_page_binding(
             "source_manifest_sha256": source_manifest_sha256,
         },
         "page_binding_sha256",
-    )  # type: ignore[return-value]
+    )
 
 
 def make_extraction_source(
@@ -397,7 +397,7 @@ def element_provenance(source: ExtractionSource, page_ref_id: str) -> TypedEleme
             "source_manifest_sha256": source.source_manifest_sha256,
         },
         "provenance_sha256",
-    )  # type: ignore[return-value]
+    )
 
 
 def _spec_matches_source(spec: ManualSelectionSpec, source: ExtractionSource) -> None:
@@ -480,7 +480,7 @@ def build_typed_contract(
             )
             for edge_id, (source_index, target_index) in zip(edge_ids, spec.diagram_edges, strict=True)
         )
-        return hash_model_r8x(DiagramContract, {"nodes": nodes, "edges": edges}, "contract_sha256")  # type: ignore[return-value]
+        return hash_model_r8x(DiagramContract, {"nodes": nodes, "edges": edges}, "contract_sha256")
     if spec.presentation == "table":
         assert spec.table_rows is not None and spec.table_columns is not None
         cells = []
@@ -510,7 +510,7 @@ def build_typed_contract(
             TableContract,
             {"rows": spec.table_rows, "columns": spec.table_columns, "cells": tuple(cells)},
             "contract_sha256",
-        )  # type: ignore[return-value]
+        )
     if spec.presentation == "ordered_list":
         items = tuple(
             hash_model_r8x(
@@ -526,7 +526,7 @@ def build_typed_contract(
         )
         return hash_model_r8x(
             OrderedListContract, {"items": items, "continuation_binding_ids": ()}, "contract_sha256"
-        )  # type: ignore[return-value]
+        )
     token_type, contract_type = (
         (ConstraintToken, ConstraintContract) if spec.presentation == "constraint" else (FormulaToken, FormulaContract)
     )
@@ -646,7 +646,7 @@ def build_extraction_decision(
         "browser_demo": False,
         "production_fixture_authorized": True,
     }
-    return hash_model_r8x(HumanDecision, payload, "decision_sha256")  # type: ignore[return-value]
+    return hash_model_r8x(HumanDecision, payload, "decision_sha256")
 
 
 def build_decision_manifest(
@@ -659,7 +659,7 @@ def build_decision_manifest(
         "decisions": tuple(decisions),
         "decision_count": len(decisions),
     }
-    return hash_model_r8x(HumanDecisionManifest, payload, "manifest_sha256")  # type: ignore[return-value]
+    return hash_model_r8x(HumanDecisionManifest, payload, "manifest_sha256")
 
 
 class _CandidateRef:
@@ -698,19 +698,19 @@ def extract_reviewed_fixture(
     final_items = list(queue_items)
     for spec in specs:
         key = (spec.subject_id, spec.record_id, spec.fact_id, spec.evidence_id, spec.presentation)
-        index = by_identity.get(key)
-        if index is None:
+        matched = by_identity.get(key)
+        if matched is None:
             raise ValueError(f"manual selection has no matching extraction source: {key}")
-        if index in claimed:
+        if matched in claimed:
             raise ValueError(f"extraction source already claimed by another selection: {key}")
-        claimed.add(index)
-        source, queue_item = sources[index], queue_items[index]
+        claimed.add(matched)
+        source, queue_item = sources[matched], queue_items[matched]
         decision = build_extraction_decision(
             spec, source, queue_item, queue_sha256=chain_sha256, identity_period=identity_period
         )
         validate_human_decision(decision, queue_item, _CandidateRef(decision.candidate_id))
         candidates.append(build_reviewed_candidate(queue_item, decision.candidate_id, decision))
-        final_items[index] = mark_reviewed(queue_item, decision)
+        final_items[matched] = mark_reviewed(queue_item, decision)
         decisions.append(decision)
     manifest = build_decision_manifest(decisions, queue_sha256=chain_sha256, identity_period=identity_period)
     fixture = build_reviewed_fixture(chain_sha256, candidates)

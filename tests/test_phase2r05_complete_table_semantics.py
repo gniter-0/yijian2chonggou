@@ -18,7 +18,6 @@ from examcard.knowledge.contracts import (
     FactSummaryInput,
     ModelNumericClaim,
     NumericTokenClass,
-    Step2AFactProposal,
     Step2AModelFactProposal,
     Step2AResponse,
     Step2BCardProposal,

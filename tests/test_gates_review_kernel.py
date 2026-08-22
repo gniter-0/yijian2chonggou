@@ -10,7 +10,6 @@ from examcard.gates.review.audit import DecisionAudit, build_decision_audit
 from examcard.gates.review.contracts import validate_typed_contract_binding
 from examcard.gates.review.decisions import (
     HumanDecision,
-    HumanDecisionManifest,
     empty_human_manifest,
     validate_human_decision,
 )

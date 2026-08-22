@@ -7,7 +7,7 @@ production_fixture_authorized 必须为 False 且六项确认齐备。生产语�
 """
 from __future__ import annotations
 
-from typing import Literal
+from typing import Final, Literal
 
 from pydantic import Field, model_validator
 
@@ -16,9 +16,10 @@ from ...knowledge.contracts.admission_legacy_hash import canonical_hash, hash_mo
 from ...materials.schema import StrictModel
 from .decisions import HumanDecision
 from .dispositions import derive_admission_basis, effective_disposition
+from .queue import QueueItemLike
 
-DECISION_AUDIT_VERSION = "phase2r84_decision_audit_v1"
-BROWSER_INPUT_AUDIT_VERSION = "phase2r84_browser_input_audit_v1"
+DECISION_AUDIT_VERSION: Final = "phase2r84_decision_audit_v1"
+BROWSER_INPUT_AUDIT_VERSION: Final = "phase2r84_browser_input_audit_v1"
 
 
 class DecisionAudit(StrictModel):
@@ -108,7 +109,7 @@ class BrowserInputAudit(StrictModel):
 def build_decision_audit(
     *,
     candidate_id: str,
-    queue_item: object,
+    queue_item: QueueItemLike,
     decision: HumanDecision | None = None,
     browser_demo: bool = False,
     audit_id: str | None = None,
@@ -163,4 +164,4 @@ def build_decision_audit(
             "browser_demo": browser_demo,
             "admission_basis": derive_admission_basis(decision.disposition, browser_demo=browser_demo),
         }
-    return hash_model_r8x(DecisionAudit, payload, "audit_sha256")  # type: ignore[return-value]
+    return hash_model_r8x(DecisionAudit, payload, "audit_sha256")

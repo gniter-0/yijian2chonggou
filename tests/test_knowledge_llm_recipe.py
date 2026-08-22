@@ -9,7 +9,6 @@ import json
 import re
 from types import SimpleNamespace
 
-import pytest
 
 from examcard.knowledge.contracts import (
     STEP2A_REQUEST_VERSION,

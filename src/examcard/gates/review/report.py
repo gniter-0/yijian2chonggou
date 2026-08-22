@@ -8,7 +8,7 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Any, Literal, Mapping
+from typing import Any, Final, Literal, Mapping
 
 from pydantic import Field, model_validator
 
@@ -18,8 +18,8 @@ from ...common.io import atomic_write_json
 from ...common.junit import JUnitReceipt, parse_junit_receipt
 from ...materials.schema import StrictModel
 
-MACHINE_REPORT_VERSION = "examcard_review_machine_report_v1"
-ACCEPTANCE_REPORT_VERSION = "examcard_review_acceptance_report_v1"
+MACHINE_REPORT_VERSION: Final = "examcard_review_machine_report_v1"
+ACCEPTANCE_REPORT_VERSION: Final = "examcard_review_acceptance_report_v1"
 
 
 class ReviewMachineReport(StrictModel):

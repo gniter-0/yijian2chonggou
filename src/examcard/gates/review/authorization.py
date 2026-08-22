@@ -18,7 +18,7 @@ fixture 封印；frozen input audit ← 源投影封印集；source page sidecar
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any, Iterable, Literal, Sequence
+from typing import Any, Final, Iterable, Literal, Sequence
 
 from pydantic import Field, model_validator
 
@@ -42,13 +42,13 @@ from .decisions import (
 )
 from .fixtures import ReviewedFixture, build_reviewed_candidate, build_reviewed_fixture
 
-AUTHORIZATION_VERSION = "phase2r810_production_authorization_decision_v1"
-AUTHORIZATION_MANIFEST_VERSION = "phase2r810_production_authorization_manifest_v1"
-DISPOSITION_VERSION = "phase2r810_disposition_projection_item_v1"
-DISPOSITION_PROJECTION_VERSION = "phase2r810_disposition_projection_v1"
-PRESERVED_QUEUE_VERSION = "phase2r810_preserved_disposition_queue_v1"
-AUTHORIZATION_AUDIT_VERSION = "phase2r810_authorization_audit_v1"
-R84_RECEIPT_VERSION = "phase2r810_r84_export_receipt_v1"
+AUTHORIZATION_VERSION: Final = "phase2r810_production_authorization_decision_v1"
+AUTHORIZATION_MANIFEST_VERSION: Final = "phase2r810_production_authorization_manifest_v1"
+DISPOSITION_VERSION: Final = "phase2r810_disposition_projection_item_v1"
+DISPOSITION_PROJECTION_VERSION: Final = "phase2r810_disposition_projection_v1"
+PRESERVED_QUEUE_VERSION: Final = "phase2r810_preserved_disposition_queue_v1"
+AUTHORIZATION_AUDIT_VERSION: Final = "phase2r810_authorization_audit_v1"
+R84_RECEIPT_VERSION: Final = "phase2r810_r84_export_receipt_v1"
 
 DISPOSITIONS = ("reviewed_candidate", "manual_review", "blocked", "not_applicable")
 
@@ -315,7 +315,7 @@ def export_r84_decision(decision: ProductionAuthorizationDecision) -> HumanDecis
         "browser_demo": False,
         "production_fixture_authorized": True,
     }
-    return hash_model_r8x(HumanDecision, payload, "decision_sha256")  # type: ignore[return-value]
+    return hash_model_r8x(HumanDecision, payload, "decision_sha256")
 
 
 def export_r84_manifest(manifest: ProductionAuthorizationManifest) -> tuple[HumanDecisionManifest, R84ExportReceipt]:
@@ -336,7 +336,7 @@ def export_r84_manifest(manifest: ProductionAuthorizationManifest) -> tuple[Huma
         "exported_reviewed_candidate_count": len(decisions),
     }
     receipt = hash_model_r8x(R84ExportReceipt, receipt_payload, "receipt_sha256")
-    return exported, receipt  # type: ignore[return-value]
+    return exported, receipt
 
 
 def assert_no_silent_upgrade(items: Iterable[DispositionProjectionItem]) -> None:
@@ -412,7 +412,7 @@ def build_authorization_decision(
         "step3_authorized": False,
         "step4_authorized": False,
     }
-    return hash_model_r8x(ProductionAuthorizationDecision, payload, "decision_sha256")  # type: ignore[return-value]
+    return hash_model_r8x(ProductionAuthorizationDecision, payload, "decision_sha256")
 
 
 def strict_ingest_exported_manifest(
@@ -442,11 +442,11 @@ def strict_ingest_exported_manifest(
     candidates = []
     ingested_queue_items: set[str] = set()
     for queue_item in queue_items:
-        decision = decisions_by_queue_item.get(queue_item.queue_item_id)
-        if decision is None:
+        bound = decisions_by_queue_item.get(queue_item.queue_item_id)
+        if bound is None:
             continue
-        validate_human_decision(decision, queue_item, _CandidateRef(decision.candidate_id))
-        candidates.append(build_reviewed_candidate(queue_item, decision.candidate_id, decision))
+        validate_human_decision(bound, queue_item, _CandidateRef(bound.candidate_id))
+        candidates.append(build_reviewed_candidate(queue_item, bound.candidate_id, bound))
         ingested_queue_items.add(queue_item.queue_item_id)
     missing = set(decisions_by_queue_item) - ingested_queue_items
     if missing:
@@ -474,7 +474,7 @@ def build_reviewed_typed_evidence_fixture(
         "step3_authorized": False,
         "step4_authorized": False,
     }
-    return hash_model_r8x(ReviewedTypedEvidenceFixture, payload, "fixture_sha256")  # type: ignore[return-value]
+    return hash_model_r8x(ReviewedTypedEvidenceFixture, payload, "fixture_sha256")
 
 
 @dataclass(frozen=True)
@@ -549,7 +549,7 @@ def authorize_extraction_batch(
         "step4_authorized": False,
     }
     authorization = hash_model_r8x(ProductionAuthorizationManifest, manifest_payload, "manifest_sha256")
-    exported, receipt = export_r84_manifest(authorization)  # type: ignore[arg-type]
+    exported, receipt = export_r84_manifest(authorization)
     ingested = strict_ingest_exported_manifest(exported, batch.queue_items)
     fixture = build_reviewed_typed_evidence_fixture(
         admission_bundle_sha256=batch.fixture.fixture_sha256,
@@ -558,7 +558,7 @@ def authorize_extraction_batch(
         ingested_fixture=ingested,
     )
     return AuthorizedFixtureBundle(
-        authorization=authorization,  # type: ignore[arg-type]
+        authorization=authorization,
         exported=exported,
         receipt=receipt,
         ingested_fixture=ingested,

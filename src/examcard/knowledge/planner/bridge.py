@@ -13,7 +13,6 @@ from ..contracts import (
     ContinuationTitleProjectionProvenance,
     FactSummaryInput,
     ReviewedCanonicalTitleProjection,
-    Step2AFactProposal,
     fact_summary_from_proposal,
 )
 from ..llm import Step2AExecutionRecord

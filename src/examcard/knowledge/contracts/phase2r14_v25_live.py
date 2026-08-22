@@ -14,7 +14,7 @@ from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
 from time import perf_counter
-from typing import Any, Mapping, Protocol
+from typing import Any, Final, Mapping, Protocol
 
 import yaml
 
@@ -27,8 +27,6 @@ from ..diagram.sidecar import load_diagram_review_sidecar
 from ..learning_fixture import LearningReviewState, load_learning_golden_fixture
 from .phase2r12_v25_golden_review import (
     _SOURCE_DISPOSITION_SIDECAR,
-    _TABLE_REPAIR_SIDECAR,
-    _TARGET_CONTINUATION_SIDECAR,
     _TARGET_REVIEWED_FIXTURE,
     _TARGET_SEMANTIC_SIDECAR,
 )
@@ -69,7 +67,7 @@ from .v25_generic_contracts import (
 )
 
 
-PHASE = "2R.1.4.0"
+PHASE: Final = "2R.1.4.0"
 NETWORK_CALL_BUDGET = 6
 SAMPLE_IDS = ("gonglu_24_table_formula", "gonglu_41_diagram_mixed")
 REPORT_NAME = "phase2r14_v25_live_smoke_report.json"

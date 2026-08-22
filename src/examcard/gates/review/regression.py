@@ -7,13 +7,13 @@ ValueError/TypeError/KeyError，pydantic ValidationError 是 ValueError 子类�
 """
 from __future__ import annotations
 
-from typing import Any, Callable, Iterable, Literal, Mapping
+from typing import Any, Callable, Final, Iterable, Literal, Mapping
 
 from pydantic import Field
 
 from ...materials.schema import StrictModel
 
-REGRESSION_VERSION = "phase2r84_regression_result_v1"
+REGRESSION_VERSION: Final = "phase2r84_regression_result_v1"
 
 REJECTION_ERRORS: tuple[type[Exception], ...] = (ValueError, TypeError, KeyError)
 

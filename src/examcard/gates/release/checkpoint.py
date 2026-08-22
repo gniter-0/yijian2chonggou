@@ -19,7 +19,7 @@ from __future__ import annotations
 import hashlib
 import json
 from pathlib import Path
-from typing import Any, Iterable, Literal, Sequence
+from typing import Any, Final, Iterable, Iterator, Literal, Sequence
 
 from pydantic import Field, model_validator
 
@@ -40,15 +40,15 @@ __all__ = [
     "digest_artifact",
 ]
 
-PHASE = "2R.6"
-SCHEMA_VERSION = "phase2r6_generic_multi_subject_release_checkpoint_v1"
-ARTIFACT_VERSION = "phase2r6_checkpoint_artifact_v1"
-SCHEMA_AUDIT_VERSION = "phase2r6_schema_audit_v1"
-SOURCE_AUDIT_VERSION = "phase2r6_generic_source_audit_v1"
-REGRESSION_VERSION = "phase2r6_regression_result_v1"
-CHECK_VERSION = "phase2r6_gate_check_v1"
-GATE_VERSION = "phase2r6_release_gate_v1"
-REPORT_VERSION = "phase2r6_report_v1"
+PHASE: Final = "2R.6"
+SCHEMA_VERSION: Final = "phase2r6_generic_multi_subject_release_checkpoint_v1"
+ARTIFACT_VERSION: Final = "phase2r6_checkpoint_artifact_v1"
+SCHEMA_AUDIT_VERSION: Final = "phase2r6_schema_audit_v1"
+SOURCE_AUDIT_VERSION: Final = "phase2r6_generic_source_audit_v1"
+REGRESSION_VERSION: Final = "phase2r6_regression_result_v1"
+CHECK_VERSION: Final = "phase2r6_gate_check_v1"
+GATE_VERSION: Final = "phase2r6_release_gate_v1"
+REPORT_VERSION: Final = "phase2r6_report_v1"
 
 _HASH = r"^[0-9a-f]{64}$"
 _ID = r"^[a-z0-9][a-z0-9._:-]{2,255}$"
@@ -78,14 +78,14 @@ def file_hash(path: Path) -> str:
 
 
 class ArtifactDigest(StrictModel):
-    schema_version: Literal[ARTIFACT_VERSION] = ARTIFACT_VERSION
+    schema_version: Literal["phase2r6_checkpoint_artifact_v1"] = ARTIFACT_VERSION
     path: str = Field(min_length=1)
     bytes: int = Field(gt=0)
     sha256: str = Field(pattern=_HASH)
 
 
 class GenericSourceAudit(StrictModel):
-    schema_version: Literal[SOURCE_AUDIT_VERSION] = SOURCE_AUDIT_VERSION
+    schema_version: Literal["phase2r6_generic_source_audit_v1"] = SOURCE_AUDIT_VERSION
     path: str = Field(min_length=1)
     markers: tuple[str, ...] = ()
     domain_neutral: bool
@@ -94,7 +94,7 @@ class GenericSourceAudit(StrictModel):
 
 
 class SchemaAudit(StrictModel):
-    schema_version: Literal[SCHEMA_AUDIT_VERSION] = SCHEMA_AUDIT_VERSION
+    schema_version: Literal["phase2r6_schema_audit_v1"] = SCHEMA_AUDIT_VERSION
     path: str = Field(min_length=1)
     object_count: int = Field(ge=1)
     closed_object_count: int = Field(ge=0)
@@ -104,7 +104,7 @@ class SchemaAudit(StrictModel):
 
 
 class RegressionResult(StrictModel):
-    schema_version: Literal[REGRESSION_VERSION] = REGRESSION_VERSION
+    schema_version: Literal["phase2r6_regression_result_v1"] = REGRESSION_VERSION
     case_id: str = Field(pattern=_ID)
     expected: Literal["fail_closed"] = "fail_closed"
     caught: bool
@@ -112,14 +112,14 @@ class RegressionResult(StrictModel):
 
 
 class GateCheck(StrictModel):
-    schema_version: Literal[CHECK_VERSION] = CHECK_VERSION
+    schema_version: Literal["phase2r6_gate_check_v1"] = CHECK_VERSION
     check_id: str = Field(pattern=_ID)
     passed: bool
     detail: str = Field(min_length=1)
 
 
 class ReleaseGate(StrictModel):
-    schema_version: Literal[GATE_VERSION] = GATE_VERSION
+    schema_version: Literal["phase2r6_release_gate_v1"] = GATE_VERSION
     valid: bool
     generic_multi_subject_ready: bool
     checks: tuple[GateCheck, ...] = Field(min_length=1)
@@ -143,7 +143,7 @@ class ReleaseGate(StrictModel):
 
 
 class CheckpointManifest(StrictModel):
-    schema_version: Literal[SCHEMA_VERSION] = SCHEMA_VERSION
+    schema_version: Literal["phase2r6_generic_multi_subject_release_checkpoint_v1"] = SCHEMA_VERSION
     checkpoint_id: str = Field(pattern=_ID)
     frozen_phase_range: Literal["Phase 2R.5-2R.5.7"] = "Phase 2R.5-2R.5.7"
     generic_sources: tuple[ArtifactDigest, ...] = Field(min_length=1)
@@ -169,8 +169,8 @@ class CheckpointManifest(StrictModel):
 
 
 class Phase2R6Report(StrictModel):
-    schema_version: Literal[REPORT_VERSION] = REPORT_VERSION
-    phase: Literal[PHASE] = PHASE
+    schema_version: Literal["phase2r6_report_v1"] = REPORT_VERSION
+    phase: Literal["2R.6"] = PHASE
     disposition: Literal["accepted_generic_multi_subject_release_checkpoint"] = "accepted_generic_multi_subject_release_checkpoint"
     checkpoint_id: str = Field(pattern=_ID)
     manifest_sha256: str = Field(pattern=_HASH)
@@ -226,7 +226,7 @@ def audit_domain_neutrality(
     return tuple(audits)
 
 
-def _walk_objects(value: object):
+def _walk_objects(value: object) -> Iterator[dict[str, Any]]:
     if isinstance(value, dict):
         if value.get("type") == "object":
             yield value

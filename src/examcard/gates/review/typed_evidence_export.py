@@ -17,7 +17,7 @@ source page sidecar ← 放行决策页绑定集；queue ← 调用方链哈希�
 """
 from __future__ import annotations
 
-from typing import Any, Literal, Mapping, Sequence
+from typing import Any, Final, Literal, Mapping, Sequence
 
 from pydantic import Field
 
@@ -40,7 +40,7 @@ __all__ = (
     "export_reviewed_typed_evidence_fixture",
 )
 
-EXPLICIT_AUTHORIZATION_VERSION = "examcard_explicit_production_authorization_v1"
+EXPLICIT_AUTHORIZATION_VERSION: Final = "examcard_explicit_production_authorization_v1"
 
 
 class ExplicitProductionAuthorization(StrictModel):
@@ -66,7 +66,10 @@ def _queue_item_dump(queue_item: Any) -> dict[str, Any]:
     dump = getattr(queue_item, "model_dump", None)
     if not callable(dump):
         raise ValueError("queue items must be pydantic-model-like (AdmissionQueueItem duck face)")
-    return dump(mode="json")
+    payload = dump(mode="json")
+    if not isinstance(payload, dict):
+        raise ValueError("queue item model_dump must return an object")
+    return payload
 
 
 def export_reviewed_typed_evidence_fixture(
@@ -145,7 +148,7 @@ def export_reviewed_typed_evidence_fixture(
         "step4_authorized": False,
     }
     authorization_manifest = hash_model_r8x(ProductionAuthorizationManifest, manifest_payload, "manifest_sha256")
-    exported, _receipt = export_r84_manifest(authorization_manifest)  # type: ignore[arg-type]
+    exported, _receipt = export_r84_manifest(authorization_manifest)
     ingested = strict_ingest_exported_manifest(exported, ordered_queue_items)
     return build_reviewed_typed_evidence_fixture(
         admission_bundle_sha256=admission_fixture.fixture_sha256,

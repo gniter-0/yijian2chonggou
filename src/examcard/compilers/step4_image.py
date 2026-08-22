@@ -24,7 +24,7 @@ from __future__ import annotations
 
 import json
 from dataclasses import dataclass
-from typing import Any, Literal, Mapping, Sequence
+from typing import Any, Final, Literal, Mapping, Sequence
 
 from pydantic import Field, model_validator
 
@@ -67,23 +67,23 @@ __all__ = [
     "validate_response",
 ]
 
-PHASE = "2R.11"
+PHASE: Final = "2R.11"
 
-FREEZE_VERSION = "phase2r11_r10_freeze_v1"
-SOURCE_CARD_VERSION = "phase2r11_source_card_v1"
-MODEL_INPUT_VERSION = "phase2r11_image_model_input_v1"
-PROMPT_CARD_VERSION = "phase2r11_prompt_card_v1"
-PROMPT_VERSION = "phase2r11_image_prompt_v1"
-REQUEST_VERSION = "phase2r11_image_request_v1"
-RESPONSE_CARD_VERSION = "phase2r11_fake_response_card_v1"
-RESPONSE_VERSION = "phase2r11_fake_response_v1"
-CACHE_VERSION = "phase2r11_image_cache_v1"
-JOURNAL_VERSION = "phase2r11_image_journal_v1"
-REGRESSION_VERSION = "phase2r11_regression_result_v1"
-GATE_CHECK_VERSION = "phase2r11_gate_check_v1"
-GATE_VERSION = "phase2r11_offline_gate_v1"
-REPORT_VERSION = "phase2r11_machine_report_v1"
-ACCEPTANCE_VERSION = "phase2r11_acceptance_report_v1"
+FREEZE_VERSION: Final = "phase2r11_r10_freeze_v1"
+SOURCE_CARD_VERSION: Final = "phase2r11_source_card_v1"
+MODEL_INPUT_VERSION: Final = "phase2r11_image_model_input_v1"
+PROMPT_CARD_VERSION: Final = "phase2r11_prompt_card_v1"
+PROMPT_VERSION: Final = "phase2r11_image_prompt_v1"
+REQUEST_VERSION: Final = "phase2r11_image_request_v1"
+RESPONSE_CARD_VERSION: Final = "phase2r11_fake_response_card_v1"
+RESPONSE_VERSION: Final = "phase2r11_fake_response_v1"
+CACHE_VERSION: Final = "phase2r11_image_cache_v1"
+JOURNAL_VERSION: Final = "phase2r11_image_journal_v1"
+REGRESSION_VERSION: Final = "phase2r11_regression_result_v1"
+GATE_CHECK_VERSION: Final = "phase2r11_gate_check_v1"
+GATE_VERSION: Final = "phase2r11_offline_gate_v1"
+REPORT_VERSION: Final = "phase2r11_machine_report_v1"
+ACCEPTANCE_VERSION: Final = "phase2r11_acceptance_report_v1"
 
 HASH = r"^[0-9a-f]{64}$"
 CARD_ID = r"^step3-card-contract:[0-9a-f]{24}$"
@@ -121,7 +121,7 @@ def canonical_hash(value: Any) -> str:
     return _canonical_hash_r10x(_jsonable(value))
 
 
-def _hash_model(model_type: type[StrictModel], payload: Mapping[str, Any], field: str) -> StrictModel:
+def _hash_model[ModelT: StrictModel](model_type: type[ModelT], payload: Mapping[str, Any], field: str) -> ModelT:
     document = dict(payload)
     draft = model_type.model_construct(**{**document, field: "0" * 64})
     document[field] = canonical_hash(draft.model_dump(mode="json", exclude={"schema_version", field}))
@@ -129,15 +129,15 @@ def _hash_model(model_type: type[StrictModel], payload: Mapping[str, Any], field
 
 
 class FrozenArtifact(StrictModel):
-    schema_version: Literal[FREEZE_VERSION] = FREEZE_VERSION
+    schema_version: Literal["phase2r11_r10_freeze_v1"] = FREEZE_VERSION
     path: str = Field(min_length=1)
     bytes: int = Field(gt=0)
     sha256: str = Field(pattern=HASH)
 
 
 class R10Freeze(StrictModel):
-    schema_version: Literal[FREEZE_VERSION] = FREEZE_VERSION
-    phase: Literal[PHASE] = PHASE
+    schema_version: Literal["phase2r11_r10_freeze_v1"] = FREEZE_VERSION
+    phase: Literal["2R.11"] = PHASE
     artifacts: tuple[FrozenArtifact, ...] = Field(min_length=1)
     artifact_count: int = Field(gt=0)
     aggregate_sha256: str = Field(pattern=HASH)
@@ -157,7 +157,7 @@ class R10Freeze(StrictModel):
 
 
 class SourceCard(StrictModel):
-    schema_version: Literal[SOURCE_CARD_VERSION] = SOURCE_CARD_VERSION
+    schema_version: Literal["phase2r11_source_card_v1"] = SOURCE_CARD_VERSION
     source_card_id: str = Field(pattern=CARD_ID)
     source_candidate_id: str = Field(min_length=1)
     presentation: Literal["diagram", "table", "ordered_list", "constraint", "formula"]
@@ -218,7 +218,7 @@ class SourceCard(StrictModel):
 
 
 class ModelInput(StrictModel):
-    schema_version: Literal[MODEL_INPUT_VERSION] = MODEL_INPUT_VERSION
+    schema_version: Literal["phase2r11_image_model_input_v1"] = MODEL_INPUT_VERSION
     model_input_id: str = Field(pattern=MODEL_INPUT_ID)
     source_fixture_sha256: str = Field(pattern=HASH)
     cards: tuple[SourceCard, ...] = Field(min_length=1)
@@ -238,7 +238,7 @@ class ModelInput(StrictModel):
 
 
 class PromptCard(StrictModel):
-    schema_version: Literal[PROMPT_CARD_VERSION] = PROMPT_CARD_VERSION
+    schema_version: Literal["phase2r11_prompt_card_v1"] = PROMPT_CARD_VERSION
     source_card_id: str = Field(pattern=CARD_ID)
     source_candidate_id: str = Field(min_length=1)
     presentation: Literal["diagram", "table", "ordered_list", "constraint", "formula"]
@@ -252,7 +252,7 @@ class PromptCard(StrictModel):
 
 
 class Prompt(StrictModel):
-    schema_version: Literal[PROMPT_VERSION] = PROMPT_VERSION
+    schema_version: Literal["phase2r11_image_prompt_v1"] = PROMPT_VERSION
     prompt_id: str = Field(pattern=PROMPT_ID)
     instructions: tuple[str, ...] = PROMPT_INSTRUCTIONS
     cards: tuple[PromptCard, ...] = Field(min_length=1)
@@ -273,12 +273,12 @@ class Prompt(StrictModel):
 
 
 class ImageRequest(StrictModel):
-    schema_version: Literal[REQUEST_VERSION] = REQUEST_VERSION
+    schema_version: Literal["phase2r11_image_request_v1"] = REQUEST_VERSION
     request_id: str = Field(pattern=REQUEST_ID)
     backend: Literal["deterministic_fake_image_backend_r11_v1"] = "deterministic_fake_image_backend_r11_v1"
     model_input: ModelInput
     prompt: Prompt
-    response_schema_version: Literal[RESPONSE_VERSION] = RESPONSE_VERSION
+    response_schema_version: Literal["phase2r11_fake_response_v1"] = RESPONSE_VERSION
     response_schema_sha256: str = Field(pattern=HASH)
     real_http_call_budget: Literal[0] = 0
     real_image_generation_authorized: Literal[False] = False
@@ -296,7 +296,7 @@ class ImageRequest(StrictModel):
 
 
 class FakeResponseCard(StrictModel):
-    schema_version: Literal[RESPONSE_CARD_VERSION] = RESPONSE_CARD_VERSION
+    schema_version: Literal["phase2r11_fake_response_card_v1"] = RESPONSE_CARD_VERSION
     source_card_id: str = Field(pattern=CARD_ID)
     source_candidate_id: str = Field(min_length=1)
     presentation: Literal["diagram", "table", "ordered_list", "constraint", "formula"]
@@ -318,7 +318,7 @@ class FakeResponseCard(StrictModel):
 
 
 class FakeResponse(StrictModel):
-    schema_version: Literal[RESPONSE_VERSION] = RESPONSE_VERSION
+    schema_version: Literal["phase2r11_fake_response_v1"] = RESPONSE_VERSION
     response_id: str = Field(pattern=RESPONSE_ID)
     request_id: str = Field(pattern=REQUEST_ID)
     request_sha256: str = Field(pattern=HASH)
@@ -337,7 +337,7 @@ class FakeResponse(StrictModel):
 
 
 class CacheRecord(StrictModel):
-    schema_version: Literal[CACHE_VERSION] = CACHE_VERSION
+    schema_version: Literal["phase2r11_image_cache_v1"] = CACHE_VERSION
     request_sha256: str = Field(pattern=HASH)
     response_sha256: str = Field(pattern=HASH)
     cache_hit: Literal[False] = False
@@ -346,7 +346,7 @@ class CacheRecord(StrictModel):
 
 
 class JournalRecord(StrictModel):
-    schema_version: Literal[JOURNAL_VERSION] = JOURNAL_VERSION
+    schema_version: Literal["phase2r11_image_journal_v1"] = JOURNAL_VERSION
     event: Literal["offline_fake_backend_completed"] = "offline_fake_backend_completed"
     request_id: str = Field(pattern=REQUEST_ID)
     request_sha256: str = Field(pattern=HASH)
@@ -360,7 +360,7 @@ class JournalRecord(StrictModel):
 
 
 class RegressionResult(StrictModel):
-    schema_version: Literal[REGRESSION_VERSION] = REGRESSION_VERSION
+    schema_version: Literal["phase2r11_regression_result_v1"] = REGRESSION_VERSION
     case_id: str = Field(min_length=3)
     expected_failure: str = Field(min_length=3)
     caught: bool
@@ -376,15 +376,15 @@ class RegressionResult(StrictModel):
 
 
 class GateCheck(StrictModel):
-    schema_version: Literal[GATE_CHECK_VERSION] = GATE_CHECK_VERSION
+    schema_version: Literal["phase2r11_gate_check_v1"] = GATE_CHECK_VERSION
     check_id: str = Field(min_length=3)
     passed: bool
     detail: str = Field(min_length=3)
 
 
 class OfflineGate(StrictModel):
-    schema_version: Literal[GATE_VERSION] = GATE_VERSION
-    phase: Literal[PHASE] = PHASE
+    schema_version: Literal["phase2r11_offline_gate_v1"] = GATE_VERSION
+    phase: Literal["2R.11"] = PHASE
     valid: bool
     freeze_valid: bool
     source_fixture_valid: bool
@@ -427,8 +427,8 @@ class OfflineGate(StrictModel):
 
 
 class MachineReport(StrictModel):
-    schema_version: Literal[REPORT_VERSION] = REPORT_VERSION
-    phase: Literal[PHASE] = PHASE
+    schema_version: Literal["phase2r11_machine_report_v1"] = REPORT_VERSION
+    phase: Literal["2R.11"] = PHASE
     source_card_count: int = Field(gt=0)
     fake_response_card_count: int = Field(gt=0)
     presentation_counts: tuple[tuple[str, int], ...] = Field(min_length=1)
@@ -453,7 +453,7 @@ class MachineReport(StrictModel):
 
 
 class JUnitReceipt(StrictModel):
-    schema_version: Literal[ACCEPTANCE_VERSION] = ACCEPTANCE_VERSION
+    schema_version: Literal["phase2r11_acceptance_report_v1"] = ACCEPTANCE_VERSION
     label: Literal["targeted", "full"]
     sha256: str = Field(pattern=HASH)
     tests: int = Field(ge=1)
@@ -463,8 +463,8 @@ class JUnitReceipt(StrictModel):
 
 
 class AcceptanceReport(StrictModel):
-    schema_version: Literal[ACCEPTANCE_VERSION] = ACCEPTANCE_VERSION
-    phase: Literal[PHASE] = PHASE
+    schema_version: Literal["phase2r11_acceptance_report_v1"] = ACCEPTANCE_VERSION
+    phase: Literal["2R.11"] = PHASE
     accepted: bool
     report_sha256: str = Field(pattern=HASH)
     receipts: tuple[JUnitReceipt, JUnitReceipt]
@@ -521,7 +521,7 @@ def _source_card(card: ReviewedStep3Card, fixture_sha256: str) -> SourceCard:
         "geometry_sha256": canonical_hash(contract.geometry),
         "source_fixture_sha256": fixture_sha256,
     }
-    return _hash_model(SourceCard, payload, "source_card_sha256")  # type: ignore[return-value]
+    return _hash_model(SourceCard, payload, "source_card_sha256")
 
 
 def _prompt_card(card: SourceCard) -> PromptCard:
@@ -583,7 +583,7 @@ def deterministic_fake_backend(request: ImageRequest) -> FakeResponse:
         "cards": cards,
         "card_count": len(cards),
     }
-    return _hash_model(FakeResponse, payload, "response_sha256")  # type: ignore[return-value]
+    return _hash_model(FakeResponse, payload, "response_sha256")
 
 
 def validate_response(request: ImageRequest, response: FakeResponse) -> None:
@@ -615,8 +615,8 @@ def _fail_closed(case_id: str, expected_failure: str, callback: Any) -> Regressi
     try:
         callback()
     except (ValueError, TypeError, KeyError, json.JSONDecodeError) as exc:
-        return _hash_model(RegressionResult, {"case_id": case_id, "expected_failure": expected_failure, "caught": True, "detail": str(exc)[:500] or type(exc).__name__}, "regression_sha256")  # type: ignore[return-value]
-    return _hash_model(RegressionResult, {"case_id": case_id, "expected_failure": expected_failure, "caught": False, "detail": "mutation was unexpectedly accepted"}, "regression_sha256")  # type: ignore[return-value]
+        return _hash_model(RegressionResult, {"case_id": case_id, "expected_failure": expected_failure, "caught": True, "detail": str(exc)[:500] or type(exc).__name__}, "regression_sha256")
+    return _hash_model(RegressionResult, {"case_id": case_id, "expected_failure": expected_failure, "caught": False, "detail": "mutation was unexpectedly accepted"}, "regression_sha256")
 
 
 def _mutated_response(request: ImageRequest, response: FakeResponse, field: str, value: Any) -> FakeResponse:
@@ -628,7 +628,7 @@ def _mutated_response(request: ImageRequest, response: FakeResponse, field: str,
     payload = response.model_dump(mode="json")
     payload["cards"] = (changed_card, *response.cards[1:])
     payload["response_sha256"] = "0" * 64
-    return _hash_model(FakeResponse, payload, "response_sha256")  # type: ignore[return-value]
+    return _hash_model(FakeResponse, payload, "response_sha256")
 
 
 def build_regression_matrix(batch: ImageBatch) -> tuple[RegressionResult, ...]:
