@@ -85,24 +85,33 @@ def validate_step2a_response(*, request: Step2ARequest, response: Step2AResponse
         if audit.state != TableSemanticCoverageState.COMPLETE:
             errors.append(f"{audit.table_evidence_id}: complete-table semantic coverage {audit.state.value}: {audit.basis}")
     table_atomic_subfacts = assess_step2a_table_atomic_subfacts(request=request, proposals=response.proposals)
-    for audit in table_atomic_subfacts:
-        if audit.state != TableAtomicSubfactCoverageState.COMPLETE:
-            errors.append(f"{audit.requirement_id}: table atomic subfact {audit.state.value}: {audit.basis}")
+    for subfact_audit in table_atomic_subfacts:
+        if subfact_audit.state != TableAtomicSubfactCoverageState.COMPLETE:
+            errors.append(
+                f"{subfact_audit.requirement_id}: table atomic subfact {subfact_audit.state.value}: {subfact_audit.basis}"
+            )
     coverage_obligation_audit = assess_step2a_coverage_obligations(request=request, proposals=response.proposals)
-    for audit in coverage_obligation_audit:
-        if audit.state != CoverageObligationCoverageState.COMPLETE:
-            errors.append(f"{audit.obligation_id}: coverage obligation {audit.state.value}: {audit.basis}")
+    for obligation_audit in coverage_obligation_audit:
+        if obligation_audit.state != CoverageObligationCoverageState.COMPLETE:
+            errors.append(
+                f"{obligation_audit.obligation_id}: coverage obligation {obligation_audit.state.value}: {obligation_audit.basis}"
+            )
     continuation_audit = assess_step2a_continuations(request=request, proposals=response.proposals)
-    for audit in continuation_audit:
-        if audit.state != ContinuationAllItemsAuditState.CLOSED:
-            errors.append(f"{audit.proposal_key}: all_items Fact is blocked by continuation {audit.state.value}: {audit.basis}")
+    for all_items_audit in continuation_audit:
+        if all_items_audit.state != ContinuationAllItemsAuditState.CLOSED:
+            errors.append(
+                f"{all_items_audit.proposal_key}: all_items Fact is blocked by continuation "
+                f"{all_items_audit.state.value}: {all_items_audit.basis}"
+            )
     condition_derivation = derive_step2a_condition_claims(request=request, proposals=response.proposals)
     expected_condition_claims = {
         proposal.proposal_key: proposal.condition_claims for proposal in condition_derivation.proposals
     }
-    for audit in condition_derivation.audits:
-        if audit.state != ConditionClaimDerivationState.DERIVED:
-            errors.append(f"{audit.proposal_key}: condition derivation {audit.state.value}: {audit.basis}")
+    for condition_audit in condition_derivation.audits:
+        if condition_audit.state != ConditionClaimDerivationState.DERIVED:
+            errors.append(
+                f"{condition_audit.proposal_key}: condition derivation {condition_audit.state.value}: {condition_audit.basis}"
+            )
     numeric_derivation = (
         derive_step2a_numeric_claims(request=request, proposals=response.proposals)
         if request.identity.request_version
@@ -124,24 +133,31 @@ def validate_step2a_response(*, request: Step2ARequest, response: Step2AResponse
         else {}
     )
     if numeric_derivation is not None:
-        for audit in numeric_derivation.audits:
-            if audit.state != NumericClaimDerivationState.DERIVED:
-                errors.append(f"{audit.proposal_key}: numeric derivation {audit.state.value}: {audit.basis}")
-        for audit in numeric_derivation.table_occurrence_audits:
-            if audit.state not in {
+        for numeric_audit in numeric_derivation.audits:
+            if numeric_audit.state != NumericClaimDerivationState.DERIVED:
+                errors.append(
+                    f"{numeric_audit.proposal_key}: numeric derivation {numeric_audit.state.value}: {numeric_audit.basis}"
+                )
+        for occurrence_audit in numeric_derivation.table_occurrence_audits:
+            if occurrence_audit.state not in {
                 TableNumericOccurrenceState.DERIVED_TABLE_CELL_OCCURRENCES,
                 TableNumericOccurrenceState.DERIVED_GRID_METADATA,
             }:
-                errors.append(f"{audit.proposal_key}: table numeric occurrence {audit.state.value}: {audit.basis}")
-        for audit in numeric_derivation.table_structural_index_occurrence_audits:
-            if audit.state != TableStructuralIndexOccurrenceState.DERIVED:
                 errors.append(
-                    f"{audit.proposal_key}: table structural-index occurrence {audit.state.value}: {audit.basis}"
+                    f"{occurrence_audit.proposal_key}: table numeric occurrence "
+                    f"{occurrence_audit.state.value}: {occurrence_audit.basis}"
                 )
-        for audit in numeric_derivation.table_structural_projection_audits:
-            if audit.state != CompleteTableStructuralProjectionState.DERIVED:
+        for index_occurrence_audit in numeric_derivation.table_structural_index_occurrence_audits:
+            if index_occurrence_audit.state != TableStructuralIndexOccurrenceState.DERIVED:
                 errors.append(
-                    f"{audit.proposal_key}: table structural projection {audit.state.value}: {audit.basis}"
+                    f"{index_occurrence_audit.proposal_key}: table structural-index occurrence "
+                    f"{index_occurrence_audit.state.value}: {index_occurrence_audit.basis}"
+                )
+        for projection_audit in numeric_derivation.table_structural_projection_audits:
+            if projection_audit.state != CompleteTableStructuralProjectionState.DERIVED:
+                errors.append(
+                    f"{projection_audit.proposal_key}: table structural projection "
+                    f"{projection_audit.state.value}: {projection_audit.basis}"
                 )
     known_anchor_span_ids = set(spans_by_id)
     for proposal in response.proposals:

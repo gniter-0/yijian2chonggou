@@ -409,10 +409,10 @@ class Step2ARequest(StrictModel):
                     raise ValueError("reviewed continuation marker sidecar binding does not match the request projection")
                 reviewed_marker_dispositions[continuation_id] = review.disposition
             reviewed_closures = {item.continuation_id: item for item in sidecar.closure_reviews}
-            for continuation_id, review in reviewed_closures.items():
+            for continuation_id, sidecar_closure_review in reviewed_closures.items():
                 record, source_projection = continuation_records[continuation_id]
-                adjacent_projection = projections_by_id.get(review.adjacent_projection_id)
-                adjacent_section = sections_by_id.get(review.adjacent_section_id)
+                adjacent_projection = projections_by_id.get(sidecar_closure_review.adjacent_projection_id)
+                adjacent_section = sections_by_id.get(sidecar_closure_review.adjacent_section_id)
                 if adjacent_projection is None and self.identity.request_version in {
                     TABLE_CONTINUATION_STEP2A_REQUEST_VERSION,
                     TABLE_COVERAGE_OBLIGATION_STEP2A_REQUEST_VERSION,
@@ -422,35 +422,47 @@ class Step2ARequest(StrictModel):
                     STRUCTURAL_INDEX_OCCURRENCE_STEP2A_REQUEST_VERSION,
                     SOURCE_OWNED_STRUCTURAL_PROJECTION_STEP2A_REQUEST_VERSION,
                 }:
-                    candidates = tuple(
+                    adjacent_projection_candidates = tuple(
                         projection
                         for projection in projections
-                        if projection.page_num == review.adjacent_page_num
-                        and projection.source_manifest_sha256 == review.adjacent_manifest_sha256
+                        if projection.page_num == sidecar_closure_review.adjacent_page_num
+                        and projection.source_manifest_sha256 == sidecar_closure_review.adjacent_manifest_sha256
                     )
-                    adjacent_projection = candidates[0] if len(candidates) == 1 else None
+                    adjacent_projection = (
+                        adjacent_projection_candidates[0] if len(adjacent_projection_candidates) == 1 else None
+                    )
                 if adjacent_section is None and adjacent_projection is not None and controlled_table_page_rebind(adjacent_projection):
-                    candidates = tuple(
+                    adjacent_section_candidates = tuple(
                         section
                         for section in self.sections
                         if section.page_num == adjacent_projection.page_num
-                        and set(review.closure_anchor_span_ids) <= set(section.anchor_span_ids)
+                        and set(sidecar_closure_review.closure_anchor_span_ids) <= set(section.anchor_span_ids)
                     )
-                    adjacent_section = candidates[0] if len(candidates) == 1 else None
+                    adjacent_section = (
+                        adjacent_section_candidates[0] if len(adjacent_section_candidates) == 1 else None
+                    )
                 if (
-                    (review.source_projection_id != source_projection.projection_id and not controlled_table_page_rebind(source_projection))
-                    or review.source_manifest_sha256 != source_projection.source_manifest_sha256
-                    or review.source_page_num != source_projection.page_num
-                    or review.source_anchor_span_ids != record.anchor_span_ids
+                    (
+                        sidecar_closure_review.source_projection_id != source_projection.projection_id
+                        and not controlled_table_page_rebind(source_projection)
+                    )
+                    or sidecar_closure_review.source_manifest_sha256 != source_projection.source_manifest_sha256
+                    or sidecar_closure_review.source_page_num != source_projection.page_num
+                    or sidecar_closure_review.source_anchor_span_ids != record.anchor_span_ids
                     or adjacent_projection is None
                     or adjacent_section is None
-                    or (review.adjacent_projection_id != adjacent_projection.projection_id and not controlled_table_page_rebind(adjacent_projection))
-                    or review.adjacent_manifest_sha256 != adjacent_projection.source_manifest_sha256
-                    or review.adjacent_page_num != adjacent_projection.page_num
+                    or (
+                        sidecar_closure_review.adjacent_projection_id != adjacent_projection.projection_id
+                        and not controlled_table_page_rebind(adjacent_projection)
+                    )
+                    or sidecar_closure_review.adjacent_manifest_sha256 != adjacent_projection.source_manifest_sha256
+                    or sidecar_closure_review.adjacent_page_num != adjacent_projection.page_num
                     or adjacent_section.page_num != adjacent_projection.page_num
-                    or review.adjacent_page_num != record.required_adjacent_page_num
-                    or not set(review.closure_anchor_span_ids) <= spans_by_projection[adjacent_projection.projection_id]
-                    or not set(review.closure_anchor_span_ids) <= set(adjacent_section.anchor_span_ids)
+                    or sidecar_closure_review.adjacent_page_num != record.required_adjacent_page_num
+                    or not set(sidecar_closure_review.closure_anchor_span_ids)
+                    <= spans_by_projection[adjacent_projection.projection_id]
+                    or not set(sidecar_closure_review.closure_anchor_span_ids)
+                    <= set(adjacent_section.anchor_span_ids)
                 ):
                     raise ValueError("reviewed continuation closure sidecar binding does not match the request projection")
         if self.identity.request_version == MULTIPAGE_STEP2A_REQUEST_VERSION:
@@ -637,7 +649,7 @@ def _step2a_payload(
         for section_payload in section_payloads:
             for table_payload in section_payload.get("tables", []):
                 table_payload.pop("atomic_subfact_requirements", None)
-    payload = {
+    payload: dict[str, Any] = {
         "sample_id": sample_id,
         "material_profile_id": material_profile_id,
         "model_input_version": model_input_version,

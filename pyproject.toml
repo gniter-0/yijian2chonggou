@@ -188,13 +188,8 @@ module = [
     "examcard.knowledge.continuation.core",           # 10
     "examcard.knowledge.continuation.repair_sidecar", # 7
     "examcard.knowledge.contracts.table_inputs",      # 5
-    "examcard.knowledge.contracts.validation",        # 16
 ]
 disable_error_code = ["assignment", "attr-defined"]
-
-[[tool.mypy.overrides]]
-module = ["examcard.knowledge.contracts.step2a_request"] # 18
-disable_error_code = ["assignment", "attr-defined", "misc"]
 
 [[tool.mypy.overrides]]
 module = ["examcard.knowledge.step2b_card_golden"] # 15
