@@ -535,7 +535,10 @@ def _facts_for_v25b(*, request, fixture_sample) -> tuple[tuple[V25Step2BFactSumm
         if target.fact_type.value == "diagram_relation":
             held.add(target.fact_key)
             continue
-        selected = []
+        # 本函数的 request / fixture_sample 没有注解，all_spans 的元素类型在 mypy 眼里就是
+        # Any；空列表必须显式注解，否则只能报 var-annotated，并把元素退化成 object，连带
+        # 后面的字段访问一起报。
+        selected: list[Any] = []
         for selector in target.primary_anchors:
             needle = normalized_compare_text(selector.text)
             selected.extend(
@@ -639,10 +642,12 @@ def build_phase2r12_report(*, repository_root: Path, generated_at_utc: str) -> P
         pages = [PageEvidence.model_validate_json(path.read_bytes()) for path in manifest_paths]
         builds = []
         for page, manifest_path in zip(pages, manifest_paths, strict=True):
-            repair_kwargs = {}
-            if sample.sample_id == repair.sample_id and page.page_num == repair.page_num:
-                repair_kwargs = {"table_repair_sidecar": repair, "table_repair_sidecar_path": repository_root / _TABLE_REPAIR_SIDECAR}
-            builds.append(build_step2a_semantic_projection(sample_id=sample.sample_id, page=page, source_manifest_path=manifest_path, source_manifest_reference=manifest_path.relative_to(repository_root).as_posix(), content_policy=policy, diagram_review_sidecar=semantic_sidecar, diagram_review_sidecar_path=paths["diagram"], diagram_disposition_sidecar=disposition, repository_root=repository_root, **repair_kwargs))
+            # 这一页是否落在人工审阅过的表格修复 sidecar 上。原先靠一份中间 kwargs 字典
+            # `**` 解包，字典被推成 dict[str, object]，解包处按剩余形参逐个报 arg-type；
+            # 改成两个具名实参后类型逐点对上，且「不传」与「传 None」在被调方等价（两个
+            # 形参的默认值都是 None）。
+            repaired_here = sample.sample_id == repair.sample_id and page.page_num == repair.page_num
+            builds.append(build_step2a_semantic_projection(sample_id=sample.sample_id, page=page, source_manifest_path=manifest_path, source_manifest_reference=manifest_path.relative_to(repository_root).as_posix(), content_policy=policy, diagram_review_sidecar=semantic_sidecar, diagram_review_sidecar_path=paths["diagram"], diagram_disposition_sidecar=disposition, repository_root=repository_root, table_repair_sidecar=repair if repaired_here else None, table_repair_sidecar_path=repository_root / _TABLE_REPAIR_SIDECAR if repaired_here else None))
         sections = tuple(item.section for item in builds)
         request = build_v25_step2a_request(
             sample_id=sample.sample_id, material_profile_id=registry.material_profile_id,

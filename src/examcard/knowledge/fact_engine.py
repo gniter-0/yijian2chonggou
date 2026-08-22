@@ -753,11 +753,16 @@ def _make_fact(
     if diagram_review is not None and diagram_disposition is not None:
         raise ValueError("a diagram fact cannot use both a structure review and a disposition")
     disposition_entry = diagram_disposition.entry if diagram_disposition is not None else None
-    released_visual = disposition_entry is not None and is_released_disposition(disposition_entry.disposition)
+    # 「这是一条已发布的图示处置」同时也是 disposition_entry 非空的担保。原先只用一个布尔量
+    # 转述该担保，mypy 不跨条件收窄，三处 disposition_entry.X 各报一条 union-attr。改成把担保
+    # 记在一个可空绑定上：released_entry 非空 ⇔ 原来的 released_visual 为真，取值逐点等价，
+    # 而收窄这回是结构性的，不再靠注释维持。
+    released_entry = disposition_entry if disposition_entry is not None and is_released_disposition(disposition_entry.disposition) else None
+    released_visual = released_entry is not None
     text = (
         _reviewed_diagram_text(diagram_review)
         if diagram_review is not None
-        else (disposition_entry.title if released_visual else (override_text or _group_text(units, rendered)))
+        else (released_entry.title if released_entry is not None else (override_text or _group_text(units, rendered)))
     )
     if text is None:
         raise ValueError("released visual disposition requires a display title")
@@ -784,7 +789,7 @@ def _make_fact(
             assertion_contract=assertion_contract,
         ),
         fact_type=fact_type,
-        label=(diagram_review.title if diagram_review is not None else (disposition_entry.title if released_visual else _label(text))),
+        label=(diagram_review.title if diagram_review is not None else (released_entry.title if released_entry is not None else _label(text))),
         assertion=text,
         completeness_mode=mode,
         primary_evidence_ids=tuple(unit.evidence_id for unit in units),
@@ -805,7 +810,7 @@ def _make_fact(
             for transform in rendered[unit.evidence_id].presentation_transforms
         ),
         diagram_review_id=assessment.review.review_id if assessment.review is not None else None,
-        diagram_disposition_id=disposition_entry.disposition_id if released_visual else None,
+        diagram_disposition_id=released_entry.disposition_id if released_entry is not None else None,
         diagram_disposition_trace=diagram_disposition.trace if released_visual and diagram_disposition is not None else None,
     )
 
@@ -900,7 +905,10 @@ def _make_card(
         split_reason="按唯一 primary evidence anchor span 分组；不与相似标题跨 span 合并。",
     )
     if bundle.diagram_review is not None:
-        segments = (
+        # 形状 B：这处赋值是个 1 元组，会被推成定长 tuple[ContentSegment]，下面 else 支路用
+        # 生成器构造的 tuple[ContentSegment, ...] 就报 assignment。显式注解一次即可，四条支路
+        # 的取值一个没动。
+        segments: tuple[ContentSegment, ...] = (
             ContentSegment(
                 text=fact.assertion,
                 fact_ids=(fact.fact_id,),
@@ -1219,7 +1227,7 @@ def run_sample(
     grouped = _group_included_evidence(contexts=contexts, overrides=overrides)
     diagram_reviews = diagram_reviews or {}
     diagram_dispositions = diagram_dispositions or {}
-    bundles: list[FactBundle] = []
+    collected: list[FactBundle] = []
     audit_exclusions: dict[str, DiagramDispositionBinding] = {
         unit.evidence_id: binding
         for unit in units
@@ -1244,7 +1252,7 @@ def run_sample(
         ):
             audit_exclusions.update({unit.evidence_id: diagram_disposition for unit in group})
             continue
-        bundles.append(
+        collected.append(
             FactBundle(
                 fact=_make_fact(
                     units=group,
@@ -1259,7 +1267,11 @@ def run_sample(
                 diagram_disposition=diagram_disposition,
             )
         )
-    bundles = tuple(bundles)
+    # 累加用的列表与最终的不可变元组分成两个名字：原先第二次赋值 `bundles = tuple(bundles)`
+    # 会与首次绑定的 list[FactBundle] 冲突（assignment），而 bundles 声明成 list 之后又与
+    # 下游要 tuple[FactBundle, ...] 的 _quality_gate 对不上（arg-type）。分名后两条一起消掉，
+    # 下游用法一个字没改。
+    bundles = tuple(collected)
     facts = tuple(bundle.fact for bundle in bundles)
     if len({fact.fact_id for fact in facts}) != len(facts):
         raise ValueError(f"{sample.sample_id}: duplicate fact IDs require explicit dedup review")

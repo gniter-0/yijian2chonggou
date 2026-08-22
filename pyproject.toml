@@ -145,17 +145,23 @@ ignore_missing_imports = true
 # 下面的条目逐条删掉（即改掉真问题），而不是把码集合往大里写。
 #
 # 基线实测（mypy 2.3.1 + pydantic 插件，--no-incremental，checked 127 source files）：
-# 首测 263 条 / 35 个模块。已按「正解」真修掉并从本清单删除条目的模块共 23 个
+# 首测 263 条 / 35 个模块。已按「正解」真修掉并从本清单删除条目的模块共 28 个
 # （v25_generic_contracts 58、learning_fixture 28、step2a_request 18、validation 16、
 # step2b_card_golden 15、contracts.audits 13、continuation.core 10、repair_sidecar 7、
-# envelope_profiles 6、table_inputs 5、admission_fixtures 5、providers.base 3、
-# evidence.fusion 3、echo_release 2、evidence.native 2、knowledge.projection 2、
-# pipeline.run 2、request_helpers 2、obligations 1、evidence.layout 1、
-# phase2r142_v25_projection 1、planner.bridge 1、pipeline.shadow 1）；derivation 由 10 条
-# 压到 1 条。
-# 现测 50 条 / 12 个模块，按码分布：call-arg 12、assignment 10、arg-type 10、
-# prop-decorator 4、union-attr 3、attr-defined 3、call-overload 2、var-annotated 2、
-# index 2、import-not-found 1、misc 1（operator、return-value 两族已清零）。
+# envelope_profiles 6、fact_engine 6、table_inputs 5、admission_fixtures 5、
+# phase2r13_v25_reconciliation 5、pipeline.live_run 5、phase2r12_v25_golden_review 4、
+# providers.base 3、evidence.fusion 3、phase2r14_v25_live 3、echo_release 2、
+# evidence.native 2、knowledge.projection 2、pipeline.run 2、request_helpers 2、
+# obligations 1、evidence.layout 1、phase2r142_v25_projection 1、planner.bridge 1、
+# pipeline.shadow 1）；另有两个模块被压薄但没清零：derivation 由 10 条压到 1 条，
+# step2a_builders 由 11 条压到 10 条。
+# 现测 26 条 / 7 个模块，按码分布：call-arg 12、assignment 5、prop-decorator 4、
+# call-overload 2、arg-type 1、attr-defined 1、import-not-found 1（union-attr、
+# var-annotated、index、misc 四族本轮清零；operator、return-value 两族早前已清零）。
+# 剩下的 26 条里 18 条是工具侧假阳性（model_construct 合成签名 12、@property 叠装饰器
+# 4、OpenAI SDK 重载 2），1 条是故意留的盖子（derivation:151），1 条是缺陷记账
+# （phase2r11 的 tools/ 死 import），只有 llm 的 5 条 assignment 与 quality 的 1 条
+# attr-defined 属于「改代码就能清掉」的存量。
 # 每个模块后面括号里的数字是它当时的条数，删条目时拿它对账。
 #
 # 成因逐族抽样核查过，没有一条是「访问模型上根本不存在的字段」那类真缺陷——那一类
@@ -194,32 +200,12 @@ disable_error_code = ["arg-type"]
 module = ["examcard.knowledge.contracts.admission_legacy_hash"] # 2
 disable_error_code = ["call-arg"]
 
-# 10 条 call-arg 同上（model_construct）；1 条 arg-type 是 Path | None 传进要 Path 的
-# 形参（step2a_builders:291），属形状 D 的近亲，可以单独修掉。
+# 10 条 call-arg 同上（model_construct）。原先还有 1 条 arg-type（step2a_builders:291，
+# `Path | None` 传进要 `Path` 的形参）已按正解补上显式判空修掉，码集合随之收窄成只剩
+# call-arg 一族。
 [[tool.mypy.overrides]]
-module = ["examcard.knowledge.contracts.step2a_builders"] # 11
-disable_error_code = ["arg-type", "call-arg"]
-
-# 形状 C（arg-type）+ 空容器缺注解（var-annotated），phase2r13 另有 1 条形状 A。
-[[tool.mypy.overrides]]
-module = ["examcard.knowledge.contracts.phase2r12_v25_golden_review"] # 4
-disable_error_code = ["arg-type", "var-annotated"]
-
-[[tool.mypy.overrides]]
-module = ["examcard.knowledge.contracts.phase2r13_v25_reconciliation"] # 5
-disable_error_code = ["arg-type", "attr-defined", "var-annotated"]
-
-# 形状 C 的下标变体：report 声明成 dict[str, object]，`report["probes"]["step2a"] = …`
-# 里内层拿到的是 object，报 index。
-[[tool.mypy.overrides]]
-module = ["examcard.knowledge.contracts.phase2r14_v25_live"] # 3
-disable_error_code = ["attr-defined", "index"]
-
-# 同形状 D。fact_engine:760/787/808 是「布尔量担保非空」；request_helpers 与 planner.bridge
-# 那三条已按正解补上显式判空并删除条目。
-[[tool.mypy.overrides]]
-module = ["examcard.knowledge.fact_engine"] # 6
-disable_error_code = ["arg-type", "assignment", "union-attr"]
+module = ["examcard.knowledge.contracts.step2a_builders"] # 10
+disable_error_code = ["call-arg"]
 
 # call-overload 2 条是 OpenAI SDK 的
 # chat.completions.with_raw_response.create(...)：本仓按 dict 动态拼 response_format /
@@ -237,12 +223,6 @@ disable_error_code = ["attr-defined", "prop-decorator"]
 [[tool.mypy.overrides]]
 module = ["examcard.knowledge.schema"] # 2
 disable_error_code = ["prop-decorator"]
-
-# misc 1 条是 live_run:732 `stage_executor(...)`——可选回调在调用点没收窄，报
-# "None" not callable。这条其实是形状 D，修起来只要一句显式判空。
-[[tool.mypy.overrides]]
-module = ["examcard.pipeline.live_run"] # 5
-disable_error_code = ["arg-type", "assignment", "misc"]
 
 # 这条不是类型噪声，是给一处真缺陷记账：build_phase2r11_five_golden_report 内部
 # `from tools.verify_phase2r1_phase2r0_freeze import ...`，而本仓没有 tools/ 包（旧仓

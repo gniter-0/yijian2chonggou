@@ -731,6 +731,12 @@ def run_v25_live_smoke(
         relay_base_url=relay_base_url,
         manual_reissue_reason=manual_reissue_reason,
     )
+    # probes 与 samples 单独具名：报告整体是 dict[str, object]（要原样落成 JSON），而从
+    # report["probes"] 取回来的静态类型只能是 object，于是下标赋值报 index、append 报
+    # attr-defined。具名局部量把精确类型留在原处，字典里放的是同一个对象引用，落盘结果
+    # 逐字节不变。
+    probes: dict[str, object] = {"step2a": None, "step2b": None}
+    samples: list[dict[str, object]] = []
     report: dict[str, object] = {
         "phase": PHASE,
         "mode": "live" if allow_live else "dry_run",
@@ -739,8 +745,8 @@ def run_v25_live_smoke(
         "network_call_budget": NETWORK_CALL_BUDGET,
         "manual_reissue_reason": manual_reissue_reason,
         "frozen_phase2r13_before": frozen_before,
-        "probes": {"step2a": None, "step2b": None},
-        "samples": [],
+        "probes": probes,
+        "samples": samples,
         "review_promotion": "disabled; all live Step 2A and Step 2B output remains draft",
         "source_mutations": 0,
         "accepted": False,
@@ -767,19 +773,19 @@ def run_v25_live_smoke(
     if transport is None:
         raise ValueError("Phase 2R.1.4 live mode requires an OpenAI-compatible transport")
     step2a_probe = _strict_probe(transport=transport, model=model, relay_base_url=relay_base_url, stage="step2a")
-    report["probes"]["step2a"] = step2a_probe
+    probes["step2a"] = step2a_probe
     if step2a_probe["outcome"] != "success":
         report.update({"network_calls": transport.network_call_count, "stop_reason": "step2a_schema_probe_failed"})
         return finish(1)
     step2b_probe = _strict_probe(transport=transport, model=model, relay_base_url=relay_base_url, stage="step2b")
-    report["probes"]["step2b"] = step2b_probe
+    probes["step2b"] = step2b_probe
     if step2b_probe["outcome"] != "success":
         report.update({"network_calls": transport.network_call_count, "stop_reason": "step2b_schema_probe_failed"})
         return finish(1)
     for context in contexts:
         step2a = _execute_stage(storage_root=storage, transport=transport, request=context.step2a_request, stage="step2a")
         sample_report: dict[str, object] = {"sample_id": context.sample_id, "step2a": step2a, "step2b": None}
-        report["samples"].append(sample_report)
+        samples.append(sample_report)
         if step2a["state"] != "success":
             report.update({"network_calls": transport.network_call_count, "stop_reason": f"{context.sample_id}_step2a_{step2a['state']}"})
             return finish(1)

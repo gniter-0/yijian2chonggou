@@ -23,6 +23,7 @@ from ..continuation.review import load_continuation_review_sidecar
 from ..diagram.disposition import load_diagram_disposition_sidecar
 from ..diagram.sidecar import DiagramSemanticContractVersion, load_diagram_review_sidecar
 from ..learning_fixture import LearningReviewState, load_learning_golden_fixture
+from .anchors import EvidenceAnchorSpan
 from .phase2r12_v25_golden_review import (
     _ADJACENT_PAGE2_MANIFEST,
     _EVIDENCE_ROOT,
@@ -396,9 +397,9 @@ def _builds_for_sample(*, repository_root: Path, sample, policy, diagram_sidecar
         repair_path = repairs_by_page.get((sample.sample_id, page.page_num))
         if repair_path is None and sample.sample_id == "gonglu_24_table_formula" and page.page_num == 1:
             repair_path = repository_root / _TABLE_REPAIR_SIDECAR
-        repair_kwargs = {}
-        if repair_path is not None:
-            repair_kwargs = {"table_repair_sidecar": load_table_repair_sidecar(repair_path), "table_repair_sidecar_path": repair_path}
+        # 是否有人工审阅过的表格修复 sidecar 覆盖这一页。原先靠一份中间 kwargs 字典 `**`
+        # 解包，字典被推成 dict[str, object]，解包处按剩余形参逐个报 arg-type；改成两个
+        # 具名实参后类型逐点对上，且两个形参的默认值都是 None，「不传」与「传 None」等价。
         builds.append(
             build_step2a_semantic_projection(
                 sample_id=sample.sample_id,
@@ -410,7 +411,8 @@ def _builds_for_sample(*, repository_root: Path, sample, policy, diagram_sidecar
                 diagram_review_sidecar_path=diagram_path,
                 diagram_disposition_sidecar=disposition,
                 repository_root=repository_root,
-                **repair_kwargs,
+                table_repair_sidecar=load_table_repair_sidecar(repair_path) if repair_path is not None else None,
+                table_repair_sidecar_path=repair_path,
             )
         )
     return tuple(builds), tuple(paths)
@@ -447,8 +449,12 @@ def _build_v25_request(*, sample, builds, registry, policy, continuation):
     )
 
 
-def _span_maps(builds) -> tuple[dict[str, object], dict[str, str], dict[str, str]]:
-    spans = {}
+# 返回值第一项原先写成 dict[str, object]，把 span 的类型在函数边界上擦掉了；调用点再取
+# 出来就只能是 object，访问 canonical_text 报 attr-defined。三处 anchor_spans 字段的声明
+# 都是 tuple[EvidenceAnchorSpan, ...]（projection / table_inputs / contracts.projection），
+# 所以这里如实写成 EvidenceAnchorSpan，擦除从源头去掉。
+def _span_maps(builds) -> tuple[dict[str, EvidenceAnchorSpan], dict[str, str], dict[str, str]]:
+    spans: dict[str, EvidenceAnchorSpan] = {}
     table_by_span = {}
     manifest_by_span = {}
     for build in builds:
@@ -546,7 +552,9 @@ def _fact_summaries(*, request, fixture_sample, builds, diagram_sidecar, semanti
                 semantic_diagram_bridge=bridge,
             )))
             continue
-        selected = []
+        # 空列表要显式注解，否则 mypy 只能报 var-annotated。元素类型取自 _span_maps 的
+        # 返回声明。
+        selected: list[EvidenceAnchorSpan] = []
         for selector in target.primary_anchors:
             needle = normalized_compare_text(selector.text)
             selected.extend(

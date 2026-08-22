@@ -282,7 +282,9 @@ def build_step2a_request(
         raise ValueError("reviewed continuation sidecars require their source file path for hash binding")
     if continuation_review_sidecar is not None and continuation_repository_root is None:
         raise ValueError("reviewed continuation sidecars require a repository root for source PDF verification")
-    if continuation_review_sidecar is not None and continuation_review_sidecar_path is not None:
+    # 末一个条件（仓库根非空）在运行时恒真：上面那条守卫已经担保「带 sidecar 就必须带
+    # 仓库根」。mypy 不跨条件收窄，把担保显式写进条件即可，取值与控制流都不变。
+    if continuation_review_sidecar is not None and continuation_review_sidecar_path is not None and continuation_repository_root is not None:
         file_sidecar = load_continuation_review_sidecar(continuation_review_sidecar_path)
         if file_sidecar != continuation_review_sidecar:
             raise ValueError("reviewed continuation sidecar object does not match its source file")

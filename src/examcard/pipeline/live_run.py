@@ -686,8 +686,15 @@ def execute_stage_samples(
     - 门禁登记：gate_evaluator 结果只登记不影响 outcome（pilot 口径）。
     """
 
+    # 兜底执行器只在调用方没传时按需导入。原先写成 `import ... as stage_executor` 直接覆盖
+    # 形参，mypy 不把这种重绑当作收窄，调用点报「"None" not callable」，而且原地还压着一条
+    # 抑制注释。改成另起一个不可空的局部名，两处一起干净。
     if stage_executor is None:
-        from ..knowledge.contracts.phase2r14_v25_live import _execute_stage as stage_executor  # type: ignore[assignment]
+        from ..knowledge.contracts.phase2r14_v25_live import _execute_stage
+
+        executor: Callable[..., dict[str, Any]] = _execute_stage
+    else:
+        executor = stage_executor
 
     storage.mkdir(parents=True, exist_ok=True)
     outcome: dict[str, Any] = {"stage": stage, "probe": None, "samples": [], "status": "completed"}
@@ -731,7 +738,7 @@ def execute_stage_samples(
                 entry["attempts"].append(attempt_entry)
                 continue  # 已有失败身份：换下一轮新身份，不重放
             budget.charge(stage, calls=1, usd_estimate=price_per_call)
-            record = stage_executor(storage_root=storage, transport=transport, request=request, stage=stage)
+            record = executor(storage_root=storage, transport=transport, request=request, stage=stage)
             attempt_entry["state"] = record.get("state")
             attempt_entry["http_status"] = record.get("http_status")
             attempt_entry["latency_ms"] = record.get("latency_ms")
@@ -936,13 +943,17 @@ def run_step3_stage(
                 geometry=projected.geometry,
             )
         )
-    model_input = build_response_model_input(representatives, source_fixture_sha256=compilation.source_fixture_sha256)
-    inspector = make_inner_inspector(model_input)
-    prompt = build_prompt()
+    # 这三个名字在本函数上半段已经绑给单卡道（build_single_card_model_input /
+    # build_single_card_prompt 那一族），mypy 认死首次绑定的类型，多卡道这三行本来合法的赋值
+    # 各报一条 assignment，还连带把 make_inner_inspector 的实参类型也判错。按形状 A 的正解给
+    # 第二次绑定改名，行为不变。
+    response_model_input = build_response_model_input(representatives, source_fixture_sha256=compilation.source_fixture_sha256)
+    response_inspector = make_inner_inspector(response_model_input)
+    response_prompt = build_prompt()
     user_content = (
-        prompt.prompt_text
+        response_prompt.prompt_text
         + "\n\nMODEL_INPUT_JSON:\n"
-        + json.dumps(model_input.model_dump(mode="json"), ensure_ascii=False, sort_keys=True, separators=(",", ":"))
+        + json.dumps(response_model_input.model_dump(mode="json"), ensure_ascii=False, sort_keys=True, separators=(",", ":"))
     )
     budget.charge("step3", calls=1, usd_estimate=price_per_call)
     result = dict(
@@ -958,13 +969,13 @@ def run_step3_stage(
         {"choices": [{"index": 0, "message": {"role": "assistant", "content": content}}]}, ensure_ascii=False
     ).encode("utf-8")
     (storage / "v1-response.raw.json").write_bytes(envelope)
-    gate = inspector(envelope) if content else None
-    valid = bool(gate and gate.valid)
+    response_gate = response_inspector(envelope) if content else None
+    valid = bool(response_gate and response_gate.valid)
     outcome.update(
         {
             "card_count": 3,
             "passed_cards": 3 if valid else 0,
-            "gate_failures": list(gate.failure_codes) if gate is not None else ["inner-not-reached"],
+            "gate_failures": list(response_gate.failure_codes) if response_gate is not None else ["inner-not-reached"],
             "status": "completed" if valid else "completed_with_failures",
         }
     )
