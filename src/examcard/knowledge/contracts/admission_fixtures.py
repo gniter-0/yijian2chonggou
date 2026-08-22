@@ -85,9 +85,13 @@ _ANCHOR_ID_PATTERN = r"^span:[0-9a-f]{24}$"
 # --- phase2r2242 unified release fixture (FIXTURE_VERSION renamed; source
 # fixture paths inlined with the exact legacy values) ---
 R2242_FIXTURE_VERSION = "phase2r2242_step3_reviewed_release_fixture_v1"
-UNIFIED_FIXTURE = Path(
+# posix 串才是权威字面量：下游 Step4PilotHandoffRefresh 要用 Literal[...] 把这条
+# 路径钉进契约，而 PEP 586 只允许字面量进 Literal——UNIFIED_FIXTURE.as_posix()
+# 这类表达式不合法。所以字面量在上、Path 由它派生，两者不可能漂移。
+UNIFIED_FIXTURE_POSIX: Final = (
     "scripts/tests/fixtures/v2/release_fixtures/gonglu_phase2r2242_step3_reviewed_release.yaml"
 )
+UNIFIED_FIXTURE = Path(UNIFIED_FIXTURE_POSIX)
 SOURCE_PHASE224_FIXTURE = Path(
     "scripts/tests/fixtures/v2/release_fixtures/gonglu_phase2r224_step3_reviewed_release.yaml"
 )
@@ -113,8 +117,11 @@ R104_ACCEPTANCE_VERSION: Final = "phase2r104_acceptance_report_v1"
 
 # --- phase2r319 Step 4 pilot handoff ---
 HANDOFF_VERSION: Final = "step4_pilot_handoff_refresh_r319_v1"
-SOURCE_R316_RUN = Path("data/semantic_llm_v2/phase2r316_step4_card3_reviewed_image_fixture_run1")
-SOURCE_R316_HANDOFF = SOURCE_R316_RUN / "step4-pilot-handoff-refresh.json"
+# 同上：这条 posix 串也要进 Literal[...]，所以字面量在上，Path 与 run 目录都由它派生，
+# 三者只有一个真值来源，不存在改了一处忘了另一处的可能。
+SOURCE_R316_HANDOFF_POSIX: Final = "data/semantic_llm_v2/phase2r316_step4_card3_reviewed_image_fixture_run1/step4-pilot-handoff-refresh.json"
+SOURCE_R316_HANDOFF = Path(SOURCE_R316_HANDOFF_POSIX)
+SOURCE_R316_RUN = SOURCE_R316_HANDOFF.parent
 _SHA = r"^[0-9a-f]{64}$"
 _CARD = r"^v25-release-card:[0-9a-f]{24}$"
 
@@ -1198,9 +1205,13 @@ class Step4PilotCardDispositionR319(StrictModel):
 class Step4PilotHandoffRefresh(StrictModel):
     schema_version: Literal["step4_pilot_handoff_refresh_r319_v1"] = HANDOFF_VERSION
     manifest_id: str = Field(pattern=r"^step4-pilot-handoff-r319:[0-9a-f]{24}$")
-    source_r316_handoff_path: Literal[SOURCE_R316_HANDOFF.as_posix()] = SOURCE_R316_HANDOFF.as_posix()
+    source_r316_handoff_path: Literal[
+        "data/semantic_llm_v2/phase2r316_step4_card3_reviewed_image_fixture_run1/step4-pilot-handoff-refresh.json"
+    ] = SOURCE_R316_HANDOFF_POSIX
     source_r316_handoff_sha256: str = Field(pattern=_SHA)
-    source_step3_fixture_path: Literal[UNIFIED_FIXTURE.as_posix()] = UNIFIED_FIXTURE.as_posix()
+    source_step3_fixture_path: Literal[
+        "scripts/tests/fixtures/v2/release_fixtures/gonglu_phase2r2242_step3_reviewed_release.yaml"
+    ] = UNIFIED_FIXTURE_POSIX
     source_step3_fixture_sha256: str = Field(pattern=_SHA)
     reviewed_image_fixtures: tuple[Step4ReviewedImageReferenceR319, ...] = Field(min_length=4, max_length=4)
     card_count: Literal[16] = 16

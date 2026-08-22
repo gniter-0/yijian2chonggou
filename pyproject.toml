@@ -127,3 +127,181 @@ extra_checks = true
 [[tool.mypy.overrides]]
 module = ["fitz.*", "cv2.*", "rapidocr_onnxruntime.*"]
 ignore_missing_imports = true
+
+# ---------------------------------------------------------------------------
+# 逐模块豁免清单（棘轮）：只许缩短，不许加宽。
+#
+# 作用是让「全仓 mypy」这一步能在 CI 里退出 0，同时保住两条硬线：
+#   1) gates/ 与 compilers/ 走上面的严格档，一个模块都不许出现在本清单里；
+#   2) 每条豁免只关掉该模块此刻实测在报的那几个错误码——新错误码、新模块、
+#      严格档里的任何回归，都会照常把 CI 打红。
+#
+# 已知盲区：已豁免模块内、已豁免错误码下新增的同类错误拦不住。缩小盲区的办法是把
+# 下面的条目逐条删掉（即改掉真问题），而不是把码集合往大里写。
+#
+# 基线实测（mypy 2.3.1 + pydantic 插件，--no-incremental，checked 127 source files）：
+# 263 条 / 35 个模块。按码分布：attr-defined 115、assignment 86、arg-type 22、
+# call-arg 12、misc 6、union-attr 6、var-annotated 5、prop-decorator 4、index 2、
+# call-overload 2、operator 1、return-value 1、import-not-found 1。
+# 每个模块后面括号里的数字是它当时的条数，删条目时拿它对账。
+#
+# 成因逐族抽样核查过，没有一条是「访问模型上根本不存在的字段」那类真缺陷——那一类
+# 上一轮已作为 DiagramEdgeRef 缺陷单独修掉并加了封印测试。反复出现的四种形状：
+#   A. 循环变量复用：同一个名字在同文件多个 for 里迭代不同的模型类型，mypy 认死第一
+#      次绑定的类型，后面每个本来合法的字段访问都记一条 attr-defined。占 attr-defined
+#      的主体。正解是逐个循环改名。
+#   B. 首次赋值定死类型：`x = ("a",)` 推成定长 tuple[str]，后续再赋 tuple[str, ...]
+#      就冲突。占 assignment 的主体，正解是补一行显式注解。
+#   C. 中间字典声明成 dict[str, object]：`**payload` 解包进强类型形参会逐个形参报
+#      arg-type，取下标再赋值报 index，原样返回报 return-value。正解是换 TypedDict。
+#   D. 相关条件：非空性由另一个布尔量或枚举取值担保，mypy 不跨条件收窄，报 union-attr。
+# ---------------------------------------------------------------------------
+
+# 形状 B。另含 pydantic 子类收窄父类 Literal[...] 判别字段的一族：
+# admission_fixtures 那 5 条全是 TypedTextBase 的子类把 schema_version 收窄成自己的
+# 字面量，mypy 按不变量看待类属性覆盖，pydantic 却把它当判别式惯用法。
+[[tool.mypy.overrides]]
+module = [
+    "examcard.evidence.fusion",                               # 3
+    "examcard.knowledge.contracts.admission_fixtures",        # 5
+    "examcard.knowledge.contracts.audits",                    # 13
+    "examcard.knowledge.contracts.echo_release",              # 2
+    "examcard.knowledge.contracts.obligations",               # 1
+    "examcard.knowledge.contracts.phase2r142_v25_projection", # 1
+    "examcard.knowledge.projection",                          # 2
+    "examcard.pipeline.run",                                  # 2
+    "examcard.pipeline.shadow",                               # 1
+    "examcard.providers.base",                                # 3
+    "examcard.providers.envelope_profiles",                   # 6
+]
+disable_error_code = ["assignment"]
+
+# 形状 A + B 混合：循环变量复用（attr-defined）叠加首次赋值定死类型（assignment）。
+# repair_sidecar 190–222 是最清楚的样本：同一个 binding 名字先迭代
+# TableRepairRowBinding 再迭代 TableRepairCellBinding，于是 row_evidence_id /
+# column_index / bbox 这些只在 cell 上的字段被判成 RowBinding 没有该属性。
+# 运行时两个循环各自成立，不是缺陷。
+[[tool.mypy.overrides]]
+module = [
+    "examcard.knowledge.continuation.core",           # 10
+    "examcard.knowledge.continuation.repair_sidecar", # 7
+    "examcard.knowledge.contracts.table_inputs",      # 5
+    "examcard.knowledge.contracts.validation",        # 16
+]
+disable_error_code = ["assignment", "attr-defined"]
+
+# 全仓最集中的一处：58 条。成因单一——validate_document 里连写了五六个
+# `for obligation in self.<各种>_obligations`，五种不同的 obligation 模型共用
+# `obligation` 这个名字，mypy 认死第一次绑定的 Step2ACoverageObligation，后面 41 处
+# 合法字段访问（anchors / source_table_id / source_cell_evidence_id …）全成
+# attr-defined。同源的还有 _table_by_id 返回类型写成 dict[str, object]（形状 C），
+# 由此多出 1 条 return-value 和若干 "object" has no attribute。
+# 正解：逐循环改名 + 收紧 _table_by_id 的返回类型，纯机械但要逐处核对语义。
+[[tool.mypy.overrides]]
+module = ["examcard.knowledge.contracts.v25_generic_contracts"] # 58
+disable_error_code = ["assignment", "attr-defined", "misc", "operator", "return-value"]
+
+# 同形状 A + B。misc 是推导式的元素类型被判成第一次绑定的那个模型
+# （例：learning_fixture:719 List[Step2BCardProposal] 撞 List[Step2AFactProposal]）；
+# var-annotated 是空容器初始化没写注解。
+[[tool.mypy.overrides]]
+module = ["examcard.knowledge.learning_fixture"] # 28
+disable_error_code = ["assignment", "attr-defined", "misc", "var-annotated"]
+
+[[tool.mypy.overrides]]
+module = ["examcard.knowledge.contracts.step2a_request"] # 18
+disable_error_code = ["assignment", "attr-defined", "misc"]
+
+[[tool.mypy.overrides]]
+module = ["examcard.knowledge.step2b_card_golden"] # 15
+disable_error_code = ["assignment", "attr-defined", "var-annotated"]
+
+# 形状 C：`**payload` 解包进强类型形参。payload 声明成 dict[str, object]，mypy 无法
+# 按键分辨 str/int，于是每个形参各报一条（derivation:745 一行就 3 条）。
+# derivation:144 另有一条 isinstance(x, ModelMetaclass | None)——可选的模型类对象
+# 直接进 isinstance，值得单独收拾。正解是把中间字典换成 TypedDict 或改传具名参数。
+[[tool.mypy.overrides]]
+module = [
+    "examcard.evidence.layout",                 # 1
+    "examcard.evidence.native",                 # 2
+    "examcard.knowledge.contracts.derivation",  # 10
+]
+disable_error_code = ["arg-type"]
+
+# call-arg 全部落在 `Model.model_construct(...)` 上：pydantic 的 mypy 插件给
+# model_construct 合成了「必须给齐全部字段」的签名，而它的真实契约是部分赋值 + 跳过
+# 校验（本仓拿它做 hash 前的骨架构造）。这是插件的假阳性，不是漏参。
+[[tool.mypy.overrides]]
+module = ["examcard.knowledge.contracts.admission_legacy_hash"] # 2
+disable_error_code = ["call-arg"]
+
+# 10 条 call-arg 同上（model_construct）；1 条 arg-type 是 Path | None 传进要 Path 的
+# 形参（step2a_builders:291），属形状 D 的近亲，可以单独修掉。
+[[tool.mypy.overrides]]
+module = ["examcard.knowledge.contracts.step2a_builders"] # 11
+disable_error_code = ["arg-type", "call-arg"]
+
+# 形状 C（arg-type）+ 空容器缺注解（var-annotated），phase2r13 另有 1 条形状 A。
+[[tool.mypy.overrides]]
+module = ["examcard.knowledge.contracts.phase2r12_v25_golden_review"] # 4
+disable_error_code = ["arg-type", "var-annotated"]
+
+[[tool.mypy.overrides]]
+module = ["examcard.knowledge.contracts.phase2r13_v25_reconciliation"] # 5
+disable_error_code = ["arg-type", "attr-defined", "var-annotated"]
+
+# 形状 C 的下标变体：report 声明成 dict[str, object]，`report["probes"]["step2a"] = …`
+# 里内层拿到的是 object，报 index。
+[[tool.mypy.overrides]]
+module = ["examcard.knowledge.contracts.phase2r14_v25_live"] # 3
+disable_error_code = ["attr-defined", "index"]
+
+# 形状 D（相关条件）。fact_engine:760/787/808：released_visual 是
+# `disposition_entry is not None and is_released_disposition(...)`，之后拿这个布尔量
+# 当守卫，mypy 不会把布尔的真值回传成 disposition_entry 的非空收窄——运行时不可能为
+# None。正解是先算出「非空且已放行」的 entry 本身再判，收窄就能传下去。
+[[tool.mypy.overrides]]
+module = ["examcard.knowledge.fact_engine"] # 6
+disable_error_code = ["arg-type", "assignment", "union-attr"]
+
+# 同形状 D。request_helpers:174/175 是
+# `table.row_count if obligation.kind == COMPLETE_TABLE_COMPOSITION else None`：
+# table 的非空性与 kind 的取值绑定，mypy 不关联这两个条件。
+[[tool.mypy.overrides]]
+module = [
+    "examcard.knowledge.contracts.request_helpers", # 2
+    "examcard.knowledge.planner.bridge",            # 1
+]
+disable_error_code = ["union-attr"]
+
+# call-overload 2 条是 OpenAI SDK 的
+# chat.completions.with_raw_response.create(...)：本仓按 dict 动态拼 response_format /
+# stream 等 kwargs，mypy 挑不到匹配的重载分支。
+[[tool.mypy.overrides]]
+module = ["examcard.knowledge.llm"] # 7
+disable_error_code = ["assignment", "call-overload"]
+
+# mypy 不支持 @property 之上再叠装饰器，而本仓用的正是 pydantic 的
+# `@computed_field` + `@property` 标准写法。这是 mypy 的已知限制，代码没有问题。
+[[tool.mypy.overrides]]
+module = ["examcard.knowledge.quality"] # 3
+disable_error_code = ["attr-defined", "prop-decorator"]
+
+[[tool.mypy.overrides]]
+module = ["examcard.knowledge.schema"] # 2
+disable_error_code = ["prop-decorator"]
+
+# misc 1 条是 live_run:732 `stage_executor(...)`——可选回调在调用点没收窄，报
+# "None" not callable。这条其实是形状 D，修起来只要一句显式判空。
+[[tool.mypy.overrides]]
+module = ["examcard.pipeline.live_run"] # 7
+disable_error_code = ["arg-type", "assignment", "misc"]
+
+# 这条不是类型噪声，是给一处真缺陷记账：build_phase2r11_five_golden_report 内部
+# `from tools.verify_phase2r1_phase2r0_freeze import ...`，而本仓没有 tools/ 包（旧仓
+# 遗留路径，yijian2 对应路径也不在），该函数一旦被调用就 ModuleNotFoundError。
+# 目前 src/tests/migration 里零调用点（只有 docs/prework 的历史 import 扫描提到它），
+# 所以先记账不修。修法二选一：把那个工具移植进来，或删掉这个死函数。
+[[tool.mypy.overrides]]
+module = ["examcard.knowledge.contracts.phase2r11_generic_five_golden"] # 1
+disable_error_code = ["import-not-found"]

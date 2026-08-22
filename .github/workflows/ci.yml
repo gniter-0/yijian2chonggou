@@ -19,7 +19,7 @@ permissions:
 
 jobs:
   check:
-    name: lint + tests (${{ matrix.os }})
+    name: lint + types + tests (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
     strategy:
       # 两个 OS 互不熔断：跨平台字节一致性正是 -text 要保证的东西，出问题要看得见。
@@ -52,15 +52,17 @@ jobs:
       - name: ruff
         run: uv run ruff check src tests migration
 
-      # mypy 暂不入门禁，但原因已经变了：`Literal[模块级常量]` 的惯用法冲突已裁决并改写
-      # 完毕（155 处 → 0，见 refactor(types) 那次提交），gates/compilers 严格档实测清零：
-      #   mypy src/examcard/gates src/examcard/compilers --follow-imports=silent
-      #   -> Success: no issues found in 32 source files
-      # 挡路的是剩下的宽松档：全仓 265 条 / 35 个文件，其中 240 条在 knowledge/，
-      # attr-defined 115 + assignment 86 占了大头（抽样看多是同名变量在两个循环里
-      # 复用不同模型类型，属机械问题）。红着的步骤等于没有步骤，所以先不挂；等边界
-      # 定了（清零，或在 [tool.mypy] 里带一份只许缩短的逐模块豁免清单）再补一步
-      # `uv run mypy`。
+      # mypy 正式入门禁。一次跑覆盖两档，靠 pyproject [tool.mypy] 的逐模块配置分流：
+      #   - gates/ 与 compilers/ 走严格档（disallow_untyped_defs 等一整套），实测清零；
+      #   - 其余包走宽松基线 + 一份「逐模块 × 错误码」的豁免清单，把 263 条既有噪声精确
+      #     挂账，而不是 ignore_errors 一刀切。清单只许缩短，条目旁记着当时的条数。
+      # 有牙是实测过的：临时往 gates/ 放一个未注解函数，会被 no-untyped-def 拦下；往只
+      # 豁免了 assignment 的模块里塞一处 attr-defined，同样报错。即新错误码、新模块、
+      # 严格档回归都会把这一步打红。盲区（已豁免模块内已豁免码下的新增同类错误）写在
+      # pyproject 的清单头部。
+      # 配置里已固定 files = ["src/examcard"]，所以这里不需要再传路径。
+      - name: mypy（gates+compilers 严格档，其余走豁免清单棘轮）
+        run: uv run mypy
 
       # -rs 打印跳过原因：旧仓金标语料不在 CI 上，92 个回放用例会整体跳过，
       # conftest 会在摘要里响亮报数。若哪天 CI 能拿到语料，设
