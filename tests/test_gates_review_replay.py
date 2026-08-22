@@ -33,14 +33,15 @@ from examcard.gates.review.image_admission import (
 )
 from examcard.gates.review.queue import ManualReviewQueue
 from examcard.knowledge.contracts.admission_fixtures import ReviewedStep3Fixture
+from tests.conftest import legacy_path, requires_legacy_corpus
 
-LEGACY_ROOT = Path(r"C:\Users\liushaocheng\Desktop\getinfo\yijian2")
-R84_RUN = LEGACY_ROOT / "data/semantic_llm_v2/phase2r84_selected_batch_human_decision_ingestion_run1"
-R810_RUN = LEGACY_ROOT / "data/semantic_llm_v2/phase2r810_r89_reviewed_admission_authorization_run1"
-R104_RUN = LEGACY_ROOT / "data/semantic_llm_v2/phase2r104_step3_explicit_production_authorization_run1"
-R11101_RUN = LEGACY_ROOT / "data/semantic_llm_v11101_step4_human_visual_review_strict_admission_run1"
+_R84_REL = "data/semantic_llm_v2/phase2r84_selected_batch_human_decision_ingestion_run1"
+R84_RUN = legacy_path(_R84_REL)
+R810_RUN = legacy_path("data/semantic_llm_v2/phase2r810_r89_reviewed_admission_authorization_run1")
+R104_RUN = legacy_path("data/semantic_llm_v2/phase2r104_step3_explicit_production_authorization_run1")
+R11101_RUN = legacy_path("data/semantic_llm_v11101_step4_human_visual_review_strict_admission_run1")
 
-pytestmark = pytest.mark.skipif(not R84_RUN.is_dir(), reason="旧仓 reviewed 语料不在本机，跳过回放")
+pytestmark = requires_legacy_corpus(_R84_REL)
 
 
 def _read(path: Path) -> Any:

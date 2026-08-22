@@ -47,9 +47,10 @@ from tests.fixtures.admission_kernel import (
     KernelQueueItem,
     make_source_page,
 )
+from tests.conftest import legacy_path, requires_legacy_corpus
 
-LEGACY_ROOT = Path(r"C:\Users\liushaocheng\Desktop\getinfo\yijian2")
-R810_RUN = LEGACY_ROOT / "data/semantic_llm_v2/phase2r810_r89_reviewed_admission_authorization_run1"
+_R810_REL = "data/semantic_llm_v2/phase2r810_r89_reviewed_admission_authorization_run1"
+R810_RUN = legacy_path(_R810_REL)
 
 
 def _batch():
@@ -284,7 +285,7 @@ def corpus() -> dict[str, Any]:
     }
 
 
-@pytest.mark.skipif(not R810_RUN.is_dir(), reason="旧仓 r810 reviewed 语料不在本机，跳过金标回放")
+@requires_legacy_corpus(_R810_REL)
 class TestR810AuthorizationGoldenReplay:
     """语料导出清单 → 严格摄取重建 → r810 fixture 构造，逐字节对拍生产语料。"""
 

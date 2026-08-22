@@ -50,9 +50,10 @@ from tests.fixtures.admission_kernel import (
     SUBJECT_ID,
     make_source_page,
 )
+from tests.conftest import legacy_path, requires_legacy_corpus
 
-LEGACY_ROOT = Path(r"C:\Users\liushaocheng\Desktop\getinfo\yijian2")
-R810_RUN = LEGACY_ROOT / "data/semantic_llm_v2/phase2r810_r89_reviewed_admission_authorization_run1"
+_R810_REL = "data/semantic_llm_v2/phase2r810_r89_reviewed_admission_authorization_run1"
+R810_RUN = legacy_path(_R810_REL)
 
 
 def _source(presentation: str, **overrides: Any) -> ExtractionSource:
@@ -384,7 +385,7 @@ def corpus_fixture() -> ReviewedTypedEvidenceFixture:
     return ReviewedTypedEvidenceFixture.model_validate(_read(R810_RUN / "reviewed-typed-evidence-fixture.json"))
 
 
-@pytest.mark.skipif(not R810_RUN.is_dir(), reason="旧仓 r810 reviewed 语料不在本机，跳过金标回放")
+@requires_legacy_corpus(_R810_REL)
 class TestR810GoldenReplay:
     """r810 六候选（table×2 / ordered_list×3 / formula×1）逐字节重建对拍。"""
 

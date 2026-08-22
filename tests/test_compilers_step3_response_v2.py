@@ -8,7 +8,6 @@
 from __future__ import annotations
 
 import hashlib
-from pathlib import Path
 from types import SimpleNamespace
 from typing import Any, Iterator
 
@@ -36,15 +35,15 @@ from examcard.compilers.step3_response_v2 import (
 from examcard.knowledge.contracts.admission_fixtures import ReviewedTypedEvidenceFixture
 from examcard.knowledge.contracts.admission_legacy_hash import canonical_hash_r10x
 from tests.fixtures.compilers_synthetic import make_reviewed_typed_evidence_fixture
+from tests.conftest import legacy_path, requires_legacy_corpus
 
 SOURCE_SHA = "2" * 64
 # strict schema 快照指纹（法定哈希口径）。pydantic 由 uv.lock 钉版；schema 发生任何
 # 字节级漂移（字段增删、const 改动、required/additionalProperties 松动）都会击穿本值。
 RESULT_SCHEMA_V2_CANONICAL_SHA256 = "0bc5741630370a72646950f875122b7189071e628b2e70fafbe0dea58220487f"
 
-R810_RUN = Path(r"C:\Users\liushaocheng\Desktop\getinfo\yijian2") / (
-    "data/semantic_llm_v2/phase2r810_r89_reviewed_admission_authorization_run1"
-)
+_R810_REL = "data/semantic_llm_v2/phase2r810_r89_reviewed_admission_authorization_run1"
+R810_RUN = legacy_path(_R810_REL)
 
 
 @pytest.fixture(scope="module")
@@ -281,7 +280,7 @@ def golden() -> Step3Compilation:
     return compile_reviewed_fixture(fixture, source_fixture_sha256=hashlib.sha256(fixture_bytes).hexdigest())
 
 
-@pytest.mark.skipif(not R810_RUN.is_dir(), reason="r810 语料缺席（旧仓 reviewed 语料不在本机）")
+@requires_legacy_corpus(_R810_REL)
 class TestR810GoldenReplay:
     def test_every_golden_card_builds_and_fake_echo_passes(self, golden: Step3Compilation) -> None:
         pairs = list(zip(golden.contracts, golden.model_input.cards, strict=True))

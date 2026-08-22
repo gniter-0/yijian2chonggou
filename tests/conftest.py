@@ -18,6 +18,75 @@ ARTIFACT_ROOT = ROOT / ".test-tmp"
 # T7：matplotlib 无头渲染，避免 GUI 后端在 CI/无显示环境崩溃。
 os.environ.setdefault("MPLBACKEND", "Agg")
 
+# ---------------------------------------------------------------------------
+# 旧仓（yijian2）金标语料的机器无关定位。
+#
+# 语料体量 >120MB，按 engineering_skeleton.md 第 3 节不入 git，只能挂在本机。
+# 但路径决不允许硬编码到某台机器的用户目录：那会让依赖它的回放模块在任何其他
+# 机器（含未来的 CI）上整体静默消失——模块级 skipif 让 92 个用例无声蒸发，
+# 却不报一个错。
+#
+# 解析顺序：EXAMCARD_LEGACY_ROOT 显式指定 > 仓库同级 ../yijian2。
+# 显式指定却不存在 = 配置错误，立即抛错；未指定且不存在 = 允许跳过，但会在
+# 会话摘要里响亮报数。EXAMCARD_REQUIRE_LEGACY_CORPUS=1 时升级为收集期失败（CI 用）。
+# ---------------------------------------------------------------------------
+LEGACY_ROOT_ENV = "EXAMCARD_LEGACY_ROOT"
+REQUIRE_LEGACY_CORPUS_ENV = "EXAMCARD_REQUIRE_LEGACY_CORPUS"
+_TRUTHY = {"1", "true", "yes", "on"}
+
+# 被语料缺席挡掉的模块清单，供 pytest_terminal_summary 响亮报数。
+_CORPUS_GATED: list[str] = []
+
+
+def _resolve_legacy_root() -> Path:
+    override = (os.environ.get(LEGACY_ROOT_ENV) or "").strip()
+    if not override:
+        return ROOT.parent / "yijian2"
+    path = Path(override).expanduser()
+    if not path.is_dir():
+        raise RuntimeError(
+            f"{LEGACY_ROOT_ENV}={override!r} 指向的目录不存在。"
+            "显式指定即视为承诺语料就位，不做静默回落。"
+        )
+    return path
+
+
+LEGACY_ROOT = _resolve_legacy_root()
+LEGACY_CORPUS_PRESENT = LEGACY_ROOT.is_dir()
+
+
+def legacy_path(relative: str) -> Path:
+    """取旧仓语料下的相对路径（relative 用 POSIX 分隔符书写）。"""
+    return LEGACY_ROOT / relative
+
+
+def requires_legacy_corpus(*relatives: str) -> pytest.MarkDecorator:
+    """语料齐备则不跳；缺席则跳过并记账；严格模式下直接抛错阻止静默跳过。"""
+    missing = tuple(item for item in relatives if not legacy_path(item).is_dir())
+    if not missing:
+        return pytest.mark.skipif(False, reason="旧仓金标语料就位")
+
+    detail = f"{LEGACY_ROOT} 下缺少 {', '.join(missing)}"
+    if (os.environ.get(REQUIRE_LEGACY_CORPUS_ENV) or "").strip().lower() in _TRUTHY:
+        raise RuntimeError(
+            f"{REQUIRE_LEGACY_CORPUS_ENV} 已开启，但旧仓金标语料不可用（{detail}）。"
+            f"请用 {LEGACY_ROOT_ENV} 指向 yijian2 仓，或关闭严格模式。"
+        )
+    _CORPUS_GATED.append(detail)
+    return pytest.mark.skipif(True, reason=f"旧仓金标语料不在本机（{detail}）")
+
+
+def pytest_terminal_summary(terminalreporter: pytest.TerminalReporter) -> None:
+    """语料缺席不许悄悄过去：在摘要里点名有多少回放模块被挡掉。"""
+    if not _CORPUS_GATED:
+        return
+    terminalreporter.write_sep("=", "旧仓金标语料缺席", yellow=True)
+    terminalreporter.write_line(
+        f"{len(_CORPUS_GATED)} 个回放模块因语料不在本机被整体跳过；"
+        f"这些用例本轮未提供任何保障。设 {LEGACY_ROOT_ENV} 指向 yijian2 仓可启用，"
+        f"或设 {REQUIRE_LEGACY_CORPUS_ENV}=1 让缺席直接失败。"
+    )
+
 _LOOPBACK_HOSTS = {"localhost", "127.0.0.1", "::1"}
 
 

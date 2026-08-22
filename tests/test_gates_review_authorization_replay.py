@@ -23,7 +23,6 @@ from __future__ import annotations
 
 import json
 from dataclasses import dataclass
-from pathlib import Path
 from typing import Any
 
 import pytest
@@ -37,7 +36,6 @@ from examcard.gates.review.authorization import (
     export_r84_manifest,
 )
 from examcard.gates.review.decisions import (
-    HumanDecision,
     HumanDecisionManifest,
     validate_human_decision,
 )
@@ -67,6 +65,7 @@ from tests.fixtures.admission_kernel import (
     SUBJECT_ID,
     make_source_page,
 )
+from tests.conftest import legacy_path, requires_legacy_corpus
 
 # 实现方新 API（uncommitted 期间可能尚未就位/更名；缺席只跳层 B，不阻层 A）。
 try:
@@ -81,13 +80,12 @@ try:
 except ImportError:  # pragma: no cover - 落库后恒 True
     _ASSEMBLY_API = False
 
-LEGACY_ROOT = Path(r"C:\Users\liushaocheng\Desktop\getinfo\yijian2")
-R810_RUN = LEGACY_ROOT / "data/semantic_llm_v2/phase2r810_r89_reviewed_admission_authorization_run1"
-R89_RUN = LEGACY_ROOT / "data/semantic_llm_v2/phase2r89_production_raw_draft_source_page_closure_run1"
+_R810_REL = "data/semantic_llm_v2/phase2r810_r89_reviewed_admission_authorization_run1"
+_R89_REL = "data/semantic_llm_v2/phase2r89_production_raw_draft_source_page_closure_run1"
+R810_RUN = legacy_path(_R810_REL)
+R89_RUN = legacy_path(_R89_REL)
 
-requires_corpus = pytest.mark.skipif(
-    not (R810_RUN.is_dir() and R89_RUN.is_dir()), reason="旧仓 r810/r89 生产语料不在本机，跳过金标对拍"
-)
+requires_corpus = requires_legacy_corpus(_R810_REL, _R89_REL)
 requires_assembly = pytest.mark.skipif(not _ASSEMBLY_API, reason="装配半程 API 尚未落库（实现方在飞）")
 
 
