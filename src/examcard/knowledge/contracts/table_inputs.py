@@ -332,9 +332,13 @@ class TableContinuationRequestInput(StrictModel):
         }
         if table_span_ids != set(self.complete_table_anchor_span_ids):
             raise ValueError("controlled virtual table cells must expose every reviewed continuation anchor exactly once")
-        source = spans_by_id.get(self.item_three_source_anchor_span_id)
+        item_three_source_span = spans_by_id.get(self.item_three_source_anchor_span_id)
         closure = spans_by_id.get(self.item_three_closure_anchor_span_id)
-        if source is None or closure is None or source.source_manifest_sha256 == closure.source_manifest_sha256:
+        if (
+            item_three_source_span is None
+            or closure is None
+            or item_three_source_span.source_manifest_sha256 == closure.source_manifest_sha256
+        ):
             raise ValueError("controlled table item three requires source and closure anchors on separate pages")
         requirements = self.table.atomic_subfact_requirements
         expected_requirement_count = (
@@ -371,17 +375,17 @@ class TableContinuationRequestInput(StrictModel):
             if set(requirements_by_anchor) != {*complete_row_ids, self.item_three_source_anchor_span_id}:
                 raise ValueError("V2 controlled table requirements must exactly cover the two complete rows and item three")
             for anchor_span_id in complete_row_ids:
-                span = spans_by_id.get(anchor_span_id)
+                complete_row_span = spans_by_id.get(anchor_span_id)
                 complete_row_requirement = requirements_by_anchor.get(anchor_span_id)
                 if (
-                    span is None
+                    complete_row_span is None
                     or complete_row_requirement is None
-                    or span.source_manifest_sha256 != source.source_manifest_sha256
-                    or span.parent_evidence_id != source.parent_evidence_id
+                    or complete_row_span.source_manifest_sha256 != item_three_source_span.source_manifest_sha256
+                    or complete_row_span.parent_evidence_id != item_three_source_span.parent_evidence_id
                     or complete_row_requirement.table_evidence_id != self.binding_id
-                    or complete_row_requirement.cell_evidence_id != span.parent_evidence_id
+                    or complete_row_requirement.cell_evidence_id != complete_row_span.parent_evidence_id
                     or complete_row_requirement.expected_fact_type != FactType.THRESHOLD
-                    or complete_row_requirement.required_assertion != span.canonical_text
+                    or complete_row_requirement.required_assertion != complete_row_span.canonical_text
                 ):
                     raise ValueError("V2 complete-row threshold requirements must exactly bind reviewed source spans")
         expected_id = make_table_continuation_request_input_id(self.model_dump(mode="json", exclude={"input_id"}))

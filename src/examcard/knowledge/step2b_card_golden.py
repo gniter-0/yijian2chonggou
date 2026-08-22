@@ -11,6 +11,7 @@ from .schema import FactType, ShortCardException
 from .contracts import (
     CONTINUATION_TITLE_PROJECTION_STEP2B_REQUEST_VERSION,
     CardPresentation,
+    Step2BCardProposal,
     Step2BRequest,
     Step2BResponse,
 )
@@ -164,23 +165,23 @@ def assess_continuation_card_golden(
             or provenance.source_response_sha256 != fixture.source_response_sha256
         ):
             fact_failures.append("continuation_projection_provenance_mismatch")
+    actual_cards: tuple[Step2BCardProposal, ...] = ()
     if response.request != request.identity or response.state.value != "succeeded":
         failures.append("step2b_response_not_successful")
-        actual_cards = ()
     else:
         actual_cards = response.proposals
     fact_ids_by_proposal = {key: fact.fact_id for key, fact in facts_by_proposal.items()}
     used_cards: set[str] = set()
     alignments: list[ContinuationCardGoldenCardAlignment] = []
-    for expected in fixture.cards:
-        expected_fact_ids = {fact_ids_by_proposal.get(key) for key in expected.primary_proposal_keys}
+    for expected_card in fixture.cards:
+        expected_fact_ids = {fact_ids_by_proposal.get(key) for key in expected_card.primary_proposal_keys}
         if None in expected_fact_ids:
             alignments.append(
                 ContinuationCardGoldenCardAlignment(
-                    card_key=expected.card_key,
-                    expected_title=expected.title,
-                    expected_presentation=expected.presentation,
-                    expected_primary_proposal_keys=expected.primary_proposal_keys,
+                    card_key=expected_card.card_key,
+                    expected_title=expected_card.title,
+                    expected_presentation=expected_card.presentation,
+                    expected_primary_proposal_keys=expected_card.primary_proposal_keys,
                     match_state="missing_fact_dependency",
                 )
             )
@@ -193,27 +194,27 @@ def assess_continuation_card_golden(
         if len(candidates) != 1:
             alignments.append(
                 ContinuationCardGoldenCardAlignment(
-                    card_key=expected.card_key,
-                    expected_title=expected.title,
-                    expected_presentation=expected.presentation,
-                    expected_primary_proposal_keys=expected.primary_proposal_keys,
+                    card_key=expected_card.card_key,
+                    expected_title=expected_card.title,
+                    expected_presentation=expected_card.presentation,
+                    expected_primary_proposal_keys=expected_card.primary_proposal_keys,
                     match_state="missing" if not candidates else "ambiguous",
                 )
             )
             continue
-        actual = candidates[0]
-        used_cards.add(actual.proposal_key)
+        actual_card = candidates[0]
+        used_cards.add(actual_card.proposal_key)
         alignments.append(
             ContinuationCardGoldenCardAlignment(
-                card_key=expected.card_key,
-                expected_title=expected.title,
-                expected_presentation=expected.presentation,
-                expected_primary_proposal_keys=expected.primary_proposal_keys,
+                card_key=expected_card.card_key,
+                expected_title=expected_card.title,
+                expected_presentation=expected_card.presentation,
+                expected_primary_proposal_keys=expected_card.primary_proposal_keys,
                 match_state="matched",
-                actual_card_proposal_key=actual.proposal_key,
-                title_drift=actual.title != expected.title,
-                presentation_drift=actual.presentation != expected.presentation,
-                grouping_drift=set(actual.primary_fact_ids) != expected_fact_ids,
+                actual_card_proposal_key=actual_card.proposal_key,
+                title_drift=actual_card.title != expected_card.title,
+                presentation_drift=actual_card.presentation != expected_card.presentation,
+                grouping_drift=set(actual_card.primary_fact_ids) != expected_fact_ids,
             )
         )
     extra = tuple(card.proposal_key for card in actual_cards if card.proposal_key not in used_cards)

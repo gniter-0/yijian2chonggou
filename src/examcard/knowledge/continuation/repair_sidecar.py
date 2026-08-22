@@ -197,9 +197,9 @@ def verify_reviewed_table_repair(
     cells_by_id = {cell.evidence_id: cell for cell in cells}
     if set(cells_by_id) != {cell.evidence_id for cell in sidecar.cells}:
         raise ValueError("table repair cell Evidence set does not exactly match source table")
-    for binding in sidecar.cells:
-        cell = cells_by_id[binding.evidence_id]
-        if cell.parent_id != binding.row_evidence_id:
+    for cell_binding in sidecar.cells:
+        cell = cells_by_id[cell_binding.evidence_id]
+        if cell.parent_id != cell_binding.row_evidence_id:
             raise ValueError("table repair cell parent row does not match source Evidence")
         source_geometry = (
             int(cell.metadata.get("row", -1)),
@@ -208,12 +208,15 @@ def verify_reviewed_table_repair(
             int(cell.metadata.get("col_span", 1)),
         )
         if source_geometry != (
-            binding.row_index,
-            binding.column_index,
-            binding.source_row_span,
-            binding.source_col_span,
+            cell_binding.row_index,
+            cell_binding.column_index,
+            cell_binding.source_row_span,
+            cell_binding.source_col_span,
         ):
             raise ValueError("table repair source cell geometry does not match immutable Evidence")
-        if _text_sha256(cell.canonical_text) != binding.canonical_text_sha256 or cell.locator.bbox != binding.bbox:
+        if (
+            _text_sha256(cell.canonical_text) != cell_binding.canonical_text_sha256
+            or cell.locator.bbox != cell_binding.bbox
+        ):
             raise ValueError("table repair cell text hash or bbox does not match immutable Evidence")
     return {binding.evidence_id: (binding.reviewed_row_span, binding.reviewed_col_span) for binding in sidecar.cells}

@@ -308,13 +308,13 @@ def verify_table_continuation_binding(
 
     verified: list[EvidenceAnchorSpan] = []
     for anchor in binding.anchor_bindings:
-        page = pages_by_manifest.get(anchor.source_manifest_sha256)
-        if page is None or page.page_num != anchor.page_num:
+        anchor_page = pages_by_manifest.get(anchor.source_manifest_sha256)
+        if anchor_page is None or anchor_page.page_num != anchor.page_num:
             raise ValueError("table continuation anchor does not bind a declared source manifest/page")
-        cell = cells_by_id.get(anchor.parent_evidence_id)
-        if cell is None:
+        anchor_cell = cells_by_id.get(anchor.parent_evidence_id)
+        if anchor_cell is None:
             raise ValueError("table continuation anchor parent is not one of the reviewed cells")
-        verified.append(_verified_anchor_span(anchor=anchor, unit=cell, policy=content_policy))
+        verified.append(_verified_anchor_span(anchor=anchor, unit=anchor_cell, policy=content_policy))
     return tuple(verified)
 
 
@@ -529,17 +529,20 @@ def verify_table_continuation_card_backfill(
         raise ValueError("table Card backfill source fixture sample does not match")
     facts = {item.proposal_key: item for item in fixture.facts}
     cards = {item.card_key: item for item in fixture.cards}
-    for entry in backfill.facts:
-        source = facts.get(entry.source_draft_proposal_key)
-        if source is None or source.review.state != CardGoldenReviewState.DRAFT:
+    for fact_entry in backfill.facts:
+        source_fact = facts.get(fact_entry.source_draft_proposal_key)
+        if source_fact is None or source_fact.review.state != CardGoldenReviewState.DRAFT:
             raise ValueError("table Card backfill may only target an existing draft Fact Golden entry")
-    for entry in backfill.cards:
-        source = cards.get(entry.card_key)
-        if source is None or source.review.state != CardGoldenReviewState.DRAFT:
+    for card_entry in backfill.cards:
+        source_card = cards.get(card_entry.card_key)
+        if source_card is None or source_card.review.state != CardGoldenReviewState.DRAFT:
             raise ValueError("table Card backfill may only target an existing draft Card Golden entry")
-        if source.title != entry.expected_title or source.presentation.value != entry.expected_presentation:
+        if (
+            source_card.title != card_entry.expected_title
+            or source_card.presentation.value != card_entry.expected_presentation
+        ):
             raise ValueError("table Card backfill title/presentation does not match source draft Card Golden")
-        if tuple(source.primary_proposal_keys) != entry.required_source_draft_proposal_keys:
+        if tuple(source_card.primary_proposal_keys) != card_entry.required_source_draft_proposal_keys:
             raise ValueError("table Card backfill Fact grouping does not match source draft Card Golden")
 
 
