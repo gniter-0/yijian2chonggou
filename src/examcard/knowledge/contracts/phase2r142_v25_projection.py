@@ -775,7 +775,9 @@ def build_v25_response_golden_projection(
         owner = exact_owner.get(index)
         if owner is not None:
             disposition = V25ProjectionDisposition.PROJECTED
-            basis_codes = ("exact_reviewed_target_projection",)
+            # 显式注解：首次赋值是单元素字面量，不注解会被推成定长 tuple[str]，
+            # 下面分支再赋变长 tuple 就冲突。
+            basis_codes: tuple[str, ...] = ("exact_reviewed_target_projection",)
         elif set(selected) & reviewed_atomic_anchor_ids:
             disposition = V25ProjectionDisposition.MANUAL_REVIEW
             basis_codes = tuple(sorted(overlap_failures[index])) or ("reviewed_atomic_anchor_not_projected",)

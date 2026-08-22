@@ -364,22 +364,25 @@ def fuse_page(
         if figure is not None:
             figure_bbox, parent_id, crop_path = figure
             figure_ocr[parent_id].append(ocr_line)
-            kind, role, risk_tags, must_cover = (
+            # 换名而非复用 native 那一遍的 risk_tags：本循环的取值来自 classify_visual_text
+            # （frozenset[str]），同名会让 mypy 认死首次绑定的类型；这里也统一用 frozenset
+            # 落首次绑定，三处赋值口径一致。
+            kind, role, visual_risk_tags, must_cover = (
                 EvidenceKind.DIAGRAM_NODE,
                 SemanticRole.CORE,
-                {"diagram_node", "visual_only"},
+                frozenset({"diagram_node", "visual_only"}),
                 True,
             )
             parent = parent_id
             region_id = f"diagram_{parent_id[-8:]}"
             provenance_crop = crop_path
         else:
-            kind, role, risk_tags, must_cover = classify_visual_text(ocr_line.text, bbox=ocr_line.bbox, page=native)
+            kind, role, visual_risk_tags, must_cover = classify_visual_text(ocr_line.text, bbox=ocr_line.bbox, page=native)
             parent = None
             region_id = None
             provenance_crop = None
             if "=" in ocr_line.text or "＝" in ocr_line.text:
-                kind, risk_tags, must_cover = EvidenceKind.FORMULA, set(risk_tags) | {"formula", "numeric"}, True
+                kind, visual_risk_tags, must_cover = EvidenceKind.FORMULA, frozenset(visual_risk_tags) | {"formula", "numeric"}, True
         unit = build_evidence_unit(
             document_sha256=document_sha256,
             page_num=native.page_num,
@@ -397,7 +400,7 @@ def fuse_page(
             parent_id=parent,
             region_id=region_id,
             crop_path=provenance_crop,
-            risk_tags=set(risk_tags),
+            risk_tags=set(visual_risk_tags),
             must_cover_by_source=must_cover,
             metadata={"ocr_polygon": ocr_line.polygon, "ocr_confidence": ocr_line.confidence},
         )
@@ -487,7 +490,9 @@ def fuse_page(
         if index not in used_ocr and line.confidence >= minimum_ocr_confidence
     )
     total_chars = native_chars + unmatched_visual_chars
-    quality = PageQuality(
+    # 换名而非复用上面逐行判定用的 quality（SourceQuality 枚举）：这里是整页的
+    # PageQuality 指标对象，同名会让 mypy 认死首次绑定的枚举类型。
+    page_quality = PageQuality(
         native_text_coverage=native_chars / total_chars if total_chars else 1.0,
         ocr_alignment_rate=len(used_ocr) / len(ocr.lines) if ocr.lines else 1.0,
         unresolved_regions=0,
@@ -501,5 +506,5 @@ def fuse_page(
         rotation=native.rotation,
         evidence_units=tuple(units),
         source_conflicts=tuple(conflicts),
-        quality=quality,
+        quality=page_quality,
     )

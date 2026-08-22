@@ -27,9 +27,16 @@ _NOISE_TEXT = re.compile(
 )
 
 
+# dict 的值类型不变（invariant），dict[str, str] 并不是 str.maketrans 重载要的
+# dict[str, str | int | None]；显式注解成重载口径即可。顺带把表提到模块级，
+# 不用每次调用重建。
+_HALFWIDTH_MAP: dict[str, str | int | None] = {"．": ".", "，": ",", "：": ":", "＞": ">", "＜": "<", "～": "~"}
+_HALFWIDTH_TABLE = str.maketrans(_HALFWIDTH_MAP)
+
+
 def normalized_compare_text(value: str) -> str:
     normalized = re.sub(r"[\s\u3000]+", "", value)
-    return normalized.translate(str.maketrans({"．": ".", "，": ",", "：": ":", "＞": ">", "＜": "<", "～": "~"}))
+    return normalized.translate(_HALFWIDTH_TABLE)
 
 
 def equivalent_text(left: str, right: str, *, strict_formula: bool = False) -> bool:

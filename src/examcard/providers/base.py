@@ -18,7 +18,7 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass
 from enum import StrEnum
-from typing import Literal, Mapping, Protocol, Sequence, runtime_checkable
+from typing import Final, Literal, Mapping, Protocol, Sequence, runtime_checkable
 
 from pydantic import BaseModel, ConfigDict, Field, StrictBool, StrictInt, StrictStr, model_validator
 
@@ -96,7 +96,9 @@ def merge_failure_codes(values: Mapping[str, bool], extra: Sequence[str]) -> tup
 # 不透明失败关闭（502 家族：r117 证据 + r118 remediation）
 # ---------------------------------------------------------------------------
 
-OPAQUE_HTTP_FAILURE_VERSION = "examcard_provider_opaque_http_failure_v1"
+# Final（不带显式注解）让 mypy 保留字面量类型，常量才能当 Literal 字段的默认值；
+# 裸赋值会推成 str，赋给 Literal[...] 即报 assignment。
+OPAQUE_HTTP_FAILURE_VERSION: Final = "examcard_provider_opaque_http_failure_v1"
 
 _SECRET_PATTERN = re.compile(r"(?i)(bearer\s+\S+|sk-[A-Za-z0-9_-]{8,}|api[-_]?key\s*[:=]\s*\S+)")
 _SANITIZED_LIMIT = 300
@@ -151,8 +153,8 @@ def build_opaque_failure(status: int, body: bytes, detail: str = "") -> OpaqueHt
 # 中继能力诊断（r2232：固定顺序探针 + 失败分类税 + 就绪判定）
 # ---------------------------------------------------------------------------
 
-CAPABILITY_PROBE_VERSION = "examcard_relay_capability_probe_v1"
-CAPABILITY_ASSESSMENT_VERSION = "examcard_relay_capability_assessment_v1"
+CAPABILITY_PROBE_VERSION: Final = "examcard_relay_capability_probe_v1"
+CAPABILITY_ASSESSMENT_VERSION: Final = "examcard_relay_capability_assessment_v1"
 
 
 class RelayProbeKind(StrEnum):

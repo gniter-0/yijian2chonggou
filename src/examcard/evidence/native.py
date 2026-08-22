@@ -52,8 +52,14 @@ def _extract_tables(page: fitz.Page) -> tuple[NativeTable, ...]:
         for row_index, row in enumerate(table.rows):
             values = extracted[row_index] if row_index < len(extracted) else []
             for column_index, cell_rect in enumerate(row.cells):
-                text = values[column_index] if column_index < len(values) and values[column_index] else ""
-                bbox = tuple(round(float(value), 4) for value in cell_rect) if cell_rect else None
+                # 显式注解 + 显式解包成 4 元组：fitz 无存根，extract() 的格值与 Rect 迭代
+                # 都是 Any，生成器进 tuple() 只能推出 tuple[float, ...]，与下面容器声明的
+                # 定长 4 元组对不上。Rect 恒为 4 个分量，解包不改变行为。
+                text: str = values[column_index] if column_index < len(values) and values[column_index] else ""
+                bbox: tuple[float, float, float, float] | None = None
+                if cell_rect:
+                    x0, y0, x1, y1 = (round(float(value), 4) for value in cell_rect)
+                    bbox = (x0, y0, x1, y1)
                 raw_cells.append((row_index, column_index, bbox, text))
                 if bbox is not None:
                     seen.setdefault(bbox, []).append((row_index, column_index))

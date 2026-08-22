@@ -140,15 +140,19 @@ ignore_missing_imports = true
 # 下面的条目逐条删掉（即改掉真问题），而不是把码集合往大里写。
 #
 # 基线实测（mypy 2.3.1 + pydantic 插件，--no-incremental，checked 127 source files）：
-# 首测 263 条 / 35 个模块。已按「正解」真修掉并从本清单删除条目的：
-# v25_generic_contracts 58 条、learning_fixture 28 条。现测 177 条 / 33 个模块，
-# 按码分布：assignment 71、attr-defined 51、arg-type 22、call-arg 12、union-attr 6、
-# prop-decorator 4、var-annotated 4、misc 2、call-overload 2、index 2、
-# import-not-found 1（operator、return-value 两族已随上述修复清零）。
+# 首测 263 条 / 35 个模块。已按「正解」真修掉并从本清单删除条目的模块共 21 个
+# （v25_generic_contracts 58、learning_fixture 28、step2a_request 18、validation 16、
+# step2b_card_golden 15、continuation.core 10、repair_sidecar 7、envelope_profiles 6、
+# table_inputs 5、providers.base 3、evidence.fusion 3、echo_release 2、evidence.native 2、
+# knowledge.projection 2、pipeline.run 2、request_helpers 2、obligations 1、
+# evidence.layout 1、phase2r142_v25_projection 1、planner.bridge 1、pipeline.shadow 1）。
+# 现测 77 条 / 14 个模块，按码分布：assignment 28、arg-type 19、call-arg 12、
+# prop-decorator 4、union-attr 3、attr-defined 3、call-overload 2、var-annotated 2、
+# index 2、import-not-found 1、misc 1（operator、return-value 两族已清零）。
 # 每个模块后面括号里的数字是它当时的条数，删条目时拿它对账。
 #
 # 成因逐族抽样核查过，没有一条是「访问模型上根本不存在的字段」那类真缺陷——那一类
-# 上一轮已作为 DiagramEdgeRef 缺陷单独修掉并加了封印测试。反复出现的四种形状：
+# 上一轮已作为 DiagramEdgeRef 缺陷单独修掉并加了封印测试。反复出现的五种形状：
 #   A. 循环变量复用：同一个名字在同文件多个 for 里迭代不同的模型类型，mypy 认死第一
 #      次绑定的类型，后面每个本来合法的字段访问都记一条 attr-defined。占 attr-defined
 #      的主体。正解是逐个循环改名。
@@ -157,6 +161,11 @@ ignore_missing_imports = true
 #   C. 中间字典声明成 dict[str, object]：`**payload` 解包进强类型形参会逐个形参报
 #      arg-type，取下标再赋值报 index，原样返回报 return-value。正解是换 TypedDict。
 #   D. 相关条件：非空性由另一个布尔量或枚举取值担保，mypy 不跨条件收窄，报 union-attr。
+#      正解是在使用点补一句显式判空（运行时恒真，只是把担保写给类型检查器看）。
+#   E. 版本常量当 Literal 字段默认值：`X = "v1"` 推成 str，赋给
+#      `schema_version: Literal["v1"]` 报 assignment。正解是 `X: Final = "v1"`——
+#      不带显式注解的 Final 会让 mypy 保留字面量类型。注意这跟 PEP 586 禁止的
+#      `Literal[X]`（把变量写进 Literal 下标）是相反方向的两件事，后者 Final 帮不上忙。
 # ---------------------------------------------------------------------------
 
 # 形状 B。另含 pydantic 子类收窄父类 Literal[...] 判别字段的一族：
@@ -164,17 +173,8 @@ ignore_missing_imports = true
 # 字面量，mypy 按不变量看待类属性覆盖，pydantic 却把它当判别式惯用法。
 [[tool.mypy.overrides]]
 module = [
-    "examcard.evidence.fusion",                               # 3
-    "examcard.knowledge.contracts.admission_fixtures",        # 5
-    "examcard.knowledge.contracts.audits",                    # 13
-    "examcard.knowledge.contracts.echo_release",              # 2
-    "examcard.knowledge.contracts.obligations",               # 1
-    "examcard.knowledge.contracts.phase2r142_v25_projection", # 1
-    "examcard.knowledge.projection",                          # 2
-    "examcard.pipeline.run",                                  # 2
-    "examcard.pipeline.shadow",                               # 1
-    "examcard.providers.base",                                # 3
-    "examcard.providers.envelope_profiles",                   # 6
+    "examcard.knowledge.contracts.admission_fixtures", # 5
+    "examcard.knowledge.contracts.audits",             # 13
 ]
 disable_error_code = ["assignment"]
 
@@ -183,11 +183,7 @@ disable_error_code = ["assignment"]
 # derivation:144 另有一条 isinstance(x, ModelMetaclass | None)——可选的模型类对象
 # 直接进 isinstance，值得单独收拾。正解是把中间字典换成 TypedDict 或改传具名参数。
 [[tool.mypy.overrides]]
-module = [
-    "examcard.evidence.layout",                 # 1
-    "examcard.evidence.native",                 # 2
-    "examcard.knowledge.contracts.derivation",  # 10
-]
+module = ["examcard.knowledge.contracts.derivation"] # 10
 disable_error_code = ["arg-type"]
 
 # call-arg 全部落在 `Model.model_construct(...)` 上：pydantic 的 mypy 插件给
@@ -218,23 +214,11 @@ disable_error_code = ["arg-type", "attr-defined", "var-annotated"]
 module = ["examcard.knowledge.contracts.phase2r14_v25_live"] # 3
 disable_error_code = ["attr-defined", "index"]
 
-# 形状 D（相关条件）。fact_engine:760/787/808：released_visual 是
-# `disposition_entry is not None and is_released_disposition(...)`，之后拿这个布尔量
-# 当守卫，mypy 不会把布尔的真值回传成 disposition_entry 的非空收窄——运行时不可能为
-# None。正解是先算出「非空且已放行」的 entry 本身再判，收窄就能传下去。
+# 同形状 D。fact_engine:760/787/808 是「布尔量担保非空」；request_helpers 与 planner.bridge
+# 那三条已按正解补上显式判空并删除条目。
 [[tool.mypy.overrides]]
 module = ["examcard.knowledge.fact_engine"] # 6
 disable_error_code = ["arg-type", "assignment", "union-attr"]
-
-# 同形状 D。request_helpers:174/175 是
-# `table.row_count if obligation.kind == COMPLETE_TABLE_COMPOSITION else None`：
-# table 的非空性与 kind 的取值绑定，mypy 不关联这两个条件。
-[[tool.mypy.overrides]]
-module = [
-    "examcard.knowledge.contracts.request_helpers", # 2
-    "examcard.knowledge.planner.bridge",            # 1
-]
-disable_error_code = ["union-attr"]
 
 # call-overload 2 条是 OpenAI SDK 的
 # chat.completions.with_raw_response.create(...)：本仓按 dict 动态拼 response_format /
@@ -256,7 +240,7 @@ disable_error_code = ["prop-decorator"]
 # misc 1 条是 live_run:732 `stage_executor(...)`——可选回调在调用点没收窄，报
 # "None" not callable。这条其实是形状 D，修起来只要一句显式判空。
 [[tool.mypy.overrides]]
-module = ["examcard.pipeline.live_run"] # 7
+module = ["examcard.pipeline.live_run"] # 5
 disable_error_code = ["arg-type", "assignment", "misc"]
 
 # 这条不是类型噪声，是给一处真缺陷记账：build_phase2r11_five_golden_report 内部

@@ -78,7 +78,12 @@ def build_continuation_step2b_fact_summaries(
     if record.request.identity.request_version != title_projection.request_version:
         raise ValueError("continuation title projection request version does not match the Step 2A record")
     reviewed_projection = reviewed_title_projection_from_continuation(title_projection)
-    target_key = reviewed_projection.continuation_title_projection.source_proposal_key
+    # 非空性由构造函数担保，但类型上仍是 Optional；显式判空而不是靠 mypy 跨函数收窄，
+    # 顺带与本函数其余 fail-closed 校验保持同一种失败姿态。
+    continuation_projection = reviewed_projection.continuation_title_projection
+    if continuation_projection is None:
+        raise ValueError("reviewed title projection lost its continuation provenance")
+    target_key = continuation_projection.source_proposal_key
     proposals = {proposal.proposal_key: proposal for proposal in record.response.proposals}
     if target_key not in proposals:
         raise ValueError("continuation title projection proposal is absent from the Step 2A record")

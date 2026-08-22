@@ -33,7 +33,7 @@ from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import Any, Literal, Sequence
+from typing import Any, Final, Literal, Sequence
 
 from pydantic import Field, model_validator
 
@@ -192,8 +192,10 @@ class ResendPlan:
 # ===========================================================================
 
 LIVE_STAGES: tuple[str, ...] = ("step1", "step2a", "step2b", "step3", "step4")
-LIVE_STAGE_REPORT_VERSION = "examcard_live_stage_report_v1"
-LIVE_RUN_REPORT_VERSION = "examcard_live_run_report_v1"
+# Final（不带显式注解）让 mypy 保留字面量类型，常量才能当 Literal 字段的默认值；
+# 裸赋值会推成 str，赋给 Literal[...] 即报 assignment。
+LIVE_STAGE_REPORT_VERSION: Final = "examcard_live_stage_report_v1"
+LIVE_RUN_REPORT_VERSION: Final = "examcard_live_run_report_v1"
 DEFAULT_PRICING_RELATIVE = "configs/v2/live_pricing_v1.yaml"
 _RUN_LABEL_MAX = 64
 

@@ -23,7 +23,7 @@ import binascii
 import json
 from dataclasses import dataclass
 from io import BytesIO
-from typing import Any, Callable, Literal, Mapping
+from typing import Any, Callable, Final, Literal, Mapping
 
 from PIL import Image, UnidentifiedImageError
 from pydantic import Field, StrictBool, StrictInt, StrictStr, model_validator
@@ -95,9 +95,11 @@ CHAT_TRANSPORT_ONLY_PATHS = (
     "usage.completion_tokens_details",
 )
 
-CHAT_ALLOWLIST_VERSION = "examcard_chat_envelope_allowlist_v1"
-CHAT_PROFILE_VERSION = "examcard_chat_envelope_profile_v1"
-CHAT_GATE_VERSION = "examcard_chat_envelope_gate_v1"
+# Final（不带显式注解）让 mypy 保留字面量类型，常量才能当 Literal 字段的默认值；
+# 裸赋值会推成 str，赋给 Literal[...] 即报 assignment。
+CHAT_ALLOWLIST_VERSION: Final = "examcard_chat_envelope_allowlist_v1"
+CHAT_PROFILE_VERSION: Final = "examcard_chat_envelope_profile_v1"
+CHAT_GATE_VERSION: Final = "examcard_chat_envelope_gate_v1"
 
 
 class ChatUsage(StrictModel):
@@ -451,8 +453,8 @@ IMAGE_USAGE_KEYS = ("input_tokens", "output_tokens", "total_tokens", "input_toke
 IMAGE_INPUT_DETAIL_KEYS = ("text_tokens", "image_tokens", "cached_tokens")
 IMAGE_OUTPUT_DETAIL_KEYS = ("text_tokens", "image_tokens", "reasoning_tokens")
 
-IMAGE_PROFILE_VERSION = "examcard_image_envelope_profile_v1"
-IMAGE_GATE_VERSION = "examcard_image_envelope_gate_v1"
+IMAGE_PROFILE_VERSION: Final = "examcard_image_envelope_profile_v1"
+IMAGE_GATE_VERSION: Final = "examcard_image_envelope_gate_v1"
 
 _PNG_SIGNATURE = b"\x89PNG\r\n\x1a\n"
 
@@ -712,7 +714,7 @@ def _mark_passed_until(values: dict[str, bool], failed_check: str) -> None:
 # ===========================================================================
 
 IMAGE_HTTP_PUBLIC_FIELDS = ("model", "n", "prompt", "response_format", "size")
-IMAGE_REQUEST_PROJECTION_VERSION = "examcard_image_request_projection_v1"
+IMAGE_REQUEST_PROJECTION_VERSION: Final = "examcard_image_request_projection_v1"
 
 # distilled_from: phase2r116 INTERNAL_FIELDS——历史上真实泄漏过或高危的内部绑定字段。
 KNOWN_INTERNAL_FIELDS = (

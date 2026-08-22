@@ -302,7 +302,9 @@ def derive_step2a_coverage_obligation_input(
     for binding in continuation_bindings:
         if binding.state != ContinuationBindingState.CLOSED:
             continue
-        required_spans = (*binding.source_anchor_span_ids, *binding.closure_anchor_span_ids)
+        # 换名而非复用上一循环的 required_spans：那里是 list[str]，这里是 tuple[str, ...]，
+        # 同名会让 mypy 认死首次绑定的类型。
+        closure_spans = (*binding.source_anchor_span_ids, *binding.closure_anchor_span_ids)
         obligations.append(
             Step2ACoverageObligation(
                 obligation_id=make_step2a_coverage_obligation_id(
@@ -311,13 +313,13 @@ def derive_step2a_coverage_obligation_input(
                     table_evidence_id=None,
                     atomic_requirement_id=None,
                     expected_fact_type=FactType.ENUMERATION,
-                    required_primary_anchor_span_ids=required_spans,
+                    required_primary_anchor_span_ids=closure_spans,
                     requires_all_items=True,
                 ),
                 kind=Step2ACoverageObligationKind.CLOSED_CONTINUATION,
                 source_binding_id=binding.binding_id,
                 expected_fact_type=FactType.ENUMERATION,
-                required_primary_anchor_span_ids=required_spans,
+                required_primary_anchor_span_ids=closure_spans,
                 requires_all_items=True,
             )
         )

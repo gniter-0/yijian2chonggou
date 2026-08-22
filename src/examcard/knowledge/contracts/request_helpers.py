@@ -163,6 +163,9 @@ def derive_step2a_coverage_obligation_context_input(
                     source_text_sha256=span.exact_text_sha256,
                 )
             )
+        # table 的非空性由上面第 139 行的守卫担保（非 CLOSED_CONTINUATION 必有表），
+        # 但 mypy 不关联这两个条件；补一句 table is not None，运行时是恒真的空操作。
+        is_complete_table = obligation.kind == Step2ACoverageObligationKind.COMPLETE_TABLE_COMPOSITION
         context_payload = {
             "obligation_id": obligation.obligation_id,
             "kind": obligation.kind.value,
@@ -171,8 +174,8 @@ def derive_step2a_coverage_obligation_context_input(
             "requires_all_items": obligation.requires_all_items,
             "anchor_contexts": [item.model_dump(mode="json") for item in anchor_contexts],
             "table_evidence_id": obligation.table_evidence_id,
-            "table_row_count": table.row_count if obligation.kind == Step2ACoverageObligationKind.COMPLETE_TABLE_COMPOSITION else None,
-            "table_column_count": table.column_count if obligation.kind == Step2ACoverageObligationKind.COMPLETE_TABLE_COMPOSITION else None,
+            "table_row_count": table.row_count if table is not None and is_complete_table else None,
+            "table_column_count": table.column_count if table is not None and is_complete_table else None,
             "required_source_assertion": requirement.required_assertion if requirement is not None else None,
             "required_source_assertion_sha256": requirement.required_assertion_sha256 if requirement is not None else None,
         }

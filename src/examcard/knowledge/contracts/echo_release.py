@@ -17,7 +17,7 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
-from typing import Literal
+from typing import Final, Literal
 
 from pydantic import Field, model_validator
 
@@ -40,8 +40,10 @@ __all__ = (
     "load_echo_handoff",
 )
 
-ECHO_RELEASE_VERSION = "echo-batch-release/1.0"
-ECHO_HANDOFF_VERSION = "echo-batch-step4-handoff/1.0"
+# Final（不带显式注解）让 mypy 保留字面量类型，常量才能当 Literal 字段的默认值；
+# 裸赋值会推成 str，赋给 Literal[...] 即报 assignment。
+ECHO_RELEASE_VERSION: Final = "echo-batch-release/1.0"
+ECHO_HANDOFF_VERSION: Final = "echo-batch-step4-handoff/1.0"
 
 _ID = r"^[a-z0-9][a-z0-9._:-]{2,255}$"
 _BATCH_ID = r"^echo-batch:[0-9a-f]{24}$"

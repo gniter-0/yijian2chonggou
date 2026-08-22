@@ -12,14 +12,16 @@ import json
 import re
 import unicodedata
 from pathlib import Path
-from typing import Any, Callable, Literal, Mapping, Sequence
+from typing import Any, Callable, Final, Literal, Mapping, Sequence
 
 from pydantic import Field, model_validator
 
 from ..common.hashing import SHA256_HEX, canonical_hash, hash_model
 from ..materials.schema import StrictModel
 
-DIFF_REPORT_VERSION = "examcard_shadow_diff_report_v1"
+# Final（不带显式注解）让 mypy 保留字面量类型，这个常量才能当 Literal 字段的默认值用；
+# 写成裸赋值会推成 str，赋给 Literal[...] 字段即报 assignment。
+DIFF_REPORT_VERSION: Final = "examcard_shadow_diff_report_v1"
 
 # 老工具冒烟章前缀（01/24/41/55/62 五章代表集）。
 SMOKE_CHAPTER_PREFIXES: tuple[str, ...] = ("01", "24", "41", "55", "62")

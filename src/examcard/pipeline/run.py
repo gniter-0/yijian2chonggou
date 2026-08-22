@@ -15,7 +15,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Callable, Literal, Mapping
+from typing import Any, Callable, Final, Literal, Mapping
 
 from pydantic import Field, model_validator
 
@@ -24,8 +24,10 @@ from ..common.hashing import SHA256_HEX, canonical_hash, hash_model
 from ..common.io import append_jsonl, atomic_write_json
 from ..materials.schema import StrictModel
 
-STEP_RESULT_VERSION = "examcard_pipeline_step_result_v1"
-RUN_REPORT_VERSION = "examcard_pipeline_run_report_v1"
+# Final（不带显式注解）让 mypy 保留字面量类型，常量才能当 Literal 字段的默认值；
+# 裸赋值会推成 str，赋给 Literal[...] 即报 assignment。
+STEP_RESULT_VERSION: Final = "examcard_pipeline_step_result_v1"
+RUN_REPORT_VERSION: Final = "examcard_pipeline_run_report_v1"
 
 StepName = Literal["extract", "evidence", "facts", "cards"]
 PIPELINE_STEPS: tuple[StepName, ...] = ("extract", "evidence", "facts", "cards")

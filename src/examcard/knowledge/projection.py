@@ -398,13 +398,15 @@ def build_step2a_semantic_projection(
     for table in (unit for unit in units if unit.kind == EvidenceKind.TABLE):
         rows = [row for row in by_parent.get(table.evidence_id, []) if row.kind == EvidenceKind.TABLE_ROW]
         source_grid_record, table_members = _table_grid_integrity(table=table, rows=rows, by_parent=by_parent)
-        overrides = table_repair_overrides.get(table.evidence_id)
-        if overrides is not None:
+        # 换名而非复用上面的 overrides：那里是校验函数返回的非空字典，这里是 .get() 的
+        # Optional，同名会让 mypy 认死首次绑定的非空类型。
+        table_overrides = table_repair_overrides.get(table.evidence_id)
+        if table_overrides is not None:
             repaired_grid_record, _ = _table_grid_integrity(
                 table=table,
                 rows=rows,
                 by_parent=by_parent,
-                span_overrides=overrides,
+                span_overrides=table_overrides,
             )
             if repaired_grid_record.status != TableGridIntegrityStatus.PASSED:
                 raise ValueError("reviewed table repair does not produce a complete structured grid")
@@ -559,12 +561,14 @@ def build_step2a_semantic_projection(
             for evidence_id in node.evidence_ids:
                 if evidence_id in minted_node_evidence_ids:
                     continue
-                unit = by_id.get(evidence_id)
-                if unit is None or unit.kind != EvidenceKind.DIAGRAM_NODE:
+                # 换名而非复用外层的 unit：那里是 for unit in units 绑定的非空 EvidenceUnit，
+                # 这里是 by_id.get() 的 Optional，同名会让 mypy 认死非空类型。
+                node_unit = by_id.get(evidence_id)
+                if node_unit is None or node_unit.kind != EvidenceKind.DIAGRAM_NODE:
                     continue
                 if policy_decisions[evidence_id].disposition != PolicyDisposition.INCLUDED:
                     continue
-                label_text = unit.canonical_text
+                label_text = node_unit.canonical_text
                 start, end = 0, len(label_text)
                 while start < end and label_text[start].isspace():
                     start += 1
@@ -578,15 +582,15 @@ def build_step2a_semantic_projection(
                 controlled_diagram_anchor_spans.append(
                     EvidenceAnchorSpan(
                         anchor_span_id=make_evidence_anchor_span_id(
-                            parent_evidence_id=unit.evidence_id,
+                            parent_evidence_id=node_unit.evidence_id,
                             start=start,
                             end=end,
                             exact_text_sha256=exact_text_sha256,
                             content_policy_fingerprint_sha256=policy_fingerprint,
                             source_manifest_sha256=source_manifest_sha256,
                         ),
-                        parent_evidence_id=unit.evidence_id,
-                        parent_evidence_kind=unit.kind,
+                        parent_evidence_id=node_unit.evidence_id,
+                        parent_evidence_kind=node_unit.kind,
                         start=start,
                         end=end,
                         canonical_text=exact_text,
@@ -594,7 +598,7 @@ def build_step2a_semantic_projection(
                         content_policy_id=content_policy.policy_id,
                         content_policy_revision=content_policy.revision,
                         content_policy_fingerprint_sha256=policy_fingerprint,
-                        policy_decision=policy_decisions[unit.evidence_id],
+                        policy_decision=policy_decisions[node_unit.evidence_id],
                         source_manifest_sha256=source_manifest_sha256,
                     )
                 )
