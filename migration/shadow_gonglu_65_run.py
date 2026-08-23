@@ -37,6 +37,7 @@ from examcard.pipeline.shadow_wiring import (  # noqa: E402
     make_live_vision_verifier,
     make_vision_review_runner,
 )
+from examcard.providers.base import sanitized_error_summary  # noqa: E402
 
 TOTAL_CHAPTERS = 65
 HIGH_RISK_GATE = 400
@@ -117,7 +118,10 @@ def cmd_probe(args: argparse.Namespace) -> int:
             print(f"PROBE OK: {base}/models reachable (HTTP {response.status_code})")
             return 0
         except Exception as error2:  # noqa: BLE001
-            print(f"PROBE FAIL: {base} unreachable: {type(error).__name__}: {error} / {type(error2).__name__}: {error2}")
+            print(
+                f"PROBE FAIL: {base} unreachable: "
+                f"{sanitized_error_summary(error)} / {sanitized_error_summary(error2)}"
+            )
             return 1
 
 

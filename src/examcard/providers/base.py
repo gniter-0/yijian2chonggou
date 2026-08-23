@@ -111,6 +111,18 @@ def sanitize_error_text(text: str) -> str:
     return masked[:_SANITIZED_LIMIT]
 
 
+def sanitized_error_summary(error: BaseException) -> str:
+    """异常落纸的唯一形状：类型名 + 脱敏正文，长度口径仍由脱敏器持有。
+
+    为什么要有这个函数，而不是各处自己拼 ``f"{type(e).__name__}: {e}"``：
+    供应商与中继的错误正文会回显凭据（``Incorrect API key provided: sk-...`` 与
+    ``Authorization: Bearer ...`` 都是常见形态），而这些回显往往被逐行写进 journal、
+    运行报告或 stdout，再随日志与归档一起流走。把「取类型名 + 过脱敏器」固定成一处，
+    落纸点就无从各写一套尺子；knowledge.llm 的传输层与 migration 下的实跑脚本共用它。
+    """
+    return sanitize_error_text(f"{type(error).__name__}: {error}")
+
+
 class OpaqueHttpFailure(StrictModel):
     """非 2xx 供应商响应的失败关闭证据：只存哈希与脱敏摘要，决不保留响应体。
 

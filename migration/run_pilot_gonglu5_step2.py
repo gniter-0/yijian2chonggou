@@ -60,6 +60,7 @@ from examcard.knowledge.reinforcement import (  # noqa: E402
     STEP2A_REINFORCEMENT_V1_ID,
 )
 from examcard.pipeline.live_run import load_run_env  # noqa: E402
+from examcard.providers.base import sanitize_error_text  # noqa: E402
 
 PILOT_SAMPLE_IDS = (
     "gonglu_01_text_list",
@@ -257,14 +258,14 @@ def main() -> int:
                 gates["source_contract"] = source_gate.model_dump(mode="json")
                 results.append(("source_contract", source_gate.valid))
             except Exception as error:
-                gates["source_contract"] = {"evaluation_error": type(error).__name__, "detail": str(error)[:160]}
+                gates["source_contract"] = {"evaluation_error": type(error).__name__, "detail": sanitize_error_text(str(error))}
                 results.append(("source_contract_evaluation_error", False))
             try:
                 teaching_gate = _teaching_gate(context, response_a)
                 gates["teaching"] = teaching_gate.model_dump(mode="json")
                 results.append(("teaching_publishable", teaching_gate.publishable))
             except Exception as error:
-                gates["teaching"] = {"evaluation_error": type(error).__name__, "detail": str(error)[:160]}
+                gates["teaching"] = {"evaluation_error": type(error).__name__, "detail": sanitize_error_text(str(error))}
                 results.append(("teaching_evaluation_error", False))
             learning_fact = _learning_fact_gate(context)
             gates["learning_fixture"] = learning_fact
@@ -274,7 +275,7 @@ def main() -> int:
                 gates["learning_golden"] = learning_golden
                 results.append(("learning_golden", learning_golden["valid"]))
             except Exception as error:
-                gates["learning_golden"] = {"evaluation_error": type(error).__name__, "detail": str(error)[:160]}
+                gates["learning_golden"] = {"evaluation_error": type(error).__name__, "detail": sanitize_error_text(str(error))}
                 results.append(("learning_golden_evaluation_error", False))
             sample_report["step2a_gates"] = gates
             for gate_name, ok in results:

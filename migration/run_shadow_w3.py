@@ -26,6 +26,7 @@ from examcard.pipeline.shadow_wiring import (  # noqa: E402
     VisionCallBudget,
     make_v2_evidence_runner,
 )
+from examcard.providers.base import sanitized_error_summary  # noqa: E402
 
 LANE = "w3"
 YIJIAN2 = Path(r"C:\Users\liushaocheng\Desktop\getinfo\yijian2")
@@ -133,8 +134,8 @@ def main() -> int:
             metrics = runner(prefix)
             counts = write_census(chapter_dir, prefix)
         except Exception as exc:  # noqa: BLE001 — 单章失败登记后继续，不阻断其余章
-            print(f"[{LANE}] {prefix} FAIL: {type(exc).__name__}: {exc}", flush=True)
-            failed.append((prefix, f"{type(exc).__name__}: {exc}"))
+            print(f"[{LANE}] {prefix} FAIL: {sanitized_error_summary(exc)}", flush=True)
+            failed.append((prefix, sanitized_error_summary(exc)))
             continue
         done.append(prefix)
         elapsed = time.time() - started

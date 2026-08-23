@@ -36,6 +36,7 @@ from examcard.pipeline.shadow_wiring import (  # noqa: E402
     make_live_vision_verifier,
     make_vision_review_runner,
 )
+from examcard.providers.base import sanitize_error_text, sanitized_error_summary  # noqa: E402
 
 LEGACY = Path(r"C:\Users\liushaocheng\Desktop\getinfo\yijian2")
 PDF_DIR = LEGACY / "input_pdf_公路"
@@ -48,6 +49,16 @@ def _journal(event: dict) -> None:
     JOURNAL.parent.mkdir(parents=True, exist_ok=True)
     with JOURNAL.open("a", encoding="utf-8") as stream:
         stream.write(json.dumps({"ts": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()), **event}, ensure_ascii=False) + "\n")
+
+
+def _sanitized_stack(error: BaseException, *, frames: int = 2) -> str:
+    """只登记最后若干个栈帧，且照样过脱敏器。
+
+    原来这里是 ``traceback.print_exc(limit=2)``：它把异常正文原样打到 stderr，而实跑
+    一律 tee 成日志（census_s2.log / vision_s2.log 就是这么来的），等于把 401 正文里的
+    密钥写进文件。栈帧只有文件/行号/源码行，不含供应商响应，是可以留下的那一半。
+    """
+    return sanitize_error_text("".join(traceback.format_tb(error.__traceback__)[-frames:]))
 
 
 def cmd_census_seg(start: int, end: int) -> int:
@@ -65,10 +76,10 @@ def cmd_census_seg(start: int, end: int) -> int:
         try:
             payload = runner(prefix)
         except Exception as error:
-            print(f"[FAIL] {prefix}: {type(error).__name__}: {str(error)[:160]}", flush=True)
-            traceback.print_exc(limit=2)
+            print(f"[FAIL] {prefix}: {sanitized_error_summary(error)}", flush=True)
+            print(f"  stack: {_sanitized_stack(error)}", flush=True)
             failed.append(prefix)
-            _journal({"pass": "census", "chapter": prefix, "status": "failed", "error": str(error)[:200]})
+            _journal({"pass": "census", "chapter": prefix, "status": "failed", "error": sanitized_error_summary(error)})
             continue
         elapsed = round(time.perf_counter() - started, 1)
         done.append(prefix)
@@ -184,8 +195,8 @@ def cmd_vision_pass(probe: bool) -> int:
         try:
             outcome = verifier.verify(sample.read_bytes())
         except Exception as error:
-            print(f"PROBE_FAILED: {type(error).__name__}: {str(error)[:200]}", flush=True)
-            _journal({"pass": "vision", "event": "probe_failed", "error": str(error)[:200]})
+            print(f"PROBE_FAILED: {sanitized_error_summary(error)}", flush=True)
+            _journal({"pass": "vision", "event": "probe_failed", "error": sanitized_error_summary(error)})
             return 3
         print(f"PROBE_OK visible_text_len={len(outcome.visible_text)} uncertain={outcome.uncertain} budget={budget.calls}/{budget.hard_cap}", flush=True)
         _journal({"pass": "vision", "event": "probe_ok", "budget": budget.calls})
@@ -206,14 +217,14 @@ def cmd_vision_pass(probe: bool) -> int:
         try:
             metrics = runner(prefix)
         except VisionBudgetExceeded as error:
-            print(f"[BREAKER] {prefix}: {error}", flush=True)
-            _journal({"pass": "vision", "chapter": prefix, "status": "breaker", "error": str(error)[:200]})
+            print(f"[BREAKER] {prefix}: {sanitized_error_summary(error)}", flush=True)
+            _journal({"pass": "vision", "chapter": prefix, "status": "breaker", "error": sanitized_error_summary(error)})
             break
         except Exception as error:
-            print(f"[FAIL] {prefix}: {type(error).__name__}: {str(error)[:160]}", flush=True)
-            traceback.print_exc(limit=2)
+            print(f"[FAIL] {prefix}: {sanitized_error_summary(error)}", flush=True)
+            print(f"  stack: {_sanitized_stack(error)}", flush=True)
             failed.append(prefix)
-            _journal({"pass": "vision", "chapter": prefix, "status": "failed", "error": str(error)[:200]})
+            _journal({"pass": "vision", "chapter": prefix, "status": "failed", "error": sanitized_error_summary(error)})
             continue
         elapsed = round(time.perf_counter() - started, 1)
         done.append(prefix)

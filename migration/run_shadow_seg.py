@@ -23,6 +23,7 @@ from examcard.pipeline.shadow_wiring import (  # noqa: E402
     make_live_vision_verifier,
     make_v2_evidence_runner,
 )
+from examcard.providers.base import sanitized_error_summary  # noqa: E402
 
 YIJIAN2 = Path(r"C:\Users\liushaocheng\Desktop\getinfo\yijian2")
 ENV_PATH = YIJIAN2 / ".env"
@@ -78,12 +79,12 @@ def main() -> int:
         try:
             metrics = runner(prefix)
         except VisionBudgetExceeded as exc:
-            print(f"[{args.budget_suffix}] {prefix} BUDGET-FUSED: {exc}", flush=True)
+            print(f"[{args.budget_suffix}] {prefix} BUDGET-FUSED: {sanitized_error_summary(exc)}", flush=True)
             failed.append((prefix, "vision_budget_exceeded"))
             break
         except Exception as exc:  # noqa: BLE001 — 单章失败登记后继续
-            print(f"[{args.budget_suffix}] {prefix} FAIL: {type(exc).__name__}: {exc}", flush=True)
-            failed.append((prefix, f"{type(exc).__name__}: {exc}"))
+            print(f"[{args.budget_suffix}] {prefix} FAIL: {sanitized_error_summary(exc)}", flush=True)
+            failed.append((prefix, sanitized_error_summary(exc)))
             continue
         done.append(prefix)
         print(

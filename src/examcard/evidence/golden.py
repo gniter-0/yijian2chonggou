@@ -10,6 +10,7 @@ import yaml
 from pydantic import Field, model_validator
 
 from examcard.materials.schema import SemanticRole, StrictModel, V2_SCHEMA_VERSION
+from examcard.providers.base import sanitize_error_text
 
 from .schema import EvidenceKind, SourceQuality
 
@@ -120,7 +121,7 @@ def verify_golden_sources(registry: GoldenSampleRegistry, root: Path) -> list[st
             with fitz.open(path) as document:
                 invalid_pages = [page for page in sample.selected_pages if page > document.page_count]
         except (OSError, RuntimeError, ValueError) as exc:
-            errors.append(f"{sample.sample_id}: cannot open source PDF: {exc}")
+            errors.append(f"{sample.sample_id}: cannot open source PDF: {sanitize_error_text(str(exc))}")
             continue
         if invalid_pages:
             errors.append(

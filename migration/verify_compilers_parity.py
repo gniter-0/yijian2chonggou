@@ -25,6 +25,18 @@ def record(target: str, ok: bool, detail: str) -> None:
     print(f"[{'PASS' if ok else 'FAIL'}] {target}: {detail}")
 
 
+def _sanitized(exc: BaseException) -> str:
+    """异常正文一律过 providers 的脱敏器再进对照报告。
+
+    本文件不外呼，但 detail 会随对照报告一起打到 stdout 并被 tee 存档；落纸口径按仓内
+    统一那一处走，才不会在某天有人给这里加一次真实调用后又漏出凭据。examcard 的导入
+    保持本文件既有的「函数内延迟导入」风格（模块导入期不碰 examcard）。
+    """
+    from examcard.providers.base import sanitized_error_summary
+
+    return sanitized_error_summary(exc)
+
+
 def canonical_bytes(value) -> bytes:
     from examcard.knowledge.contracts.admission_legacy_hash import canonical_json_r10x
 
@@ -218,12 +230,12 @@ def main() -> int:
             if name == "step3_card" and result is not None:
                 compilation, fixture_path = result
         except Exception as exc:  # noqa: BLE001 - 汇总报告
-            record(name, False, f"exception: {type(exc).__name__}: {exc}")
+            record(name, False, f"exception: {_sanitized(exc)}")
     if compilation is not None and fixture_path is not None:
         try:
             verify_closure(old_root, compilation, fixture_path)
         except Exception as exc:  # noqa: BLE001
-            record("closure", False, f"exception: {type(exc).__name__}: {exc}")
+            record("closure", False, f"exception: {_sanitized(exc)}")
     passed = sum(1 for _, ok, _ in RESULTS if ok)
     print(f"\n== parity summary: {passed}/{len(RESULTS)} targets byte-identical ==")
     return 0 if passed == len(RESULTS) else 1

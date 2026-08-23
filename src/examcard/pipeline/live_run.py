@@ -41,6 +41,7 @@ from ..common.freeze import build_freeze
 from ..common.hashing import SHA256_HEX, canonical_hash, hash_model
 from ..common.io import atomic_write_json, read_json
 from ..materials.schema import StrictModel
+from ..providers.base import sanitized_error_summary
 from .shadow_wiring import load_env_file
 
 _REPO_ROOT = Path(__file__).resolve().parents[3]
@@ -749,7 +750,7 @@ def execute_stage_samples(
                     try:
                         entry["gates"] = dict(gate_evaluator(stage, context, record))
                     except Exception as error:  # 门禁登记不熔断（测量面）
-                        entry["gates"] = {"gate_error": f"{type(error).__name__}: {error}"}
+                        entry["gates"] = {"gate_error": sanitized_error_summary(error)}
                 break
         if entry["outcome"] != "success":
             failed_samples += 1
@@ -1289,7 +1290,7 @@ def ingest_admission_decisions(
         return {
             "status": "refused",
             "stop_reason": "gate_refused_admission",
-            "detail": f"{type(error).__name__}: {error}",
+            "detail": sanitized_error_summary(error),
         }
     released = tuple(
         decision for decision in normalized if getattr(decision, "disposition", None) == "reviewed_candidate"
@@ -1347,7 +1348,7 @@ def ingest_image_review_sheet(*, run_root: Path) -> dict[str, Any]:
     try:
         manifest = build_batch_image_authorization(cards)
     except Exception as error:
-        return {"status": "refused", "stop_reason": "gate_refused_admission", "detail": f"{type(error).__name__}: {error}"}
+        return {"status": "refused", "stop_reason": "gate_refused_admission", "detail": sanitized_error_summary(error)}
     atomic_write_json(checkpoint_dir / "image-authorization-manifest.json", manifest.model_dump(mode="json"))
     approved = sum(1 for card in cards if card.get("disposition") == "approved")
     return {"status": "ingested", "approved_count": approved, "decision_count": len(cards)}

@@ -7,6 +7,7 @@ from pathlib import Path
 from typing import Any
 
 from examcard.materials.schema import MaterialProfile
+from examcard.providers.base import sanitized_error_summary
 
 from .engine_types import VisualReviewHint
 from .golden import ExpectedEvidenceMatch, GoldenAssertion, GoldenSample, GoldenSampleRegistry, verify_golden_sources
@@ -172,7 +173,7 @@ def run_golden_registry(
                 "annotation_status": sample.annotation_status.value,
                 "assertions": [],
                 "assertions_passed": False,
-                "error": f"{type(exc).__name__}: {exc}",
+                "error": sanitized_error_summary(exc),
             }
         reports.append(report)
     assertion_reports = [assertion for sample in reports for assertion in sample["assertions"]]

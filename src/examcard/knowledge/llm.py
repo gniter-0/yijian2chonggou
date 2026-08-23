@@ -20,7 +20,7 @@ from openai import APIConnectionError, APIStatusError, APITimeoutError, OpenAI
 from pydantic import Field, ValidationError, model_validator
 
 from ..materials.schema import StrictModel
-from ..providers.base import sanitize_error_text
+from ..providers.base import sanitize_error_text, sanitized_error_summary
 
 from .contracts import (
     ContractValidationReport,
@@ -99,7 +99,7 @@ def _sanitized_error_message(error: BaseException) -> str:
          没有接线——等于规则只在离线录制通道成立，在会真联网的通道失效。
     截断口径一并交给脱敏器（300 字），不另立长度，避免同一条不变式出现两套尺子。
     """
-    return sanitize_error_text(f"{type(error).__name__}: {error}")
+    return sanitized_error_summary(error)
 
 
 def _json_dumps(value: Any) -> str:

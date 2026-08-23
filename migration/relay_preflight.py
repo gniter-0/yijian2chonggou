@@ -58,6 +58,7 @@ from examcard.providers import (  # noqa: E402
     build_image_profile,
     inspect_image_envelope,
     project_image_request,
+    sanitize_error_text,
 )
 
 TOOL_VERSION = "relay_preflight/1.0"
@@ -668,7 +669,7 @@ def _error_facts(error: Exception) -> dict[str, Any]:
     facts: dict[str, Any] = {
         "error_type": type(error).__name__,
         "http_status": status if isinstance(status, int) and 100 <= status <= 599 else None,
-        "message": str(error)[:200],
+        "message": sanitize_error_text(str(error)),
     }
     response = getattr(error, "response", None)
     if response is not None:
@@ -1245,7 +1246,7 @@ def run_preflight(
             else:
                 print("  跳过：.env 无 IMAGE_MODEL 且未给 --image-model")
     except BudgetExceeded as error:
-        stop_reason = f"budget_exceeded: {error}"
+        stop_reason = f"budget_exceeded: {sanitize_error_text(str(error))}"
     finally:
         client.close()
 

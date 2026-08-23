@@ -30,6 +30,7 @@ from .base import (
     assess_relay_capability,
     build_opaque_failure,
     sanitize_error_text,
+    sanitized_error_summary,
 )
 from .envelope_profiles import (
     CHAT_ALLOWED_METADATA,
@@ -71,6 +72,7 @@ __all__ = (
     "OpaqueHttpFailure",
     "build_opaque_failure",
     "sanitize_error_text",
+    "sanitized_error_summary",
     "RelayProbeKind",
     "RelayProbeOutcome",
     "RelayFailureClass",
