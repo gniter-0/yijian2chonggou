@@ -20,6 +20,7 @@ from openai import APIConnectionError, APIStatusError, APITimeoutError, OpenAI
 from pydantic import Field, ValidationError, model_validator
 
 from ..materials.schema import StrictModel
+from ..providers.base import sanitize_error_text
 
 from .contracts import (
     ContractValidationReport,
@@ -82,6 +83,23 @@ def _utc_now() -> str:
 
 def _sha256(value: str) -> str:
     return hashlib.sha256(value.encode("utf-8")).hexdigest()
+
+
+def _sanitized_error_message(error: BaseException) -> str:
+    """错误原文落纸前必过脱敏器（providers 的不变式 #12），本模块是活的外呼路径。
+
+    为什么必须在这里接线，而不是照抄 ``str(exc)[:500]``：
+      1) 供应商/中继的错误正文会回显凭据——``Incorrect API key provided: sk-...``
+         与 ``Authorization: Bearer ...`` 都是常见形态，而 openai SDK 的
+         ``APIStatusError.__str__`` 直接带上响应体；
+      2) 本模块的 ``_append`` 会把 ``error_message`` 逐行写进 step2 journal 文件，
+         回显一旦被原样收录，凭据就落到磁盘上，并随 journal 一起被审阅、归档；
+      3) ``providers/base.py`` 已为同一条口径配了强制校验器（``sanitized_detail``
+         与脱敏结果不一致即抛 ``probe detail is not sanitized``），而真外呼的传输层
+         没有接线——等于规则只在离线录制通道成立，在会真联网的通道失效。
+    截断口径一并交给脱敏器（300 字），不另立长度，避免同一条不变式出现两套尺子。
+    """
+    return sanitize_error_text(f"{type(error).__name__}: {error}")
 
 
 def _json_dumps(value: Any) -> str:
@@ -791,7 +809,7 @@ class OpenAICompatibleStep2Transport:
                 "error": None,
             }
         except Exception as exc:  # Capability probes must report incompatibility, not hide it.
-            return {"supported": False, "provider_request_id": None, "raw_response_sha256": None, "error": f"{type(exc).__name__}: {str(exc)[:500]}"}
+            return {"supported": False, "provider_request_id": None, "raw_response_sha256": None, "error": _sanitized_error_message(exc)}
 
     def probe_json_schema(
         self,
@@ -856,7 +874,7 @@ class OpenAICompatibleStep2Transport:
                 )
             return {"supported": records[1]["idempotency_replayed"] is True, "records": records, "error": None}
         except Exception as exc:
-            return {"supported": False, "records": records, "error": f"{type(exc).__name__}: {str(exc)[:500]}"}
+            return {"supported": False, "records": records, "error": _sanitized_error_message(exc)}
 
 
 class CallableStep2Transport:
@@ -941,7 +959,7 @@ class Step2OpenAIAdapter:
             provider_request_id=provider_request_id,
             http_status=http_status,
             error_type=type(error).__name__ if error else None,
-            error_message=str(error)[:500] if error else None,
+            error_message=sanitize_error_text(str(error)) if error else None,
             reconciled_terminal_outcome=reconciled_terminal_outcome,
         )
         _append_event(self._journal_path, event)
@@ -1365,7 +1383,7 @@ class Step2OpenAIAdapter:
                 state,
                 self._safe_rejected_response_message("payload_schema_validation_failed")
                 if rejected_response_forensics is not None
-                else f"{type(exc).__name__}: {str(exc)[:500]}",
+                else _sanitized_error_message(exc),
             )
             record = Step2AExecutionRecord(
                 request=request,
@@ -1440,7 +1458,7 @@ class Step2OpenAIAdapter:
             unknown_outcome = self._is_unknown_outcome(exc)
             outcome = Step2JournalOutcome.UNKNOWN_OUTCOME if unknown_outcome else Step2JournalOutcome.FAILED
             state = self._failure_state(exc, unknown_outcome=unknown_outcome)
-            response = self._failed_b(request, state, f"{type(exc).__name__}: {str(exc)[:500]}")
+            response = self._failed_b(request, state, _sanitized_error_message(exc))
             record = Step2BExecutionRecord(
                 request=request,
                 response=response,

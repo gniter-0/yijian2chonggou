@@ -8,6 +8,7 @@ from typing import Any
 
 import pytest
 
+from examcard.evidence.vision import PROBE_IDEMPOTENCY_CALL_COUNT
 from examcard.pipeline.shadow_wiring import (
     BudgetedVisionVerifier,
     VisionBudgetExceeded,
@@ -95,6 +96,62 @@ def test_budgeted_verifier_charges_before_calling(tmp_path: Path) -> None:
     with pytest.raises(VisionBudgetExceeded):
         wrapped.verify(PNG_BYTES)
     assert wrapped.calls == 1  # 熔断发生在外呼之前，不计为一次调用
+
+
+class _RecordingProber:
+    """记录调用的假 verifier：只观察预算记账，不产生任何外呼。"""
+
+    name = "recording_prober"
+    version = "test-v1"
+
+    def __init__(self) -> None:
+        self.probe_keys: list[str] = []
+
+    def verify(self, png_bytes: bytes) -> Any:
+        raise AssertionError("本测试不应触达 verify")
+
+    def probe_idempotency(self, png_bytes: bytes, *, idempotency_key: str) -> str:
+        self.probe_keys.append(idempotency_key)
+        return "probed"
+
+
+def test_budgeted_probe_idempotency_charges_every_call_it_makes(tmp_path: Path) -> None:
+    """幂等探测一次发两呼，就必须扣两次——按 verify 的一次一扣记会让账面短记一半。"""
+    budget = VisionCallBudget(tmp_path / "probe.json", hard_cap=4)
+    inner = _RecordingProber()
+    wrapped = BudgetedVisionVerifier(inner, budget)
+
+    assert wrapped.probe_idempotency(PNG_BYTES, idempotency_key="k-1") == "probed"
+
+    assert inner.probe_keys == ["k-1"]
+    assert PROBE_IDEMPOTENCY_CALL_COUNT == 2
+    assert budget.calls == PROBE_IDEMPOTENCY_CALL_COUNT
+    assert wrapped.calls == PROBE_IDEMPOTENCY_CALL_COUNT
+
+
+def test_budgeted_probe_idempotency_refuses_when_only_one_call_remains(tmp_path: Path) -> None:
+    """余量只剩 1 时当场熔断：两呼探测不许先发一呼、再发现额度不够。"""
+    budget = VisionCallBudget(tmp_path / "probe.json", hard_cap=3)
+    budget.charge(2)
+    inner = _RecordingProber()
+    wrapped = BudgetedVisionVerifier(inner, budget)
+
+    with pytest.raises(VisionBudgetExceeded, match="hard cap 3"):
+        wrapped.probe_idempotency(PNG_BYTES, idempotency_key="k-2")
+
+    assert inner.probe_keys == []
+    assert budget.calls == 2 and wrapped.calls == 0
+
+
+def test_budgeted_probe_idempotency_fails_loud_without_charging(tmp_path: Path) -> None:
+    """内层没有探测能力时响亮失败，且不许先把额度扣掉。"""
+    budget = VisionCallBudget(tmp_path / "probe.json", hard_cap=4)
+    wrapped = BudgetedVisionVerifier(make_mock_vision_verifier("文本"), budget)
+
+    with pytest.raises(AttributeError, match="probe_idempotency"):
+        wrapped.probe_idempotency(PNG_BYTES, idempotency_key="k-3")
+
+    assert budget.calls == 0 and wrapped.calls == 0
 
 
 def test_load_env_and_live_verifier_fail_closed(tmp_path: Path) -> None:

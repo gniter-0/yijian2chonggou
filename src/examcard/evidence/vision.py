@@ -6,7 +6,7 @@ import json
 import re
 from dataclasses import dataclass
 from collections.abc import Mapping
-from typing import Any
+from typing import Any, Final
 
 from openai import OpenAI
 
@@ -27,6 +27,12 @@ class IdempotencyProbeResult:
     first_replayed: bool | None
     second_replayed: bool | None
     response_header_evidence: dict[str, str]
+
+
+# 一次幂等探测固定连发两呼：只有第二呼的重放响应头才是判据（见
+# OpenAIVisionVerifier.probe_idempotency）。这个数字同时被 pipeline.shadow_wiring 的
+# 预算包装器用来按 2 扣额度，因此必须与实际请求数同源——两边各写一个字面量迟早会漂。
+PROBE_IDEMPOTENCY_CALL_COUNT: Final = 2
 
 
 class GoldenFixtureVisionVerifier:
@@ -144,7 +150,11 @@ class OpenAIVisionVerifier:
         return self._parse_verification(response=response, headers=headers)
 
     def probe_idempotency(self, png_bytes: bytes, *, idempotency_key: str) -> IdempotencyProbeResult:
-        """Require an explicit replay response header before trusting relay idempotency."""
+        """Require an explicit replay response header before trusting relay idempotency.
+
+        代价是 ``PROBE_IDEMPOTENCY_CALL_COUNT`` 次付费外呼，且两呼都真的打到中继——
+        走预算的调用方必须按这个数扣额度，不能沿用 ``verify`` 的一次一扣。
+        """
         first_response, first_headers = self._create_completion(png_bytes=png_bytes, idempotency_key=idempotency_key)
         second_response, second_headers = self._create_completion(png_bytes=png_bytes, idempotency_key=idempotency_key)
         first = self._parse_verification(response=first_response, headers=first_headers)

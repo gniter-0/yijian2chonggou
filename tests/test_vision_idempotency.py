@@ -5,7 +5,7 @@ from types import SimpleNamespace
 
 
 import examcard.evidence.vision as vision_module
-from examcard.evidence.vision import OpenAIVisionVerifier
+from examcard.evidence.vision import PROBE_IDEMPOTENCY_CALL_COUNT, OpenAIVisionVerifier
 
 
 def _raw_response(*, replayed: str | None, request_id: str):
@@ -81,3 +81,26 @@ def test_client_pins_zero_automatic_retries(monkeypatch):
     OpenAIVisionVerifier(base_url="https://relay.example/v1", api_key="test", model="gpt-test")
 
     assert constructed[0]["max_retries"] == 0
+
+
+def test_probe_issues_exactly_the_number_of_calls_the_budget_charges(monkeypatch):
+    """封印：探测的真实请求数必须等于 PROBE_IDEMPOTENCY_CALL_COUNT。
+
+    这个常量是 pipeline.shadow_wiring 预算包装器扣额度的依据。两者一旦漂开，
+    硬顶记账就会重新短记——与 cm15 修掉的「一次调用真发三次请求」是同一形状。
+    """
+    issued: list[dict] = []
+
+    class FakeRawCompletions:
+        def create(self, **kwargs):
+            issued.append(kwargs)
+            return _raw_response(replayed="true" if len(issued) > 1 else "false", request_id="req-1")
+
+    fake_client = SimpleNamespace(chat=SimpleNamespace(completions=SimpleNamespace(with_raw_response=FakeRawCompletions())))
+    monkeypatch.setattr(vision_module, "OpenAI", lambda **kwargs: fake_client)
+    verifier = OpenAIVisionVerifier(base_url="https://relay.example/v1", api_key="test", model="gpt-test")
+
+    verifier.probe_idempotency(b"\x89PNGfixture", idempotency_key="vision-count-key")
+
+    assert len(issued) == PROBE_IDEMPOTENCY_CALL_COUNT
+    assert {call["extra_headers"]["Idempotency-Key"] for call in issued} == {"vision-count-key"}

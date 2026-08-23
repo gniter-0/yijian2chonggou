@@ -20,7 +20,11 @@ from typing import Any, Callable
 from ..common.io import atomic_write_json, read_json
 from ..evidence.engine_types import VisualReviewHint
 from ..evidence.ingest import EvidenceEngine, EvidenceEngineConfig
-from ..evidence.vision import GoldenFixtureVisionVerifier, OpenAIVisionVerifier
+from ..evidence.vision import (
+    PROBE_IDEMPOTENCY_CALL_COUNT,
+    GoldenFixtureVisionVerifier,
+    OpenAIVisionVerifier,
+)
 from ..materials.schema import MaterialProfile
 from .shadow import classify_text_conflict, v1_chapter_metrics
 
@@ -95,6 +99,28 @@ class BudgetedVisionVerifier:
         self.calls += 1
         try:
             return self._inner.verify(png_bytes)
+        except Exception:
+            self.failures += 1
+            raise
+
+    def probe_idempotency(self, png_bytes: bytes, *, idempotency_key: str) -> Any:
+        """幂等探测一次连发两呼，预算必须按 2 扣——否则硬顶记账短记一半。
+
+        ``OpenAIVisionVerifier.probe_idempotency`` 刻意用同一个 ``Idempotency-Key``
+        连打两次，靠第二呼的重放响应头判断中继是否真的幂等；两呼都是付费外呼。
+        ``verify`` 的 ``charge(1)`` 记不到它，而本包装器此前根本不代理这个方法：
+        拿着裸 verifier 的调用方能在零记账下花掉两次额度，与 cm15 修掉的
+        「一次调用真发三次请求」是同一形状的缺口——账面与线上不一致，断路器失明。
+        次数取自 evidence.vision 的 ``PROBE_IDEMPOTENCY_CALL_COUNT``，与真实请求数同源。
+        先扣后发，且余量不足 2 次时当场熔断，绝不先发一呼再发现额度不够。
+        """
+        prober = getattr(self._inner, "probe_idempotency", None)
+        if not callable(prober):
+            raise AttributeError(f"inner verifier {self._inner.name} exposes no probe_idempotency")
+        self._budget.charge(PROBE_IDEMPOTENCY_CALL_COUNT)
+        self.calls += PROBE_IDEMPOTENCY_CALL_COUNT
+        try:
+            return prober(png_bytes, idempotency_key=idempotency_key)
         except Exception:
             self.failures += 1
             raise
