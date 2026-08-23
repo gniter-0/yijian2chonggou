@@ -482,7 +482,25 @@ def _audit_sample(
 def build_phase2r11_five_golden_report(
     *, repository_root: Path, generated_at_utc: str
 ) -> Phase2R11FiveGoldenReport:
-    """Build five generic V25 source contracts without changing source artifacts."""
+    """Build five generic V25 source contracts without changing source artifacts.
+
+    未移植入口：本函数在本仓无法运行，且全仓没有任何调用点（src/tests/migration 皆无）。
+    第一条函数内 import 就会抛 ModuleNotFoundError——``tools.verify_phase2r1_phase2r0_freeze``
+    留在旧仓 ``yijian2/scripts/tools/``（4024 字节，旧仓把 ``scripts/`` 挂在 sys.path 上，
+    所以那边的导入路径写作 ``tools.``），未随内核迁移过来。
+
+    它还依赖六条旧仓语料/配置路径（``scripts/tests/fixtures/v2/golden_samples/`` 下的
+    golden registry 与 learning golden、``data/evidence_v2/golden/gonglu_phase0_v1``、
+    ``configs/v2/`` 下三个 sidecar），属于机器本地语料，不在本仓交付物内。补齐移植的代价
+    由这批语料决定，而不是那 4 KB 的校验脚本。
+
+    保留而非删除的理由：本函数构造的 ``Phase2R11FiveGoldenReport`` /
+    ``Phase2R11SampleIntegrationAudit`` / ``Phase2R11Readiness`` 是 V25 契约形状本身，
+    在本项目里契约定义即交付物，不因驱动缺席而失效；``_review_queue`` 也仍被
+    ``phase2r12_v25_golden_review`` 顶层 import。pyproject 里那条 import-not-found 豁免
+    就是给这处未移植记账，并由 tests/test_phase2r11_generic_five_golden.py 封住——
+    「调用即 ModuleNotFoundError」是被测事实，不是注释里的声明。
+    """
 
     from ...materials.catalog import load_content_policy
     from tools.verify_phase2r1_phase2r0_freeze import verify_phase2r1_phase2r0_freeze
