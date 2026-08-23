@@ -10,6 +10,8 @@ from pathlib import Path
 
 import pytest
 
+from examcard.utils.legacy_root import LEGACY_ROOT_ENV, resolve_legacy_root
+
 ROOT = Path(__file__).resolve().parents[1]
 # T3：必须仓库相对的测试产物统一收口到单一稳定父目录。
 # 在根目录随意建删顶层路径会与 pytest 的文件系统扫描竞态（Windows 上曾致收集期 stat 已删目录）。
@@ -26,32 +28,19 @@ os.environ.setdefault("MPLBACKEND", "Agg")
 # 机器（含未来的 CI）上整体静默消失——模块级 skipif 让 92 个用例无声蒸发，
 # 却不报一个错。
 #
-# 解析顺序：EXAMCARD_LEGACY_ROOT 显式指定 > 仓库同级 ../yijian2。
-# 显式指定却不存在 = 配置错误，立即抛错；未指定且不存在 = 允许跳过，但会在
-# 会话摘要里响亮报数。EXAMCARD_REQUIRE_LEGACY_CORPUS=1 时升级为收集期失败（CI 用）。
+# 解析顺序（EXAMCARD_LEGACY_ROOT 显式指定 > 本仓同级 ../yijian2）与「指错即抛错、
+# 决不静默回落」的口径都由 examcard.utils.legacy_root 一处提供：cm20 起 migration
+# 下 25 个脚本共用同一处，两份副本各自漂移的余地被消掉。这里只叠加测试特有的一层：
+# 未指定且语料不在本机 = 允许跳过，但在会话摘要里响亮报数；
+# EXAMCARD_REQUIRE_LEGACY_CORPUS=1 时升级为收集期失败（CI 用）。
 # ---------------------------------------------------------------------------
-LEGACY_ROOT_ENV = "EXAMCARD_LEGACY_ROOT"
 REQUIRE_LEGACY_CORPUS_ENV = "EXAMCARD_REQUIRE_LEGACY_CORPUS"
 _TRUTHY = {"1", "true", "yes", "on"}
 
 # 被语料缺席挡掉的模块清单，供 pytest_terminal_summary 响亮报数。
 _CORPUS_GATED: list[str] = []
 
-
-def _resolve_legacy_root() -> Path:
-    override = (os.environ.get(LEGACY_ROOT_ENV) or "").strip()
-    if not override:
-        return ROOT.parent / "yijian2"
-    path = Path(override).expanduser()
-    if not path.is_dir():
-        raise RuntimeError(
-            f"{LEGACY_ROOT_ENV}={override!r} 指向的目录不存在。"
-            "显式指定即视为承诺语料就位，不做静默回落。"
-        )
-    return path
-
-
-LEGACY_ROOT = _resolve_legacy_root()
+LEGACY_ROOT = resolve_legacy_root(ROOT)
 LEGACY_CORPUS_PRESENT = LEGACY_ROOT.is_dir()
 
 

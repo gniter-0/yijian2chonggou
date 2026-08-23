@@ -36,9 +36,12 @@ from datetime import UTC, datetime
 from pathlib import Path
 
 NEW_ROOT = Path(__file__).resolve().parents[1]
-OLD_ROOT = Path(r"C:\Users\liushaocheng\Desktop\getinfo\yijian2")
 sys.path.insert(0, str(NEW_ROOT / "src"))
 sys.path.insert(0, str(NEW_ROOT / "migration"))
+
+from examcard.utils.legacy_root import resolve_legacy_root  # noqa: E402
+
+OLD_ROOT = resolve_legacy_root(NEW_ROOT)
 
 from examcard.pipeline.live_run import (  # noqa: E402
     DEFAULT_PRICING_RELATIVE,

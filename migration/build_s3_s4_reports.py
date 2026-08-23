@@ -32,8 +32,9 @@ sys.path.insert(0, str(REPO_ROOT / "src"))
 from examcard.common.io import read_json  # noqa: E402
 from examcard.pipeline.shadow import v1_chapter_metrics  # noqa: E402
 from examcard.pipeline.shadow_wiring import _index_by_prefix, high_risk_review_hints  # noqa: E402
+from examcard.utils.legacy_root import resolve_legacy_root  # noqa: E402
 
-LEGACY = Path(r"C:\Users\liushaocheng\Desktop\getinfo\yijian2")
+LEGACY = resolve_legacy_root(REPO_ROOT)
 STRUCTURED_DIR = LEGACY / "data" / "structured_公路"
 ROOT = REPO_ROOT / "data" / "shadow_gonglu_65"
 DOCS = REPO_ROOT / "docs" / "prework"

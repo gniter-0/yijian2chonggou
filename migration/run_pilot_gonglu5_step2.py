@@ -32,8 +32,11 @@ from datetime import UTC, datetime
 from pathlib import Path
 
 NEW_ROOT = Path(__file__).resolve().parents[1]
-OLD_ROOT = Path(r"C:\Users\liushaocheng\Desktop\getinfo\yijian2")
 sys.path.insert(0, str(NEW_ROOT / "src"))
+
+from examcard.utils.legacy_root import resolve_legacy_root  # noqa: E402
+
+OLD_ROOT = resolve_legacy_root(NEW_ROOT)
 
 from examcard.knowledge.contracts.phase2r14_v25_live import (  # noqa: E402
     _atomic_write_json,

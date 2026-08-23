@@ -22,8 +22,10 @@ import sys
 from pathlib import Path
 from typing import Any
 
+from examcard.utils.legacy_root import resolve_legacy_root
+
 NEW_ROOT = Path(__file__).resolve().parents[1]
-OLD_ROOT = Path(r"C:\Users\liushaocheng\Desktop\getinfo\yijian2")
+OLD_ROOT = resolve_legacy_root(NEW_ROOT)
 
 REPLAY_OUT = NEW_ROOT / ".test-tmp" / "golden_replay" / "facts_v2"
 REPORT_PATH = NEW_ROOT / "docs" / "prework" / "P3_golden_five_replay_report_20260812.md"

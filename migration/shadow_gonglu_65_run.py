@@ -21,12 +21,14 @@ import time
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[1]
-YIJIAN = Path(r"C:\Users\liushaocheng\Desktop\getinfo\yijian2")
+sys.path.insert(0, str(REPO / "src"))
+
+from examcard.utils.legacy_root import resolve_legacy_root  # noqa: E402
+
+YIJIAN = resolve_legacy_root(REPO)
 PDF_DIR = YIJIAN / "input_pdf_公路"
 ENV_PATH = YIJIAN / ".env"
 OUTPUT_ROOT = REPO / "data" / "shadow_gonglu_65"
-
-sys.path.insert(0, str(REPO / "src"))
 
 from examcard.common.io import atomic_write_json, read_json  # noqa: E402
 from examcard.pipeline.shadow_wiring import (  # noqa: E402

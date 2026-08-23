@@ -27,9 +27,10 @@ from examcard.pipeline.shadow_wiring import (  # noqa: E402
     make_v2_evidence_runner,
 )
 from examcard.providers.base import sanitized_error_summary  # noqa: E402
+from examcard.utils.legacy_root import resolve_legacy_root  # noqa: E402
 
 LANE = "w3"
-YIJIAN2 = Path(r"C:\Users\liushaocheng\Desktop\getinfo\yijian2")
+YIJIAN2 = resolve_legacy_root(REPO)
 OUTPUT_ROOT = REPO / "data" / "shadow_gonglu_65"
 BUDGET_PATH = OUTPUT_ROOT / f"vision-budget-{LANE}.json"
 HARD_CAP = 100

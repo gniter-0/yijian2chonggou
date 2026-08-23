@@ -19,7 +19,10 @@ from pathlib import Path
 
 import yaml
 
-OLD_ROOT = Path(r"c:\Users\liushaocheng\Desktop\getinfo\yijian2")
+from examcard.utils.legacy_root import resolve_legacy_root
+
+REPO_ROOT = Path(__file__).resolve().parents[1]
+OLD_ROOT = resolve_legacy_root(REPO_ROOT, must_exist=True)
 sys.path.insert(0, str(OLD_ROOT / "scripts"))
 
 import knowledge_v2.phase2r810_r89_reviewed_admission_authorization as old_r810  # noqa: E402

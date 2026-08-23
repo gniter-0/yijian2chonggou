@@ -15,9 +15,16 @@ from pathlib import Path
 
 sys.dont_write_bytecode = True
 
-DEFAULT_OLD_ROOT = Path(r"C:\Users\liushaocheng\Desktop\getinfo\yijian2")
+REPO_ROOT = Path(__file__).resolve().parents[1]
 
 RESULTS: list[tuple[str, bool, str]] = []
+
+
+def _default_old_root() -> Path:
+    """--old-root 缺省值走仓内统一解析；导入放函数内，保持模块导入期不碰 examcard。"""
+    from examcard.utils.legacy_root import resolve_legacy_root
+
+    return resolve_legacy_root(REPO_ROOT)
 
 
 def record(target: str, ok: bool, detail: str) -> None:
@@ -211,9 +218,9 @@ def verify_closure(old_root: Path, compilation, fixture_path: Path):
 
 def main() -> int:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--old-root", type=Path, default=DEFAULT_OLD_ROOT)
+    parser.add_argument("--old-root", type=Path, default=None)
     args = parser.parse_args()
-    old_root = args.old_root.resolve()
+    old_root = (args.old_root or _default_old_root()).resolve()
     if not old_root.is_dir():
         print(f"old root not found: {old_root}")
         return 2

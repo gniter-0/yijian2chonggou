@@ -37,8 +37,9 @@ from examcard.pipeline.shadow_wiring import (  # noqa: E402
     make_vision_review_runner,
 )
 from examcard.providers.base import sanitize_error_text, sanitized_error_summary  # noqa: E402
+from examcard.utils.legacy_root import resolve_legacy_root  # noqa: E402
 
-LEGACY = Path(r"C:\Users\liushaocheng\Desktop\getinfo\yijian2")
+LEGACY = resolve_legacy_root(REPO_ROOT)
 PDF_DIR = LEGACY / "input_pdf_公路"
 ROOT = REPO_ROOT / "data" / "shadow_gonglu_65"
 JOURNAL = ROOT / "journal-s2.jsonl"

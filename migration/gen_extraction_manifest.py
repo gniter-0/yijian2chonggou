@@ -33,13 +33,19 @@ v2 修订（人工复核后按两处根因修正；根因诊断见 report_task /
 from __future__ import annotations
 
 import re
+import sys
 from collections import defaultdict
 from datetime import date
 from pathlib import Path
 
-OLD_SCRIPTS = Path(r"c:\Users\liushaocheng\Desktop\getinfo\yijian2\scripts")
+REPO_ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(REPO_ROOT / "src"))
+
+from examcard.utils.legacy_root import resolve_legacy_root  # noqa: E402
+
+OLD_SCRIPTS = resolve_legacy_root(REPO_ROOT) / "scripts"
 KV2 = OLD_SCRIPTS / "knowledge_v2"
-OUT = Path(__file__).resolve().parents[1] / "docs" / "extraction_manifest.md"
+OUT = REPO_ROOT / "docs" / "extraction_manifest.md"
 
 # 迁走 / 留旧仓 的语义分组
 MIGRATE_KINDS = ("core", "core-current", "current-runtime")

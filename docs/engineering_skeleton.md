@@ -133,6 +133,15 @@ uv add <pkg>@latest && uv sync                            # 升级依赖（锁�
 
 `--basetemp` 每条都带，不是可选项——见 §4.1。
 
+**旧仓语料位置（`EXAMCARD_LEGACY_ROOT`）**：依赖 yijian2 金标语料的用例，与 `migration/` 下的
+实跑/对照脚本，共用同一条解析顺序——`EXAMCARD_LEGACY_ROOT` 显式指定优先，其次取本仓同级 `../yijian2`；
+显式指错即抛错，决不静默回落到同级猜测（那会把「我指错了」悄悄变成「语料不在本机」）。唯一
+实现在 `src/examcard/utils/legacy_root.py`，仓内任何 `.py` 都不许再钉机器本地绝对路径——
+钉了就等于让别人（含 CI）只能以「找不到文件」的形式失败，而错误里出现的还是他从未写过的那条
+路径。封印见 `tests/test_legacy_root_resolution_seal.py`。语料不在本机时相关模块整体跳过，
+并在 pytest 摘要里响亮报数；`EXAMCARD_REQUIRE_LEGACY_CORPUS=1` 把这种缺席升级为收集期失败
+（给 CI 用，防止 92 个用例无声蒸发）。
+
 ### 5.1 本机 pytest 环境附注（Windows ACL 损伤与修复）
 
 裸 `uv run pytest` 若出现大批 `tmp_path` fixture 初始化 ERROR（本机曾实测 84 例、全部非代码缺陷——20260812 未来就绪审计定性），病因是 `%TEMP%\pytest-of-<用户名>` 与仓内 `.pytest_cache/` 曾被管理员权限运行创建，普通用户对其 ACL 拒绝访问、无法删除/改名/重置。
@@ -151,7 +160,7 @@ takeown /f $env:TEMP\pytest-of-$env:USERNAME /r /d y; icacls $env:TEMP\pytest-of
 
 0. **两条铁律（总指挥令，组公告 bc-b8b9aca6）**：
    - **冻结哈希铁律**：所有旧契约的法定哈希/指纹实现（Step2 的 canonical_step2_sha256/_canonicalize/fingerprint_*、evidence 的 identity._canonical/_digest 内容寻址 ID、cache.stable_config_hash 及其它一切既有指纹）**逐字节原样随包搬运**，禁止折叠进 common/hashing 底座或改调新实现；common 底座仅供四桶新代码。合流仅允许在黄金重放逐字节平价通过后以别名化方式进行，且不属阶段 2 范围。一字节规范化差异（浮点 round / frozenset 排序 / separators / ensure_ascii）即作废全部 ID/缓存键/golden。
-   - **产出路径纪律**：yijian2 旧仓全程只读；任何产出（文档/脚本/扫描结果）只写本仓，设计类进 `docs/design/` 或 `docs/prework/`。
+   - **产出路径纪律**：yijian2 旧仓全程只读；任何产出（文档/脚本/扫描结果）只写本仓，设计类进 `docs/design/` 或 `docs/prework/`。旧仓位置一律经 `EXAMCARD_LEGACY_ROOT` 解析（缺省取同级 `../yijian2`），见 §5。
 1. import 改写：`knowledge_v2.X` / `scripts.knowledge_v2.X` → 按 manifest 去向列映射到 `examcard.knowledge.*` 等；`evidence_v2.*` → `examcard.evidence.*`；`materials_v2.*` → `examcard.materials.*`。
 2. 每迁一批模块：同批迁其"随核心迁移"的测试（manifest 第六节 76 个），并使其满足 T1–T8（写盘改 tmp、外呼标 live）。
 3. 骨架冒烟 `tests/test_skeleton.py` 必须始终绿：它锁定子包齐全、可导入、T3/T4 装置生效。

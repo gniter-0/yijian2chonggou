@@ -22,8 +22,11 @@ import inspect
 import sys
 from pathlib import Path
 
-OLD_SCRIPTS = Path(r"c:\Users\liushaocheng\Desktop\getinfo\yijian2\scripts")
-OLD_ROOT = OLD_SCRIPTS.parent
+from examcard.utils.legacy_root import resolve_legacy_root
+
+REPO_ROOT = Path(__file__).resolve().parents[1]
+OLD_ROOT = resolve_legacy_root(REPO_ROOT, must_exist=True)
+OLD_SCRIPTS = OLD_ROOT / "scripts"
 sys.path.insert(0, str(OLD_SCRIPTS))
 
 import knowledge_v2.semantic_contracts as old_sc  # noqa: E402

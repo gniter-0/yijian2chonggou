@@ -46,8 +46,11 @@ import sys
 from pathlib import Path
 
 NEW_ROOT = Path(__file__).resolve().parents[1]
-OLD_ROOT = Path(r"C:\Users\liushaocheng\Desktop\getinfo\yijian2")
 sys.path.insert(0, str(NEW_ROOT / "src"))
+
+from examcard.utils.legacy_root import resolve_legacy_root  # noqa: E402
+
+OLD_ROOT = resolve_legacy_root(NEW_ROOT)
 
 EXAM_ID = "gonglu_golden5_rehearsal"
 REGISTRY_ID = f"{EXAM_ID}_phase0_v1"

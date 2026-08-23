@@ -11,10 +11,16 @@
 from __future__ import annotations
 
 import re
+import sys
 from pathlib import Path
 
-OLD_TESTS = Path(r"C:\Users\liushaocheng\Desktop\getinfo\yijian2\scripts\tests")
-NEW_TESTS = Path(__file__).resolve().parents[1] / "tests"
+REPO_ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(REPO_ROOT / "src"))
+
+from examcard.utils.legacy_root import resolve_legacy_root  # noqa: E402
+
+OLD_TESTS = resolve_legacy_root(REPO_ROOT) / "scripts" / "tests"
+NEW_TESTS = REPO_ROOT / "tests"
 
 FILES = [
     "test_diagram_disposition_v2.py",

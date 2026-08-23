@@ -28,10 +28,16 @@ from __future__ import annotations
 
 import ast
 import hashlib
+import sys
 from pathlib import Path
 
-OLD_KV2 = Path(r"c:\Users\liushaocheng\Desktop\getinfo\yijian2\scripts\knowledge_v2")
-CONTRACTS_DIR = Path(__file__).resolve().parents[1] / "src" / "examcard" / "knowledge" / "contracts"
+REPO_ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(REPO_ROOT / "src"))
+
+from examcard.utils.legacy_root import resolve_legacy_root  # noqa: E402
+
+OLD_KV2 = resolve_legacy_root(REPO_ROOT) / "scripts" / "knowledge_v2"
+CONTRACTS_DIR = REPO_ROOT / "src" / "examcard" / "knowledge" / "contracts"
 
 
 def collect_segments(source: str) -> dict[str, str]:

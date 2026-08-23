@@ -12,8 +12,11 @@ import sys
 from pathlib import Path
 
 NEW_ROOT = Path(__file__).resolve().parents[1]
-OLD_ROOT = Path(r"C:\Users\liushaocheng\Desktop\getinfo\yijian2")
 sys.path.insert(0, str(NEW_ROOT / "src"))
+
+from examcard.utils.legacy_root import resolve_legacy_root  # noqa: E402
+
+OLD_ROOT = resolve_legacy_root(NEW_ROOT)
 
 from examcard.knowledge.llm import OpenAICompatibleStep2Transport  # noqa: E402
 from examcard.pipeline.shadow_wiring import load_env_file  # noqa: E402

@@ -12,7 +12,10 @@ import json
 import sys
 from pathlib import Path
 
-OLD_SCRIPTS = Path(r"c:\Users\liushaocheng\Desktop\getinfo\yijian2\scripts")
+from examcard.utils.legacy_root import resolve_legacy_root
+
+REPO_ROOT = Path(__file__).resolve().parents[1]
+OLD_SCRIPTS = resolve_legacy_root(REPO_ROOT, must_exist=True) / "scripts"
 sys.path.insert(0, str(OLD_SCRIPTS))
 
 import knowledge_v2.semantic_contracts as old_sc  # noqa: E402

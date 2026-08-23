@@ -49,9 +49,12 @@ from urllib.parse import urlsplit
 import httpx
 
 NEW_ROOT = Path(__file__).resolve().parents[1]
-OLD_ROOT = Path(r"C:\Users\liushaocheng\Desktop\getinfo\yijian2")
 if str(NEW_ROOT / "src") not in sys.path:
     sys.path.insert(0, str(NEW_ROOT / "src"))
+
+from examcard.utils.legacy_root import resolve_legacy_root  # noqa: E402
+
+OLD_ROOT = resolve_legacy_root(NEW_ROOT)
 
 from examcard.knowledge.llm import OpenAICompatibleStep2Transport  # noqa: E402
 from examcard.providers import (  # noqa: E402
