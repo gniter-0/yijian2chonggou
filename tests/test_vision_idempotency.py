@@ -56,3 +56,28 @@ def test_probe_requires_explicit_second_replay_header(monkeypatch):
     assert result.supported is True
     assert result.second_replayed is True
     assert result.second_provider_request_id == "req-1"
+
+
+def test_client_pins_zero_automatic_retries(monkeypatch):
+    """封印：视觉通道必须显式钉 max_retries=0，不许继承 SDK 默认的 2 次盲重试。
+
+    这条不是风格约束。openai SDK 默认 max_retries=2，而「服务端未回响应就断开」这类
+    未知完成无法判断对方是否已处理，重发不安全；且 BudgetedVisionVerifier 每次 verify
+    只扣 1 次预算，一次调用真发三次请求会让硬顶被击穿到三倍而断路器毫无察觉。
+    """
+    constructed: list[dict] = []
+
+    class FakeRawCompletions:
+        def create(self, **kwargs):
+            return _raw_response(replayed=None, request_id="req-1")
+
+    fake_client = SimpleNamespace(chat=SimpleNamespace(completions=SimpleNamespace(with_raw_response=FakeRawCompletions())))
+
+    def _capture(**kwargs):
+        constructed.append(kwargs)
+        return fake_client
+
+    monkeypatch.setattr(vision_module, "OpenAI", _capture)
+    OpenAIVisionVerifier(base_url="https://relay.example/v1", api_key="test", model="gpt-test")
+
+    assert constructed[0]["max_retries"] == 0

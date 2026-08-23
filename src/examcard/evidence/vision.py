@@ -63,6 +63,16 @@ class OpenAIVisionVerifier:
             api_key=api_key,
             timeout=timeout,
             default_headers=default_headers or None,
+            # max_retries=0 是硬性口径，不是调参：与 knowledge/llm.py 同址规则一致——
+            # 未知的 transport 完成绝不自动重试。SDK 默认值是 2，不显式钉住就会静默继承，
+            # 而本模块自己的 probe_idempotency 存在的前提正是「中继的幂等性未经证实不可信」，
+            # 交给 SDK 盲重试与该前提直接冲突。另有两条实际后果：
+            #   1) BudgetedVisionVerifier 每次 verify 只扣 1 次预算（pipeline/shadow_wiring.py），
+            #      一次调用真发三次请求会让硬顶被击穿到三倍而断路器毫无察觉；
+            #   2) 同一张裁剪图重发可能拿回不同转写，而证据层要的是确定性。
+            # 实测证据：vision_s2.log 里 RemoteProtocolError「服务端未回响应就断开」正是
+            # 无法判断对方是否已处理的那一类，重发既不安全也无从对账。
+            max_retries=0,
         )
 
     def _create_completion(self, *, png_bytes: bytes, idempotency_key: str | None) -> tuple[Any, dict[str, str]]:
