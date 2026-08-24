@@ -61,7 +61,7 @@ CORE_TARGETS = {
     "state_machine": "src/examcard/knowledge/state_machine.py",
     "fact_engine": "src/examcard/knowledge/fact_engine.py + fact_*.py  (cm21 拆分：门面 + 12 兄弟)",
     "semantic_contracts": "src/examcard/knowledge/contracts/*  (389KB 在此拆分)",
-    "semantic_llm": "src/examcard/knowledge/llm.py",
+    "semantic_llm": "src/examcard/knowledge/llm.py + llm_*.py  (cm25 拆分：门面 + 7 兄弟)",
     "semantic_projection": "src/examcard/knowledge/projection.py",
     "learning_fixture": "src/examcard/knowledge/learning_fixture.py  (黄金样本装置·RC3 路由修正：被 V25 运行时闭包顶层 import)",
     "teaching_quality": "src/examcard/knowledge/quality.py",

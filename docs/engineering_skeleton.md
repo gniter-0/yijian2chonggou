@@ -35,6 +35,8 @@ src/examcard/
     schema.py fact_engine.py llm.py projection.py quality.py
     fact_*.py            fact_engine（67KB）在此拆分：门面留原名 + 12 个同级兄弟
                          （层序与验收口径见 docs/prework/fact_engine_split_blueprint.md）
+    llm_*.py             llm（73KB）在此拆分：门面留原名 + 7 个同级兄弟
+                         （层序与验收口径见 docs/prework/llm_split_blueprint.md）
     adapter_v1.py state_machine.py identity.py
     contracts/          semantic_contracts（380KB）在此拆分 + v25_generic_contracts + v25_teaching_gate_layers
     continuation/       core / integration / review / repair_sidecar

@@ -24,7 +24,7 @@
 |---|---|---|---|
 | semantic_contracts | 380KB | 52/1/29/16/38/0 | src/examcard/knowledge/contracts/*  (389KB 在此拆分) |
 | fact_engine | 67KB | 6/0/1/3/2/1 | src/examcard/knowledge/fact_engine.py + fact_*.py  (77KB，cm21 拆分：门面 + 12 兄弟) |
-| semantic_llm | 64KB | 51/1/6/7/52/0 | src/examcard/knowledge/llm.py |
+| semantic_llm | 64KB | 51/1/6/7/52/0 | src/examcard/knowledge/llm.py + llm_*.py  (77KB，cm25 拆分：门面 + 7 兄弟) |
 | learning_fixture | 38KB | 7/1/7/0/7/0 | src/examcard/knowledge/learning_fixture.py  (黄金样本装置·RC3 路由修正：被 V25 运行时闭包顶层 import) |
 | table_continuation_integration | 31KB | 10/0/0/0/12/0 | src/examcard/knowledge/continuation/integration.py |
 | continuation_review | 30KB | 11/1/2/5/11/0 | src/examcard/knowledge/continuation/review.py |
