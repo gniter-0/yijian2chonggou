@@ -17,6 +17,8 @@ from pathlib import Path
 from typing import Any, Protocol
 
 from openai import APIConnectionError, APIStatusError, APITimeoutError, OpenAI
+from openai.types.chat import ChatCompletionMessageParam
+from openai.types.shared_params import ResponseFormatJSONObject, ResponseFormatJSONSchema
 from pydantic import Field, ValidationError, model_validator
 
 from ..materials.schema import StrictModel
@@ -75,6 +77,13 @@ from .quality import (
 
 
 _SHA256_PATTERN = r"^[0-9a-f]{64}$"
+
+# openai SDK 的 ``chat.completions.create()`` 按 ``stream`` 布尔重载，且 ``messages`` /
+# ``response_format`` 都要求 TypedDict 精确形状：喂 ``list[dict[str, Any]]`` 与
+# ``dict[str, Any]`` 一律匹配不上任何重载（call-overload）。本别名把 transport 缝的入参
+# 钉到 SDK 自己的类型上——本仓只用 json_object 与 json_schema 两种响应格式，因此这里是
+# 两member 的闭合联合，而不是 SDK 那个还含 text 的宽联合。
+_ChatResponseFormatParam = ResponseFormatJSONObject | ResponseFormatJSONSchema
 
 
 def _utc_now() -> str:
@@ -407,10 +416,10 @@ class OpenAICompatibleStep2Transport:
         self,
         *,
         model: str,
-        messages: list[dict[str, Any]],
+        messages: list[ChatCompletionMessageParam],
         max_tokens: int,
         temperature: float,
-        response_format: Mapping[str, Any],
+        response_format: _ChatResponseFormatParam,
         idempotency_key: str | None,
     ) -> TransportCompletion:
         self.network_call_count += 1
@@ -428,7 +437,7 @@ class OpenAICompatibleStep2Transport:
             messages=messages,
             max_tokens=max_tokens,
             temperature=temperature,
-            response_format=dict(response_format),
+            response_format=response_format,
             extra_headers={"Idempotency-Key": idempotency_key} if idempotency_key else None,
         )
         headers = self._normalized_headers(raw.headers)
@@ -448,10 +457,10 @@ class OpenAICompatibleStep2Transport:
         self,
         *,
         model: str,
-        messages: list[dict[str, Any]],
+        messages: list[ChatCompletionMessageParam],
         max_tokens: int,
         temperature: float,
-        response_format: Mapping[str, Any],
+        response_format: _ChatResponseFormatParam,
         idempotency_key: str | None,
     ) -> TransportCompletion:
         """SSE aggregation: join deltas into a TransportCompletion equivalent to the non-streaming shape.
@@ -469,7 +478,7 @@ class OpenAICompatibleStep2Transport:
             messages=messages,
             max_tokens=max_tokens,
             temperature=temperature,
-            response_format=dict(response_format),
+            response_format=response_format,
             stream=True,
             extra_headers={"Idempotency-Key": idempotency_key} if idempotency_key else None,
         )
@@ -534,7 +543,7 @@ class OpenAICompatibleStep2Transport:
 
         decoder = identity.decoder
         if decoder.response_format == Step2ResponseFormat.JSON_SCHEMA_STRICT:
-            response_format: dict[str, Any] = {
+            response_format: _ChatResponseFormatParam = {
                 "type": "json_schema",
                 "json_schema": {
                     "name": f"{identity.stage.value}_result",
@@ -765,14 +774,16 @@ class OpenAICompatibleStep2Transport:
     @staticmethod
     def _request_messages(
         *, request: Step2ARequest | Step2BRequest, prompt: str
-    ) -> list[dict[str, Any]]:
+    ) -> list[ChatCompletionMessageParam]:
         return OpenAICompatibleStep2Transport._messages_for_model_payload(
             prompt=prompt,
             model_payload=OpenAICompatibleStep2Transport.model_payload(request),
         )
 
     @staticmethod
-    def _messages_for_model_payload(*, prompt: str, model_payload: Mapping[str, Any]) -> list[dict[str, Any]]:
+    def _messages_for_model_payload(
+        *, prompt: str, model_payload: Mapping[str, Any]
+    ) -> list[ChatCompletionMessageParam]:
         return [
             {"role": "system", "content": prompt},
             {
@@ -837,8 +848,8 @@ class OpenAICompatibleStep2Transport:
         )
 
     def probe_idempotency(self, *, model: str, idempotency_key: str) -> dict[str, Any]:
-        response_format = {"type": "json_object"}
-        messages = [
+        response_format: _ChatResponseFormatParam = {"type": "json_object"}
+        messages: list[ChatCompletionMessageParam] = [
             {"role": "system", "content": "Return JSON only."},
             {"role": "user", "content": "Return {\"probe\": true}."},
         ]

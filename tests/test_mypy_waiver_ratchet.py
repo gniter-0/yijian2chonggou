@@ -10,10 +10,9 @@ pyproject.toml 的 ``[[tool.mypy.overrides]]`` 头注释写着棘轮规则「只
    一旦允许豁免，最该被类型检查的地方就成了盲区。
 3. 每条豁免只用 ``disable_error_code`` 精确关码，绝不用 ``ignore_errors`` 整模块放行。
 
-清单为何还剩这些：七条全部是工具/上游限制或已实测的「盖子」，不是偷懒——
-- call-arg（step2a_builders / admission_legacy_hash）：未启用 pydantic 插件，
-  ``model_construct`` 在 mypy 眼里要求列全字段；
-- call-overload（knowledge.llm）：openai SDK 的 create() 重载被运行期 stream 布尔打败；
+清单为何还剩这些：六条全部是工具/上游限制或已实测的「盖子」，不是偷懒——
+- call-arg（step2a_builders / admission_legacy_hash）：pyproject 挂了 pydantic 插件，
+  插件给 ``model_construct`` 合成的签名要求列全字段，而它的真实契约是部分赋值；
 - prop-decorator（knowledge.quality / knowledge.schema）：mypy 不支持 @property 之上再叠装饰器；
 - arg-type（contracts.derivation）：见该文件 isinstance 处的长注释，按正解修掉会掀开约
   50 条 union-attr 真问题，需按请求版本逐个收窄才能收口；
@@ -36,7 +35,6 @@ _WAIVER_CEILING: dict[str, frozenset[str]] = {
     "examcard.knowledge.contracts.admission_legacy_hash": frozenset({"call-arg"}),
     "examcard.knowledge.contracts.step2a_builders": frozenset({"call-arg"}),
     "examcard.knowledge.contracts.phase2r11_generic_five_golden": frozenset({"import-not-found"}),
-    "examcard.knowledge.llm": frozenset({"call-overload"}),
     "examcard.knowledge.quality": frozenset({"prop-decorator"}),
     "examcard.knowledge.schema": frozenset({"prop-decorator"}),
 }
