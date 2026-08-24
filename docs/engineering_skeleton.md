@@ -47,6 +47,8 @@ src/examcard/
     review/             人工准入门禁（manifest 4.3，27 个 phase 提炼）
     release/            发布就绪门禁（manifest 4.4，4 个 phase 提炼）
   pipeline/             四步流水线编排（出网走顶层 providers）
+    live_*.py            live_run（86KB）在此拆分：门面留原名 + 14 个同级兄弟
+                         （层序与验收口径见 docs/prework/live_run_split_blueprint.md）
   providers/            供应商兼容层，顶层包（manifest 4.2，18 个 phase 提炼；桶内 chat/image/relay/transport 结构自主）
   webui/                审阅工作台（纯函数渲染静态单文件 HTML；无 flask，无 HTTP 层）
   common/               四 distill 桶共用冻结底座（六模块：hashing/gates/io/freeze/junit/schema，签名冻结）
