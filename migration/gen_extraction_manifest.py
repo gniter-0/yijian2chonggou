@@ -59,7 +59,7 @@ CORE_TARGETS = {
     "schema": "src/examcard/knowledge/schema.py",
     "identity": "src/examcard/knowledge/identity.py",
     "state_machine": "src/examcard/knowledge/state_machine.py",
-    "fact_engine": "src/examcard/knowledge/fact_engine.py",
+    "fact_engine": "src/examcard/knowledge/fact_engine.py + fact_*.py  (cm21 拆分：门面 + 12 兄弟)",
     "semantic_contracts": "src/examcard/knowledge/contracts/*  (389KB 在此拆分)",
     "semantic_llm": "src/examcard/knowledge/llm.py",
     "semantic_projection": "src/examcard/knowledge/projection.py",

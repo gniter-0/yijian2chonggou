@@ -33,6 +33,8 @@ src/examcard/
   evidence/             类型化证据。原 scripts/evidence_v2 整包（17 文件），仅改 import
   knowledge/            语义知识内核（manifest 第一、二节的 19 核心模块 + V25 现役契约）
     schema.py fact_engine.py llm.py projection.py quality.py
+    fact_*.py            fact_engine（67KB）在此拆分：门面留原名 + 12 个同级兄弟
+                         （层序与验收口径见 docs/prework/fact_engine_split_blueprint.md）
     adapter_v1.py state_machine.py identity.py
     contracts/          semantic_contracts（380KB）在此拆分 + v25_generic_contracts + v25_teaching_gate_layers
     continuation/       core / integration / review / repair_sidecar
@@ -69,7 +71,7 @@ providers 只可 import common + utils；业务包可 import providers + common 
 - **compilers ⇄ gates.review 依赖环拆解（已裁决·A 案，经 gates-review 转达登记）**：跨桶纯数据契约下沉 `knowledge/contracts/admission_fixtures.py`；其法定哈希搬运件一并下沉为 `knowledge/contracts/admission_legacy_hash.py`（若搬运件留在 gates，下沉模型的自哈希 validator 会形成 knowledge→gates 向上回边；admission_ 前缀与 Step2 法定哈希冻结区模块隔离防混）。一级子包与冒烟不受影响；搬运件遵守冻结哈希铁律（bc-b8b9aca6，逐字节原样）。
 - **阶段边界（总指挥令）**：P1 骨架落盘到此为止；阶段 2 的代码搬运须待用户确认后启动，骨架侧不得先行迁移任何模块。
 - 历史台阶（v19/v23/v24）与 62 个 archive phase、289 个 phase 伴生工具、55 个 V1 生产工具：**一律不进新仓**（manifest 第三、4.5、五-2 节）。
-- **金样资产镜像（阶段 2·n5 登记，总指挥补录）**：随迁测试所需的黄金语料闭包（≈120MB：`data/`（evidence_v2/diagram_review_v2/facts_v2/semantic_llm_v2 相关 run 目录 + shadow_v2 第 24 章）、`configs/v2/`、`scripts/tests/fixtures/v2/`、`schemas/v2/` 35 个快照、`docs/v2/baselines/`、5 个金样源 PDF、`input_pdf_公路/` 金样章）按旧仓相对布局**镜像于新仓根**，对用例只读（T5）。落仓根而非 tests/golden 是仓库相对路径契约所迫：`fact_engine` 以仓根锚定 crop-manifest 校验链（其 ROOT 推导已修正为 parents[3]，src 布局下唯一自锚点），conftest 的 repo_tmp_path 亦须同根。
+- **金样资产镜像（阶段 2·n5 登记，总指挥补录）**：随迁测试所需的黄金语料闭包（≈120MB：`data/`（evidence_v2/diagram_review_v2/facts_v2/semantic_llm_v2 相关 run 目录 + shadow_v2 第 24 章）、`configs/v2/`、`scripts/tests/fixtures/v2/`、`schemas/v2/` 35 个快照、`docs/v2/baselines/`、5 个金样源 PDF、`input_pdf_公路/` 金样章）按旧仓相对布局**镜像于新仓根**，对用例只读（T5）。落仓根而非 tests/golden 是仓库相对路径契约所迫：`fact_engine` 以仓根锚定 crop-manifest 校验链（其 ROOT 推导已修正为 parents[3]，src 布局下唯一自锚点；cm21 拆分后锚点实体在 knowledge/fact_support.py，门面按原名再导出），conftest 的 repo_tmp_path 亦须同根。
 
 ## 4. 测试隔离规范（T1–T8）
 
