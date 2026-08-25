@@ -39,3 +39,9 @@ htmlcov/
 # 新考试工作区（runbook §1：代码与数据分仓；T4b §3.2）
 /exams/*/input_pdf/
 /exams/*/data/
+
+# 仓根体检日志：census / vision 两支盘点脚本的落地输出，属一次性排查产物，不入 git。
+# 按文件名精确登记而非 `*.log` 通配——通配会把将来「本该随提交一起审阅」的日志
+# 也悄悄吞掉。cm30 已用 .test-tmp/leakscan.py 扫过这两份：SCANNED=2 HIT_FILES=0 HIT_LINES=0。
+/census_s2.log
+/vision_s2.log

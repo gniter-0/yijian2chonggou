@@ -4,7 +4,9 @@ import hashlib
 import re
 from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, TypedDict
+from typing import TYPE_CHECKING, Final, TypedDict
+
+from pydantic import BaseModel
 
 from ...evidence.layout import normalized_compare_text
 from ..schema import FactType
@@ -97,6 +99,54 @@ if TYPE_CHECKING:
     from .step2a_request import Step2ARequest
 
 
+# Step 2A 模型提案的形状由请求版本一对一固定：V13 起每个请求版本对应一个专属模型类，
+# V13 之前是旧基类 Step2AModelFactProposal。下面三张类元组把「哪些版本带哪个字段」写成
+# mypy 能窄化的形式，循环体因此不必再用布尔旗子间接判定——旗子会把 isinstance 的类型
+# 信息抹成 bool，导致 union 上的字段访问全部失检（cm30 之前正是这样被一条 arg-type
+# 豁免连带压住了 51 条 union-attr）。加新请求版本时三张表都要同步登记，漏登记会被
+# tests/test_knowledge_contracts_derivation_shape_seal.py 当场点名。
+_MINIMAL_MODEL_PROPOSAL_TYPES: Final = (
+    Step2AV13ModelFactProposal,
+    Step2AV14ModelFactProposal,
+    Step2AV15ModelFactProposal,
+    Step2AV16ModelFactProposal,
+    Step2AV17ModelFactProposal,
+    Step2AV18ModelFactProposal,
+    Step2AV19ModelFactProposal,
+    Step2AV20ModelFactProposal,
+    Step2AV21ModelFactProposal,
+    Step2AV22ModelFactProposal,
+    Step2AV23ModelFactProposal,
+)
+# V13/V14 仍由模型声明 secondary 锚点角色；V15 起只剩一个穷举的 selected 角色，
+# secondary 一律为空，parent 角色冲突在那里结构上不可表达。
+_DUAL_ROLE_ANCHOR_PROPOSAL_TYPES: Final = (
+    Step2AModelFactProposal,
+    Step2AV13ModelFactProposal,
+    Step2AV14ModelFactProposal,
+)
+# V16 起数值声明改成本地确定性派生，模型不再声明 numeric_claims。
+_MODEL_NUMERIC_CLAIM_PROPOSAL_TYPES: Final = (
+    Step2AModelFactProposal,
+    Step2AV13ModelFactProposal,
+    Step2AV14ModelFactProposal,
+    Step2AV15ModelFactProposal,
+)
+_MINIMAL_MODEL_TYPE_BY_STEP2A_REQUEST_VERSION: Final[Mapping[str, type[BaseModel]]] = {
+    MINIMAL_REVIEWED_MULTIPAGE_STEP2A_REQUEST_VERSION: Step2AV13ModelFactProposal,
+    NUMERIC_EXPRESSION_GROUNDING_STEP2A_REQUEST_VERSION: Step2AV14ModelFactProposal,
+    SINGLE_ROLE_ANCHOR_STEP2A_REQUEST_VERSION: Step2AV15ModelFactProposal,
+    DETERMINISTIC_NUMERIC_CLAIM_STEP2A_REQUEST_VERSION: Step2AV16ModelFactProposal,
+    TABLE_CONTINUATION_STEP2A_REQUEST_VERSION: Step2AV17ModelFactProposal,
+    TABLE_COVERAGE_OBLIGATION_STEP2A_REQUEST_VERSION: Step2AV18ModelFactProposal,
+    TABLE_COVERAGE_OBLIGATION_CONTEXT_STEP2A_REQUEST_VERSION: Step2AV19ModelFactProposal,
+    TABLE_STIFFNESS_ATOMIC_THRESHOLD_COVERAGE_STEP2A_REQUEST_VERSION: Step2AV20ModelFactProposal,
+    COMPOSITION_NUMERIC_OCCURRENCE_STEP2A_REQUEST_VERSION: Step2AV21ModelFactProposal,
+    STRUCTURAL_INDEX_OCCURRENCE_STEP2A_REQUEST_VERSION: Step2AV22ModelFactProposal,
+    SOURCE_OWNED_STRUCTURAL_PROJECTION_STEP2A_REQUEST_VERSION: Step2AV23ModelFactProposal,
+}
+
+
 def derive_step2a_anchor_span_selection(
     *,
     request: Step2ARequest,
@@ -127,40 +177,28 @@ def derive_step2a_anchor_span_selection(
     canonical: list[Step2AFactProposal] = []
     audits: list[Step2AAnchorSpanSelectionAudit] = []
     for proposal in proposals:
-        expected_minimal_type = {
-            MINIMAL_REVIEWED_MULTIPAGE_STEP2A_REQUEST_VERSION: Step2AV13ModelFactProposal,
-            NUMERIC_EXPRESSION_GROUNDING_STEP2A_REQUEST_VERSION: Step2AV14ModelFactProposal,
-            SINGLE_ROLE_ANCHOR_STEP2A_REQUEST_VERSION: Step2AV15ModelFactProposal,
-            DETERMINISTIC_NUMERIC_CLAIM_STEP2A_REQUEST_VERSION: Step2AV16ModelFactProposal,
-            TABLE_CONTINUATION_STEP2A_REQUEST_VERSION: Step2AV17ModelFactProposal,
-            TABLE_COVERAGE_OBLIGATION_STEP2A_REQUEST_VERSION: Step2AV18ModelFactProposal,
-            TABLE_COVERAGE_OBLIGATION_CONTEXT_STEP2A_REQUEST_VERSION: Step2AV19ModelFactProposal,
-            TABLE_STIFFNESS_ATOMIC_THRESHOLD_COVERAGE_STEP2A_REQUEST_VERSION: Step2AV20ModelFactProposal,
-            COMPOSITION_NUMERIC_OCCURRENCE_STEP2A_REQUEST_VERSION: Step2AV21ModelFactProposal,
-            STRUCTURAL_INDEX_OCCURRENCE_STEP2A_REQUEST_VERSION: Step2AV22ModelFactProposal,
-            SOURCE_OWNED_STRUCTURAL_PROJECTION_STEP2A_REQUEST_VERSION: Step2AV23ModelFactProposal,
-        }.get(request.identity.request_version)
-        is_minimal = expected_minimal_type is not None
-        # 注意这条 isinstance 的第二参是 `ModelMetaclass | None`（pydantic 模型类在 mypy
-        # 眼里是 ModelMetaclass），因此本行会报一条 arg-type，并且 mypy 会把 proposal 在
-        # 本行之后退化成 Any——那正好压住了循环体里约 50 条 union-attr。换句话说这条
-        # arg-type 是一块「盖子」：把它按正解修掉（例如把校验挪进独立函数、或给字典标
-        # `dict[str, type[Step2AFactProposal]]`），本文件立刻从 1 条涨到 51 条，露出的是
-        # 「某字段只在某些请求版本上存在」这一族真问题，需要按版本逐个收窄才能收口。
-        # 已实测两种改法都会掀开盖子，所以先保持现状、把盲区写在这里，不假装它不存在。
-        # cm29 起这条不再走 pyproject 的整模块豁免，而是行尾逐点关码：盖子还是这块盖子，
-        # 但本文件其余约 1200 行的 arg-type 重新受检，盲区从整模块缩到这一行。
-        if is_minimal and not isinstance(proposal, expected_minimal_type):  # type: ignore[arg-type]
+        # 形状校验：请求版本与提案类必须一对一咬合。先判 None 再 isinstance，mypy 由此不再
+        # 需要 arg-type 豁免；下面 5 个版本相关字段各自就地 isinstance 窄化，proposal 全程
+        # 保持 12 元 union 受检（cm30 之前这里靠一条 arg-type ignore 把 proposal 退化成 Any，
+        # 循环体内 51 条 union-attr 因此全部失检）。
+        minimal_type = _MINIMAL_MODEL_TYPE_BY_STEP2A_REQUEST_VERSION.get(
+            request.identity.request_version
+        )
+        is_minimal = minimal_type is not None
+        if minimal_type is not None and not isinstance(proposal, minimal_type):
             raise ValueError("Step 2A model proposal shape does not match its immutable request version")
-        if not is_minimal and isinstance(
-            proposal,
-            (Step2AV13ModelFactProposal, Step2AV14ModelFactProposal, Step2AV15ModelFactProposal, Step2AV16ModelFactProposal, Step2AV17ModelFactProposal, Step2AV18ModelFactProposal, Step2AV19ModelFactProposal, Step2AV20ModelFactProposal, Step2AV21ModelFactProposal, Step2AV22ModelFactProposal, Step2AV23ModelFactProposal),
-        ):
+        if minimal_type is None and isinstance(proposal, _MINIMAL_MODEL_PROPOSAL_TYPES):
             raise ValueError("Step 2A model proposal shape does not match its immutable request version")
-        is_single_role = isinstance(proposal, (Step2AV15ModelFactProposal, Step2AV16ModelFactProposal, Step2AV17ModelFactProposal, Step2AV18ModelFactProposal, Step2AV19ModelFactProposal, Step2AV20ModelFactProposal, Step2AV21ModelFactProposal, Step2AV22ModelFactProposal, Step2AV23ModelFactProposal))
-        is_deterministic_numeric = isinstance(proposal, (Step2AV16ModelFactProposal, Step2AV17ModelFactProposal, Step2AV18ModelFactProposal, Step2AV19ModelFactProposal, Step2AV20ModelFactProposal, Step2AV21ModelFactProposal, Step2AV22ModelFactProposal, Step2AV23ModelFactProposal))
-        secondary_anchor_span_ids = () if is_single_role else proposal.secondary_anchor_span_ids
-        proposal_key = proposal.derived_proposal_key if is_minimal else proposal.proposal_key
+        secondary_anchor_span_ids = (
+            proposal.secondary_anchor_span_ids
+            if isinstance(proposal, _DUAL_ROLE_ANCHOR_PROPOSAL_TYPES)
+            else ()
+        )
+        proposal_key = (
+            proposal.derived_proposal_key
+            if isinstance(proposal, _MINIMAL_MODEL_PROPOSAL_TYPES)
+            else proposal.proposal_key
+        )
         selected_span_ids = tuple(dict.fromkeys((*proposal.primary_anchor_span_ids, *secondary_anchor_span_ids)))
         unknown_ids = tuple(span_id for span_id in selected_span_ids if span_id not in spans_by_id)
         if unknown_ids:
@@ -176,7 +214,7 @@ def derive_step2a_anchor_span_selection(
             continue
         source_section_ids = (
             _derive_v13_source_section_ids(request, selected_span_ids)
-            if is_minimal
+            if isinstance(proposal, _MINIMAL_MODEL_PROPOSAL_TYPES)
             else proposal.source_section_ids
         )
         declared_sections = set(source_section_ids)
@@ -207,7 +245,7 @@ def derive_step2a_anchor_span_selection(
                 )
             )
             continue
-        if is_minimal:
+        if isinstance(proposal, _MINIMAL_MODEL_PROPOSAL_TYPES):
             completeness_mode, completeness_basis = _derive_v13_completeness_mode(
                 request=request,
                 fact_type=proposal.fact_type,
@@ -227,7 +265,11 @@ def derive_step2a_anchor_span_selection(
         else:
             completeness_mode = proposal.completeness_mode
             completeness_basis = "model-declared legacy completeness retained under the pre-V13 contract"
-        model_numeric_claims = () if is_deterministic_numeric else proposal.numeric_claims
+        model_numeric_claims = (
+            proposal.numeric_claims
+            if isinstance(proposal, _MODEL_NUMERIC_CLAIM_PROPOSAL_TYPES)
+            else ()
+        )
         numeric_span_ids = tuple(claim.anchor_span_id for claim in model_numeric_claims)
         if any(span_id not in selected_span_ids for span_id in numeric_span_ids):
             audits.append(

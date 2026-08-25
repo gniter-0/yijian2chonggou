@@ -153,12 +153,15 @@ ignore_missing_imports = true
 #     step2a_builders:438 一行 10 条（pydantic 插件给 model_construct 合成「必须列全字段」
 #     的签名，而它的真实契约是部分赋值 + 跳过校验）、knowledge/schema 与 knowledge/quality
 #     各 2 条（mypy 不支持 @property 之上再叠装饰器，python/mypy#1362，而
-#     `@computed_field` + `@property` 正是 pydantic 官方写法）、derivation:153 1 条
-#     （那块「盖子」，按正解修会掀开约 50 条 union-attr，见同址长注释）、
+#     `@computed_field` + `@property` 正是 pydantic 官方写法）、
 #     phase2r11:507 1 条（tools/ 未随内核迁移，给缺陷记账，且有测试封住「调用即炸」）。
+#     其中 derivation 那 1 条「盖子」已在 cm30 按正解拆掉（版本表提到模块级 Final、
+#     6 个版本相关字段各自就地 isinstance 窄化），逐点 ignore 因此从 20 条 / 11 个文件
+#     降到 19 条 / 10 个文件，proposal 全程保持 12 元 union 受检。
 #
 # 为什么逐点关码严于模块级豁免：盲区从「整个模块内该错误码的全部错误」缩到「这一行」。
-# 例如 derivation 有 1200 余行，原先整模块的 arg-type 全部失明，现在只有第 151 行失明。
+# 例如 step2a_builders 有数百行，原先整模块的 call-arg 全部失明，现在只有 model_construct
+# 那一行失明。
 # 再配上全局 warn_unused_ignores，某条 ignore 一旦因上游修好而失效，mypy 会当场点名。
 #
 # 棘轮的下一档由 tests/test_mypy_waiver_ratchet.py 执行：

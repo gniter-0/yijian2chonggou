@@ -17,17 +17,21 @@ pyproject.toml 曾经带一份「逐模块 × 错误码」的豁免清单，把 
    warn_unused_configs 发现死豁免条目的机制。
 4. **gates/ 与 compilers/ 永不出现在任何关码条目里**（这两个包是判定逻辑所在，走严格档）。
 
-清单为何还剩这 20 条：全是工具/上游限制或已记账的「盖子」，不是偷懒——
+清单为何还剩这 19 条：全是工具/上游限制，不是偷懒——
 - ``prop-decorator``（knowledge/schema、knowledge/quality）：mypy 不支持 @property 之上
   再叠装饰器（python/mypy#1362），而 ``@computed_field`` + ``@property`` 是 pydantic 官方写法；
 - ``call-arg``（contracts/step2a_builders 一行 10 条）：pydantic 的 mypy 插件给
   ``model_construct`` 合成了「必须列全字段」的签名，真实契约是部分赋值 + 跳过校验；
-- ``arg-type``（contracts/derivation:153）：见该文件 isinstance 处的长注释，按正解修掉会
-  掀开约 50 条 union-attr 真问题，需按请求版本逐个收窄才能收口；
 - ``import-not-found``（contracts/phase2r11_generic_five_golden）：``tools.`` 未随内核迁移，
   「调用即 ModuleNotFoundError」由 tests/test_phase2r11_generic_five_golden.py 封住；
 - ``assignment``（contracts/admission_fixtures 5 条）：Literal 字段默认值覆盖，同址有说明；
 - 其余 ``return-value`` / ``misc`` / ``arg-type`` 各处：旧仓口径的窄化返回与协议缝，同址有说明。
+
+cm30 拆掉了唯一一条「盖子」型条目 ``arg-type``（contracts/derivation）：那条 ignore 连带把
+proposal 退化成 Any，压住了循环体里 51 条 union-attr。实测那 51 条只落在 5 个属性访问点上，
+根因是三个布尔旗子把 isinstance 的类型信息抹成了 bool；改成模块级类元组 + 就地 isinstance
+窄化后 mypy 零报错，ignore 随之删除，ceiling 从 20 条 / 11 个文件降到 19 条 / 10 个文件。
+形状表的自洽由 tests/test_knowledge_contracts_derivation_shape_seal.py 单独看住。
 """
 from __future__ import annotations
 
@@ -55,7 +59,6 @@ _IGNORE_CEILING: dict[str, dict[str, int]] = {
     "gates/review/extraction.py": {"misc": 1, "return-value": 1},
     "gates/review/step4_text_gate.py": {"arg-type": 1},
     "knowledge/contracts/admission_fixtures.py": {"assignment": 5},
-    "knowledge/contracts/derivation.py": {"arg-type": 1},
     "knowledge/contracts/phase2r11_generic_five_golden.py": {"import-not-found": 1},
     "knowledge/contracts/step2a_builders.py": {"call-arg": 1},
     "knowledge/quality.py": {"prop-decorator": 2},
