@@ -299,7 +299,10 @@ class ChapterQualityGate(StrictModel):
     lineage_valid: bool
     adapter_valid: bool
 
-    @computed_field
+    # mypy 不支持 @property 之上再叠装饰器（长期未实现，见 python/mypy#1362），而
+    # `@computed_field` + `@property` 正是 pydantic 官方推荐写法，pydantic 自己的文档
+    # 示例里也带着同一条 ignore。逐点关码而不是整模块豁免：盲区只有这一行。
+    @computed_field  # type: ignore[prop-decorator]
     @property
     def blockers(self) -> tuple[str, ...]:
         blockers: list[str] = []
@@ -325,7 +328,7 @@ class ChapterQualityGate(StrictModel):
         )
         return tuple(blockers)
 
-    @computed_field
+    @computed_field  # type: ignore[prop-decorator]  # 同上：mypy 的 @property 叠装饰器限制
     @property
     def publishable(self) -> bool:
         return not self.blockers

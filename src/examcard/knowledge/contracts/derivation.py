@@ -148,7 +148,9 @@ def derive_step2a_anchor_span_selection(
         # `dict[str, type[Step2AFactProposal]]`），本文件立刻从 1 条涨到 51 条，露出的是
         # 「某字段只在某些请求版本上存在」这一族真问题，需要按版本逐个收窄才能收口。
         # 已实测两种改法都会掀开盖子，所以先保持现状、把盲区写在这里，不假装它不存在。
-        if is_minimal and not isinstance(proposal, expected_minimal_type):
+        # cm29 起这条不再走 pyproject 的整模块豁免，而是行尾逐点关码：盖子还是这块盖子，
+        # 但本文件其余约 1200 行的 arg-type 重新受检，盲区从整模块缩到这一行。
+        if is_minimal and not isinstance(proposal, expected_minimal_type):  # type: ignore[arg-type]
             raise ValueError("Step 2A model proposal shape does not match its immutable request version")
         if not is_minimal and isinstance(
             proposal,

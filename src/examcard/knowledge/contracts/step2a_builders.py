@@ -430,8 +430,12 @@ def build_step2a_request(
     )
     coverage_obligation_context_input = (
         derive_step2a_coverage_obligation_context_input(
+            # `model_construct` 的真实契约是「部分赋值 + 跳过校验」（本处只需要 stage 一个
+            # 字段就够派生覆盖义务上下文），而 pyproject 挂的 pydantic mypy 插件给它合成了
+            # 一份「必须列全字段」的签名，于是这一行会刷出 10 条 Missing named argument。
+            # 这是插件的假阳性，不是漏参；逐点关码，盲区只有这一行。
             request=Step2ARequest.model_construct(
-                identity=Step2RequestIdentity.model_construct(stage=Step2Stage.FACT_PLANNING),
+                identity=Step2RequestIdentity.model_construct(stage=Step2Stage.FACT_PLANNING),  # type: ignore[call-arg]
                 sample_id=sample_id,
                 material_profile_id=material_profile_id,
                 projection=projection,

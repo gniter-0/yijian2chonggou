@@ -497,13 +497,14 @@ def build_phase2r11_five_golden_report(
     保留而非删除的理由：本函数构造的 ``Phase2R11FiveGoldenReport`` /
     ``Phase2R11SampleIntegrationAudit`` / ``Phase2R11Readiness`` 是 V25 契约形状本身，
     在本项目里契约定义即交付物，不因驱动缺席而失效；``_review_queue`` 也仍被
-    ``phase2r12_v25_golden_review`` 顶层 import。pyproject 里那条 import-not-found 豁免
-    就是给这处未移植记账，并由 tests/test_phase2r11_generic_five_golden.py 封住——
-    「调用即 ModuleNotFoundError」是被测事实，不是注释里的声明。
+    ``phase2r12_v25_golden_review`` 顶层 import。这处未移植的记账原先挂在 pyproject 的
+    整模块豁免上，cm29 起改成下面那行的行尾逐点关码（本模块其余 570 余行的
+    import-not-found 重新受检），并仍由 tests/test_phase2r11_generic_five_golden.py 封住
+    ——「调用即 ModuleNotFoundError」是被测事实，不是注释里的声明。
     """
 
     from ...materials.catalog import load_content_policy
-    from tools.verify_phase2r1_phase2r0_freeze import verify_phase2r1_phase2r0_freeze
+    from tools.verify_phase2r1_phase2r0_freeze import verify_phase2r1_phase2r0_freeze  # type: ignore[import-not-found]
 
     repository_root = Path(repository_root).resolve()
     registry_path = repository_root / "scripts/tests/fixtures/v2/golden_samples/gonglu_phase0.yaml"

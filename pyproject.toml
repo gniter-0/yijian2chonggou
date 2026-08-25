@@ -114,6 +114,10 @@ plugins = ["pydantic.mypy"]
 warn_redundant_casts = true
 warn_unused_configs = true
 show_error_codes = true
+# 逐点 `# type: ignore[码]` 是本仓唯一的关码手段（模块级豁免清单 cm29 已清零），
+# 所以这条必须全局开：某处 ignore 一旦因上游修好而失效，mypy 立刻报 unused-ignore，
+# 逼着同一批把它删掉，而不是让过期注释永久留在代码里当噪声。
+warn_unused_ignores = true
 
 [[tool.mypy.overrides]]
 module = ["examcard.gates.*", "examcard.compilers.*"]
@@ -123,7 +127,6 @@ disallow_untyped_calls = true
 disallow_any_generics = true
 no_implicit_optional = true
 warn_return_any = true
-warn_unused_ignores = true
 strict_equality = true
 extra_checks = true
 
@@ -134,100 +137,33 @@ module = ["fitz.*", "cv2.*", "rapidocr_onnxruntime.*"]
 ignore_missing_imports = true
 
 # ---------------------------------------------------------------------------
-# 逐模块豁免清单（棘轮）：只许缩短，不许加宽。
+# 逐模块豁免清单（棘轮）：cm29 已清零——本文件不再有任何 disable_error_code。
 #
-# 作用是让「全仓 mypy」这一步能在 CI 里退出 0，同时保住两条硬线：
-#   1) gates/ 与 compilers/ 走上面的严格档，一个模块都不许出现在本清单里；
-#   2) 每条豁免只关掉该模块此刻实测在报的那几个错误码——新错误码、新模块、
-#      严格档里的任何回归，都会照常把 CI 打红。
+# 历史：首测 263 条 / 35 个模块。按「正解真修」逐批退条目（第 1~8 批退掉 29 个模块，
+# cm23 退 knowledge.llm），到 cm28 只剩 6 个模块 / 18 条：call-arg 12、
+# prop-decorator 4、arg-type 1、import-not-found 1。cm29 把这 18 条收口：
 #
-# 已知盲区：已豁免模块内、已豁免错误码下新增的同类错误拦不住。缩小盲区的办法是把
-# 下面的条目逐条删掉（即改掉真问题），而不是把码集合往大里写。
+#   - admission_legacy_hash 那 2 条 call-arg **是真错，不是插件假阳性**（旧注释误诊成
+#     model_construct）：`field.default_factory()` 对 pydantic v2 的
+#     `Callable[[], Any] | Callable[[dict[str, Any]], Any] | None` 少传参，来一个单参
+#     factory 就会在运行时 TypeError。已按正解改用 `FieldInfo.get_default(...)`；
+#     等值实测：全仓 500 个模型 / 1428 个默认值字段两种写法逐个相等且同型，
+#     canonical 载荷与旧口径哈希均不变。
+#   - 其余 16 条是工具侧限制，改成**行尾逐点 `# type: ignore[码]`**，原因写在出错点旁边：
+#     step2a_builders:438 一行 10 条（pydantic 插件给 model_construct 合成「必须列全字段」
+#     的签名，而它的真实契约是部分赋值 + 跳过校验）、knowledge/schema 与 knowledge/quality
+#     各 2 条（mypy 不支持 @property 之上再叠装饰器，python/mypy#1362，而
+#     `@computed_field` + `@property` 正是 pydantic 官方写法）、derivation:153 1 条
+#     （那块「盖子」，按正解修会掀开约 50 条 union-attr，见同址长注释）、
+#     phase2r11:507 1 条（tools/ 未随内核迁移，给缺陷记账，且有测试封住「调用即炸」）。
 #
-# 基线实测（mypy 2.3.1 + pydantic 插件，--no-incremental，checked 127 source files）：
-# 首测 263 条 / 35 个模块。已按「正解」真修掉并从本清单删除条目的模块共 29 个
-# （v25_generic_contracts 58、learning_fixture 28、step2a_request 18、validation 16、
-# step2b_card_golden 15、contracts.audits 13、continuation.core 10、repair_sidecar 7、
-# envelope_profiles 6、fact_engine 6、table_inputs 5、admission_fixtures 5、
-# phase2r13_v25_reconciliation 5、pipeline.live_run 5、phase2r12_v25_golden_review 4、
-# providers.base 3、evidence.fusion 3、phase2r14_v25_live 3、echo_release 2、
-# evidence.native 2、knowledge.projection 2、pipeline.run 2、request_helpers 2、
-# obligations 1、evidence.layout 1、phase2r142_v25_projection 1、planner.bridge 1、
-# pipeline.shadow 1、knowledge.llm 7）；另有三个模块被压薄但没清零：derivation 由
-# 10 条压到 1 条、step2a_builders 由 11 条压到 10 条、quality 由 3 条压到 2 条。
-# 现测 18 条 / 6 个模块，按码分布：call-arg 12、prop-decorator 4、arg-type 1、
-# import-not-found 1（call-overload 一族本轮清零：transport 缝改用 openai 的
-# ChatCompletionMessageParam / ResponseFormatJSON* 后 llm 那 2 条按正解消失；
-# assignment、attr-defined 两族上一轮清零；union-attr、var-annotated、index、misc
-# 四族更早清零；operator、return-value 两族最早已清零）。
-# 到这里清单已经见底：剩下的 18 条里 16 条是工具侧假阳性（model_construct 合成签名 12、
-# @property 叠装饰器 4），1 条是故意留的盖子（derivation:151），1 条是缺陷记账
-# （phase2r11 的 tools/ 死 import）——没有一条能靠补注解或改名清掉。第三条路（transport
-# 缝改用 openai 的 TypedDict）已经走完，llm 的条目随之删除。想再往下削只剩两条路：把
-# derivation 那 50 条按请求版本逐个收窄、给 phase2r11 的死函数定去留。两条都是要先定
-# 方向的活，不是清理。
-# 每个模块后面括号里的数字是它当时的条数，删条目时拿它对账。
+# 为什么逐点关码严于模块级豁免：盲区从「整个模块内该错误码的全部错误」缩到「这一行」。
+# 例如 derivation 有 1200 余行，原先整模块的 arg-type 全部失明，现在只有第 151 行失明。
+# 再配上全局 warn_unused_ignores，某条 ignore 一旦因上游修好而失效，mypy 会当场点名。
 #
-# 成因逐族抽样核查过，没有一条是「访问模型上根本不存在的字段」那类真缺陷——那一类
-# 上一轮已作为 DiagramEdgeRef 缺陷单独修掉并加了封印测试。反复出现的五种形状：
-#   A. 循环变量复用：同一个名字在同文件多个 for 里迭代不同的模型类型，mypy 认死第一
-#      次绑定的类型，后面每个本来合法的字段访问都记一条 attr-defined。占 attr-defined
-#      的主体。正解是逐个循环改名。
-#   B. 首次赋值定死类型：`x = ("a",)` 推成定长 tuple[str]，后续再赋 tuple[str, ...]
-#      就冲突。占 assignment 的主体，正解是补一行显式注解。
-#   C. 中间字典声明成 dict[str, object]：`**payload` 解包进强类型形参会逐个形参报
-#      arg-type，取下标再赋值报 index，原样返回报 return-value。正解是换 TypedDict。
-#   D. 相关条件：非空性由另一个布尔量或枚举取值担保，mypy 不跨条件收窄，报 union-attr。
-#      正解是在使用点补一句显式判空（运行时恒真，只是把担保写给类型检查器看）。
-#   E. 版本常量当 Literal 字段默认值：`X = "v1"` 推成 str，赋给
-#      `schema_version: Literal["v1"]` 报 assignment。正解是 `X: Final = "v1"`——
-#      不带显式注解的 Final 会让 mypy 保留字面量类型。注意这跟 PEP 586 禁止的
-#      `Literal[X]`（把变量写进 Literal 下标）是相反方向的两件事，后者 Final 帮不上忙。
+# 棘轮的下一档由 tests/test_mypy_waiver_ratchet.py 执行：
+#   1) 任何 disable_error_code / ignore_errors 条目都不许再出现；
+#   2) 逐点 ignore 清单（文件 × 错误码 × 条数）钉在封印里，只许缩短，新增即失败；
+#   3) gates/ 与 compilers/ 永远走严格档，且永不出现在任何关码条目里；
+#   4) 全局 warn_unused_ignores 必须保持开启。
 # ---------------------------------------------------------------------------
-
-# 形状 C 的 `**payload` 解包已按正解修掉：derivation 里那两份中间 kwargs 改成
-# `_TableStructuralCellOccurrenceKwargs` / `_TableNumericOccurrenceKwargs` 两个 TypedDict，
-# 9 条 arg-type 一次清零。剩下的 1 条在 derivation:151——
-# `isinstance(proposal, expected_minimal_type)`，第二参是 `ModelMetaclass | None`。
-# 这条不能顺手修：mypy 报错后会把 proposal 退化成 Any，正好压住循环体里约 50 条
-# union-attr（「某字段只在某些请求版本上存在」那一族）。已实测两种正解改法（抽独立
-# 校验函数 / 给字典标注 type[...]）都会把本文件从 1 条掀回 51 条。所以这条 arg-type
-# 是一块「盖子」，要连同那 50 条按请求版本逐个收窄一起收口，代码里同址已写明。
-[[tool.mypy.overrides]]
-module = ["examcard.knowledge.contracts.derivation"] # 1
-disable_error_code = ["arg-type"]
-
-# call-arg 全部落在 `Model.model_construct(...)` 上：pydantic 的 mypy 插件给
-# model_construct 合成了「必须给齐全部字段」的签名，而它的真实契约是部分赋值 + 跳过
-# 校验（本仓拿它做 hash 前的骨架构造）。这是插件的假阳性，不是漏参。
-[[tool.mypy.overrides]]
-module = ["examcard.knowledge.contracts.admission_legacy_hash"] # 2
-disable_error_code = ["call-arg"]
-
-# 10 条 call-arg 同上（model_construct）。原先还有 1 条 arg-type（step2a_builders:291，
-# `Path | None` 传进要 `Path` 的形参）已按正解补上显式判空修掉，码集合随之收窄成只剩
-# call-arg 一族。
-[[tool.mypy.overrides]]
-module = ["examcard.knowledge.contracts.step2a_builders"] # 10
-disable_error_code = ["call-arg"]
-
-# mypy 不支持 @property 之上再叠装饰器，而本仓用的正是 pydantic 的
-# `@computed_field` + `@property` 标准写法。这是 mypy 的已知限制，代码没有问题。
-# 原先那 1 条 attr-defined（五种结果模型混装的列表被推成公共基类 StrictModel）已按正解
-# 把元素类型如实写成联合后清掉。
-[[tool.mypy.overrides]]
-module = ["examcard.knowledge.quality"] # 2
-disable_error_code = ["prop-decorator"]
-
-[[tool.mypy.overrides]]
-module = ["examcard.knowledge.schema"] # 2
-disable_error_code = ["prop-decorator"]
-
-# 这条不是类型噪声，是给一处真缺陷记账：build_phase2r11_five_golden_report 内部
-# `from tools.verify_phase2r1_phase2r0_freeze import ...`，而本仓没有 tools/ 包（旧仓
-# 遗留路径，yijian2 对应路径也不在），该函数一旦被调用就 ModuleNotFoundError。
-# 目前 src/tests/migration 里零调用点（只有 docs/prework 的历史 import 扫描提到它），
-# 所以先记账不修。修法二选一：把那个工具移植进来，或删掉这个死函数。
-[[tool.mypy.overrides]]
-module = ["examcard.knowledge.contracts.phase2r11_generic_five_golden"] # 1
-disable_error_code = ["import-not-found"]

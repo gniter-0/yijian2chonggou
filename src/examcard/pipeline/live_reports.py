@@ -69,7 +69,7 @@ class LiveRunReport(StrictModel):
 
 def build_stage_report(stage: str, status: str, detail: str, **counts: int) -> LiveStageReport:
     payload = {"stage": stage, "status": status, "detail": detail, **counts}
-    return hash_model(LiveStageReport, payload, "result_sha256")  # type: ignore[return-value]
+    return hash_model(LiveStageReport, payload, "result_sha256")
 
 
 def build_live_run_report(
@@ -92,4 +92,4 @@ def build_live_run_report(
         "network_calls": network_calls,
         "usd_estimate": round(usd_estimate, 6),
     }
-    return hash_model(LiveRunReport, payload, "report_sha256")  # type: ignore[return-value]
+    return hash_model(LiveRunReport, payload, "report_sha256")

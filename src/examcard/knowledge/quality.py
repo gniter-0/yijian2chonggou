@@ -344,7 +344,9 @@ class TeachingQualityGate(StrictModel):
     manual_review_items: int = Field(ge=0)
     spatial_watermark_candidates: int = Field(ge=0)
 
-    @computed_field
+    # 同 knowledge/schema.py：mypy 不支持 @property 之上再叠装饰器（python/mypy#1362），
+    # `@computed_field` + `@property` 是 pydantic 官方写法。逐点关码，盲区只有这一行。
+    @computed_field  # type: ignore[prop-decorator]
     @property
     def blockers(self) -> tuple[str, ...]:
         blockers: list[str] = []
@@ -364,7 +366,7 @@ class TeachingQualityGate(StrictModel):
             blockers.append("spatial_watermark_review")
         return tuple(blockers)
 
-    @computed_field
+    @computed_field  # type: ignore[prop-decorator]  # 同上：mypy 的 @property 叠装饰器限制
     @property
     def publishable(self) -> bool:
         return not self.blockers

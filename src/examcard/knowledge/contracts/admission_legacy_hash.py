@@ -13,6 +13,20 @@ canonical_hash binding inside the two r10x builders gained explicit _r10x names
 (identifier-level, hash-invisible). Output equivalence of the lineages on
 model_dump payloads is proven by migration/verify_admission_fixtures.py against
 the frozen production artifacts. Never fold into examcard.common.hashing.
+
+Sole deviation from the verbatim slices (cm29): the default-filling line inside
+hash_model_r8x / hash_model_r102 used to read
+``field.default_factory() if field.default_factory else field.default``, which
+calls the factory with zero arguments. pydantic v2 types default_factory as
+``Callable[[], Any] | Callable[[dict[str, Any]], Any] | None`` -- a one-argument
+factory (``Field(default_factory=lambda data: ...)``) would raise TypeError at
+runtime, and mypy reported it as ``call-arg``. Both call sites now delegate to
+``FieldInfo.get_default(call_default_factory=True, validated_data=...)``, which
+is pydantic's own accessor and handles both factory arities. Value-preserving:
+across all 500 models in examcard (1428 defaulted fields, 2 of them factories)
+the two expressions return equal objects of the same type, so every canonical
+payload -- and therefore every legacy hash -- is unchanged. Sealed by
+tests/test_knowledge_contracts_admission_legacy_hash.py.
 """
 from __future__ import annotations
 
@@ -53,7 +67,7 @@ def hash_model_r8x[ModelT: StrictModel](model_type: type[ModelT], payload: dict[
     for name, field in model_type.model_fields.items():
         if name in raw or field.is_required():
             continue
-        raw[name] = field.default_factory() if field.default_factory is not None else field.default
+        raw[name] = field.get_default(call_default_factory=True, validated_data=raw)
     raw[field_name] = canonical_hash({key: value for key, value in raw.items() if key != field_name})
     return model_type.model_validate(raw)
 
@@ -104,7 +118,7 @@ def hash_model_r102[ModelT: StrictModel](model_type: type[ModelT], payload: Mapp
     for name, definition in model_type.model_fields.items():
         if name in document or definition.is_required():
             continue
-        document[name] = definition.default_factory() if definition.default_factory else definition.default
+        document[name] = definition.get_default(call_default_factory=True, validated_data=document)
     document[field] = canonical_hash_r10x({key: value for key, value in document.items() if key not in {field, "schema_version"}})
     return model_type.model_validate(document)
 

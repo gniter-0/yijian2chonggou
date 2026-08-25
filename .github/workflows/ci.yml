@@ -54,14 +54,18 @@ jobs:
 
       # mypy 正式入门禁。一次跑覆盖两档，靠 pyproject [tool.mypy] 的逐模块配置分流：
       #   - gates/ 与 compilers/ 走严格档（disallow_untyped_defs 等一整套），实测清零；
-      #   - 其余包走宽松基线 + 一份「逐模块 × 错误码」的豁免清单，把 263 条既有噪声精确
-      #     挂账，而不是 ignore_errors 一刀切。清单只许缩短，条目旁记着当时的条数。
-      # 有牙是实测过的：临时往 gates/ 放一个未注解函数，会被 no-untyped-def 拦下；往只
-      # 豁免了 assignment 的模块里塞一处 attr-defined，同样报错。即新错误码、新模块、
-      # 严格档回归都会把这一步打红。盲区（已豁免模块内已豁免码下的新增同类错误）写在
-      # pyproject 的清单头部。
+      #   - 其余包走宽松基线，且 cm29 起**没有任何模块级豁免**：原先那份「逐模块 × 错误码」
+      #     的清单（首测 263 条，逐批真修到 18 条）已清零——2 条是真错按正解修掉，
+      #     剩下 16 条工具/上游限制改成出错行上的 `# type: ignore[码]`，盲区从整个模块
+      #     缩到那一行，且每处旁边都写着为什么。
+      # 配套开了全局 warn_unused_ignores：某处逐点 ignore 一旦因上游修好而失效，这一步
+      # 会当场报 unused-ignore，逼着同批删掉，而不是让过期注释永久留着当噪声。
+      # 有牙是实测过的：临时往 gates/ 放一个未注解函数，会被 no-untyped-def 拦下；
+      # 删掉任一处逐点 ignore 或把 admission 的 get_default 改回零参 default_factory()，
+      # 这一步立刻打红。「只许缩短」由 tests/test_mypy_waiver_ratchet.py 把关：零模块级
+      # 豁免、逐点 ignore 清单（文件 × 错误码 × 条数）钉死、禁裸 ignore、严格档禁豁免。
       # 配置里已固定 files = ["src/examcard"]，所以这里不需要再传路径。
-      - name: mypy（gates+compilers 严格档，其余走豁免清单棘轮）
+      - name: mypy（gates+compilers 严格档，其余零模块级豁免）
         run: uv run mypy
 
       # -rs 打印跳过原因：旧仓金标语料不在 CI 上，92 个回放用例会整体跳过，
