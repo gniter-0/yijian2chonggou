@@ -77,6 +77,11 @@ CORE_TARGETS = {
     "v1_adapter": "src/examcard/knowledge/adapter_v1.py",
 }
 CURRENT_RUNTIME_TARGET = "src/examcard/knowledge/contracts/ (V25 运行时闭包·随现役契约上提)"
+CURRENT_CONTRACT_TARGET = "src/examcard/knowledge/contracts/ (V25 现役契约)"
+# core-current 分支的按模块拆分注记（口径同 CORE_TARGETS 里 cm21/cm25 的写法：注解写进生成器，重生不丢）
+CURRENT_CONTRACT_NOTES = {
+    "v25_generic_contracts": "  (cm28 拆分：门面 + 15 兄弟 v25_*.py)",
+}
 
 # 总指挥 A 案裁决（2026-08-11，依据 docs/design/distill_gates_review_design.md §4/§5-2/§5-6）：
 # 以下 distill 模块的『去向』不变（逻辑仍留各自桶），但其【跨桶消费的纯数据契约模型】部分
@@ -123,7 +128,7 @@ def base_kind(name: str) -> tuple[str, str]:
         return "phase", "archive"
     if re.match(r"v\d+_", name):
         if name.startswith("v25"):
-            return "core-current", "src/examcard/knowledge/contracts/ (V25 现役契约)"
+            return "core-current", CURRENT_CONTRACT_TARGET + CURRENT_CONTRACT_NOTES.get(name, "")
         return "historical", "留旧仓 (v19/v23/v24 历史台阶)"
     return "core", CORE_TARGETS.get(name, "src/examcard/knowledge/ (待定)")
 

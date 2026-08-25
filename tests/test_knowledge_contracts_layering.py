@@ -18,6 +18,11 @@ cm27 把三个逃逸口一起堵上（拆 v25_generic_contracts.py 之前的必�
    现在相对与绝对两种写法都算运行期边。
 3. 字符串字面量的动态导入（``__import__("<包>.x", fromlist=[...])`` /
    ``importlib.import_module("<包>.x")``）在 AST 的 Import/ImportFrom 里根本不出现。现在登记进
+
+cm28 把 v25_generic_contracts.py 拆成 15 个 v25_* 兄弟 + 原名门面，层序里 15 个新条目排在门面
+之前。方向是这样定下的：``V25Step2ARequest`` / ``V25BStep2BRequest`` 的校验器在**运行位**调用
+载荷函数，所以载荷与提示词模块必须排在请求模型模块之前；反过来那 2 处（载荷函数签名标注
+请求模型）只是注解，走 ``if TYPE_CHECKING:``，按本守卫既有口径豁免。
    ``DYNAMIC_SIBLING_IMPORTS``，同样受层序管辖，并断言被取的属性在目标模块上仍可解析。
 """
 from __future__ import annotations
@@ -55,6 +60,24 @@ LAYER_ORDER = (
     "admission_legacy_hash",
     "admission_fixtures",
     "echo_release",  # P8 补链（echo-batch-release/1.0 家族）：纯数据契约，仅向后引用 admission 对
+
+    # cm28 拆分产物：v25_generic_contracts 的 15 个兄弟（蓝图 §3），层序排在门面之前。
+    # 层 0 三个自足件 → 层 1 义务/语义图 → 层 2 载荷与提示词 → 层 3 请求模型 → 层 4 构建/评定/离线。
+    "v25_versions",
+    "v25_support",
+    "v25_enums",
+    "v25_step2a_obligations",
+    "v25_step2a_prompt",
+    "v25_step2a_request",
+    "v25_step2a_build",
+    "v25_step2a_assess",
+    "v25_step2a_offline",
+    "v25_step2b_diagram",
+    "v25_step2b_prompt",
+    "v25_step2b_models",
+    "v25_step2b_build",
+    "v25_step2b_assess",
+    "v25_step2b_offline",
 
     # V25 现役声明 + RC1 运行时闭包（manifest v2 §二/§二-2），拓扑序追加：
     "v25_generic_contracts",

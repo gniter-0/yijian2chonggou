@@ -1,0 +1,38 @@
+"""V25/V25B 契约的版本常量底座（拆分层 0，不依赖任何兄弟）。
+
+六个 step2a 侧写（缺省 + atomic_source + diagram/list/standard/cost_flow 四个 canonical）
+各带 request/model_input/prompt/journal 四个版本号，加 step2b 的四个，共 28 个。
+一律**不写显式注解**：不带注解的 ``Final`` 语义让 mypy 保留字面量类型，常量才能当
+``Literal[...]`` 字段的默认值——补一句 ``: str`` 会当场把一批 assignment 错误引回来。
+"""
+from __future__ import annotations
+
+
+V25_STEP2A_REQUEST_VERSION = "step2a_contract_v25_generic_source_derived"
+V25_STEP2A_MODEL_INPUT_VERSION = "step2a_model_input_v25_generic_source_derived"
+V25_STEP2A_PROMPT_VERSION = "step2a_prompt_v25_generic_source_derived"
+V25_STEP2A_JOURNAL_VERSION = "step2a_journal_v25_generic_source_derived"
+V25_ATOMIC_SOURCE_STEP2A_REQUEST_VERSION = "step2a_contract_v25_atomic_source_contract_v2"
+V25_ATOMIC_SOURCE_STEP2A_MODEL_INPUT_VERSION = "step2a_model_input_v25_atomic_source_contract_v2"
+V25_ATOMIC_SOURCE_STEP2A_PROMPT_VERSION = "step2a_prompt_v25_atomic_source_contract_v2"
+V25_ATOMIC_SOURCE_STEP2A_JOURNAL_VERSION = "step2a_journal_v25_atomic_source_contract_v2"
+V25_DIAGRAM_CANONICAL_STEP2A_REQUEST_VERSION = "step2a_contract_v25_diagram_canonical_preflight_v1"
+V25_DIAGRAM_CANONICAL_STEP2A_MODEL_INPUT_VERSION = "step2a_model_input_v25_diagram_canonical_preflight_v1"
+V25_DIAGRAM_CANONICAL_STEP2A_PROMPT_VERSION = "step2a_prompt_v25_diagram_canonical_preflight_v1"
+V25_DIAGRAM_CANONICAL_STEP2A_JOURNAL_VERSION = "step2a_journal_v25_diagram_canonical_preflight_v1"
+V25_LIST_CANONICAL_STEP2A_REQUEST_VERSION = "step2a_contract_v25_list_canonical_preflight_v1"
+V25_LIST_CANONICAL_STEP2A_MODEL_INPUT_VERSION = "step2a_model_input_v25_list_canonical_preflight_v1"
+V25_LIST_CANONICAL_STEP2A_PROMPT_VERSION = "step2a_prompt_v25_list_canonical_preflight_v1"
+V25_LIST_CANONICAL_STEP2A_JOURNAL_VERSION = "step2a_journal_v25_list_canonical_preflight_v1"
+V25_STANDARD_CANONICAL_STEP2A_REQUEST_VERSION = "step2a_contract_v25_standard_canonical_preflight_v1"
+V25_STANDARD_CANONICAL_STEP2A_MODEL_INPUT_VERSION = "step2a_model_input_v25_standard_canonical_preflight_v1"
+V25_STANDARD_CANONICAL_STEP2A_PROMPT_VERSION = "step2a_prompt_v25_standard_canonical_preflight_v1"
+V25_STANDARD_CANONICAL_STEP2A_JOURNAL_VERSION = "step2a_journal_v25_standard_canonical_preflight_v1"
+V25_COST_FLOW_CANONICAL_STEP2A_REQUEST_VERSION = "step2a_contract_v25_cost_flow_canonical_preflight_v1"
+V25_COST_FLOW_CANONICAL_STEP2A_MODEL_INPUT_VERSION = "step2a_model_input_v25_cost_flow_canonical_preflight_v1"
+V25_COST_FLOW_CANONICAL_STEP2A_PROMPT_VERSION = "step2a_prompt_v25_cost_flow_canonical_preflight_v1"
+V25_COST_FLOW_CANONICAL_STEP2A_JOURNAL_VERSION = "step2a_journal_v25_cost_flow_canonical_preflight_v1"
+V25B_STEP2B_REQUEST_VERSION = "step2b_contract_v25b_source_grouping_bridge_v2"
+V25B_STEP2B_MODEL_INPUT_VERSION = "step2b_model_input_v25b_source_grouping_bridge_v2"
+V25B_STEP2B_PROMPT_VERSION = "step2b_prompt_v25b_source_grouping_bridge_v2"
+V25B_STEP2B_JOURNAL_VERSION = "step2b_journal_v25b_source_grouping_bridge_v2"

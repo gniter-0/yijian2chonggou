@@ -46,7 +46,7 @@
 
 | 模块 | 体量 | 引用(测试/导出/phase/核心/tools/其他) | 去向 |
 |---|---|---|---|
-| v25_generic_contracts | 101KB | 16/1/20/0/1/0 | src/examcard/knowledge/contracts/ (V25 现役契约) |
+| v25_generic_contracts | 101KB | 16/1/20/0/1/0 | src/examcard/knowledge/contracts/ (V25 现役契约)  (cm28 拆分：门面 + 15 兄弟 v25_*.py) |
 | v25_teaching_gate_layers | 6KB | 1/1/9/0/0/0 | src/examcard/knowledge/contracts/ (V25 现役契约) |
 
 ## 二-2、V25 运行时闭包（RC1·import 闭包上提·必须随现役契约迁走）（5 个，188KB）

@@ -39,6 +39,8 @@ src/examcard/
                          （层序与验收口径见 docs/prework/llm_split_blueprint.md）
     adapter_v1.py state_machine.py identity.py
     contracts/          semantic_contracts（380KB）在此拆分 + v25_generic_contracts + v25_teaching_gate_layers
+      v25_*.py           v25_generic_contracts（101KB）在此拆分：门面留原名 + 15 个同级兄弟
+                         （层序与验收口径见 docs/prework/v25_generic_contracts_split_blueprint.md）
     continuation/       core / integration / review / repair_sidecar
     diagram/            sidecar / disposition
     planner/            step2b bridge
