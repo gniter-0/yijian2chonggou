@@ -10,8 +10,6 @@ import json
 from pathlib import Path
 from typing import Any
 
-import pytest
-
 from examcard.gates.review.audit import BrowserInputAudit, DecisionAudit
 from examcard.gates.review.authorization import (
     AuthorizationAudit,
@@ -35,11 +33,18 @@ from examcard.gates.review.queue import ManualReviewQueue
 from examcard.knowledge.contracts.admission_fixtures import ReviewedStep3Fixture
 from tests.conftest import legacy_path, requires_legacy_corpus
 
+# 四条链的语料子树。相对路径单独成常量，是因为闸门一律走 requires_legacy_corpus(相对路径)：
+# 裸 skipif(not X.is_dir()) 既不进 conftest 的 _CORPUS_GATED 记账（摘要会少报条数），也不受
+# EXAMCARD_REQUIRE_LEGACY_CORPUS=1 管辖（严格模式看不见它，缺席时仍静默跳过）——cm32 实测
+# 就是这 3 处让摘要少报了 11 条。
 _R84_REL = "data/semantic_llm_v2/phase2r84_selected_batch_human_decision_ingestion_run1"
+_R810_REL = "data/semantic_llm_v2/phase2r810_r89_reviewed_admission_authorization_run1"
+_R104_REL = "data/semantic_llm_v2/phase2r104_step3_explicit_production_authorization_run1"
+_R11101_REL = "data/semantic_llm_v11101_step4_human_visual_review_strict_admission_run1"
 R84_RUN = legacy_path(_R84_REL)
-R810_RUN = legacy_path("data/semantic_llm_v2/phase2r810_r89_reviewed_admission_authorization_run1")
-R104_RUN = legacy_path("data/semantic_llm_v2/phase2r104_step3_explicit_production_authorization_run1")
-R11101_RUN = legacy_path("data/semantic_llm_v11101_step4_human_visual_review_strict_admission_run1")
+R810_RUN = legacy_path(_R810_REL)
+R104_RUN = legacy_path(_R104_REL)
+R11101_RUN = legacy_path(_R11101_REL)
 
 pytestmark = requires_legacy_corpus(_R84_REL)
 
@@ -85,7 +90,7 @@ class TestR84Chain:
         assert audit.production_authorized_count == 0
 
 
-@pytest.mark.skipif(not R810_RUN.is_dir(), reason="r810 语料缺席")
+@requires_legacy_corpus(_R810_REL)
 class TestR810Chain:
     def test_authorization_manifest_replays(self) -> None:
         manifest = R810AuthorizationManifest.model_validate(_read(R810_RUN / "production-decision-manifest.json"))
@@ -116,14 +121,14 @@ class TestR810Chain:
         assert fixture.reviewed_candidate_count == len(fixture.candidates) > 0
 
 
-@pytest.mark.skipif(not R104_RUN.is_dir(), reason="r104 语料缺席")
+@requires_legacy_corpus(_R104_REL)
 class TestR104Chain:
     def test_reviewed_step3_fixture_replays(self) -> None:
         fixture = ReviewedStep3Fixture.model_validate(_read(R104_RUN / "reviewed-step3-fixture.json"))
         assert fixture.cards
 
 
-@pytest.mark.skipif(not R11101_RUN.is_dir(), reason="r11101 语料缺席")
+@requires_legacy_corpus(_R11101_REL)
 class TestR11101Chain:
     def test_image_authorization_manifest_replays(self) -> None:
         manifest = ImageAuthorizationManifest.model_validate(_read(R11101_RUN / "production-human-decision-manifest.json"))

@@ -25,8 +25,17 @@ os.environ.setdefault("MPLBACKEND", "Agg")
 #
 # 语料体量 >120MB，按 engineering_skeleton.md 第 3 节不入 git，只能挂在本机。
 # 但路径决不允许硬编码到某台机器的用户目录：那会让依赖它的回放模块在任何其他
-# 机器（含未来的 CI）上整体静默消失——模块级 skipif 让 92 个用例无声蒸发，
-# 却不报一个错。
+# 机器（含未来的 CI）上静默消失——skipif 让整批回放用例无声蒸发，却不报一个错。
+# 但别把「模块整体消失」当成事实：cm32 实测 8 处闸门散在 5 个模块里，只挡掉 32 条，
+# 那 5 个模块共 92 条，其余 60 条不依赖语料、照常跑并照常保障。摘要里的条数一律
+# 按跳过报告现算，不写常数——写死的数字迟早变成一句假话（cm31 的 fitz/cv2 存根豁免
+# 就是这样过期的）。
+#
+# 8 处里有 3 处是 cm32 收归进来的：`test_gates_review_replay.py` 原先用裸
+# `pytest.mark.skipif(not X.is_dir(), …)` 挡 r810/r104/r11101 三条链，绕过本函数的代价有两条——
+# 不进 _CORPUS_GATED（摘要少报 11 条，实测报 21 而真值 32），也不受 REQUIRE 严格模式管辖
+# （CI 上开了严格模式，这 3 组仍会静默蒸发）。所以「语料闸门只有一个入口」这条不变式由
+# tests/test_corpus_gate_accounting_seal.py 看住：裸 skipif 一出现就当场失败。
 #
 # 解析顺序（EXAMCARD_LEGACY_ROOT 显式指定 > 本仓同级 ../yijian2）与「指错即抛错、
 # 决不静默回落」的口径都由 examcard.utils.legacy_root 一处提供：cm20 起 migration
@@ -37,7 +46,13 @@ os.environ.setdefault("MPLBACKEND", "Agg")
 REQUIRE_LEGACY_CORPUS_ENV = "EXAMCARD_REQUIRE_LEGACY_CORPUS"
 _TRUTHY = {"1", "true", "yes", "on"}
 
-# 被语料缺席挡掉的模块清单，供 pytest_terminal_summary 响亮报数。
+# 跳过原因的前缀：requires_legacy_corpus 写它，pytest_terminal_summary 按它数条数。
+# 两处共用一个常量，改文案不会让计数悄悄归零。
+_SKIP_REASON_PREFIX = "旧仓金标语料不在本机"
+
+# 被语料缺席挡掉的闸门清单，供 pytest_terminal_summary 响亮报数。一处闸门可能只覆盖
+# 一个类或一个函数（本仓 5 处里只有 1 处是模块级 pytestmark），所以这份清单的长度是
+# 「闸门处数」而不是「用例数」。
 _CORPUS_GATED: list[str] = []
 
 LEGACY_ROOT = resolve_legacy_root(ROOT)
@@ -62,17 +77,23 @@ def requires_legacy_corpus(*relatives: str) -> pytest.MarkDecorator:
             f"请用 {LEGACY_ROOT_ENV} 指向 yijian2 仓，或关闭严格模式。"
         )
     _CORPUS_GATED.append(detail)
-    return pytest.mark.skipif(True, reason=f"旧仓金标语料不在本机（{detail}）")
+    return pytest.mark.skipif(True, reason=f"{_SKIP_REASON_PREFIX}（{detail}）")
 
 
 def pytest_terminal_summary(terminalreporter: pytest.TerminalReporter) -> None:
-    """语料缺席不许悄悄过去：在摘要里点名有多少回放模块被挡掉。"""
+    """语料缺席不许悄悄过去：在摘要里报出闸门处数与**现算**的被挡用例数。"""
     if not _CORPUS_GATED:
         return
+    gated = sum(
+        1
+        for report in terminalreporter.stats.get("skipped", [])
+        if _SKIP_REASON_PREFIX in str(getattr(report, "longrepr", ""))
+    )
     terminalreporter.write_sep("=", "旧仓金标语料缺席", yellow=True)
     terminalreporter.write_line(
-        f"{len(_CORPUS_GATED)} 个回放模块因语料不在本机被整体跳过；"
-        f"这些用例本轮未提供任何保障。设 {LEGACY_ROOT_ENV} 指向 yijian2 仓可启用，"
+        f"{len(_CORPUS_GATED)} 处语料闸门被触发，挡掉 {gated} 条用例——这 {gated} 条本轮"
+        f"未提供任何保障。闸门可能只覆盖一个类或一个函数，同模块内不依赖语料的用例照常"
+        f"跑，所以这不是「模块整体消失」。设 {LEGACY_ROOT_ENV} 指向 yijian2 仓可启用，"
         f"或设 {REQUIRE_LEGACY_CORPUS_ENV}=1 让缺席直接失败。"
     )
 

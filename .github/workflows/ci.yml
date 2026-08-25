@@ -68,15 +68,21 @@ jobs:
       - name: mypy（gates+compilers 严格档，其余零模块级豁免）
         run: uv run mypy
 
-      # -rs 打印跳过原因：旧仓金标语料不在 CI 上，92 个回放用例会整体跳过，
-      # conftest 会在摘要里响亮报数。若哪天 CI 能拿到语料，设
-      # EXAMCARD_LEGACY_ROOT 指向 yijian2，并置 EXAMCARD_REQUIRE_LEGACY_CORPUS=1
-      # 把"语料缺席"从跳过升级为收集期失败。
+      # -rs 打印跳过原因：旧仓金标语料不在 CI 上，32 条回放用例会被 8 处语料闸门挡掉
+      # （那 5 个模块共 92 条，其余 60 条不依赖语料、照常跑——别把这里读成"92 条整体
+      # 蒸发"，cm32 实测过），conftest 会按跳过报告现算条数并在摘要里响亮报出。cm32 同批
+      # 把 3 处绕过记账的裸 skipif 收归 requires_legacy_corpus：裸的既不进记账（摘要曾少报
+      # 11 条），也不受下面那个严格模式管辖；这条不变式由
+      # tests/test_corpus_gate_accounting_seal.py 看住。若哪天 CI 能拿到语料，设
+      # EXAMCARD_LEGACY_ROOT 指向 yijian2，并置
+      # EXAMCARD_REQUIRE_LEGACY_CORPUS=1 把"语料缺席"从跳过升级为收集期失败。
       #
-      # --cov-fail-under=75：基线实测 75.5%（分支覆盖，21017 条语句漏 4018；
-      # 714 passed / 9 skipped，带覆盖率本机跑 60~95s，随机器负载浮动）。门槛只许往上
-      # 棘轮，不许往下调；掉下去说明新代码没带测试。当前余量只有 0.5pp。
-      # 覆盖率配置见 pyproject [tool.coverage.*]。
+      # --cov-fail-under=75：cm32 实测两档（分支覆盖，21,452 条语句）——语料缺席
+      # `795 passed / 41 skipped`、漏 4,044、75.75%（余量 0.75pp，CI 就是这一档）；
+      # 语料在位跑严格模式 `827 passed / 9 skipped`、漏 4,023、75.88%（余量 0.88pp）。
+      # 两档过+跳合计都是 836：闸门只改"过/跳"归属，不改总数。
+      # 带覆盖率本机跑 70~105s，随机器负载浮动。门槛只许往上棘轮，不许往下调；掉下去
+      # 说明新代码没带测试。覆盖率配置见 pyproject [tool.coverage.*]。
       #
       # --basetemp 收进仓内 .test-tmp/（规范 T3，强制条款见 docs/engineering_skeleton.md §4.1）：
       # 与本地跑法逐字一致，产物位置可预期、失败时可直接当 artifact 上传，也绕开某些机器上

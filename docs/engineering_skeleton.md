@@ -146,9 +146,15 @@ uv add <pkg>@latest && uv sync                            # 升级依赖（锁�
 显式指错即抛错，决不静默回落到同级猜测（那会把「我指错了」悄悄变成「语料不在本机」）。唯一
 实现在 `src/examcard/utils/legacy_root.py`，仓内任何 `.py` 都不许再钉机器本地绝对路径——
 钉了就等于让别人（含 CI）只能以「找不到文件」的形式失败，而错误里出现的还是他从未写过的那条
-路径。封印见 `tests/test_legacy_root_resolution_seal.py`。语料不在本机时相关模块整体跳过，
+路径。封印见 `tests/test_legacy_root_resolution_seal.py`。语料不在本机时相关用例跳过，
 并在 pytest 摘要里响亮报数；`EXAMCARD_REQUIRE_LEGACY_CORPUS=1` 把这种缺席升级为收集期失败
-（给 CI 用，防止 92 个用例无声蒸发）。
+（给 CI 用）。**cm32 订正两处口径**：一是被挡掉的是 **32 条**而不是「92 个」——8 处闸门散在
+5 个模块里，那 5 个模块共 92 条，其余 60 条不依赖语料、照常跑；二是「模块整体跳过」只对
+`test_gates_review_replay.py` 的 r84 那一处成立（模块级 `pytestmark`），另 7 处是类/
+函数级装饰器。摘要里的条数自 cm32 起按跳过报告**现算**，不写常数。8 处里有 3 处是 cm32
+从裸 `pytest.mark.skipif` 收归进来的——裸的既不进记账（摘要曾少报 11 条），也不受严格
+模式管辖（严格模式的全部意义就是不许静默跳过，可它看不见裸 skipif）；「语料闸门只有一个
+入口」这条不变式由 `tests/test_corpus_gate_accounting_seal.py` 看住。
 
 ### 5.1 本机 pytest 环境附注（Windows ACL 损伤与修复）
 
