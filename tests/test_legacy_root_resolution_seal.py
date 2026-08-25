@@ -7,7 +7,7 @@ examcard.utils.legacy_root，并让 tests/conftest.py 也复用同一处，不�
 
 三条机械规则，全离线（规范 T4）：
 
-1. src/examcard、migration、tests 全量 .py 不得出现盘符绝对路径（``C:\\Users\\…``）或
+1. src/examcard、migration、tests、tools 全量 .py 不得出现盘符绝对路径（``C:\\Users\\…``）或
    POSIX 家目录路径（``/home/<人名>/``）——机器本地路径一旦入库就是硬编码复发。
 2. 旧仓目录名只许由 legacy_root.py 以模块常量形式持有；任何文件把它当路径分量拼接
    （``… / "yijian2"``、``Path("…/yijian2")``）都算第二份解析顺序开始生长。散文里提到
@@ -37,7 +37,9 @@ from examcard.utils.legacy_root import (
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 SRC_ROOT = Path(examcard.__file__).resolve().parent
-SCAN_ROOTS = (SRC_ROOT, REPO_ROOT / "migration", REPO_ROOT / "tests")
+# 扫描面跟着 ruff 的 `src` 走（cm33 起含 tools/），一致性由
+# tests/test_repo_discipline_seal.py 钉住：新顶层代码目录漏收编会当场失败。
+SCAN_ROOTS = (SRC_ROOT, REPO_ROOT / "migration", REPO_ROOT / "tests", REPO_ROOT / "tools")
 RESOLVER_FILE = SRC_ROOT / "utils" / "legacy_root.py"
 
 # 本文件自身排除在扫描之外：规则 1 的正则与规则 2 的探针必须写出被禁的形状，

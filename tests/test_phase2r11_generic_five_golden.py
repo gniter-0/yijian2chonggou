@@ -12,6 +12,12 @@
 pyproject 里给这处留了一条 import-not-found 豁免。豁免的正当性以前只写在注释里，本文件
 把它变成被测事实：调用它必然抛 ModuleNotFoundError；同时守住「不许有人新接调用点」，
 因为接上去只会在运行期炸，而不是在类型检查期。
+
+cm33 起要留意一个同名巧合：本仓新建了顶层 `tools/` 包（eolaudit/leakscan/msgnorm），与旧仓
+那个 `tools.` 前缀撞名。所以 ModuleNotFoundError 的成因从「`tools` 这个包根本不存在」变成了
+「`tools` 存在但没有这个子模块」——`.name` 仍是完整点名，下面那条断言照样成立。但要记住：
+若哪天真在 `tools/` 里放进一个 `verify_phase2r1_phase2r0_freeze.py`，这条封印会先失败，
+那时该做的是把死的一半整体处理掉，而不是改断言。
 """
 from __future__ import annotations
 
@@ -60,7 +66,7 @@ def test_unported_entry_point_raises_module_not_found(tmp_path: Path) -> None:
 def test_unported_entry_point_has_no_call_sites() -> None:
     """守住零调用点：接上去只会在运行期炸，类型检查期看不出来（那条豁免正是为此存在）。"""
     offenders: list[str] = []
-    for folder in ("src", "tests", "migration"):
+    for folder in ("src", "tests", "migration", "tools"):
         for path in sorted((ROOT / folder).rglob("*.py")):
             relative = path.relative_to(ROOT)
             if Path(*relative.parts) in _ALLOWED:

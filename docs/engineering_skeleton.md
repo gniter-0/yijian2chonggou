@@ -170,6 +170,37 @@ takeown /f $env:TEMP\pytest-of-$env:USERNAME /r /d y; icacls $env:TEMP\pytest-of
 - **补充实测（20260822）**：不带 basetemp 裸跑仍然复现，且随用例增长而放大——`604 passed / 9 skipped / 110 errors`（33.7s；110 条全是 `tmp_path` fixture 初始化失败，无一条源自被测代码）。同一棵树带 `--basetemp .test-tmp/<名字>` 则 0 error。这说明这条参数必须写死在文档与 CI 里，而不是留给人临场想起。
 - 出处与证据：`docs/prework/P3_未来就绪审计与优化路线图_20260812.md` §1.1（两处损伤同一病因；`.pytest_cache/` 侧仅缓存告警不影响判定）。
 
+### 5.2 字节权威与 EOL 纪律（`* -text` + cm33 封印）
+
+本仓是**字节权威**仓库：`.gitattributes` 是全路径 `* -text`，禁止 git 做任何行尾转换，
+金标 / 夹具 / canonical 哈希都锚定**工作区字节**。由此派生两条硬规则：
+
+- **改文件要认行尾**：仓库是混合 EOL（多数新代码纯 LF，`migration/*.py`、`docs/*.md`、
+  `pyproject.toml`、部分老测试是纯 CRLF）。编辑器 / PatchEdit 一保存就把整文件降成 LF，
+  所以**纯 CRLF 文件只能用「锚点唯一命中才落盘」的字节替换脚本改**，改完体检「无 BOM +
+  无孤立 LF」。
+- **字节纪律工具入仓**：`tools/eolaudit.py`（无参，提交前跑，要求 `VIOLATIONS=0`）、
+  `tools/leakscan.py`（用项目自己的 `_SECRET_PATTERN` 扫落盘产物里的疑似凭据）、
+  `tools/msgnorm.py`（把提交信息文件规成无 BOM + 纯 CRLF）。cm33 之前它们是 gitignore 掉
+  的 `.test-tmp/` 临时脚本，靠人记得手跑；工作台一删纪律就没牙。
+
+cm33 起这条纪律「与提交态有关」的那一半由 `tests/test_repo_discipline_seal.py` 在 CI 里
+按 **HEAD 字节**强制（不看工作区，避免全量跑把 7 个黄金件按 LF 重写后误判）：全树跟踪
+文件零 BOM、每个文件行尾自洽；3 个既存混杂行尾文件按清单**逐条钉住且只许缩短**（它们的
+头部注释块由排练脚本用 `\n` 拼出、正文是纯 CRLF 逐字节拷来，不能就地规范化——其 sha256
+进了「评审侧车 → 高清裁剪清单 → 处置侧车」三链哈希，动一个字节要重算整条链）。工作区那
+一档仍由 `tools/eolaudit.py` 负责。
+
+同批还钉一条姊妹不变式：**放着受版本管理 `.py` 的顶层目录必须与 ruff 的 `[tool.ruff] src`
+集合相等**（cm33 起是 `src / tests / migration / tools`）。新建顶层代码目录若漏收编，就等于
+它一诞生就在 lint 与几处扫描面之外；封印两边集合全等，多一个少一个都失败。cm33 同批把此前
+硬编码成 `(src, tests, migration)` 的 4 处扫描面（错误脱敏、legacy_root、pymupdf 导入、
+phase2r11）一并扩到含 `tools`。
+
+**一处如实交代**：mypy 的 `files` 仍是 `["src/examcard"]`，`tools/` 与 `tests/`、
+`migration/` 一样**不在类型检查范围内**——这是既有口径，不是 cm33 的疏漏；`tools/` 只进
+ruff 与上述字节 / 扫描面封印。
+
 ## 6. 迁移执行约定（给后续 P 任务）
 
 0. **两条铁律（总指挥令，组公告 bc-b8b9aca6）**：

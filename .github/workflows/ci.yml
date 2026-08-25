@@ -49,8 +49,11 @@ jobs:
       - name: 按锁文件安装依赖
         run: uv sync --locked
 
+      # 扫描面与 pyproject 的 [tool.ruff] src 逐字对齐（cm33 起含 tools/）：新顶层代码目录
+      # 漏收编就等于它一诞生就在 lint 之外，这条一致性由
+      # tests/test_repo_discipline_seal.py 钉成机器判定，不靠下一个人恰好想起来。
       - name: ruff
-        run: uv run ruff check src tests migration
+        run: uv run ruff check src tests migration tools
 
       # mypy 正式入门禁。一次跑覆盖两档，靠 pyproject [tool.mypy] 的逐模块配置分流：
       #   - gates/ 与 compilers/ 走严格档（disallow_untyped_defs 等一整套），实测清零；
@@ -87,5 +90,10 @@ jobs:
       # --basetemp 收进仓内 .test-tmp/（规范 T3，强制条款见 docs/engineering_skeleton.md §4.1）：
       # 与本地跑法逐字一致，产物位置可预期、失败时可直接当 artifact 上传，也绕开某些机器上
       # 系统 TEMP 不可写的坑（本机 %TEMP%\pytest-of-* 已 ACL 损伤，裸跑上百条 ERROR）。
+      #
+      # cm33 起这一步还顺带执行「字节权威」：tests/test_repo_discipline_seal.py 按 HEAD 字节
+      # 断言全树跟踪文件零 BOM、每个文件行尾自洽（既存混杂按清单逐条钉住、只许缩短）。
+      # 在此之前这条纪律唯一的执行手段是一个 gitignore 掉的脚本 + 人记得手跑，工作台一删就没牙。
+      # 工作区那一档仍由 tools/eolaudit.py 负责（改完文件跑一次，要求 VIOLATIONS=0）。
       - name: pytest（带覆盖率门槛）
         run: uv run pytest -q -rs --cov --cov-report=term-missing --cov-fail-under=75 --basetemp .test-tmp/ci

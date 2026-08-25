@@ -89,7 +89,7 @@ exclude_also = [
 # （compilers/step3_card.py）只在 3.12 合法，推断错一档整个文件就退化成 E999
 # 语法错误、静默脱离 lint 覆盖。
 target-version = "py312"
-src = ["src", "tests", "migration"]
+src = ["src", "tests", "migration", "tools"]
 
 # 规则集暂用 ruff 默认（E4/E7/E9 + F）：先把现有真信号清零并接进 CI，
 # 再逐条加规则，避免一次性引入几千条噪声反而没人看。

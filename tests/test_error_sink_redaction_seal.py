@@ -1,4 +1,4 @@
-"""封印：错误落纸只许经 providers 的脱敏器（不变式 #12），src 与 migration 用同一把尺子。
+"""封印：错误落纸只许经 providers 的脱敏器（不变式 #12），src / migration / tools 用同一把尺子。
 
 cm15/cm18 只把这条不变式钉在 knowledge/llm.py 一个模块里，代价是同一个漏法在别处照样成立：
 migration 下的实跑脚本一律 ``print(f"...{exc}")`` 并 tee 成日志（census_s2.log / vision_s2.log
@@ -6,7 +6,7 @@ migration 下的实跑脚本一律 ``print(f"...{exc}")`` 并 tee 成日志（ce
 再归档。供应商与中继的 401/403 正文会回显 ``Incorrect API key provided: sk-...`` 与
 ``Authorization: Bearer ...``，于是一次失败就能把密钥落进磁盘。
 
-本封印把三条机械规则变成可执行门禁，覆盖 src/examcard 与 migration 全量 .py：
+本封印把三条机械规则变成可执行门禁，覆盖 src/examcard、migration 与 tools 全量 .py：
 
 1. ``except ... as NAME`` 块里不得用 f-string 直插 NAME（直插会调 ``__str__`` 带出正文）；
    ``raise`` 语句豁免——那是在造新异常，不是往报告/日志里写。
@@ -30,6 +30,10 @@ from examcard.providers.base import sanitize_error_text, sanitized_error_summary
 REPO_ROOT = Path(__file__).resolve().parents[1]
 SRC_ROOT = Path(examcard.__file__).resolve().parent
 MIGRATION_ROOT = REPO_ROOT / "migration"
+# cm33：`tools/` 也进扫描面。那里住着 leakscan/eolaudit——专门跟凭据和字节打交道的脚本，
+# 恰恰最不该自己往标准输出倒异常原文。扫描面与 ruff `src` 的一致性由
+# tests/test_repo_discipline_seal.py 钉住。
+TOOLS_ROOT = REPO_ROOT / "tools"
 
 _OPENAI_CTORS = frozenset({"OpenAI", "AsyncOpenAI"})
 _HTTPX_ONESHOT = frozenset({"Client", "AsyncClient", "get", "post", "stream"})
@@ -40,7 +44,7 @@ _LEAKED_KEY = "sk-live-ABCDEF1234567890"
 
 def _scanned_files() -> tuple[Path, ...]:
     files: list[Path] = []
-    for root in (SRC_ROOT, MIGRATION_ROOT):
+    for root in (SRC_ROOT, MIGRATION_ROOT, TOOLS_ROOT):
         files.extend(path for path in root.rglob("*.py") if "__pycache__" not in path.parts)
     return tuple(sorted(files))
 

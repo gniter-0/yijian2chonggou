@@ -31,8 +31,9 @@ ROOT = Path(__file__).resolve().parents[1]
 PYPROJECT = ROOT / "pyproject.toml"
 LOCK = ROOT / "uv.lock"
 
-# 扫描面与 ruff 的 src 配置一致（src / tests / migration）：三处都可能 import PyMuPDF。
-_SCAN_ROOTS = ("src/examcard", "tests", "migration")
+# 扫描面与 ruff 的 src 配置一致（src / tests / migration / tools）：四处都可能 import PyMuPDF。
+# 这条一致性本身由 tests/test_repo_discipline_seal.py 钉住，新顶层目录漏收编会当场失败。
+_SCAN_ROOTS = ("src/examcard", "tests", "migration", "tools")
 
 # PyMuPDF 的用点清单（相对仓根）。写成精确相等而不是「至少这些」：多一个文件用上
 # PyMuPDF 就得在提交里说清——渲染/取字是 evidence 层的职责，别的层要用先问清为什么。
