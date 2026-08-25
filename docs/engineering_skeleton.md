@@ -18,7 +18,7 @@
 
 - **requires-python：`>=3.12`（P0-1 二次上调；历程 `>=3.10` → `>=3.11` → `>=3.12`）**。3.11 的依据是 semantic_contracts 使用 StrEnum（3.11+）；再上调一档的依据是 `compilers/step3_card.py:204` 用了 PEP 701 嵌套 f-string（f-string 内层复用同种引号，`f"…{self.model_dump(mode="json", …)}…"`），该写法在 3.11 上是 SyntaxError——声明 `>=3.11` 等于放行一个「装得上、一 import 就崩」的组合。开发解释器与旧仓 venv 实测均为 3.12.10。旧仓若将来以依赖方式引用本引擎，需同步上调自身下限。
 - **开发解释器：`.python-version` = 3.12**。对齐 yijian2 实际 venv（3.12.10）；uv sync 自动取用，新仓 venv/CI 均用 3.12。
-- **运行依赖 9 项**：PyMuPDF、openai、httpx、Pillow、PyYAML、pydantic、rapidocr-onnxruntime、opencv-python<5、numpy。下限与 yijian2 `requirements.txt` 逐项一致，上限由 `uv.lock` 固定。
+- **运行依赖 9 项**：PyMuPDF、openai、httpx、Pillow、PyYAML、pydantic、rapidocr-onnxruntime、opencv-python<5、numpy。下限与 yijian2 `requirements.txt` 逐项一致，唯一例外是 **PyMuPDF：`>=1.24.3`**（cm31 把 `import fitz` 全仓改成 `import pymupdf`，而 `pymupdf` 这个导入名自 1.24.3 才存在——1.24.2 的 wheel 顶层只有 `fitz/`；下限再写 1.24.0 就是一句假声明）。上限由 `uv.lock` 固定。
 - **删掉的 3 项零 import 声明（12 → 9，理由入 pyproject 注释）**：`flask`（webui 是纯函数静态 HTML 渲染器，测试反而 AST 断言禁止 import flask）、`matplotlib`（`utils/table_render` 未落地，全仓零 import；conftest 的 T7 `MPLBACKEND=Agg` 是 setdefault 空守卫，保留）、`python-dotenv`（T6 规定测试不自动加载 `.env`）。声明零 import 的依赖不是无害的：它进锁文件、进 CI 安装面、进供应链审计面，还让读者误判包内真实形态。将来真落 flask 路由或 table_render 渲染分支，`uv add` 加回并同步本节。
 - **与旧仓的两处刻意差异**：
   1. `pytest` 移出运行依赖，进 `[dependency-groups] dev`（uv sync 默认安装，构建产物不再携带测试框架）；

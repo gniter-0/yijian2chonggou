@@ -5,7 +5,7 @@ import hashlib
 from enum import StrEnum
 from pathlib import Path
 
-import fitz
+import pymupdf
 import yaml
 from pydantic import Field, model_validator
 
@@ -118,7 +118,7 @@ def verify_golden_sources(registry: GoldenSampleRegistry, root: Path) -> list[st
             errors.append(f"{sample.sample_id}: source hash mismatch")
             continue
         try:
-            with fitz.open(path) as document:
+            with pymupdf.open(path) as document:
                 invalid_pages = [page for page in sample.selected_pages if page > document.page_count]
         except (OSError, RuntimeError, ValueError) as exc:
             errors.append(f"{sample.sample_id}: cannot open source PDF: {sanitize_error_text(str(exc))}")

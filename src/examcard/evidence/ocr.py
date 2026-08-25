@@ -4,7 +4,7 @@ from __future__ import annotations
 from importlib.metadata import PackageNotFoundError, version
 from typing import Protocol
 
-import fitz
+import pymupdf
 import numpy as np
 from rapidocr_onnxruntime import RapidOCR
 
@@ -15,7 +15,7 @@ class OCRProvider(Protocol):
     name: str
     version: str
 
-    def audit(self, page: fitz.Page, *, page_num: int, render_dpi: int) -> OCRPage: ...
+    def audit(self, page: pymupdf.Page, *, page_num: int, render_dpi: int) -> OCRPage: ...
 
 
 def _package_version(package: str, fallback: str = "unknown") -> str:
@@ -38,7 +38,7 @@ class RapidOCRProvider:
             self._engine = RapidOCR()
         return self._engine
 
-    def audit(self, page: fitz.Page, *, page_num: int, render_dpi: int) -> OCRPage:
+    def audit(self, page: pymupdf.Page, *, page_num: int, render_dpi: int) -> OCRPage:
         pixmap = page.get_pixmap(dpi=render_dpi, alpha=False)
         image = np.frombuffer(pixmap.samples, dtype=np.uint8).reshape(pixmap.height, pixmap.width, pixmap.n)
         result, elapsed = self.engine(image)

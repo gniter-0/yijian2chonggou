@@ -231,11 +231,11 @@ def _sample_pdf(sample_id: str) -> Path:
 
 
 def _render_page(pdf_path: Path, page_num: int, target: Path) -> None:
-    import fitz  # pymupdf；与 EvidenceEngineConfig(render_dpi=200) 同参
+    import pymupdf  # 与 EvidenceEngineConfig(render_dpi=200) 同参
 
     if target.is_file():
         return
-    document = fitz.open(pdf_path)
+    document = pymupdf.open(pdf_path)
     try:
         page = document[page_num - 1]
         pixmap = page.get_pixmap(dpi=RENDER_DPI)

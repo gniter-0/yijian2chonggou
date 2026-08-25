@@ -4,7 +4,7 @@ from __future__ import annotations
 import hashlib
 from collections.abc import Iterable
 
-import fitz
+import pymupdf
 
 from .engine_types import (
     NativeChar,
@@ -17,7 +17,7 @@ from .engine_types import (
 )
 
 
-def _rect_tuple(rect: fitz.Rect, page_rect: fitz.Rect) -> tuple[float, float, float, float]:
+def _rect_tuple(rect: pymupdf.Rect, page_rect: pymupdf.Rect) -> tuple[float, float, float, float]:
     return (
         round(max(page_rect.x0, rect.x0), 4),
         round(max(page_rect.y0, rect.y0), 4),
@@ -38,7 +38,7 @@ def _union_rect(rects: Iterable[tuple[float, float, float, float]]) -> tuple[flo
     )
 
 
-def _extract_tables(page: fitz.Page) -> tuple[NativeTable, ...]:
+def _extract_tables(page: pymupdf.Page) -> tuple[NativeTable, ...]:
     try:
         detected = page.find_tables().tables
     except (RuntimeError, ValueError):
@@ -52,9 +52,12 @@ def _extract_tables(page: fitz.Page) -> tuple[NativeTable, ...]:
         for row_index, row in enumerate(table.rows):
             values = extracted[row_index] if row_index < len(extracted) else []
             for column_index, cell_rect in enumerate(row.cells):
-                # 显式注解 + 显式解包成 4 元组：fitz 无存根，extract() 的格值与 Rect 迭代
-                # 都是 Any，生成器进 tuple() 只能推出 tuple[float, ...]，与下面容器声明的
-                # 定长 4 元组对不上。Rect 恒为 4 个分量，解包不改变行为。
+                # 显式注解 + 显式解包成 4 元组：pymupdf 自带 py.typed，但 find_tables()
+                # 返回 Any，于是 extract() 的格值与 Rect 迭代仍是 Any，生成器进 tuple()
+                # 只能推出 tuple[float, ...]，与下面容器声明的定长 4 元组对不上。
+                # Rect 恒为 4 个分量，解包不改变行为。另注：mypy 眼里 pymupdf.Rect 没有
+                # __iter__，上游哪天给 find_tables() 标上类型，这两处迭代会立刻报
+                # attr-defined，届时要改成按 x0/y0/x1/y1 取分量，而不是再糊一条 ignore。
                 text: str = values[column_index] if column_index < len(values) and values[column_index] else ""
                 bbox: tuple[float, float, float, float] | None = None
                 if cell_rect:
@@ -89,7 +92,7 @@ def _extract_tables(page: fitz.Page) -> tuple[NativeTable, ...]:
     return tuple(tables)
 
 
-def extract_native_page(page: fitz.Page, *, page_num: int) -> NativePage:
+def extract_native_page(page: pymupdf.Page, *, page_num: int) -> NativePage:
     """Extract unmodified native text, style, char boxes, images, tables and drawings."""
     page_rect = page.rect
     rawdict = page.get_text("rawdict", sort=False)
@@ -101,7 +104,7 @@ def extract_native_page(page: fitz.Page, *, page_num: int) -> NativePage:
             spans: list[NativeSpan] = []
             for raw_span in raw_line.get("spans", []):
                 chars = tuple(
-                    NativeChar(char=item.get("c", ""), bbox=_rect_tuple(fitz.Rect(item["bbox"]), page_rect))
+                    NativeChar(char=item.get("c", ""), bbox=_rect_tuple(pymupdf.Rect(item["bbox"]), page_rect))
                     for item in raw_span.get("chars", [])
                 )
                 text = "".join(item.char for item in chars)
@@ -110,7 +113,7 @@ def extract_native_page(page: fitz.Page, *, page_num: int) -> NativePage:
                 spans.append(
                     NativeSpan(
                         text=text,
-                        bbox=_rect_tuple(fitz.Rect(raw_span["bbox"]), page_rect),
+                        bbox=_rect_tuple(pymupdf.Rect(raw_span["bbox"]), page_rect),
                         font=str(raw_span.get("font") or ""),
                         size=float(raw_span.get("size") or 0),
                         flags=int(raw_span.get("flags") or 0),
@@ -143,7 +146,7 @@ def extract_native_page(page: fitz.Page, *, page_num: int) -> NativePage:
         images.append(
             NativeImage(
                 image_index=image_index,
-                bbox=_rect_tuple(fitz.Rect(bbox), page_rect),
+                bbox=_rect_tuple(pymupdf.Rect(bbox), page_rect),
                 xref=info.get("xref"),
                 digest=digest.hex() if isinstance(digest, bytes) else None,
                 width=int(info.get("width") or 0),
@@ -165,7 +168,7 @@ def extract_native_page(page: fitz.Page, *, page_num: int) -> NativePage:
     )
 
 
-def page_render_hash(page: fitz.Page, *, dpi: int = 72) -> str:
+def page_render_hash(page: pymupdf.Page, *, dpi: int = 72) -> str:
     """A reproducible low-cost page render hash for lineage and cache diagnostics."""
     pixmap = page.get_pixmap(dpi=dpi, alpha=False)
     return hashlib.sha256(pixmap.samples).hexdigest()

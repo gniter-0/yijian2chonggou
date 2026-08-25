@@ -7,7 +7,8 @@ requires-python = ">=3.12"
 license = { text = "Proprietary" }
 authors = [{ name = "examcard maintainers" }]
 
-# 下限与 yijian2 requirements.txt 保持一致，上限由 uv.lock 固定。
+# 下限与 yijian2 requirements.txt 保持一致（唯一例外是 PyMuPDF，理由见该条上方），
+# 上限由 uv.lock 固定。
 # 升级依赖：`uv add openai@latest`；同步本地：`uv sync`。
 #
 # 已删三项「零 import 声明」（原 12 项 → 现 9 项）：
@@ -19,7 +20,11 @@ authors = [{ name = "examcard maintainers" }]
 #   - python-dotenv：T6 规定测试不自动加载 .env，live 密钥一律显式读环境变量。
 # 将来真要落 flask 路由或 table_render 渲染分支，再 `uv add` 加回并同步本文档口径。
 dependencies = [
-    "PyMuPDF>=1.24.0",
+    # 唯一比 yijian2 高一档的下限：`pymupdf` 这个导入名自 1.24.3 才存在
+    # （1.24.2 的 wheel 顶层只有 fitz/，1.24.3 起才多出 pymupdf/，实测），
+    # 而本仓 cm31 起一律 `import pymupdf`。若仍写 >=1.24.0，按下限解析出来的
+    # 环境装得上却一 import 就 ModuleNotFoundError——正是「声明与用法不符」那一族。
+    "PyMuPDF>=1.24.3",
     "openai>=1.30.0",
     "httpx>=0.27.0",
     "Pillow>=10.0.0",
@@ -130,10 +135,18 @@ warn_return_any = true
 strict_equality = true
 extra_checks = true
 
-# 无类型存根的三方库：PyMuPDF / OpenCV / RapidOCR 均不发 stub，
+# 无类型存根的三方库：如今只剩 RapidOCR（rapidocr_onnxruntime 既无 py.typed 也无 -stubs 包）。
 # 这里只关「找不到存根」，不放过我们自己代码里的类型冲突。
+# cm31 一次退掉两条**已经过期**的条目，它们都不是「关了码」，而是「写着关码却早已无效」：
+#   - PyMuPDF：新导入名 `pymupdf` 自带 py.typed（旧的 fitz shim 没有），留着 `fitz.*`
+#     会被 warn_unused_configs 当场判成 `unused section(s)`；
+#   - opencv-python：自带 py.typed + `cv2/__init__.pyi`，实测删掉 `cv2.*` 后 mypy 仍是
+#     `Success: no issues found in 176 source files`——这条从头到尾没起过作用，却让读者
+#     误以为全仓的 cv2 调用都在盲区里。
+# 本清单只许缩短，且「条目是否已过期」由 tests/test_evidence_pymupdf_import_seal.py
+# 按「该包到底有没有 py.typed / -stubs」逐条对账——靠人记得删是记不住的。
 [[tool.mypy.overrides]]
-module = ["fitz.*", "cv2.*", "rapidocr_onnxruntime.*"]
+module = ["rapidocr_onnxruntime.*"]
 ignore_missing_imports = true
 
 # ---------------------------------------------------------------------------

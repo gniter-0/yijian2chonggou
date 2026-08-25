@@ -251,7 +251,7 @@ requires-dist = [
     { name = "opencv-python", specifier = ">=4.10.0,<5" },
     { name = "pillow", specifier = ">=10.0.0" },
     { name = "pydantic", specifier = ">=2.7.0" },
-    { name = "pymupdf", specifier = ">=1.24.0" },
+    { name = "pymupdf", specifier = ">=1.24.3" },
     { name = "pyyaml", specifier = ">=6.0" },
     { name = "rapidocr-onnxruntime", specifier = ">=1.4.4" },
 ]

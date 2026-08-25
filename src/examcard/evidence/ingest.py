@@ -7,7 +7,7 @@ import time
 from dataclasses import dataclass
 from pathlib import Path
 
-import fitz
+import pymupdf
 from pydantic import Field
 
 from examcard.materials.schema import MaterialProfile, StrictModel, V2_SCHEMA_VERSION
@@ -90,13 +90,13 @@ class EvidenceEngine:
             }
         )
 
-    def _native_page(self, page: fitz.Page, *, document_sha256: str, page_num: int) -> NativePage:
+    def _native_page(self, page: pymupdf.Page, *, document_sha256: str, page_num: int) -> NativePage:
         key = make_cache_key(
             pdf_sha256=document_sha256,
             page_num=page_num,
             region_bbox=None,
             engine_name="pymupdf_rawdict",
-            engine_version=fitz.VersionBind,
+            engine_version=pymupdf.VersionBind,
             config_hash=self.config_hash,
             artifact_schema_version=self.config.cache_schema_version,
         )
@@ -107,7 +107,7 @@ class EvidenceEngine:
         self.cache.put_model(key, extracted)
         return extracted
 
-    def _ocr_page(self, page: fitz.Page, *, document_sha256: str, page_num: int) -> OCRPage:
+    def _ocr_page(self, page: pymupdf.Page, *, document_sha256: str, page_num: int) -> OCRPage:
         key = make_cache_key(
             pdf_sha256=document_sha256,
             page_num=page_num,
@@ -153,7 +153,7 @@ class EvidenceEngine:
     def _visual_reviews(
         self,
         *,
-        page: fitz.Page,
+        page: pymupdf.Page,
         native: NativePage,
         document_sha256: str,
         hints: tuple[VisualReviewHint, ...],
@@ -167,7 +167,7 @@ class EvidenceEngine:
             if bbox is None:
                 continue
             crop_path = None
-            png_bytes = page.get_pixmap(dpi=self.config.crop_dpi, clip=fitz.Rect(bbox), alpha=False).tobytes("png")
+            png_bytes = page.get_pixmap(dpi=self.config.crop_dpi, clip=pymupdf.Rect(bbox), alpha=False).tobytes("png")
             if output_dir is not None:
                 relative = Path("crops") / f"p{native.page_num:04d}_review_{hint.hint_id}.png"
                 target = output_dir / relative
@@ -233,7 +233,7 @@ class EvidenceEngine:
         hints_by_page: dict[int, list[VisualReviewHint]] = {}
         for hint in review_hints:
             hints_by_page.setdefault(hint.page_num, []).append(hint)
-        with fitz.open(pdf_path) as document:
+        with pymupdf.open(pdf_path) as document:
             requested = tuple(page_numbers or range(1, document.page_count + 1))
             if not requested:
                 raise ValueError("at least one page is required")
@@ -248,7 +248,7 @@ class EvidenceEngine:
             repeated_noise = detect_repeated_noise(tuple(native_pages[number] for number in requested))
             pages: list[PageEvidence] = []
             engine_versions = {
-                "pymupdf": fitz.VersionBind,
+                "pymupdf": pymupdf.VersionBind,
                 "ocr": f"{self.ocr_provider.name}@{self.ocr_provider.version}",
             }
             if self.vision_verifier is not None:
@@ -321,7 +321,7 @@ class EvidenceEngine:
         review_hints: tuple[VisualReviewHint, ...] = (),
     ) -> tuple[DocumentEvidenceManifest, dict[str, object]]:
         """Process a complete document and emit a manifest that satisfies the V2 schema."""
-        with fitz.open(pdf_path) as document:
+        with pymupdf.open(pdf_path) as document:
             page_numbers = tuple(range(1, document.page_count + 1))
             page_count = document.page_count
         result = self.process_pages(

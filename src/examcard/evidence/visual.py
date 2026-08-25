@@ -4,7 +4,7 @@ from __future__ import annotations
 from pathlib import Path
 
 import cv2
-import fitz
+import pymupdf
 import numpy as np
 from pydantic import Field
 
@@ -22,9 +22,9 @@ class DetectedDiagramEdge(StrictModel):
     method: str
 
 
-def save_page_crop(page: fitz.Page, bbox: tuple[float, float, float, float], path: Path, *, dpi: int = 250) -> None:
+def save_page_crop(page: pymupdf.Page, bbox: tuple[float, float, float, float], path: Path, *, dpi: int = 250) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
-    page.get_pixmap(dpi=dpi, clip=fitz.Rect(bbox), alpha=False).save(path)
+    page.get_pixmap(dpi=dpi, clip=pymupdf.Rect(bbox), alpha=False).save(path)
 
 
 def _rectangles(image: np.ndarray) -> list[tuple[int, int, int, int]]:
@@ -79,7 +79,7 @@ def _page_bbox(box: tuple[int, int, int, int], *, figure_bbox: tuple[float, floa
 
 
 def detect_diagram_edges(
-    page: fitz.Page,
+    page: pymupdf.Page,
     *,
     figure_bbox: tuple[float, float, float, float],
     ocr_lines: tuple[OCRLine, ...],
@@ -90,7 +90,7 @@ def detect_diagram_edges(
     The edge direction is intentionally unresolved unless the local arrowhead density
     distinguishes one endpoint. Step 2 must not treat unresolved direction as a fact.
     """
-    pixmap = page.get_pixmap(dpi=render_dpi, clip=fitz.Rect(figure_bbox), alpha=False)
+    pixmap = page.get_pixmap(dpi=render_dpi, clip=pymupdf.Rect(figure_bbox), alpha=False)
     image = np.frombuffer(pixmap.samples, dtype=np.uint8).reshape(pixmap.height, pixmap.width, pixmap.n)
     gray = cv2.cvtColor(image, cv2.COLOR_RGB2GRAY)
     binary = cv2.threshold(gray, 180, 255, cv2.THRESH_BINARY_INV)[1]

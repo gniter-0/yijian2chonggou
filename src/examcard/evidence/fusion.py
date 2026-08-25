@@ -5,7 +5,7 @@ from difflib import SequenceMatcher
 from pathlib import Path
 from typing import Iterable
 
-import fitz
+import pymupdf
 
 from examcard.materials.schema import SemanticRole
 
@@ -84,7 +84,7 @@ def _native_ocr_alignment(native_lines: tuple[NativeLine, ...], ocr_lines: tuple
 
 def _crop_path(
     *,
-    page: fitz.Page,
+    page: pymupdf.Page,
     bbox: tuple[float, float, float, float],
     output_dir: Path | None,
     relative_dir: str,
@@ -116,7 +116,7 @@ def _source_conflict(
 
 def fuse_page(
     *,
-    page: fitz.Page,
+    page: pymupdf.Page,
     native: NativePage,
     ocr: OCRPage,
     document_sha256: str,

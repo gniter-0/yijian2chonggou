@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-import fitz
+import pymupdf
 from PIL import Image, ImageDraw
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -23,7 +23,7 @@ class FakeOCRProvider:
     def __init__(self) -> None:
         self.calls = 0
 
-    def audit(self, page: fitz.Page, *, page_num: int, render_dpi: int) -> OCRPage:
+    def audit(self, page: pymupdf.Page, *, page_num: int, render_dpi: int) -> OCRPage:
         self.calls += 1
         if page_num == 1:
             lines = (
@@ -148,12 +148,12 @@ def _make_pdf(path: Path) -> Path:
     draw.polygon(((210, 35), (220, 42), (210, 49)), fill="black")
     image.save(image_path)
 
-    doc = fitz.open()
+    doc = pymupdf.open()
     page = doc.new_page(width=300, height=300)
     page.insert_text((20, 20), "1. Heading", fontsize=12)
     page.insert_text((20, 40), "Alpha", fontsize=12)
     page.insert_text((20, 63), "value=1", fontsize=12)
-    page.insert_image(fitz.Rect(40, 120, 240, 200), filename=image_path)
+    page.insert_image(pymupdf.Rect(40, 120, 240, 200), filename=image_path)
     page = doc.new_page(width=300, height=300)
     page.insert_text((20, 40), "Beta", fontsize=12)
     page.insert_text((20, 63), "typo", fontsize=12)
