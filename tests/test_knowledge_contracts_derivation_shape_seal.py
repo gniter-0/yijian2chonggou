@@ -33,9 +33,9 @@ import re
 from collections.abc import Mapping
 from pathlib import Path
 
-from examcard.knowledge.contracts import derivation, versions
+from examcard.knowledge.contracts import derivation_anchor_span, versions
 
-_SOURCE = Path(derivation.__file__)
+_SOURCE = Path(derivation_anchor_span.__file__)
 _TARGET_FUNCTION = "derive_step2a_anchor_span_selection"
 
 # 只有部分 union 成员声明这些字段，所以每次访问都必须先窄化。
@@ -77,7 +77,7 @@ def _union_members(tree: ast.Module) -> tuple[type, ...]:
         for node in ast.walk(annotations[0])
         if isinstance(node, ast.Name) and node.id.startswith("Step2A")
     }
-    return tuple(getattr(derivation, name) for name in sorted(names))
+    return tuple(getattr(derivation_anchor_span, name) for name in sorted(names))
 
 
 def _declaring(field: str, members: tuple[type, ...]) -> set[type]:
@@ -129,7 +129,7 @@ def _scan(node: ast.AST, narrowed: bool, offenders: list[str], seen: set[str]) -
 
 def test_version_table_matches_reviewed_multipage_versions() -> None:
     """版本表既不许漏登记，也不许错配：键对账 versions 里的集合，键里的 vNN 与类名同号。"""
-    table = derivation._MINIMAL_MODEL_TYPE_BY_STEP2A_REQUEST_VERSION
+    table = derivation_anchor_span._MINIMAL_MODEL_TYPE_BY_STEP2A_REQUEST_VERSION
     assert isinstance(table, Mapping), "版本表必须是模块级 Mapping（不是每轮循环重建的字典）"
     expected_keys = set(versions._REVIEWED_MULTIPAGE_STEP2A_REQUEST_VERSIONS) - {
         versions.REVIEWED_MULTIPAGE_STEP2A_REQUEST_VERSION
@@ -140,7 +140,7 @@ def test_version_table_matches_reviewed_multipage_versions() -> None:
         % (sorted(expected_keys - set(table)), sorted(set(table) - expected_keys))
     )
     assert len(set(table.values())) == len(table), "一个提案类只能挂一个请求版本"
-    assert set(table.values()) == set(derivation._MINIMAL_MODEL_PROPOSAL_TYPES), (
+    assert set(table.values()) == set(derivation_anchor_span._MINIMAL_MODEL_PROPOSAL_TYPES), (
         "版本表的值集合必须与 _MINIMAL_MODEL_PROPOSAL_TYPES 相等，否则形状校验会放过某个类"
     )
     mismatched = {
@@ -155,8 +155,8 @@ def test_version_table_matches_reviewed_multipage_versions() -> None:
 def test_minimal_tuple_matches_derived_proposal_key_declarations() -> None:
     """_MINIMAL_MODEL_PROPOSAL_TYPES ⟺ 「有 derived_proposal_key、没有 proposal_key」的那批类。"""
     members = _union_members(_tree())
-    minimal = set(derivation._MINIMAL_MODEL_PROPOSAL_TYPES)
-    assert set(members) == minimal | {derivation.Step2AModelFactProposal}, (
+    minimal = set(derivation_anchor_span._MINIMAL_MODEL_PROPOSAL_TYPES)
+    assert set(members) == minimal | {derivation_anchor_span.Step2AModelFactProposal}, (
         "12 元 union 的成员集合变了：三个旗子的等价改写依赖「union 恰好穷举」，"
         "新增成员必须同时登记进三张类元组，否则语义会悄悄漂移。实际=%s"
         % sorted(member.__name__ for member in members)
@@ -182,11 +182,11 @@ def test_dual_role_tuple_matches_secondary_anchor_declarations() -> None:
     """V15 起只剩一个穷举的 selected 角色，secondary 字段就该只在旧基类与 V13/V14 上。"""
     members = _union_members(_tree())
     declared = _declaring("secondary_anchor_span_ids", members)
-    assert set(derivation._DUAL_ROLE_ANCHOR_PROPOSAL_TYPES) == declared, (
+    assert set(derivation_anchor_span._DUAL_ROLE_ANCHOR_PROPOSAL_TYPES) == declared, (
         "_DUAL_ROLE_ANCHOR_PROPOSAL_TYPES 与声明 secondary_anchor_span_ids 的类集合不一致："
         "登记表=%s 实际声明=%s"
         % (
-            sorted(model.__name__ for model in derivation._DUAL_ROLE_ANCHOR_PROPOSAL_TYPES),
+            sorted(model.__name__ for model in derivation_anchor_span._DUAL_ROLE_ANCHOR_PROPOSAL_TYPES),
             sorted(model.__name__ for model in declared),
         )
     )
@@ -196,11 +196,11 @@ def test_numeric_claim_tuple_matches_numeric_claims_declarations() -> None:
     """V16 起数值声明改成本地确定性派生，模型不再声明 numeric_claims。"""
     members = _union_members(_tree())
     declared = _declaring("numeric_claims", members)
-    assert set(derivation._MODEL_NUMERIC_CLAIM_PROPOSAL_TYPES) == declared, (
+    assert set(derivation_anchor_span._MODEL_NUMERIC_CLAIM_PROPOSAL_TYPES) == declared, (
         "_MODEL_NUMERIC_CLAIM_PROPOSAL_TYPES 与声明 numeric_claims 的类集合不一致："
         "登记表=%s 实际声明=%s"
         % (
-            sorted(model.__name__ for model in derivation._MODEL_NUMERIC_CLAIM_PROPOSAL_TYPES),
+            sorted(model.__name__ for model in derivation_anchor_span._MODEL_NUMERIC_CLAIM_PROPOSAL_TYPES),
             sorted(model.__name__ for model in declared),
         )
     )
@@ -247,14 +247,23 @@ def test_version_dependent_fields_are_always_isinstance_narrowed() -> None:
 
 
 def test_derivation_carries_no_type_ignore() -> None:
-    """derivation.py 零逐点 ignore：cm30 删掉的那条 arg-type 不许以任何形式回来。"""
+    """derivation 家族零逐点 ignore：cm30 删掉的那条 arg-type 不许以任何形式回来。
+
+    cm36 把 derivation.py 拆成门面 + 4 个 `derivation_*` 兄弟后，本封印从「扫单文件」扩到
+    「扫门面 + 4 兄弟整个家族」，让盖子在任何一个新落点都长不回来。
+    """
+    family = sorted(_SOURCE.parent.glob("derivation*.py"))
+    assert len(family) >= 5, "derivation 家族文件少于 5 个（门面 + 4 兄弟），glob 口径可能失效：%s" % [
+        path.name for path in family
+    ]
     lines = [
-        "%d: %s" % (number, text.strip())
-        for number, text in enumerate(_SOURCE.read_text(encoding="utf-8").splitlines(), start=1)
+        "%s:%d: %s" % (path.name, number, text.strip())
+        for path in family
+        for number, text in enumerate(path.read_text(encoding="utf-8").splitlines(), start=1)
         if "type: ignore" in text
     ]
     assert not lines, (
-        "derivation.py 又出现了 type: ignore：%s。"
+        "derivation 家族又出现了 type: ignore：%s。"
         "这里的类型问题已经在 cm30 按正解解决过一次，再关码等于把盖子盖回去；"
         "确有工具限制请先在提交里说清，并同步 tests/test_mypy_waiver_ratchet.py 的 _IGNORE_CEILING。"
         % lines

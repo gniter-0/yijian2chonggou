@@ -54,6 +54,13 @@ LAYER_ORDER = (
     "step2b",
     "step2a_request",
     "step2a_builders",
+
+    # cm36 拆分产物：derivation 的 4 个扁平兄弟（蓝图 §3），四条管线彼此零交叉、同层，
+    # 均只依赖更低秩模块；拓扑序排在门面 derivation 之前。
+    "derivation_anchor_span",  # anchor-span 选取 + 4 张 Final 形状表
+    "derivation_table_cell",  # 表格单元锚点派生
+    "derivation_condition",  # 条件断言派生 + span 助手
+    "derivation_numeric",  # 数值断言派生 + 表格出现/网格助手
     "derivation",
     "validation",
     "testing",
