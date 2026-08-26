@@ -58,6 +58,15 @@ LAYER_ORDER = (
     "validation",
     "testing",
     "admission_legacy_hash",
+
+    # cm35 拆分产物：admission_fixtures 的 7 个扁平兄弟（蓝图 §3），拓扑序排在门面之前。
+    "admission_fixtures_constants",  # 层 0：版本常量 / 正则 / 噪声标记 / 两个 StrEnum，无兄弟依赖
+    "admission_fixtures_typed",  # 层 1：phase2r84 typed-evidence 家族
+    "admission_fixtures_step3card",  # 层 2：step3 卡片 / 版面契约家族
+    "admission_fixtures_release",  # 层 3：草稿 / 发布 / 人审 step3 家族（引用 step3card）
+    "admission_fixtures_merged",  # 层 4：合并 / 修复 / 统一 reviewed 发布家族
+    "admission_fixtures_offline",  # 层 5：r104 离线闸 / 冻结 / 验收家族
+    "admission_fixtures_pilot",  # 层 6：r319 试点图片 / 处置 / 交接家族
     "admission_fixtures",
     "echo_release",  # P8 补链（echo-batch-release/1.0 家族）：纯数据契约，仅向后引用 admission 对
 

@@ -24,7 +24,7 @@ pyproject.toml 曾经带一份「逐模块 × 错误码」的豁免清单，把 
   ``model_construct`` 合成了「必须列全字段」的签名，真实契约是部分赋值 + 跳过校验；
 - ``import-not-found``（contracts/phase2r11_generic_five_golden）：``tools.`` 未随内核迁移，
   「调用即 ModuleNotFoundError」由 tests/test_phase2r11_generic_five_golden.py 封住；
-- ``assignment``（contracts/admission_fixtures 5 条）：Literal 字段默认值覆盖，同址有说明；
+- ``assignment``（contracts/admission_fixtures_typed 5 条）：Literal 字段默认值覆盖，同址有说明；
 - 其余 ``return-value`` / ``misc`` / ``arg-type`` 各处：旧仓口径的窄化返回与协议缝，同址有说明。
 
 cm30 拆掉了唯一一条「盖子」型条目 ``arg-type``（contracts/derivation）：那条 ignore 连带把
@@ -58,7 +58,7 @@ _IGNORE_CEILING: dict[str, dict[str, int]] = {
     "common/junit.py": {"return-value": 1},
     "gates/review/extraction.py": {"misc": 1, "return-value": 1},
     "gates/review/step4_text_gate.py": {"arg-type": 1},
-    "knowledge/contracts/admission_fixtures.py": {"assignment": 5},
+    "knowledge/contracts/admission_fixtures_typed.py": {"assignment": 5},
     "knowledge/contracts/phase2r11_generic_five_golden.py": {"import-not-found": 1},
     "knowledge/contracts/step2a_builders.py": {"call-arg": 1},
     "knowledge/quality.py": {"prop-decorator": 2},
