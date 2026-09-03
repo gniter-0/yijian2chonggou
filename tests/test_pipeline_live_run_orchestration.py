@@ -7,6 +7,8 @@ from types import SimpleNamespace
 
 import pytest
 
+from migration.run_exam_pipeline import _validate_evidence_root
+
 from examcard.gates.review.image_admission_batch import (
     BatchImageAuthorizationManifest,
     build_batch_image_authorization,
@@ -30,6 +32,8 @@ from examcard.pipeline.live_run import (
     emit_image_review_sheet,
     orchestrate,
 )
+from examcard.evidence.golden import GoldenSampleRegistry, load_golden_registry
+from examcard.evidence.golden_runner import _assertion_page
 from tests.fixtures.compilers_synthetic import _hex, _page
 
 # ---------------------------------------------------------------------------
@@ -480,6 +484,22 @@ def _seed_exam_workspace(root: Path) -> None:
         target = root / rel
         target.parent.mkdir(parents=True, exist_ok=True)
         shutil.copyfile(_REAL_REPO / rel, target)
+    registry = load_golden_registry(root / registry_rel)
+    for sample in registry.samples:
+        source = _REAL_REPO / sample.pdf_relative_path
+        target = root / sample.pdf_relative_path
+        target.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(source, target)
+
+
+def _seed_step1_workspace(root: Path) -> None:
+    _seed_exam_workspace(root)
+    exam_root = root / "exams" / _REHEARSAL_EXAM
+    (exam_root / "input_pdf").mkdir(parents=True, exist_ok=True)
+    (exam_root / "input_pdf" / "placeholder.pdf").write_bytes(b"synthetic")
+    annotation_path = exam_root / "fixtures" / "golden_annotations" / "gonglu_golden5_rehearsal_phase0_v1.yaml"
+    annotation_path.parent.mkdir(parents=True, exist_ok=True)
+    annotation_path.write_text("synthetic: true\n", encoding="utf-8")
 
 
 def _seed_paused_run(root: Path, run_id: str, *, checkpoint_status: str = "waiting_human") -> Path:
@@ -584,3 +604,160 @@ def test_resume_with_undecided_sheet_stays_waiting(repo_tmp_path: Path) -> None:
     assert report.stop_reason == "waiting_human_image_review"
     state = json.loads((run_root / "run_state.json").read_text(encoding="utf-8"))
     assert state["checkpoints"]["image_review"]["status"] == "waiting_human"
+
+
+def _step1_config(root: Path) -> LiveRunConfig:
+    return LiveRunConfig(
+        exam_id=_REHEARSAL_EXAM,
+        stages=("step1", "step2a"),
+        mode="dry_run",
+        run_label="step1-contract",
+        repo_root=root,
+    )
+
+
+def test_step1_success_allows_downstream_stage(repo_tmp_path: Path) -> None:
+    _seed_step1_workspace(repo_tmp_path)
+    calls: list[str] = []
+
+    def facts_runner() -> dict[str, bool]:
+        calls.append("facts")
+        return {"quality_gates_passed": True, "machine_assertions_passed": True}
+
+    report, exit_code = orchestrate(
+        _step1_config(repo_tmp_path),
+        {"pricing": {}, "sample_ids": ("s1",), "step1_runner": lambda: {"ok": True}, "facts_runner": facts_runner},
+    )
+    by_stage = {entry.stage: entry for entry in report.stages}
+    assert exit_code == 0
+    assert by_stage["step1"].status == "completed"
+    assert by_stage["step2a"].status == "completed"
+    assert calls == ["facts"]
+
+
+@pytest.mark.parametrize("payload", [{"ok": False}, {}, {"ok": "true"}, {"ok": 1}, {"ok": None}])
+def test_step1_contract_is_fail_closed_and_skips_downstream(repo_tmp_path: Path, payload: dict) -> None:
+    _seed_step1_workspace(repo_tmp_path)
+    calls: list[str] = []
+
+    def facts_runner() -> dict[str, bool]:
+        calls.append("facts")
+        return {"quality_gates_passed": True, "machine_assertions_passed": True}
+
+    report, exit_code = orchestrate(
+        _step1_config(repo_tmp_path),
+        {"pricing": {}, "sample_ids": ("s1",), "step1_runner": lambda: payload, "facts_runner": facts_runner},
+    )
+    by_stage = {entry.stage: entry for entry in report.stages}
+    assert exit_code == 1
+    assert by_stage["step1"].status == "failed"
+    assert by_stage["step2a"].status == "skipped"
+    assert calls == []
+
+
+def test_nonempty_evidence_without_success_report_cannot_resume(repo_tmp_path: Path) -> None:
+    _seed_step1_workspace(repo_tmp_path)
+    paths = ExamPaths.resolve(repo_tmp_path, _REHEARSAL_EXAM)
+    paths.evidence_root.mkdir(parents=True, exist_ok=True)
+    (paths.evidence_root / "partial-page.json").write_text("{}", encoding="utf-8")
+    registry = load_golden_registry(paths.registry_path)
+
+    result = _validate_evidence_root(evidence_root=paths.evidence_root, registry=registry, sample_ids=None)
+
+    assert result["ok"] is False
+    assert "golden_run_report.json" in str(result["detail"])
+
+
+def _valid_golden_report(registry: GoldenSampleRegistry) -> dict[str, object]:
+    samples = []
+    for sample in registry.samples:
+        assertions = [
+            {
+                "assertion_id": assertion.assertion_id,
+                "pages": list(_assertion_page(assertion, sample)),
+                "passed": True,
+                "missing_evidence_kinds": [],
+                "missing_texts": [],
+                "missing_conflicts": [],
+                "missing_must_cover": [],
+                "missing_expected_matches": [],
+            }
+            for assertion in sample.assertions
+        ]
+        samples.append(
+            {
+                "sample_id": sample.sample_id,
+                "pdf_relative_path": sample.pdf_relative_path,
+                "pdf_sha256": sample.pdf_sha256,
+                "selected_pages": list(sample.selected_pages),
+                "annotation_status": sample.annotation_status.value,
+                "quality": {},
+                "assertions": assertions,
+                "assertions_passed": True,
+                "error": None,
+            }
+        )
+    return {
+        "registry_id": registry.registry_id,
+        "material_profile_id": registry.material_profile_id,
+        "golden_registry_ready_for_phase1": True,
+        "sample_count": len(samples),
+        "selected_page_count": sum(len(sample["selected_pages"]) for sample in samples),
+        "seeded_assertion_count": sum(len(sample["assertions"]) for sample in samples),
+        "seeded_assertions_passed": True,
+        "samples": samples,
+        "status": "evidence_ready_for_review",
+        "note": "synthetic accepted report for resume validation",
+    }
+
+
+def _write_valid_golden_report(evidence_root: Path, registry: GoldenSampleRegistry) -> None:
+    evidence_root.mkdir(parents=True, exist_ok=True)
+    (evidence_root / "golden_run_report.json").write_text(
+        json.dumps(_valid_golden_report(registry), ensure_ascii=False, indent=2), encoding="utf-8"
+    )
+
+
+def test_resume_revalidates_current_golden_source_bytes(repo_tmp_path: Path) -> None:
+    _seed_exam_workspace(repo_tmp_path)
+    paths = ExamPaths.resolve(repo_tmp_path, _REHEARSAL_EXAM)
+    registry = load_golden_registry(paths.registry_path)
+    _write_valid_golden_report(paths.evidence_root, registry)
+
+    accepted = _validate_evidence_root(
+        evidence_root=paths.evidence_root,
+        registry=registry,
+        sample_ids=None,
+        workspace_root=repo_tmp_path,
+    )
+    assert accepted["ok"] is True
+
+    source_path = repo_tmp_path / registry.samples[0].pdf_relative_path
+    source_path.write_bytes(source_path.read_bytes() + b"\nresume-source-drift")
+    rejected = _validate_evidence_root(
+        evidence_root=paths.evidence_root,
+        registry=registry,
+        sample_ids=None,
+        workspace_root=repo_tmp_path,
+    )
+    assert rejected["ok"] is False
+    assert "source hash mismatch" in str(rejected["detail"])
+
+
+def test_seeded_evidence_rejects_missing_current_golden_source(repo_tmp_path: Path) -> None:
+    _seed_exam_workspace(repo_tmp_path)
+    paths = ExamPaths.resolve(repo_tmp_path, _REHEARSAL_EXAM)
+    registry = load_golden_registry(paths.registry_path)
+    seed_root = repo_tmp_path / "seed-evidence"
+    _write_valid_golden_report(seed_root, registry)
+    source_path = repo_tmp_path / registry.samples[-1].pdf_relative_path
+    source_path.unlink()
+
+    result = _validate_evidence_root(
+        evidence_root=seed_root,
+        registry=registry,
+        sample_ids=None,
+        workspace_root=repo_tmp_path,
+    )
+    assert result["ok"] is False
+    assert "missing source" in str(result["detail"])

@@ -51,6 +51,7 @@ from examcard.pipeline.live_run import (  # noqa: E402
     load_run_env,
     orchestrate,
 )
+from examcard.evidence.golden import GoldenSampleRegistry  # noqa: E402
 
 
 def _parse_args() -> argparse.Namespace:
@@ -150,6 +151,46 @@ def _load_preflight(args: argparse.Namespace, env_path: Path, stages: tuple[str,
     return report
 
 
+def _golden_report_result(
+    report: object, *, registry: GoldenSampleRegistry, sample_ids: set[str] | None
+) -> dict[str, object]:
+    from examcard.evidence.golden_runner import validate_golden_report
+
+    valid, detail = validate_golden_report(report, registry=registry, sample_ids=sample_ids)
+    if valid:
+        expected_count = len(registry.samples) if sample_ids is None else len(sample_ids)
+        return {"ok": True, "detail": f"golden evidence run: {expected_count} samples"}
+    return {"ok": False, "detail": f"golden evidence report rejected: {detail}"}
+
+
+def _validate_evidence_root(
+    *,
+    evidence_root: Path,
+    registry: GoldenSampleRegistry,
+    sample_ids: set[str] | None,
+    workspace_root: Path = NEW_ROOT,
+) -> dict[str, object]:
+    """Accept resume output only when its authoritative report is valid."""
+
+    report_path = evidence_root / "golden_run_report.json"
+    if not report_path.is_file():
+        return {"ok": False, "detail": "evidence root is incomplete: missing golden_run_report.json"}
+    try:
+        report = json.loads(report_path.read_text(encoding="utf-8"))
+    except (OSError, UnicodeError, ValueError):
+        return {"ok": False, "detail": "evidence root is incomplete: golden_run_report.json is unreadable"}
+    report_result = _golden_report_result(report, registry=registry, sample_ids=sample_ids)
+    if report_result["ok"] is not True:
+        return report_result
+
+    from examcard.evidence.golden import verify_golden_sources
+
+    source_errors = verify_golden_sources(registry, workspace_root)
+    if source_errors:
+        return {"ok": False, "detail": "golden source verification failed: " + "; ".join(source_errors)}
+    return report_result
+
+
 def main() -> int:
     args = _parse_args()
     config = LiveRunConfig(
@@ -187,9 +228,21 @@ def main() -> int:
 
     # ---- step1 / 事实底座（纯离线闭包） -------------------------------------
     def step1_runner() -> dict:
-        # 断点续跑（§5.1 产物即完成标记）：evidence 产物已在即跳过，不重算不覆盖。
+        wanted = set(config.only_samples or ())
+        selected = {s for s in sample_ids if any(token in s for token in wanted)} if wanted else None
+        if wanted and not selected:
+            return {"ok": False, "detail": "no golden samples matched the requested filters"}
+
+        # 断点续跑只能认权威完成报告，不能把任意目录内容当作成功证据。
         if paths.evidence_root.is_dir() and any(paths.evidence_root.iterdir()):
-            return {"ok": True, "detail": "evidence products already present (resume skip)"}
+            return _validate_evidence_root(
+                evidence_root=paths.evidence_root,
+                registry=registry,
+                sample_ids=selected,
+                workspace_root=NEW_ROOT,
+            )
+        if paths.evidence_root.exists() and not paths.evidence_root.is_dir():
+            return {"ok": False, "detail": "evidence root is invalid: expected a directory"}
         if args.seed_evidence_from is not None:
             import shutil
 
@@ -198,7 +251,15 @@ def main() -> int:
                 return {"ok": False, "detail": f"seed evidence root does not exist: {seed}"}
             paths.evidence_root.parent.mkdir(parents=True, exist_ok=True)
             shutil.copytree(seed, paths.evidence_root)
-            return {"ok": True, "detail": f"evidence seeded from identity-equivalent root: {seed}"}
+            result = _validate_evidence_root(
+                evidence_root=paths.evidence_root,
+                registry=registry,
+                sample_ids=selected,
+                workspace_root=NEW_ROOT,
+            )
+            if result["ok"] is True:
+                result["detail"] = "evidence seeded from identity-equivalent root"
+            return result
         from examcard.evidence.golden_runner import run_golden_registry
         from examcard.evidence.ingest import EvidenceEngine, EvidenceEngineConfig
         from examcard.materials.catalog import load_material_profile
@@ -221,8 +282,7 @@ def main() -> int:
             output_root=paths.evidence_root,
             **({"sample_ids": selected} if selected else {}),
         )
-        ok = bool(getattr(report, "all_samples_passed", True))
-        return {"ok": ok, "detail": f"golden evidence run: {getattr(report, 'sample_count', len(sample_ids))} samples"}
+        return _golden_report_result(report, registry=registry, sample_ids=selected)
 
     def facts_runner() -> dict:
         from examcard.knowledge.fact_engine import run_golden_fact_pipeline

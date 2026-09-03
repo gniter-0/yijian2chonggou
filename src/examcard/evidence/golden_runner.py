@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import json
 import re
+from collections.abc import Mapping
 from pathlib import Path
 from typing import Any
 
@@ -16,6 +17,46 @@ from .layout import normalized_compare_text
 
 
 _PAGE_FROM_ASSERTION = re.compile(r"(?:^|_)page(?P<page>\d+)(?:_|$)")
+
+_GOLDEN_REPORT_KEYS = frozenset(
+    {
+        "registry_id",
+        "material_profile_id",
+        "golden_registry_ready_for_phase1",
+        "sample_count",
+        "selected_page_count",
+        "seeded_assertion_count",
+        "seeded_assertions_passed",
+        "samples",
+        "status",
+        "note",
+    }
+)
+_GOLDEN_SAMPLE_KEYS = frozenset(
+    {
+        "sample_id",
+        "pdf_relative_path",
+        "pdf_sha256",
+        "selected_pages",
+        "annotation_status",
+        "quality",
+        "assertions",
+        "assertions_passed",
+        "error",
+    }
+)
+_GOLDEN_ASSERTION_KEYS = frozenset(
+    {
+        "assertion_id",
+        "pages",
+        "passed",
+        "missing_evidence_kinds",
+        "missing_texts",
+        "missing_conflicts",
+        "missing_must_cover",
+        "missing_expected_matches",
+    }
+)
 
 
 def _assertion_page(assertion: GoldenAssertion, sample: GoldenSample) -> tuple[int, ...]:
@@ -122,6 +163,96 @@ def _write_report(path: Path, report: dict[str, Any]) -> None:
     temporary = path.with_suffix(path.suffix + ".tmp")
     temporary.write_text(json.dumps(report, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     temporary.replace(path)
+
+
+def validate_golden_report(
+    report: object,
+    *,
+    registry: GoldenSampleRegistry,
+    sample_ids: set[str] | None = None,
+) -> tuple[bool, str]:
+    """Validate the persisted golden report before it can satisfy Step 1.
+
+    The report is a mapping contract, not an object with optional attributes.  A
+    resume is valid only when the report explicitly proves a successful run for
+    the current registry and selected sample set.
+    """
+
+    if not isinstance(report, Mapping):
+        return False, "golden report is not a mapping"
+    if set(report) != _GOLDEN_REPORT_KEYS:
+        return False, "golden report has missing or unknown fields"
+
+    expected_samples = {sample.sample_id: sample for sample in registry.samples}
+    requested_ids = set(expected_samples) if sample_ids is None else set(sample_ids)
+    if not requested_ids or not requested_ids.issubset(expected_samples):
+        return False, "golden report sample selection is not registry-bound"
+    if not registry.ready_for_phase1:
+        return False, "golden registry is not ready for phase 1"
+    if report["registry_id"] != registry.registry_id:
+        return False, "golden report registry identity mismatch"
+    if report["material_profile_id"] != registry.material_profile_id:
+        return False, "golden report material profile identity mismatch"
+    if report["golden_registry_ready_for_phase1"] is not True:
+        return False, "golden report does not confirm registry readiness"
+    if report["status"] != "evidence_ready_for_review":
+        return False, "golden report status is not successful"
+    if report["seeded_assertions_passed"] is not True:
+        return False, "golden report assertions did not pass"
+    for key in ("sample_count", "selected_page_count", "seeded_assertion_count"):
+        if not isinstance(report[key], int) or isinstance(report[key], bool):
+            return False, f"golden report {key} is not an integer"
+
+    selected = [sample for sample in registry.samples if sample.sample_id in requested_ids]
+    expected_assertion_count = sum(len(sample.assertions) for sample in selected)
+    expected_page_count = sum(len(sample.selected_pages) for sample in selected)
+    if report["sample_count"] != len(selected):
+        return False, "golden report sample count mismatch"
+    if report["selected_page_count"] != expected_page_count:
+        return False, "golden report selected page count mismatch"
+    if report["seeded_assertion_count"] != expected_assertion_count:
+        return False, "golden report assertion count mismatch"
+    if not isinstance(report["samples"], list) or len(report["samples"]) != len(selected):
+        return False, "golden report samples are not a complete list"
+    if not isinstance(report["note"], str) or not report["note"]:
+        return False, "golden report note is missing"
+
+    seen_ids: set[str] = set()
+    for raw_sample in report["samples"]:
+        if not isinstance(raw_sample, Mapping) or set(raw_sample) != _GOLDEN_SAMPLE_KEYS:
+            return False, "golden report sample has missing or unknown fields"
+        sample_id = raw_sample["sample_id"]
+        if not isinstance(sample_id, str) or sample_id not in requested_ids or sample_id in seen_ids:
+            return False, "golden report sample identity is invalid"
+        seen_ids.add(sample_id)
+        expected = expected_samples[sample_id]
+        if (
+            raw_sample["pdf_relative_path"] != expected.pdf_relative_path
+            or raw_sample["pdf_sha256"] != expected.pdf_sha256
+            or raw_sample["selected_pages"] != list(expected.selected_pages)
+            or raw_sample["annotation_status"] != expected.annotation_status.value
+        ):
+            return False, "golden report sample identity does not match registry"
+        if raw_sample["error"] is not None or raw_sample["assertions_passed"] is not True:
+            return False, "golden report contains a failed sample"
+        if not isinstance(raw_sample["quality"], Mapping) or not isinstance(raw_sample["assertions"], list):
+            return False, "golden report sample payload is malformed"
+        if len(raw_sample["assertions"]) != len(expected.assertions):
+            return False, "golden report assertion list length mismatch"
+        for raw_assertion, expected_assertion in zip(raw_sample["assertions"], expected.assertions, strict=True):
+            if not isinstance(raw_assertion, Mapping) or set(raw_assertion) != _GOLDEN_ASSERTION_KEYS:
+                return False, "golden report assertion has missing or unknown fields"
+            if (
+                raw_assertion["assertion_id"] != expected_assertion.assertion_id
+                or raw_assertion["pages"] != list(_assertion_page(expected_assertion, expected))
+                or raw_assertion["passed"] is not True
+                or any(raw_assertion[key] != [] for key in _GOLDEN_ASSERTION_KEYS - {"assertion_id", "pages", "passed"})
+            ):
+                return False, "golden report contains an incomplete assertion"
+
+    if seen_ids != requested_ids:
+        return False, "golden report sample selection is incomplete"
+    return True, "golden evidence report validated"
 
 
 def run_golden_registry(

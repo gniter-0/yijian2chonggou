@@ -161,7 +161,7 @@ def orchestrate(config: LiveRunConfig, providers: Mapping[str, Any]) -> tuple[Li
                 failed = True
                 continue
             result = dict(runner())
-            status = "completed" if result.get("ok", True) else "failed"
+            status = "completed" if result.get("ok") is True else "failed"
             stage_reports.append(build_stage_report(stage, status, str(result.get("detail", "golden evidence run"))))
             state.set_stage(stage, status)
             failed = failed or status == "failed"
