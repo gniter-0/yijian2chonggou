@@ -8,10 +8,14 @@ import hashlib
 import json
 from pathlib import Path
 
+import pytest
+from pydantic import ValidationError
 
 from examcard.gates.release.readiness import (
+    Phase2R15FreezeAudit,
     RemediationExpectations,
     SampleSpec,
+    _freeze_paths,
     audit_remediation_document,
     audit_stage_transport,
     build_freeze_audit_from_snapshots,
@@ -64,6 +68,34 @@ def test_freeze_audit_from_snapshots_detects_drift(repo_tmp_path: Path) -> None:
     drifted = build_freeze_audit_from_snapshots(root=root, before=before, after={"frozen/a.json": "0" * 64})
     assert not drifted.valid
     assert drifted.changed_paths == ("frozen/a.json",)
+
+
+def test_freeze_paths_treats_historical_hash_drift_as_invalid(repo_tmp_path: Path) -> None:
+    root = repo_tmp_path
+    artifact = root / "frozen" / "a.json"
+    _write_json(artifact, {"value": 2})
+    audit = _freeze_paths(
+        root,
+        ({"frozen_sha256s": {"frozen/a.json": "0" * 64}},),
+        run_roots=(),
+    )
+    assert audit.historical_hash_drift_paths == ("frozen/a.json",)
+    assert audit.valid is False
+
+
+def test_freeze_audit_rejects_valid_historical_hash_drift(repo_tmp_path: Path) -> None:
+    root = repo_tmp_path
+    artifact = root / "frozen" / "a.json"
+    _write_json(artifact, {"value": 3})
+    audit = _freeze_paths(
+        root,
+        ({"frozen_sha256s": {"frozen/a.json": "0" * 64}},),
+        run_roots=(),
+    )
+    payload = audit.model_dump(mode="json")
+    payload["valid"] = True
+    with pytest.raises(ValidationError, match="historical hash drift"):
+        Phase2R15FreezeAudit.model_validate(payload)
 
 
 def test_collect_forbidden_keys_finds_nested_pollution() -> None:

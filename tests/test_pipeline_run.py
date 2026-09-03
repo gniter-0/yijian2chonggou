@@ -58,6 +58,26 @@ def test_run_offline_fail_closed_skips_downstream(tmp_path: Path) -> None:
     assert set(outputs) == {"extract"}
 
 
+def test_run_offline_sanitizes_persisted_exception_details(tmp_path: Path) -> None:
+    secret = "Authorization: Bearer super-secret-token sk-12345678ABCDEFGHIJKLMNOP"
+
+    def broken(context: PipelineContext, payload: Any) -> Any:
+        raise RuntimeError(secret)
+
+    context = PipelineContext(run_id="run-008", output_dir=tmp_path)
+    report, _ = run_offline(context, _steps(extract=broken))
+    journal = (tmp_path / "journal.jsonl").read_text(encoding="utf-8")
+    persisted_report = (tmp_path / "pipeline-report.json").read_text(encoding="utf-8")
+    failed_detail = report.steps[0].detail
+
+    assert secret not in failed_detail
+    assert secret not in report.stop_reason
+    assert secret not in journal
+    assert secret not in persisted_report
+    assert "[REDACTED]" in failed_detail
+    assert verify_freeze(tmp_path, load_pipeline_freeze(tmp_path)) is True
+
+
 def test_run_offline_persists_report_journal_and_freeze(tmp_path: Path) -> None:
     context = PipelineContext(run_id="run-003", output_dir=tmp_path)
     report, _ = run_offline(context, _steps())

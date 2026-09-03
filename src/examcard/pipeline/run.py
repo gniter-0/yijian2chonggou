@@ -23,6 +23,7 @@ from ..common.freeze import FreezeSnapshot, build_freeze
 from ..common.hashing import SHA256_HEX, canonical_hash, hash_model
 from ..common.io import append_jsonl, atomic_write_json
 from ..materials.schema import StrictModel
+from ..providers.base import sanitized_error_summary
 
 # Final（不带显式注解）让 mypy 保留字面量类型，常量才能当 Literal 字段的默认值；
 # 裸赋值会推成 str，赋给 Literal[...] 即报 assignment。
@@ -134,9 +135,9 @@ def run_offline(
                 result = _step_result(step, "completed", "completed", output_sha256)
             except Exception as error:  # fail-closed：任何步骤异常终止全链
                 failed = True
-                first_line = str(error).strip().splitlines()[0] if str(error).strip() else type(error).__name__
-                stop_reason = f"{step} failed: {first_line[:200]}"
-                result = _step_result(step, "failed", first_line[:200] or "failed", None)
+                detail = sanitized_error_summary(error)
+                stop_reason = f"{step} failed: {detail}"
+                result = _step_result(step, "failed", detail, None)
         results.append(result)
         append_jsonl(journal_path, {"sequence": sequence, "step": step, "status": result.status, "detail": result.detail})
     report = hash_model(

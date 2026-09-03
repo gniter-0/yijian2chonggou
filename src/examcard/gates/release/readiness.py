@@ -114,8 +114,8 @@ class Phase2R15FreezeAudit(StrictModel):
             raise ValueError("freeze artifact count must equal emitted artifact records")
         if len({item.path for item in self.artifacts}) != len(self.artifacts):
             raise ValueError("freeze artifact paths must be unique")
-        if self.valid != (not self.mismatch_paths):
-            raise ValueError("freeze validity must match its mismatch paths")
+        if self.valid != (not self.mismatch_paths and not self.historical_hash_drift_paths):
+            raise ValueError("freeze validity must match its mismatch and historical hash drift paths")
         return self
 
 
@@ -810,7 +810,7 @@ def _freeze_paths(root: Path, reports: tuple[Mapping[str, Any], ...], *, run_roo
     )
     aggregate = _sha256_bytes("\n".join(f"{item.path}:{item.sha256}" for item in artifacts).encode("utf-8"))
     return Phase2R15FreezeAudit(
-        valid=not mismatch_paths,
+        valid=not mismatch_paths and not historical_hash_drift_paths,
         artifact_count=len(artifacts),
         aggregate_sha256=aggregate,
         artifacts=artifacts,
