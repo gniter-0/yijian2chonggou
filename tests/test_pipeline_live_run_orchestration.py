@@ -1148,6 +1148,50 @@ def test_legacy_unbound_state_refuses_resume(repo_tmp_path: Path) -> None:
     assert not (run_root / "live_run_report.json").exists()
 
 
+def test_missing_resume_target_refuses_before_provider(repo_tmp_path: Path) -> None:
+    _seed_step1_workspace(repo_tmp_path)
+    run_id = "20260812-missing-resume-target"
+    run_root = repo_tmp_path / "exams" / _REHEARSAL_EXAM / "data" / "live_runs" / run_id
+    config = LiveRunConfig(
+        exam_id=_REHEARSAL_EXAM,
+        stages=("step1",),
+        mode="dry_run",
+        run_label="missing-resume-target",
+        resume_run_id=run_id,
+        repo_root=repo_tmp_path,
+    )
+
+    with pytest.raises(RunStateBindingError, match="missing run_state.json"):
+        orchestrate(config, {"pricing": {}, "sample_ids": ("s1",), "step1_runner": _must_not_run})
+
+    assert not run_root.exists()
+
+
+def test_orphan_resume_directory_refuses_before_provider(repo_tmp_path: Path) -> None:
+    _seed_step1_workspace(repo_tmp_path)
+    run_id = "20260812-orphan-resume-directory"
+    run_root = repo_tmp_path / "exams" / _REHEARSAL_EXAM / "data" / "live_runs" / run_id
+    run_root.mkdir(parents=True, exist_ok=True)
+    marker = run_root / "orphan.marker"
+    marker.write_text("preserve orphan contents", encoding="utf-8")
+    config = LiveRunConfig(
+        exam_id=_REHEARSAL_EXAM,
+        stages=("step1",),
+        mode="dry_run",
+        run_label="orphan-resume-directory",
+        resume_run_id=run_id,
+        repo_root=repo_tmp_path,
+    )
+
+    with pytest.raises(RunStateBindingError, match="missing run_state.json"):
+        orchestrate(config, {"pricing": {}, "sample_ids": ("s1",), "step1_runner": _must_not_run})
+
+    assert marker.read_text(encoding="utf-8") == "preserve orphan contents"
+    assert not (run_root / "run_state.json").exists()
+    assert not (run_root / "budget.json").exists()
+    assert not (run_root / "live_run_report.json").exists()
+
+
 @pytest.mark.parametrize("tamper", ["projection", "sha"])
 def test_tampered_run_state_binding_refuses_resume(repo_tmp_path: Path, tamper: str) -> None:
     config, run_id, run_root = _binding_dry_run(repo_tmp_path)

@@ -26,7 +26,7 @@ from .live_checkpoint import (
     validate_ingested_image_review,
 )
 from ..common.hashing import canonical_hash
-from .live_config import LiveRunConfig, RunState, build_run_resume_contract
+from .live_config import LiveRunConfig, RunState, RunStateBindingError, build_run_resume_contract
 from .live_stage_samples import execute_stage_samples
 from .live_rehearsal import budget_rehearsal_estimate, derive_stage_call_caps, materialize_live_run
 
@@ -56,7 +56,13 @@ def orchestrate(config: LiveRunConfig, providers: Mapping[str, Any]) -> tuple[Li
     paths = ExamPaths.resolve(config.repo_root, config.exam_id)
     run_id = config.resume_run_id or new_run_id(config.run_label)
     run_root = paths.live_runs_root / run_id
-    run_root.mkdir(parents=True, exist_ok=True)
+    if config.resume_run_id is not None:
+        if not (run_root / "run_state.json").is_file():
+            raise RunStateBindingError(
+                "resume target is missing run_state.json; start a fresh run without --resume"
+            )
+    else:
+        run_root.mkdir(parents=True, exist_ok=True)
 
     pricing: Mapping[str, float] = providers.get("pricing") or {}
     sample_ids: tuple[str, ...] = tuple(providers.get("sample_ids") or ())
