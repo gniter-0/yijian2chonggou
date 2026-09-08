@@ -24,7 +24,8 @@ from .live_checkpoint import (
     ingest_admission_decisions,
     ingest_image_review_sheet,
 )
-from .live_config import LiveRunConfig, RunState
+from ..common.hashing import canonical_hash
+from .live_config import LiveRunConfig, RunState, build_run_resume_contract
 from .live_stage_samples import execute_stage_samples
 from .live_rehearsal import budget_rehearsal_estimate, derive_stage_call_caps, materialize_live_run
 
@@ -55,7 +56,6 @@ def orchestrate(config: LiveRunConfig, providers: Mapping[str, Any]) -> tuple[Li
     run_id = config.resume_run_id or new_run_id(config.run_label)
     run_root = paths.live_runs_root / run_id
     run_root.mkdir(parents=True, exist_ok=True)
-    state = RunState.load_or_create(run_root / "run_state.json", run_id=run_id, exam_id=config.exam_id, stages=config.stages)
 
     pricing: Mapping[str, float] = providers.get("pricing") or {}
     sample_ids: tuple[str, ...] = tuple(providers.get("sample_ids") or ())
@@ -69,6 +69,27 @@ def orchestrate(config: LiveRunConfig, providers: Mapping[str, Any]) -> tuple[Li
         step3_card_count=max(step3_cards, 1),
         step4_card_count=max(step4_cards, 1),
         max_attempts=config.max_attempts,
+    )
+    image_model = str(providers.get("image_model", ""))
+    step4_handoff = config.step4_handoff or _optional_path(providers.get("step4_handoff"))
+    step4_release_fixture = _optional_path(providers.get("step4_release_fixture"))
+    run_config = build_run_resume_contract(
+        config,
+        resolved_sample_ids=sample_ids,
+        step3_card_count=step3_cards,
+        step4_card_count=step4_cards,
+        stage_call_caps=caps,
+        image_model=image_model,
+        step4_handoff=step4_handoff,
+        step4_release_fixture=step4_release_fixture if config.step3_release_fixture is None else None,
+    )
+    state = RunState.load_or_create(
+        run_root / "run_state.json",
+        run_id=run_id,
+        exam_id=config.exam_id,
+        stages=config.stages,
+        run_config=run_config,
+        run_config_sha256=canonical_hash(run_config),
     )
     stage_reports: list[LiveStageReport] = []
     extras: dict[str, Any] = {"run_root": str(run_root), "stages_requested": list(config.stages)}
@@ -313,7 +334,7 @@ def orchestrate(config: LiveRunConfig, providers: Mapping[str, Any]) -> tuple[Li
                 prompt_builder=providers["prompt_builder"],
                 image_caller=providers.get("image_caller") or (lambda payload: (0, b"")),
                 models_probe=providers.get("models_probe") if config.mode == "live" else None,
-                image_model=str(providers.get("image_model", "")),
+                image_model=image_model,
                 storage=run_root / "step4",
                 budget=budget,
                 drift_classifier=providers.get("drift_classifier"),
@@ -365,3 +386,9 @@ def orchestrate(config: LiveRunConfig, providers: Mapping[str, Any]) -> tuple[Li
         hint = extras.get("stop_reason_hint", "completed_with_failures")
         return finish(str(hint), 1)
     return finish("completed", 0)
+
+
+def _optional_path(value: Any) -> Path | None:
+    if value is None or value == "":
+        return None
+    return Path(value)
