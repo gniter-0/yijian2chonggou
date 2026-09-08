@@ -11,14 +11,19 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
+import examcard.gates.release.readiness as readiness
 from examcard.gates.release.readiness import (
+    Phase2R15BridgeAudit,
     Phase2R15FreezeAudit,
+    Phase2R15SampleAudit,
+    Phase2R15TransportAudit,
     RemediationExpectations,
     SampleSpec,
     _freeze_paths,
     audit_remediation_document,
     audit_stage_transport,
     build_freeze_audit_from_snapshots,
+    build_release_readiness_report,
     _collect_forbidden_keys,
 )
 
@@ -176,3 +181,145 @@ def test_sample_spec_carries_all_audited_paths() -> None:
     )
     assert spec.expected_diagram_nodes is None
     assert spec.expected_diagram_edges is None
+
+
+def _valid_transport(stage: str, request_id: str) -> Phase2R15TransportAudit:
+    digest = _sha(f"{stage}:{request_id}".encode("utf-8"))
+    return Phase2R15TransportAudit(
+        stage=stage,
+        request_id=request_id,
+        request_version="request-v1",
+        model_input_version="model-input-v1",
+        prompt_version="prompt-v1",
+        response_schema_sha256=digest,
+        cache_key=f"cache:{request_id}",
+        http_status=200,
+        provider_request_id=f"provider:{request_id}",
+        latency_ms=1.0,
+        response_sha256=digest,
+        report_path=f"reports/{request_id}.json",
+        request_path=f"requests/{request_id}.json",
+        record_path=f"records/{request_id}.json",
+        cache_path=f"cache/{request_id}.json",
+        journal_path=f"journals/{request_id}.jsonl",
+        report_sha256=digest,
+        request_sha256=digest,
+        record_sha256=digest,
+        cache_sha256=digest,
+        journal_sha256=digest,
+        schema_valid=True,
+        telemetry_valid=True,
+        no_unknown_response_fields=True,
+        valid=True,
+    )
+
+
+def _valid_bridge() -> Phase2R15BridgeAudit:
+    return Phase2R15BridgeAudit(
+        valid=True,
+        projected_fact_count=1,
+        bridge_fact_count=1,
+        card_count=1,
+        exactly_once=True,
+        source_grouping_valid=True,
+        complete_table_atomic_separation_valid=True,
+        model_input_has_forbidden_fields=False,
+        stale_provenance=False,
+        evidence_only_or_watermark_leak=False,
+        unknown_response_fields=False,
+    )
+
+
+def _ready_sample(sample_id: str) -> Phase2R15SampleAudit:
+    return Phase2R15SampleAudit(
+        sample_id=sample_id,
+        step2a=_valid_transport("step2a", f"{sample_id}:step2a"),
+        step2b=_valid_transport("step2b", f"{sample_id}:step2b"),
+        source_obligation_count=1,
+        source_obligation_valid=True,
+        canonical_projection_valid=True,
+        teaching_gate_valid=True,
+        learning_golden_gate_valid=True,
+        table_list_diagram_bridge_valid=True,
+        diagram_node_count=0,
+        diagram_edge_count=0,
+        source_mutations=0,
+        fact_dispositions=(),
+        card_dispositions=(),
+        bridge=_valid_bridge(),
+        release_state="ready_draft",
+    )
+
+
+def _five_specs(root: Path, frozen_sha256: str) -> tuple[SampleSpec, ...]:
+    specs = []
+    for index in range(1, 6):
+        sample_id = f"aggregate_sample_{index}"
+        step2a = f"reports/{sample_id}-step2a.json"
+        step2b = f"reports/{sample_id}-step2b.json"
+        payload = {"sample_id": sample_id, "frozen_sha256s": {"frozen/a.json": frozen_sha256}}
+        _write_json(root / step2a, payload)
+        _write_json(root / step2b, payload)
+        specs.append(
+            SampleSpec(
+                sample_id=sample_id,
+                step2a_report=step2a,
+                step2b_report=step2b,
+                expected_obligation_count=1,
+                expected_projected_fact_count=1,
+                expected_card_count=1,
+            )
+        )
+    return tuple(specs)
+
+
+def _patch_ready_sample_audit(monkeypatch: pytest.MonkeyPatch) -> None:
+    def fake_audit_sample(*, root: Path, spec: SampleSpec) -> Phase2R15SampleAudit:
+        del root
+        return _ready_sample(spec.sample_id)
+
+    monkeypatch.setattr(readiness, "audit_sample", fake_audit_sample)
+
+
+def test_build_release_readiness_report_blocks_historical_hash_drift(
+    repo_tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    root = repo_tmp_path
+    artifact = root / "frozen" / "a.json"
+    _write_json(artifact, {"value": "stable"})
+    specs = _five_specs(root, "0" * 64)
+    _patch_ready_sample_audit(monkeypatch)
+
+    report = build_release_readiness_report(repository_root=root, specs=specs)
+
+    assert report.freeze.historical_hash_drift_paths == ("frozen/a.json",)
+    assert report.freeze.valid is False
+    assert all(sample.release_state == "ready_draft" for sample in report.samples)
+    assert report.unique_request_identity_valid is True
+    assert report.no_unknown_fields_valid is True
+    assert report.no_fabricated_anchor_valid is True
+    assert report.no_cross_source_merge_valid is True
+    assert report.no_evidence_only_or_watermark_leak_valid is True
+    assert report.release_blockers == ()
+    assert report.release_ready is False
+    assert report.accepted is False
+
+
+def test_build_release_readiness_report_accepts_clean_five_sample_bundle(
+    repo_tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    root = repo_tmp_path
+    artifact = root / "frozen" / "a.json"
+    _write_json(artifact, {"value": "stable"})
+    current_sha256 = _sha(artifact.read_bytes())
+    specs = _five_specs(root, current_sha256)
+    _patch_ready_sample_audit(monkeypatch)
+
+    report = build_release_readiness_report(repository_root=root, specs=specs)
+
+    assert report.freeze.valid is True
+    assert report.freeze.historical_hash_drift_paths == ()
+    assert report.release_blockers == ()
+    assert report.release_ready is True
+    assert report.accepted is True
+    assert report.next_required_action == "manual release decision remains required because every real result is draft"
