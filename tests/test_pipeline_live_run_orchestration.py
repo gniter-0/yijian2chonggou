@@ -306,7 +306,7 @@ def test_stage_caps_and_rehearsal_estimate() -> None:
     caps = derive_stage_call_caps(stages=("step2a", "step3", "step4"), sample_count=5, step3_card_count=6, step4_card_count=16, max_attempts=3)
     assert caps["step2a"] == 5 * 3 + 2
     assert caps["step3"] == 6 * 2 + 1
-    assert caps["step4"] == 16 * 2 + 1
+    assert caps["step4"] == 16 * 3 + 1
     assert caps["preflight"] >= 1
     estimate = budget_rehearsal_estimate(
         stages=("step2a", "step4"),
@@ -317,6 +317,8 @@ def test_stage_caps_and_rehearsal_estimate() -> None:
         max_attempts=3,
     )
     assert estimate["per_stage"]["step2a"]["usd_max"] == pytest.approx((5 * 3 + 2) * 0.08)
+    assert estimate["per_stage"]["step4"]["calls_max"] == 16 * 3 + 1
+    assert estimate["per_stage"]["step4"]["usd_max"] == pytest.approx((16 * 3 + 1) * 0.045)
     assert estimate["usd_max_total"] > 0
 
 
@@ -726,6 +728,72 @@ def test_live_orchestrate_propagates_step4_max_attempts(repo_tmp_path: Path) -> 
     assert len(calls) == 3
     assert len(list((run_root / "step4" / "images").glob("*.png"))) == 1
     assert len(list((run_root / "step4" / "image-provenance").glob("*.json"))) == 1
+
+
+def test_live_orchestrate_step4_multi_card_budget_tracks_max_attempts(repo_tmp_path: Path) -> None:
+    _seed_exam_workspace(repo_tmp_path)
+    release = repo_tmp_path / "step4-release-fixture.yaml"
+    release.write_text("synthetic: true\n", encoding="utf-8")
+    handoff = _resume_step4_handoff(repo_tmp_path)
+    cards = _resume_cards()
+    image_calls: list[Mapping[str, object]] = []
+
+    def bundle_loader(_release: Path, _handoff: Path) -> tuple[object, object]:
+        return SimpleNamespace(cards=cards), SimpleNamespace(fact_count=2)
+
+    def prompt_builder(current: SimpleNamespace) -> str:
+        return f"multi-card prompt for {current.sample_id}"
+
+    def image_caller(payload: Mapping[str, object]) -> tuple[int, bytes]:
+        image_calls.append(payload)
+        if len(image_calls) in {3, 6}:
+            color = (80, 20, 160) if len(image_calls) == 3 else (20, 160, 80)
+            return 200, _resume_image_envelope(_resume_png(color), str(payload["prompt"]))
+        return 200, b"{}"
+
+    config = LiveRunConfig(
+        exam_id=_REHEARSAL_EXAM,
+        stages=("step4",),
+        mode="live",
+        run_label="step4-multi-card-max-attempts",
+        budget_usd=1.0,
+        max_attempts=3,
+        step4_handoff=handoff,
+        skip_preflight=True,
+        repo_root=repo_tmp_path,
+    )
+    providers = {
+        "pricing": {"step4_image_call": 0.1},
+        "sample_ids": ("s1",),
+        "prompt_builder": prompt_builder,
+        "image_caller": image_caller,
+        "image_model": "gpt-image-2",
+        "step4_bundle_loader": bundle_loader,
+        "step4_card_count": 2,
+        "step4_release_fixture": release,
+        "models_probe": None,
+    }
+
+    report, exit_code = orchestrate(config, providers)
+
+    assert (exit_code, report.stop_reason) == (2, "waiting_human_image_review")
+    assert report.network_calls == 6
+    assert report.usd_estimate == pytest.approx(0.6)
+    by_stage = {entry.stage: entry for entry in report.stages}
+    assert by_stage["step4"].status == "completed"
+    run_root = repo_tmp_path / "exams" / _REHEARSAL_EXAM / "data" / "live_runs" / report.run_id
+    materialized = json.loads((run_root / "live_run_report.json").read_text(encoding="utf-8"))
+    budget = materialized["extras"]["budget"]["per_stage"]["step4"]
+    assert budget["call_cap"] == 7
+    assert budget["calls"] == 6
+    assert materialized["extras"]["step4"]["status"] == "completed"
+    step4_cards = materialized["extras"]["step4_cards"]
+    assert len(step4_cards) == 2
+    assert [card["outcome"] for card in step4_cards] == ["success", "success"]
+    assert [len(card["attempts"]) for card in step4_cards] == [3, 3]
+    assert len(image_calls) == 6
+    assert len(list((run_root / "step4" / "images").glob("*.png"))) == 2
+    assert len(list((run_root / "step4" / "image-provenance").glob("*.json"))) == 2
 
 
 def test_resume_after_step4_completed_ingests_image_review(repo_tmp_path: Path) -> None:
