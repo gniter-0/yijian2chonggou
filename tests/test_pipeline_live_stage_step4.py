@@ -315,6 +315,80 @@ def test_invalid_envelope_retries_to_cap_and_fails_closed(repo_tmp_path: Path) -
     assert not list((repo_tmp_path / "step4" / "images").glob("*.png"))
 
 
+def test_non_2xx_image_attempt_persists_opaque_provider_failure(repo_tmp_path: Path) -> None:
+    body = json.dumps(
+        {
+            "error": {
+                "message": "Invalid size. Authorization: Bearer sk-supersecret123456 Cookie: session=abcdef",
+                "type": "invalid_request_error",
+                "code": "invalid_size",
+                "param": "size",
+            }
+        },
+        separators=(",", ":"),
+    ).encode("utf-8")
+
+    def caller(_payload: Mapping[str, Any]) -> tuple[int, bytes]:
+        return 400, body
+
+    result = _invoke(
+        repo_tmp_path,
+        cards=(_card(1, "one"),),
+        budget=_budget(repo_tmp_path, call_cap=1),
+        image_caller=caller,
+        max_attempts=1,
+    )
+
+    record = result["cards"][0]
+    attempt = record["attempts"][0]
+    assert result["status"] == "completed_with_failures"
+    assert result["succeeded_cards"] == 0
+    assert record["outcome"] == "failed"
+    assert len(record["attempts"]) == 1
+    assert attempt["http_status"] == 400
+    assert attempt["gate_valid"] is False
+    provider_failure = attempt["provider_failure"]
+    assert provider_failure["schema_version"] == "examcard_provider_opaque_http_failure_v1"
+    assert provider_failure["http_status"] == 400
+    assert provider_failure["response_sha256"] == sha256_bytes(body)
+    assert provider_failure["response_bytes"] == len(body)
+    assert provider_failure["sanitized_detail"] == (
+        "body=json; envelope=error; class=unsupported_size; "
+        "type=invalid_request_error; code=invalid_size; param=size"
+    )
+    assert provider_failure["body_persisted"] is False
+    assert provider_failure["body_reconstruction_allowed"] is False
+    assert len(provider_failure["failure_sha256"]) == 64
+    serialized = json.dumps(result, ensure_ascii=False)
+    assert body.decode("utf-8") not in serialized
+    for secret in ("Authorization", "Bearer", "sk-supersecret123456", "Cookie", "session=abcdef"):
+        assert secret not in serialized
+    assert not list((repo_tmp_path / "step4" / "images").glob("*.png"))
+    assert not list((repo_tmp_path / "step4" / "image-provenance").glob("*.json"))
+
+
+def test_http_200_invalid_envelope_does_not_create_opaque_provider_failure(repo_tmp_path: Path) -> None:
+    def caller(_payload: Mapping[str, Any]) -> tuple[int, bytes]:
+        return 200, b"{}"
+
+    result = _invoke(
+        repo_tmp_path,
+        cards=(_card(1, "one"),),
+        budget=_budget(repo_tmp_path, call_cap=1),
+        image_caller=caller,
+        max_attempts=1,
+    )
+
+    attempt = result["cards"][0]["attempts"][0]
+    assert result["status"] == "completed_with_failures"
+    assert result["succeeded_cards"] == 0
+    assert attempt["http_status"] == 200
+    assert attempt["gate_valid"] is False
+    assert "provider_failure" not in attempt
+    assert not list((repo_tmp_path / "step4" / "images").glob("*.png"))
+    assert not list((repo_tmp_path / "step4" / "image-provenance").glob("*.json"))
+
+
 def test_benign_drift_recovery_requires_strict_regate(repo_tmp_path: Path) -> None:
     png = _png_bytes((160, 60, 20))
     corrected = _image_envelope(png, _prompt(_card(1, "one")))

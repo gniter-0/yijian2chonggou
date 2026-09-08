@@ -14,6 +14,7 @@ from examcard.providers import (
     build_opaque_failure,
     inspect_image_envelope,
 )
+from examcard.providers.base import summarize_opaque_http_error
 
 FIXTURES = Path(__file__).resolve().parent / "fixtures" / "providers"
 
@@ -105,3 +106,111 @@ class TestOpaqueHttpFailure:
 
     def test_opaque_failure_rejects_2xx(self) -> None:
         run_fail_closed("opaque-2xx", lambda: build_opaque_failure(200, b"{}"))
+
+    def test_summarizer_emits_safe_openai_structure_only(self) -> None:
+        body = json.dumps(
+            {
+                "error": {
+                    "message": (
+                        "Invalid size. Authorization: Bearer sk-supersecret123456 "
+                        "Cookie: session=abcdef api_key=another-secret"
+                    ),
+                    "type": "invalid_request_error",
+                    "code": "invalid_size",
+                    "param": "size",
+                }
+            },
+            separators=(",", ":"),
+        ).encode("utf-8")
+
+        summary = summarize_opaque_http_error(body)
+
+        assert summary == (
+            "body=json; envelope=error; class=unsupported_size; "
+            "type=invalid_request_error; code=invalid_size; param=size"
+        )
+        for secret in (
+            "Invalid size",
+            "Authorization",
+            "Bearer",
+            "sk-supersecret123456",
+            "Cookie",
+            "session=abcdef",
+            "api_key",
+            "another-secret",
+        ):
+            assert secret not in summary
+
+    def test_summarizer_handles_fastapi_detail_list_without_prose(self) -> None:
+        body = json.dumps(
+            {"detail": [{"loc": ["body", "size"], "msg": "secret-bearing arbitrary prose"}]},
+            separators=(",", ":"),
+        ).encode("utf-8")
+
+        summary = summarize_opaque_http_error(body)
+
+        assert summary == "body=json; envelope=detail; class=validation_error"
+        assert "secret-bearing" not in summary
+        assert "size" not in summary
+
+    def test_summarizer_rejects_non_json_without_copying_input(self) -> None:
+        body = b"Bearer sk-supersecret Cookie: session=abcdef"
+
+        summary = summarize_opaque_http_error(body)
+
+        assert summary == "body=non_json; envelope=unknown; class=unknown"
+        assert "Bearer" not in summary
+        assert "session=abcdef" not in summary
+
+    def test_summarizer_bounds_oversized_body_without_parsing(self) -> None:
+        body = b"{" + (b"x" * (64 * 1024)) + b"Bearer sk-supersecret"
+
+        summary = summarize_opaque_http_error(body)
+
+        assert summary == "body=oversized; envelope=unknown; class=unknown"
+        assert "sk-supersecret" not in summary
+
+    def test_summarizer_omits_unsafe_structural_identifiers(self) -> None:
+        body = json.dumps(
+            {
+                "error": {
+                    "type": "invalid_request_error secret=abcdef",
+                    "code": "invalid size with spaces",
+                    "param": "size",
+                }
+            },
+            separators=(",", ":"),
+        ).encode("utf-8")
+
+        summary = summarize_opaque_http_error(body)
+
+        assert summary == "body=json; envelope=error; class=unknown; param=size"
+        assert "invalid_request_error" not in summary
+        assert "invalid size" not in summary
+
+    def test_summarizer_omits_regex_valid_credential_shaped_identifiers(self) -> None:
+        body = json.dumps(
+            {
+                "error": {
+                    "message": "Invalid size",
+                    "type": "access_token",
+                    "code": "sk-supersecret123456",
+                    "param": "api_key",
+                }
+            },
+            separators=(",", ":"),
+        ).encode("utf-8")
+
+        summary = summarize_opaque_http_error(body)
+
+        assert summary == "body=json; envelope=error; class=unsupported_size"
+        for secret in ("access_token", "sk-supersecret123456", "api_key"):
+            assert secret not in summary
+
+        jwt_body = json.dumps(
+            {"error": {"message": "Invalid request", "code": "eyJhbGciOiJIUzI1NiJ9.abc.def"}},
+            separators=(",", ":"),
+        ).encode("utf-8")
+        jwt_summary = summarize_opaque_http_error(jwt_body)
+        assert jwt_summary == "body=json; envelope=error; class=invalid_request"
+        assert "eyJhbGciOiJIUzI1NiJ9.abc.def" not in jwt_summary

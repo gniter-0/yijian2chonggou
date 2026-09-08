@@ -15,6 +15,7 @@ model_config 与 `examcard.common.schema.StrictModel` / `examcard.materials.sche
 """
 from __future__ import annotations
 
+import json
 import re
 from dataclasses import dataclass
 from enum import StrEnum
@@ -33,6 +34,7 @@ __all__ = (
     "OPAQUE_HTTP_FAILURE_VERSION",
     "OpaqueHttpFailure",
     "build_opaque_failure",
+    "summarize_opaque_http_error",
     "sanitize_error_text",
     "RelayProbeKind",
     "RelayProbeOutcome",
@@ -102,6 +104,35 @@ OPAQUE_HTTP_FAILURE_VERSION: Final = "examcard_provider_opaque_http_failure_v1"
 
 _SECRET_PATTERN = re.compile(r"(?i)(bearer\s+\S+|sk-[A-Za-z0-9_-]{8,}|api[-_]?key\s*[:=]\s*\S+)")
 _SANITIZED_LIMIT = 300
+_OPAQUE_ERROR_PARSE_LIMIT = 64 * 1024
+_OPAQUE_IDENTIFIER_PATTERN = re.compile(r"^[A-Za-z0-9_.-]{1,80}$")
+_OPAQUE_IDENTIFIER_DENYLIST = frozenset(
+    {
+        "api_key",
+        "apikey",
+        "access_token",
+        "auth_token",
+        "authorization",
+        "authorization_token",
+        "bearer",
+        "cookie",
+        "cookies",
+        "credential",
+        "credentials",
+        "client_secret",
+        "secret",
+        "secrets",
+        "session",
+        "session_id",
+        "sessionid",
+        "sessions",
+        "set_cookie",
+        "set-cookie",
+        "token",
+        "tokens",
+        "refresh_token",
+    }
+)
 
 
 def sanitize_error_text(text: str) -> str:
@@ -159,6 +190,113 @@ def build_opaque_failure(status: int, body: bytes, detail: str = "") -> OpaqueHt
         },
         "failure_sha256",
     )
+
+
+_OPAQUE_TAXONOMY = (
+    "authentication",
+    "model_not_found",
+    "unsupported_response_format",
+    "unsupported_size",
+    "content_policy",
+    "rate_limit",
+    "upstream",
+    "validation_error",
+    "invalid_request",
+    "unknown",
+)
+
+
+def _opaque_safe_identifier(value: object) -> str | None:
+    if isinstance(value, bool):
+        return None
+    if isinstance(value, int):
+        if -1_000_000_000 <= value <= 1_000_000_000:
+            return str(value)
+        return None
+    if not isinstance(value, str) or not _OPAQUE_IDENTIFIER_PATTERN.fullmatch(value):
+        return None
+    if value.casefold() in _OPAQUE_IDENTIFIER_DENYLIST:
+        return None
+    if sanitize_error_text(value) != value:
+        return None
+    if value.casefold().startswith(("sk-", "bearer", "eyj")):
+        return None
+    return value
+
+
+def _opaque_classification_text(message: str, identifiers: Sequence[str]) -> str:
+    """Create in-memory hints without letting echoed credentials drive classification."""
+
+    scrubbed = re.sub(r"(?i)authorization\s*:\s*bearer\s+\S+", " ", message)
+    scrubbed = re.sub(r"(?i)bearer\s+\S+", " ", scrubbed)
+    scrubbed = re.sub(r"(?i)cookie\s*:\s*\S+", " ", scrubbed)
+    scrubbed = re.sub(r"(?i)api[-_]?key\s*[:=]\s*\S+", " ", scrubbed)
+    return " ".join((scrubbed, *identifiers)).casefold()
+
+
+def _classify_opaque_http_error(text: str, *, detail_is_list: bool = False) -> str:
+    if re.search(r"(?i)\b(unauthorized|forbidden|authentication(?:\s+error)?|invalid\s+api[\s_-]*key|credential)\b", text):
+        return "authentication"
+    if ("model" in text and re.search(r"not\s+found|does\s+not\s+exist", text)) or "unknown model" in text:
+        return "model_not_found"
+    if re.search(r"response[_ ]?format|b64_json|response format", text):
+        return "unsupported_response_format"
+    if re.search(r"(size|dimension|resolution|width|height)", text) and re.search(
+        r"invalid|unsupported|not allowed|must", text
+    ):
+        return "unsupported_size"
+    if re.search(r"content policy|safety|moderation|blocked prompt", text):
+        return "content_policy"
+    if re.search(r"rate limit|quota|too many requests", text):
+        return "rate_limit"
+    if re.search(r"upstream|gateway|cloudflare|origin", text):
+        return "upstream"
+    if detail_is_list or "validation error" in text or "validation_error" in text:
+        return "validation_error"
+    if re.search(r"bad request|invalid request|invalid|missing|required", text):
+        return "invalid_request"
+    return "unknown"
+
+
+def summarize_opaque_http_error(body: bytes) -> str:
+    """Return bounded, structural diagnostics for a non-2xx provider response.
+
+    Provider prose is inspected only in memory for fixed classification.  The returned
+    value contains no body snippet and only allowlisted structural identifiers.
+    """
+
+    if len(body) > _OPAQUE_ERROR_PARSE_LIMIT:
+        return "body=oversized; envelope=unknown; class=unknown"
+    try:
+        payload = json.loads(body.decode("utf-8"))
+    except (UnicodeDecodeError, json.JSONDecodeError):
+        return "body=non_json; envelope=unknown; class=unknown"
+    if not isinstance(payload, Mapping):
+        return "body=json; envelope=unknown; class=unknown"
+
+    error = payload.get("error")
+    if isinstance(error, Mapping):
+        message_value = error.get("message")
+        message = message_value if isinstance(message_value, str) else ""
+        safe_identifiers: list[tuple[str, str]] = []
+        for key in ("type", "code", "param"):
+            safe_value = _opaque_safe_identifier(error.get(key))
+            if safe_value is not None:
+                safe_identifiers.append((key, safe_value))
+        text = _opaque_classification_text(message, [value for _, value in safe_identifiers])
+        parts = ["body=json", "envelope=error", f"class={_classify_opaque_http_error(text)}"]
+        parts.extend(f"{key}={value}" for key, value in safe_identifiers)
+        return "; ".join(parts)
+
+    if "detail" in payload:
+        detail = payload["detail"]
+        if isinstance(detail, list):
+            return "body=json; envelope=detail; class=validation_error"
+        detail_text = detail if isinstance(detail, str) else ""
+        classification = _classify_opaque_http_error(detail_text)
+        return f"body=json; envelope=detail; class={classification}"
+
+    return "body=json; envelope=unknown; class=unknown"
 
 
 # ---------------------------------------------------------------------------

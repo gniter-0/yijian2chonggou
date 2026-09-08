@@ -40,7 +40,7 @@ from examcard.pipeline.live_run import (
 )
 from examcard.pipeline.live_config import RunState, RunStateBindingError, build_run_resume_contract
 from examcard.pipeline.live_stage_step4 import Step4ImageIntegrityError, prepare_step4_request_bindings
-from examcard.common.hashing import canonical_hash
+from examcard.common.hashing import canonical_hash, sha256_bytes
 from examcard.evidence.golden import GoldenSampleRegistry, load_golden_registry
 from examcard.evidence.golden_runner import _assertion_page
 from tests.fixtures.compilers_synthetic import _hex, _page
@@ -730,6 +730,78 @@ def test_live_orchestrate_propagates_step4_max_attempts(repo_tmp_path: Path) -> 
     assert len(calls) == 3
     assert len(list((run_root / "step4" / "images").glob("*.png"))) == 1
     assert len(list((run_root / "step4" / "image-provenance").glob("*.json"))) == 1
+
+
+def test_live_orchestrate_persists_secret_free_non_2xx_image_failure(repo_tmp_path: Path) -> None:
+    _seed_exam_workspace(repo_tmp_path)
+    release = repo_tmp_path / "step4-release-fixture.yaml"
+    release.write_text("synthetic: true\n", encoding="utf-8")
+    handoff = _resume_step4_handoff(repo_tmp_path)
+    card = _resume_cards()[0]
+    body = json.dumps(
+        {
+            "error": {
+                "message": "Invalid size. Authorization: Bearer sk-supersecret123456 Cookie: session=abcdef",
+                "type": "invalid_request_error",
+                "code": "invalid_size",
+                "param": "size",
+            }
+        },
+        separators=(",", ":"),
+    ).encode("utf-8")
+
+    def bundle_loader(_release: Path, _handoff: Path) -> tuple[object, object]:
+        return SimpleNamespace(cards=(card,)), SimpleNamespace(fact_count=2)
+
+    def prompt_builder(current: SimpleNamespace) -> str:
+        return f"orchestration prompt for {current.sample_id}"
+
+    def image_caller(_payload: Mapping[str, object]) -> tuple[int, bytes]:
+        return 400, body
+
+    config = LiveRunConfig(
+        exam_id=_REHEARSAL_EXAM,
+        stages=("step4",),
+        mode="live",
+        run_label="step4-http-failure-diagnostics",
+        budget_usd=1.0,
+        max_attempts=1,
+        step4_handoff=handoff,
+        skip_preflight=True,
+        repo_root=repo_tmp_path,
+    )
+    providers = {
+        "pricing": {"step4_image_call": 0.1},
+        "sample_ids": ("s1",),
+        "prompt_builder": prompt_builder,
+        "image_caller": image_caller,
+        "image_base_url": "https://synthetic.example/v1",
+        "image_model": "gpt-image-2",
+        "step4_bundle_loader": bundle_loader,
+        "step4_card_count": 1,
+        "step4_release_fixture": release,
+        "models_probe": None,
+    }
+
+    report, exit_code = orchestrate(config, providers)
+
+    assert (exit_code, report.stop_reason, report.network_calls) == (1, "completed_with_failures", 1)
+    run_root = repo_tmp_path / "exams" / _REHEARSAL_EXAM / "data" / "live_runs" / report.run_id
+    materialized = json.loads((run_root / "live_run_report.json").read_text(encoding="utf-8"))
+    attempt = materialized["extras"]["step4_cards"][0]["attempts"][0]
+    provider_failure = attempt["provider_failure"]
+    assert provider_failure["response_sha256"] == sha256_bytes(body)
+    assert provider_failure["response_bytes"] == len(body)
+    assert provider_failure["body_persisted"] is False
+    assert provider_failure["body_reconstruction_allowed"] is False
+    assert "class=unsupported_size" in provider_failure["sanitized_detail"]
+    serialized = json.dumps(materialized, ensure_ascii=False)
+    assert body.decode("utf-8") not in serialized
+    for secret in ("Authorization", "Bearer", "sk-supersecret123456", "Cookie", "session=abcdef"):
+        assert secret not in serialized
+    assert not (run_root / "checkpoints" / "image_review" / "image_review_sheet.json").exists()
+    assert not list((run_root / "step4" / "images").glob("*.png"))
+    assert not list((run_root / "step4" / "image-provenance").glob("*.json"))
 
 
 def test_live_orchestrate_step4_multi_card_budget_tracks_max_attempts(repo_tmp_path: Path) -> None:

@@ -291,6 +291,7 @@ def run_step4_stage(
     import base64
 
     from ..providers import inspect_image_envelope
+    from ..providers.base import build_opaque_failure, summarize_opaque_http_error
 
     fixture_path = Path(release_fixture_path)
     handoff_file = Path(handoff_path)
@@ -403,6 +404,13 @@ def run_step4_stage(
         for attempt in range(1, max_attempts + 1):
             budget.charge("step4", calls=1, usd_estimate=price_per_call)
             status_code, body = image_caller(payload)
+            provider_failure = None
+            if 100 <= status_code <= 599 and not (200 <= status_code < 300):
+                provider_failure = build_opaque_failure(
+                    status_code,
+                    body,
+                    detail=summarize_opaque_http_error(body),
+                )
             gate = inspect_image_envelope(status_code, body, entry["prompt"], profile)
             drift = None
             if not gate.valid and drift_classifier is not None:
@@ -420,6 +428,8 @@ def run_step4_stage(
                 "gate_failures": list(gate.failure_codes),
                 "envelope_drift": drift,
             }
+            if provider_failure is not None:
+                attempt_entry["provider_failure"] = provider_failure.model_dump(mode="json")
             record["attempts"].append(attempt_entry)
             if gate.valid:
                 try:
