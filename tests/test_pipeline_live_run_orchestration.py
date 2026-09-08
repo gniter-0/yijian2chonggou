@@ -669,6 +669,65 @@ def _resume_config(root: Path, run_id: str) -> LiveRunConfig:
     )
 
 
+def test_live_orchestrate_propagates_step4_max_attempts(repo_tmp_path: Path) -> None:
+    _seed_exam_workspace(repo_tmp_path)
+    release = repo_tmp_path / "step4-release-fixture.yaml"
+    release.write_text("synthetic: true\n", encoding="utf-8")
+    handoff = _resume_step4_handoff(repo_tmp_path)
+    card = _resume_cards()[0]
+    calls: list[Mapping[str, object]] = []
+    valid_png = _resume_png((80, 20, 160))
+
+    def bundle_loader(_release: Path, _handoff: Path) -> tuple[object, object]:
+        return SimpleNamespace(cards=(card,)), SimpleNamespace(fact_count=2)
+
+    def prompt_builder(current: SimpleNamespace) -> str:
+        return f"orchestration prompt for {current.sample_id}"
+
+    def image_caller(payload: Mapping[str, object]) -> tuple[int, bytes]:
+        calls.append(payload)
+        if len(calls) < 3:
+            return 200, b"{}"
+        return 200, _resume_image_envelope(valid_png, str(payload["prompt"]))
+
+    config = LiveRunConfig(
+        exam_id=_REHEARSAL_EXAM,
+        stages=("step4",),
+        mode="live",
+        run_label="step4-max-attempts",
+        budget_usd=1.0,
+        max_attempts=3,
+        step4_handoff=handoff,
+        skip_preflight=True,
+        repo_root=repo_tmp_path,
+    )
+    providers = {
+        "pricing": {"step4_image_call": 0.1},
+        "sample_ids": ("s1",),
+        "prompt_builder": prompt_builder,
+        "image_caller": image_caller,
+        "image_model": "gpt-image-2",
+        "step4_bundle_loader": bundle_loader,
+        "step4_card_count": 1,
+        "step4_release_fixture": release,
+    }
+
+    report, exit_code = orchestrate(config, providers)
+
+    assert (exit_code, report.stop_reason) == (2, "waiting_human_image_review")
+    assert report.network_calls == 3
+    assert {entry.stage: entry.status for entry in report.stages}["step4"] == "completed"
+    run_root = repo_tmp_path / "exams" / _REHEARSAL_EXAM / "data" / "live_runs" / report.run_id
+    materialized = json.loads((run_root / "live_run_report.json").read_text(encoding="utf-8"))
+    assert materialized["extras"]["step4"]["status"] == "completed"
+    assert materialized["extras"]["step4_cards"][0]["outcome"] == "success"
+    assert len(materialized["extras"]["step4_cards"][0]["attempts"]) == 3
+    assert materialized["extras"]["budget"]["per_stage"]["step4"]["calls"] == 3
+    assert len(calls) == 3
+    assert len(list((run_root / "step4" / "images").glob("*.png"))) == 1
+    assert len(list((run_root / "step4" / "image-provenance").glob("*.json"))) == 1
+
+
 def test_resume_after_step4_completed_ingests_image_review(repo_tmp_path: Path) -> None:
     _seed_exam_workspace(repo_tmp_path)
     run_id = "20260812-resume-regression-fixture1"

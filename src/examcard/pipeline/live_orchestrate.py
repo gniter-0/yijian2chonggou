@@ -369,6 +369,7 @@ def orchestrate(config: LiveRunConfig, providers: Mapping[str, Any]) -> tuple[Li
                 price_per_call=pricing.get("step4_image_call", 0.0),
                 probe_price=pricing.get("probe", 0.0),
                 dry_run=config.mode == "dry_run",
+                max_attempts=config.max_attempts,
                 bundle_loader=providers.get("step4_bundle_loader"),
             )
             extras["step4"] = {key: value for key, value in outcome.items() if key != "cards"}
