@@ -431,6 +431,7 @@ def main() -> int:
 
         # step4 图像通道（显式 IMAGE_* 键优先；providers 五字段投影在库内）。
         image_base = (env.get("IMAGE_API_BASE_URL") or env.get("API_BASE_URL") or "").rstrip("/")
+        providers["image_base_url"] = image_base
         image_key = env.get("IMAGE_API_KEY") or env.get("API_KEY") or ""
         image_model = str(providers["image_model"])
         headers = {"Authorization": f"Bearer {image_key}", "Content-Type": "application/json"}

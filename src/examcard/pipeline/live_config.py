@@ -93,6 +93,7 @@ def build_run_resume_contract(
     step3_card_count: int,
     step4_card_count: int,
     stage_call_caps: Mapping[str, int],
+    image_base_url: str,
     image_model: str,
     step4_handoff: Path | None = None,
     step4_release_fixture: Path | None = None,
@@ -100,7 +101,7 @@ def build_run_resume_contract(
     """Build the secret-free immutable identity used to validate resume state."""
 
     return {
-        "schema_version": 1,
+        "schema_version": 2,
         "exam_id": config.exam_id,
         "mode": config.mode,
         "stages": list(config.stages),
@@ -117,6 +118,7 @@ def build_run_resume_contract(
         "step3_card_count": step3_card_count,
         "step4_card_count": step4_card_count,
         "stage_call_caps": dict(stage_call_caps),
+        "image_base_url": image_base_url,
         "image_model": image_model,
         "file_inputs": {
             "step3_typed_fixture": _file_binding(config.step3_typed_fixture),

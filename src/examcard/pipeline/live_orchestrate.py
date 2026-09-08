@@ -50,7 +50,7 @@ def orchestrate(config: LiveRunConfig, providers: Mapping[str, Any]) -> tuple[Li
     admission_queue_builder / workbench_renderer / candidates_by_id /
     decision_builder / chat_strict / step3_probe / step3_card_count /
     prompt_builder / image_caller / models_probe / drift_classifier /
-    step4_card_count / image_model。
+    step4_card_count / image_base_url / image_model。
     """
 
     paths = ExamPaths.resolve(config.repo_root, config.exam_id)
@@ -77,6 +77,7 @@ def orchestrate(config: LiveRunConfig, providers: Mapping[str, Any]) -> tuple[Li
         step4_card_count=max(step4_cards, 1),
         max_attempts=config.max_attempts,
     )
+    image_base_url = str(providers.get("image_base_url", ""))
     image_model = str(providers.get("image_model", ""))
     step4_handoff = config.step4_handoff or _optional_path(providers.get("step4_handoff"))
     step4_release_fixture = _optional_path(providers.get("step4_release_fixture"))
@@ -86,6 +87,7 @@ def orchestrate(config: LiveRunConfig, providers: Mapping[str, Any]) -> tuple[Li
         step3_card_count=step3_cards,
         step4_card_count=step4_cards,
         stage_call_caps=caps,
+        image_base_url=image_base_url,
         image_model=image_model,
         step4_handoff=step4_handoff,
         step4_release_fixture=step4_release_fixture if config.step3_release_fixture is None else None,

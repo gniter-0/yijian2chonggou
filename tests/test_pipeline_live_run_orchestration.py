@@ -595,6 +595,7 @@ def _resume_providers(root: Path) -> dict[str, object]:
         "sample_ids": ("s1",),
         "prompt_builder": prompt_builder,
         "image_caller": image_caller,
+        "image_base_url": "http://127.0.0.1:3100/v1",
         "image_model": "gpt-image-2",
         "step4_bundle_loader": bundle_loader,
         "step4_card_count": 2,
@@ -638,6 +639,7 @@ def _seed_paused_run(root: Path, run_id: str, *, checkpoint_status: str = "waiti
         step3_card_count=0,
         step4_card_count=2,
         stage_call_caps=caps,
+        image_base_url=str(providers["image_base_url"]),
         image_model="gpt-image-2",
         step4_handoff=config.step4_handoff,
     )
@@ -843,6 +845,89 @@ def test_resume_with_undecided_sheet_stays_waiting(repo_tmp_path: Path) -> None:
     assert report.stop_reason == "waiting_human_image_review"
     state = json.loads((run_root / "run_state.json").read_text(encoding="utf-8"))
     assert state["checkpoints"]["image_review"]["status"] == "waiting_human"
+
+
+def test_image_base_url_drift_refuses_resume_before_provider(repo_tmp_path: Path) -> None:
+    _seed_exam_workspace(repo_tmp_path)
+    run_id = "20260812-resume-regression-image-base-drift"
+    run_root = _seed_paused_run(repo_tmp_path, run_id)
+    providers = _resume_providers(repo_tmp_path)
+    providers["image_base_url"] = "http://127.0.0.1:3200/v1"
+
+    _assert_resume_refused_without_mutation(
+        _resume_config(repo_tmp_path, run_id),
+        run_id,
+        run_root,
+        providers,
+    )
+
+
+def test_image_model_drift_refuses_resume_before_provider(repo_tmp_path: Path) -> None:
+    _seed_exam_workspace(repo_tmp_path)
+    run_id = "20260812-resume-regression-image-model-drift"
+    run_root = _seed_paused_run(repo_tmp_path, run_id)
+    providers = _resume_providers(repo_tmp_path)
+    providers["image_model"] = "different-image-model"
+
+    _assert_resume_refused_without_mutation(
+        _resume_config(repo_tmp_path, run_id),
+        run_id,
+        run_root,
+        providers,
+    )
+
+
+def test_image_route_resume_contract_is_v2_and_secret_free(repo_tmp_path: Path) -> None:
+    _seed_exam_workspace(repo_tmp_path)
+    run_id = "20260812-resume-regression-image-contract"
+    run_root = _seed_paused_run(repo_tmp_path, run_id)
+    state_path = run_root / "run_state.json"
+    payload = json.loads(state_path.read_text(encoding="utf-8"))
+    run_config = payload["run_config"]
+
+    assert run_config["schema_version"] == 2
+    assert run_config["image_base_url"] == "http://127.0.0.1:3100/v1"
+    assert run_config["image_model"] == "gpt-image-2"
+    serialized = state_path.read_text(encoding="utf-8")
+    for forbidden in ("image_api_key", "IMAGE_API_KEY", "API_KEY", "Authorization", "Bearer"):
+        assert forbidden not in serialized
+
+
+def test_image_api_key_rotation_does_not_change_resume_identity(repo_tmp_path: Path) -> None:
+    _seed_exam_workspace(repo_tmp_path)
+    run_id = "20260812-resume-regression-image-key-rotation"
+    run_root = _seed_paused_run(repo_tmp_path, run_id)
+    first_providers = _resume_providers(repo_tmp_path)
+    first_providers["image_api_key"] = "synthetic-secret-A"
+    first_report, first_exit = orchestrate(_resume_config(repo_tmp_path, run_id), first_providers)
+    assert (first_exit, first_report.stop_reason) == (0, "completed")
+
+    second_providers = _resume_providers(repo_tmp_path)
+    second_providers["image_api_key"] = "synthetic-secret-B"
+    second_report, second_exit = orchestrate(_resume_config(repo_tmp_path, run_id), second_providers)
+    assert (second_exit, second_report.stop_reason) == (0, "completed")
+
+    serialized = (run_root / "run_state.json").read_text(encoding="utf-8")
+    assert "synthetic-secret-A" not in serialized
+    assert "synthetic-secret-B" not in serialized
+
+
+def test_schema_v1_route_contract_refuses_resume_without_migration(repo_tmp_path: Path) -> None:
+    _seed_exam_workspace(repo_tmp_path)
+    run_id = "20260812-resume-regression-image-schema-v1"
+    run_root = _seed_paused_run(repo_tmp_path, run_id)
+    state_path = run_root / "run_state.json"
+    payload = json.loads(state_path.read_text(encoding="utf-8"))
+    payload["run_config"]["schema_version"] = 1
+    payload["run_config"].pop("image_base_url")
+    payload["run_config_sha256"] = canonical_hash(payload["run_config"])
+    state_path.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
+    before = state_path.read_bytes()
+
+    with pytest.raises(RunStateBindingError):
+        orchestrate(_resume_config(repo_tmp_path, run_id), _resume_providers(repo_tmp_path))
+
+    assert state_path.read_bytes() == before
 
 
 def test_image_review_emit_refuses_bytes_drift(repo_tmp_path: Path) -> None:
