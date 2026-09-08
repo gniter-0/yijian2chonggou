@@ -1,12 +1,16 @@
 """pipeline.live_run T4b 编排层单测（设计 §11 离线组；全部伪件注入、零外呼）。"""
 from __future__ import annotations
 
+import base64
 import json
+from io import BytesIO
+from collections.abc import Mapping
 from dataclasses import replace
 from pathlib import Path
 from types import SimpleNamespace
 
 import pytest
+from PIL import Image
 
 from migration.run_exam_pipeline import _validate_evidence_root
 
@@ -32,8 +36,10 @@ from examcard.pipeline.live_run import (
     ingest_image_review_sheet,
     emit_image_review_sheet,
     orchestrate,
+    run_step4_stage,
 )
 from examcard.pipeline.live_config import RunState, RunStateBindingError, build_run_resume_contract
+from examcard.pipeline.live_stage_step4 import Step4ImageIntegrityError, prepare_step4_request_bindings
 from examcard.common.hashing import canonical_hash
 from examcard.evidence.golden import GoldenSampleRegistry, load_golden_registry
 from examcard.evidence.golden_runner import _assertion_page
@@ -419,22 +425,36 @@ def test_admission_checkpoint_roundtrip(repo_tmp_path: Path) -> None:
 
 
 def test_image_review_roundtrip(repo_tmp_path: Path) -> None:
-    step4_outcome = {
-        "cards": [
-            {
-                "card_index": 1,
-                "source_card_id": "card:test:one",
-                "render_presentation": "table",
-                "outcome": "success",
-                "image_path": "images/one.png",
-                "image_sha256": _hex("image-one"),
-            },
-            {"card_index": 2, "source_card_id": "card:test:two", "render_presentation": "diagram", "outcome": "failed"},
-        ]
-    }
+    release = repo_tmp_path / "release.yaml"
+    handoff = _resume_step4_handoff(repo_tmp_path)
+    release.write_text("synthetic: true\n", encoding="utf-8")
+    card = _resume_cards()[0]
+    png = _resume_png((60, 110, 160))
+
+    def bundle_loader(_release: Path, _handoff: Path) -> tuple[object, object]:
+        return SimpleNamespace(cards=(card,)), SimpleNamespace(fact_count=1)
+
+    def prompt_builder(current: SimpleNamespace) -> str:
+        return f"resume prompt for {current.sample_id}"
+
+    def image_caller(payload: Mapping[str, object]) -> tuple[int, bytes]:
+        return 200, _resume_image_envelope(png, str(payload["prompt"]))
+
+    step4_outcome = run_step4_stage(
+        release_fixture_path=release,
+        handoff_path=handoff,
+        prompt_builder=prompt_builder,
+        image_caller=image_caller,
+        models_probe=None,
+        image_model="gpt-image-2",
+        storage=repo_tmp_path / "step4",
+        budget=LiveRunBudget(repo_tmp_path / "budget.json", usd_cap=1.0, stage_call_caps={"step4": 3}),
+        bundle_loader=bundle_loader,
+    )
     sheet_path = emit_image_review_sheet(run_root=repo_tmp_path, step4_outcome=step4_outcome, storage=repo_tmp_path / "step4")
     sheet = json.loads(sheet_path.read_text(encoding="utf-8"))
-    assert len(sheet["cards"]) == 1  # 仅成功出图卡进入底稿
+    assert sheet["schema"] == "image-review-sheet/2.0"
+    assert len(sheet["cards"]) == 1
 
     waiting = ingest_image_review_sheet(run_root=repo_tmp_path)
     assert waiting["status"] == "waiting_human"
@@ -505,48 +525,119 @@ def _seed_step1_workspace(root: Path) -> None:
     annotation_path.write_text("synthetic: true\n", encoding="utf-8")
 
 
+def _resume_cards() -> tuple[SimpleNamespace, ...]:
+    return (
+        SimpleNamespace(
+            card_index=1,
+            source_card_id="source:card:one",
+            sample_id="one",
+            render_presentation="table",
+        ),
+        SimpleNamespace(
+            card_index=2,
+            source_card_id="source:card:two",
+            sample_id="two",
+            render_presentation="diagram",
+        ),
+    )
+
+
+def _resume_png(color: tuple[int, int, int]) -> bytes:
+    image = Image.new("RGB", (1024, 1536), color=color)
+    buffer = BytesIO()
+    image.save(buffer, format="PNG")
+    image.close()
+    return buffer.getvalue()
+
+
+def _resume_image_envelope(png: bytes, prompt: str) -> bytes:
+    return json.dumps(
+        {
+            "created": 1_700_000_000,
+            "data": [{"b64_json": base64.b64encode(png).decode("ascii"), "revised_prompt": prompt}],
+            "usage": {
+                "input_tokens": 1,
+                "output_tokens": 2,
+                "total_tokens": 3,
+                "input_tokens_details": {"text_tokens": 1, "image_tokens": 0, "cached_tokens": 0},
+                "output_tokens_details": {"text_tokens": 0, "image_tokens": 2, "reasoning_tokens": 0},
+            },
+        },
+        separators=(",", ":"),
+    ).encode("utf-8")
+
+
+def _resume_step4_handoff(root: Path) -> Path:
+    path = root / "resume-step4-handoff.json"
+    if not path.is_file():
+        path.write_text("{}", encoding="utf-8")
+    return path
+
+
+def _resume_providers(root: Path) -> dict[str, object]:
+    cards = _resume_cards()
+    handoff = _resume_step4_handoff(root)
+
+    def bundle_loader(_release: Path, _handoff: Path) -> tuple[object, object]:
+        return SimpleNamespace(cards=cards), SimpleNamespace(fact_count=2)
+
+    def prompt_builder(card: SimpleNamespace) -> str:
+        return f"resume prompt for {card.sample_id}"
+
+    def image_caller(payload: dict[str, object]) -> tuple[int, bytes]:
+        color = (50, 90, 140) if payload["prompt"] == "resume prompt for one" else (140, 90, 50)
+        return 200, _resume_image_envelope(_resume_png(color), str(payload["prompt"]))
+
+    return {
+        "pricing": {},
+        "sample_ids": ("s1",),
+        "prompt_builder": prompt_builder,
+        "image_caller": image_caller,
+        "image_model": "gpt-image-2",
+        "step4_bundle_loader": bundle_loader,
+        "step4_card_count": 2,
+        "step4_handoff": handoff,
+    }
+
+
 def _seed_paused_run(root: Path, run_id: str, *, checkpoint_status: str = "waiting_human") -> Path:
     run_root = root / "exams" / _REHEARSAL_EXAM / "data" / "live_runs" / run_id
     checkpoint_dir = run_root / "checkpoints" / "image_review"
     checkpoint_dir.mkdir(parents=True, exist_ok=True)
-    sheet = {
-        "cards": [
-            {
-                "card_index": 1,
-                "source_card_id": "card:resume:one",
-                "render_presentation": "table",
-                "image_sha256": _hex("resume-image-one"),
-                "disposition": "approved",
-                "reviewer": "resume-tester",
-                "basis": "clean render",
-            },
-            {
-                "card_index": 2,
-                "source_card_id": "card:resume:two",
-                "render_presentation": "diagram",
-                "image_sha256": _hex("resume-image-two"),
-                "disposition": "rejected",
-                "reviewer": "resume-tester",
-                "basis": "missing edge",
-            },
-        ]
-    }
-    (checkpoint_dir / "image_review_sheet.json").write_text(json.dumps(sheet, ensure_ascii=False, indent=2), encoding="utf-8")
     config = _resume_config(root, run_id)
+    providers = _resume_providers(root)
     caps = derive_stage_call_caps(
         stages=config.stages,
         sample_count=1,
         step3_card_count=1,
-        step4_card_count=1,
+        step4_card_count=2,
         max_attempts=config.max_attempts,
     )
+    seeded = run_step4_stage(
+        release_fixture_path=config.step3_release_fixture or Path(),
+        handoff_path=config.step4_handoff or Path(),
+        prompt_builder=providers["prompt_builder"],  # type: ignore[arg-type]
+        image_caller=providers["image_caller"],  # type: ignore[arg-type]
+        models_probe=None,
+        image_model="gpt-image-2",
+        storage=run_root / "step4",
+        budget=LiveRunBudget(run_root / "budget.json", usd_cap=1.0, stage_call_caps=caps),
+        bundle_loader=providers["step4_bundle_loader"],  # type: ignore[arg-type]
+    )
+    assert seeded["status"] == "completed"
+    sheet_path = emit_image_review_sheet(run_root=run_root, step4_outcome=seeded, storage=run_root / "step4")
+    sheet = json.loads(sheet_path.read_text(encoding="utf-8"))
+    sheet["cards"][0].update({"disposition": "approved", "reviewer": "resume-tester", "basis": "clean render"})
+    sheet["cards"][1].update({"disposition": "rejected", "reviewer": "resume-tester", "basis": "missing edge"})
+    sheet_path.write_text(json.dumps(sheet, ensure_ascii=False, indent=2), encoding="utf-8")
     run_config = build_run_resume_contract(
         config,
         resolved_sample_ids=("s1",),
         step3_card_count=0,
-        step4_card_count=0,
+        step4_card_count=2,
         stage_call_caps=caps,
-        image_model="",
+        image_model="gpt-image-2",
+        step4_handoff=config.step4_handoff,
     )
     state = RunState.load_or_create(
         run_root / "run_state.json",
@@ -571,6 +662,7 @@ def _resume_config(root: Path, run_id: str) -> LiveRunConfig:
         budget_usd=1.0,
         step3_mode="release-bypass",
         step3_release_fixture=_REAL_REPO / "scripts/tests/fixtures/v2/release_fixtures/gonglu_phase2r2242_step3_reviewed_release.yaml",
+        step4_handoff=_resume_step4_handoff(root),
         skip_preflight=True,
         resume_run_id=run_id,
         repo_root=root,
@@ -581,7 +673,7 @@ def test_resume_after_step4_completed_ingests_image_review(repo_tmp_path: Path) 
     _seed_exam_workspace(repo_tmp_path)
     run_id = "20260812-resume-regression-fixture1"
     run_root = _seed_paused_run(repo_tmp_path, run_id)
-    report, exit_code = orchestrate(_resume_config(repo_tmp_path, run_id), {"pricing": {}, "sample_ids": ("s1",)})
+    report, exit_code = orchestrate(_resume_config(repo_tmp_path, run_id), _resume_providers(repo_tmp_path))
     assert exit_code == 0
     assert report.stop_reason == "completed"
     by_stage = {entry.stage: entry for entry in report.stages}
@@ -598,11 +690,11 @@ def test_resume_after_ingest_is_idempotent(repo_tmp_path: Path) -> None:
     _seed_exam_workspace(repo_tmp_path)
     run_id = "20260812-resume-regression-fixture2"
     run_root = _seed_paused_run(repo_tmp_path, run_id)
-    first_report, first_exit = orchestrate(_resume_config(repo_tmp_path, run_id), {"pricing": {}, "sample_ids": ("s1",)})
+    first_report, first_exit = orchestrate(_resume_config(repo_tmp_path, run_id), _resume_providers(repo_tmp_path))
     assert (first_exit, first_report.stop_reason) == (0, "completed")
     manifest_path = run_root / "checkpoints" / "image_review" / "image-authorization-manifest.json"
     manifest_bytes = manifest_path.read_bytes()
-    second_report, second_exit = orchestrate(_resume_config(repo_tmp_path, run_id), {"pricing": {}, "sample_ids": ("s1",)})
+    second_report, second_exit = orchestrate(_resume_config(repo_tmp_path, run_id), _resume_providers(repo_tmp_path))
     assert (second_exit, second_report.stop_reason) == (0, "completed")
     # 已 ingested：不再产出 image_review_checkpoint 段、清单不被重写。
     assert all(entry.stage != "image_review_checkpoint" for entry in second_report.stages)
@@ -619,11 +711,157 @@ def test_resume_with_undecided_sheet_stays_waiting(repo_tmp_path: Path) -> None:
     sheet = json.loads(sheet_path.read_text(encoding="utf-8"))
     sheet["cards"][1]["disposition"] = None
     sheet_path.write_text(json.dumps(sheet, ensure_ascii=False, indent=2), encoding="utf-8")
-    report, exit_code = orchestrate(_resume_config(repo_tmp_path, run_id), {"pricing": {}, "sample_ids": ("s1",)})
+    report, exit_code = orchestrate(_resume_config(repo_tmp_path, run_id), _resume_providers(repo_tmp_path))
     assert exit_code == 2
     assert report.stop_reason == "waiting_human_image_review"
     state = json.loads((run_root / "run_state.json").read_text(encoding="utf-8"))
     assert state["checkpoints"]["image_review"]["status"] == "waiting_human"
+
+
+def test_image_review_emit_refuses_bytes_drift(repo_tmp_path: Path) -> None:
+    _seed_exam_workspace(repo_tmp_path)
+    run_id = "20260812-resume-regression-emit-drift"
+    run_root = _seed_paused_run(repo_tmp_path, run_id)
+    sheet_path = run_root / "checkpoints" / "image_review" / "image_review_sheet.json"
+    row = json.loads(sheet_path.read_text(encoding="utf-8"))["cards"][0]
+    image_path = run_root / "step4" / row["image_path"]
+    image_path.write_bytes(b"replacement bytes")
+    with pytest.raises(Step4ImageIntegrityError):
+        emit_image_review_sheet(
+            run_root=run_root,
+            step4_outcome={"cards": [{**row, "outcome": "success"}]},
+            storage=run_root / "step4",
+        )
+
+
+@pytest.mark.parametrize("tampered_path", ["../outside.png", "C:/outside.png", ""])
+def test_image_review_ingest_refuses_invalid_path(repo_tmp_path: Path, tampered_path: str) -> None:
+    _seed_exam_workspace(repo_tmp_path)
+    run_id = "20260812-resume-regression-path-escape"
+    run_root = _seed_paused_run(repo_tmp_path, run_id)
+    sheet_path = run_root / "checkpoints" / "image_review" / "image_review_sheet.json"
+    sheet = json.loads(sheet_path.read_text(encoding="utf-8"))
+    sheet["cards"][0]["image_path"] = tampered_path
+    sheet_path.write_text(json.dumps(sheet, ensure_ascii=False, indent=2), encoding="utf-8")
+    report, exit_code = orchestrate(_resume_config(repo_tmp_path, run_id), _resume_providers(repo_tmp_path))
+    assert (exit_code, report.stop_reason) == (1, "gate_refused_admission")
+    assert not (run_root / "checkpoints" / "image_review" / "image-authorization-manifest.json").exists()
+
+
+def test_already_ingested_resume_refuses_non_object_sheet(repo_tmp_path: Path) -> None:
+    _seed_exam_workspace(repo_tmp_path)
+    run_id = "20260812-resume-regression-invalid-sheet"
+    run_root = _seed_paused_run(repo_tmp_path, run_id)
+    providers = _resume_providers(repo_tmp_path)
+    first_report, first_exit = orchestrate(_resume_config(repo_tmp_path, run_id), providers)
+    assert (first_exit, first_report.stop_reason) == (0, "completed")
+    manifest_path = run_root / "checkpoints" / "image_review" / "image-authorization-manifest.json"
+    manifest_before = manifest_path.read_bytes()
+    (run_root / "checkpoints" / "image_review" / "image_review_sheet.json").write_text("[]", encoding="utf-8")
+    second_report, second_exit = orchestrate(_resume_config(repo_tmp_path, run_id), providers)
+    assert (second_exit, second_report.stop_reason) == (1, "gate_refused_admission")
+    assert manifest_path.read_bytes() == manifest_before
+    state = json.loads((run_root / "run_state.json").read_text(encoding="utf-8"))
+    assert state["checkpoints"]["image_review"]["status"] == "refused"
+
+
+def test_image_review_ingest_refuses_bytes_drift_without_manifest(repo_tmp_path: Path) -> None:
+    _seed_exam_workspace(repo_tmp_path)
+    run_id = "20260812-resume-regression-ingest-drift"
+    run_root = _seed_paused_run(repo_tmp_path, run_id)
+    sheet = json.loads((run_root / "checkpoints" / "image_review" / "image_review_sheet.json").read_text(encoding="utf-8"))
+    (run_root / "step4" / sheet["cards"][0]["image_path"]).write_bytes(b"replacement bytes")
+    report, exit_code = orchestrate(_resume_config(repo_tmp_path, run_id), _resume_providers(repo_tmp_path))
+    assert (exit_code, report.stop_reason) == (1, "gate_refused_admission")
+    assert not (run_root / "checkpoints" / "image_review" / "image-authorization-manifest.json").exists()
+
+
+def test_already_ingested_resume_refuses_image_drift_without_rewriting_manifest(repo_tmp_path: Path) -> None:
+    _seed_exam_workspace(repo_tmp_path)
+    run_id = "20260812-resume-regression-authorized-drift"
+    run_root = _seed_paused_run(repo_tmp_path, run_id)
+    providers = _resume_providers(repo_tmp_path)
+    first_report, first_exit = orchestrate(_resume_config(repo_tmp_path, run_id), providers)
+    assert (first_exit, first_report.stop_reason) == (0, "completed")
+    manifest_path = run_root / "checkpoints" / "image_review" / "image-authorization-manifest.json"
+    manifest_before = manifest_path.read_bytes()
+    sheet = json.loads((run_root / "checkpoints" / "image_review" / "image_review_sheet.json").read_text(encoding="utf-8"))
+    (run_root / "step4" / sheet["cards"][0]["image_path"]).write_bytes(b"replacement bytes")
+    second_report, second_exit = orchestrate(_resume_config(repo_tmp_path, run_id), providers)
+    assert (second_exit, second_report.stop_reason) == (1, "gate_refused_admission")
+    assert manifest_path.read_bytes() == manifest_before
+    state = json.loads((run_root / "run_state.json").read_text(encoding="utf-8"))
+    assert state["checkpoints"]["image_review"]["status"] == "refused"
+
+
+def test_already_ingested_resume_refuses_sample_id_drift_with_same_public_request(repo_tmp_path: Path) -> None:
+    _seed_exam_workspace(repo_tmp_path)
+    run_id = "20260812-resume-regression-sample-drift"
+    run_root = _seed_paused_run(repo_tmp_path, run_id)
+    providers = _resume_providers(repo_tmp_path)
+    first_report, first_exit = orchestrate(_resume_config(repo_tmp_path, run_id), providers)
+    assert (first_exit, first_report.stop_reason) == (0, "completed")
+    manifest_path = run_root / "checkpoints" / "image_review" / "image-authorization-manifest.json"
+    manifest_before = manifest_path.read_bytes()
+
+    drifted_card = SimpleNamespace(
+        card_index=1,
+        source_card_id="source:card:one",
+        sample_id="one-drifted",
+        render_presentation="table",
+    )
+    unchanged_card = _resume_cards()[1]
+
+    def drifted_loader(_release: Path, _handoff: Path) -> tuple[object, object]:
+        return SimpleNamespace(cards=(drifted_card, unchanged_card)), SimpleNamespace(fact_count=2)
+
+    drifted_providers = {**providers, "step4_bundle_loader": drifted_loader}
+
+    def stable_prompt_builder(card: SimpleNamespace) -> str:
+        return "resume prompt for one" if card.source_card_id == "source:card:one" else "resume prompt for two"
+
+    drifted_providers["prompt_builder"] = stable_prompt_builder
+    drifted_config = _resume_config(repo_tmp_path, run_id)
+    old_bindings = {
+        int(entry["card_index"]): entry
+        for entry in json.loads((run_root / "step4" / "requests-manifest.json").read_text(encoding="utf-8"))
+    }
+    drifted_bindings = prepare_step4_request_bindings(
+        release_fixture_path=drifted_config.step3_release_fixture or Path(),
+        handoff_path=drifted_config.step4_handoff or Path(),
+        prompt_builder=stable_prompt_builder,
+        image_model="gpt-image-2",
+        bundle_loader=drifted_loader,
+    )
+    assert old_bindings[1]["http_payload_sha256"] == drifted_bindings[1]["http_payload_sha256"]
+    assert old_bindings[1]["sample_id"] != drifted_bindings[1]["sample_id"]
+
+    second_report, second_exit = orchestrate(drifted_config, drifted_providers)
+    assert (second_exit, second_report.stop_reason) == (1, "gate_refused_admission")
+    assert manifest_path.read_bytes() == manifest_before
+    state = json.loads((run_root / "run_state.json").read_text(encoding="utf-8"))
+    assert state["checkpoints"]["image_review"]["status"] == "refused"
+
+
+def test_already_ingested_resume_refuses_duplicate_review_rows_without_rewriting_manifest(repo_tmp_path: Path) -> None:
+    _seed_exam_workspace(repo_tmp_path)
+    run_id = "20260812-resume-regression-duplicate-review-row"
+    run_root = _seed_paused_run(repo_tmp_path, run_id)
+    providers = _resume_providers(repo_tmp_path)
+    first_report, first_exit = orchestrate(_resume_config(repo_tmp_path, run_id), providers)
+    assert (first_exit, first_report.stop_reason) == (0, "completed")
+    manifest_path = run_root / "checkpoints" / "image_review" / "image-authorization-manifest.json"
+    manifest_before = manifest_path.read_bytes()
+    sheet_path = run_root / "checkpoints" / "image_review" / "image_review_sheet.json"
+    sheet = json.loads(sheet_path.read_text(encoding="utf-8"))
+    sheet["cards"].append(dict(sheet["cards"][0]))
+    sheet_path.write_text(json.dumps(sheet, ensure_ascii=False, indent=2), encoding="utf-8")
+
+    second_report, second_exit = orchestrate(_resume_config(repo_tmp_path, run_id), providers)
+    assert (second_exit, second_report.stop_reason) == (1, "gate_refused_admission")
+    assert manifest_path.read_bytes() == manifest_before
+    state = json.loads((run_root / "run_state.json").read_text(encoding="utf-8"))
+    assert state["checkpoints"]["image_review"]["status"] == "refused"
 
 
 def _binding_dry_run(root: Path) -> tuple[LiveRunConfig, str, Path]:

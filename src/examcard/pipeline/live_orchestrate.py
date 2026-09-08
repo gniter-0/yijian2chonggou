@@ -17,12 +17,13 @@ from .live_resend import ResendPlan
 from .live_preflight import evaluate_preflight_gate
 from .live_reports import LiveRunReport, LiveStageReport, build_live_run_report, build_stage_report
 from .live_stage_step3 import load_step3_release_bypass, load_typed_fixture_compilation, run_step3_stage
-from .live_stage_step4 import run_step4_stage
+from .live_stage_step4 import Step4ImageIntegrityError, prepare_step4_request_bindings, run_step4_stage
 from .live_checkpoint import (
     build_admission_checkpoint,
     emit_image_review_sheet,
     ingest_admission_decisions,
     ingest_image_review_sheet,
+    validate_ingested_image_review,
 )
 from ..common.hashing import canonical_hash
 from .live_config import LiveRunConfig, RunState, build_run_resume_contract
@@ -96,6 +97,15 @@ def orchestrate(config: LiveRunConfig, providers: Mapping[str, Any]) -> tuple[Li
     usd_cap = config.budget_usd if config.budget_usd is not None else 1.0
     budget = LiveRunBudget(run_root / "budget.json", usd_cap=usd_cap, stage_call_caps=caps)
 
+    def current_step4_bindings() -> dict[int, dict[str, Any]]:
+        return prepare_step4_request_bindings(
+            release_fixture_path=config.step3_release_fixture or Path(str(providers.get("step4_release_fixture", ""))),
+            handoff_path=config.step4_handoff or Path(str(providers.get("step4_handoff", ""))),
+            prompt_builder=providers["prompt_builder"],
+            image_model=image_model,
+            bundle_loader=providers.get("step4_bundle_loader"),
+        )
+
     def finish(stop_reason: str, exit_code: int) -> tuple[LiveRunReport, int]:
         report = build_live_run_report(
             run_id=run_id,
@@ -160,12 +170,29 @@ def orchestrate(config: LiveRunConfig, providers: Mapping[str, Any]) -> tuple[Li
             # 就地对账，与 step4 分支内检查点块逐字同义（ingested/refused/仍缺三分支）。
             if stage == "step4" and config.mode == "live":
                 ticket = state.checkpoint("image_review")
-                if ticket.get("status") != "ingested":
-                    sheet_ingest = ingest_image_review_sheet(run_root=run_root)
+                sheet_path = run_root / "checkpoints" / "image_review" / "image_review_sheet.json"
+                bindings = None
+                if ticket.get("status") == "ingested" or sheet_path.is_file():
+                    try:
+                        bindings = current_step4_bindings()
+                    except Exception as error:
+                        state.set_checkpoint("image_review", "refused", detail=str(error))
+                        stage_reports.append(build_stage_report("image_review_checkpoint", "failed", str(error)))
+                        return finish("gate_refused_admission", 1)
+                if ticket.get("status") == "ingested":
+                    try:
+                        validate_ingested_image_review(run_root=run_root, current_request_bindings=bindings or {})
+                    except (Step4ImageIntegrityError, KeyError, OSError, TypeError, ValueError) as error:
+                        state.set_checkpoint("image_review", "refused", detail=str(error))
+                        stage_reports.append(build_stage_report("image_review_checkpoint", "failed", str(error)))
+                        return finish("gate_refused_admission", 1)
+                else:
+                    sheet_ingest = ingest_image_review_sheet(run_root=run_root, current_request_bindings=bindings)
                     if sheet_ingest["status"] == "ingested":
                         state.set_checkpoint("image_review", "ingested", approved_count=sheet_ingest.get("approved_count", 0))
                         stage_reports.append(build_stage_report("image_review_checkpoint", "completed", f"image review ingested; approved={sheet_ingest.get('approved_count', 0)}"))
                     elif sheet_ingest["status"] == "refused":
+                        state.set_checkpoint("image_review", "refused", detail=str(sheet_ingest["detail"]))
                         stage_reports.append(build_stage_report("image_review_checkpoint", "failed", str(sheet_ingest["detail"])))
                         return finish("gate_refused_admission", 1)
                     else:
@@ -368,16 +395,51 @@ def orchestrate(config: LiveRunConfig, providers: Mapping[str, Any]) -> tuple[Li
             if config.mode == "live":
                 ticket = state.checkpoint("image_review")
                 if ticket.get("status") == "ingested":
+                    try:
+                        validate_ingested_image_review(
+                            run_root=run_root,
+                            current_request_bindings={
+                                int(card["card_index"]): {
+                                    "card_index": card["card_index"],
+                                    "source_card_id": card["source_card_id"],
+                                    "sample_id": card["sample_id"],
+                                    "render_presentation": card["render_presentation"],
+                                    "http_payload_sha256": card["http_payload_sha256"],
+                                }
+                                for card in outcome.get("cards", [])
+                            },
+                        )
+                    except (Step4ImageIntegrityError, KeyError, OSError, TypeError, ValueError) as error:
+                        state.set_checkpoint("image_review", "refused", detail=str(error))
+                        stage_reports.append(build_stage_report("image_review_checkpoint", "failed", str(error)))
+                        return finish("gate_refused_admission", 1)
                     continue
-                sheet_ingest = ingest_image_review_sheet(run_root=run_root)
+                current_bindings = {
+                    int(card["card_index"]): {
+                        "card_index": card["card_index"],
+                        "source_card_id": card["source_card_id"],
+                        "sample_id": card["sample_id"],
+                        "render_presentation": card["render_presentation"],
+                        "http_payload_sha256": card["http_payload_sha256"],
+                    }
+                    for card in outcome.get("cards", [])
+                    if card.get("outcome") == "success"
+                }
+                sheet_ingest = ingest_image_review_sheet(run_root=run_root, current_request_bindings=current_bindings)
                 if sheet_ingest["status"] == "ingested":
                     state.set_checkpoint("image_review", "ingested", approved_count=sheet_ingest.get("approved_count", 0))
                     stage_reports.append(build_stage_report("image_review_checkpoint", "completed", f"image review ingested; approved={sheet_ingest.get('approved_count', 0)}"))
                     continue
                 if sheet_ingest["status"] == "refused":
+                    state.set_checkpoint("image_review", "refused", detail=str(sheet_ingest["detail"]))
                     stage_reports.append(build_stage_report("image_review_checkpoint", "failed", str(sheet_ingest["detail"])))
                     return finish("gate_refused_admission", 1)
-                sheet_path = emit_image_review_sheet(run_root=run_root, step4_outcome=outcome, storage=run_root / "step4")
+                try:
+                    sheet_path = emit_image_review_sheet(run_root=run_root, step4_outcome=outcome, storage=run_root / "step4")
+                except (Step4ImageIntegrityError, KeyError, OSError, TypeError, ValueError) as error:
+                    state.set_checkpoint("image_review", "refused", detail=str(error))
+                    stage_reports.append(build_stage_report("image_review_checkpoint", "failed", str(error)))
+                    return finish("gate_refused_admission", 1)
                 state.set_checkpoint("image_review", "waiting_human", sheet_path=str(sheet_path))
                 stage_reports.append(build_stage_report("image_review_checkpoint", "waiting_human", "image review sheet emitted; waiting for human dispositions"))
                 return finish("waiting_human_image_review", 2)
