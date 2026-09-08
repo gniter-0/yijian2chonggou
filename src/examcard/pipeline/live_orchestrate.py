@@ -301,6 +301,7 @@ def orchestrate(config: LiveRunConfig, providers: Mapping[str, Any]) -> tuple[Li
                 storage=run_root / "step3",
                 budget=budget,
                 base_reason=config.base_reason("step3"),
+                max_attempts=config.max_attempts,
                 price_per_call=pricing.get("step3_card_call", 0.0),
                 probe_price=pricing.get("probe", 0.0),
                 probe=providers.get("step3_probe"),
