@@ -38,6 +38,7 @@ DispositionV2: TypeAlias = Literal["reviewed_candidate", "manual_review", "block
 THRESHOLD_TOKEN_VERSION: Final = "phase2r84_threshold_token_v1"
 THRESHOLD_CONTRACT_VERSION: Final = "phase2r84_threshold_contract_v1"
 REVIEWED_CANDIDATE_V2_VERSION: Final = "phase2r84_reviewed_typed_evidence_candidate_v2"
+REVIEWED_TYPED_EVIDENCE_FIXTURE_V2_VERSION: Final = "phase2r810_reviewed_typed_evidence_fixture_v2"
 
 
 class ThresholdToken(TypedTextBase):
@@ -110,14 +111,45 @@ class ReviewedCandidateV2(StrictModel):
         return self
 
 
+class ReviewedTypedEvidenceFixtureV2(StrictModel):
+    """Final V2 fixture that carries threshold authority across the boundary."""
+
+    schema_version: Literal["phase2r810_reviewed_typed_evidence_fixture_v2"] = (
+        REVIEWED_TYPED_EVIDENCE_FIXTURE_V2_VERSION
+    )
+    r89_admission_bundle_sha256: str = Field(pattern=HASH_PATTERN)
+    authorization_manifest_sha256: str = Field(pattern=HASH_PATTERN)
+    exported_r84_manifest_sha256: str = Field(pattern=HASH_PATTERN)
+    r84_fixture_sha256: str = Field(pattern=HASH_PATTERN)
+    candidates: tuple[ReviewedCandidateV2, ...] = Field(min_length=1)
+    reviewed_candidate_count: int = Field(ge=0)
+    fixture_authorized: Literal[True] = True
+    cards_created: Literal[False] = False
+    step3_authorized: Literal[False] = False
+    step4_authorized: Literal[False] = False
+    fixture_sha256: str = Field(pattern=HASH_PATTERN)
+
+    @model_validator(mode="after")
+    def validate_fixture(self) -> "ReviewedTypedEvidenceFixtureV2":
+        if self.reviewed_candidate_count != len(self.candidates) or not self.candidates:
+            raise ValueError("R8.10 V2 reviewed fixture count mismatch")
+        if len({item.candidate_id for item in self.candidates}) != len(self.candidates):
+            raise ValueError("R8.10 V2 reviewed fixture candidate identities must be unique")
+        if self.fixture_sha256 != canonical_hash(self.model_dump(mode="json", exclude={"fixture_sha256"})):
+            raise ValueError("R8.10 V2 reviewed fixture hash mismatch")
+        return self
+
+
 __all__ = (
     "DispositionV2",
     "PRESENTATIONS_V2",
     "PresentationV2",
     "REVIEWED_CANDIDATE_V2_VERSION",
+    "REVIEWED_TYPED_EVIDENCE_FIXTURE_V2_VERSION",
     "THRESHOLD_CONTRACT_VERSION",
     "THRESHOLD_TOKEN_VERSION",
     "ReviewedCandidateV2",
+    "ReviewedTypedEvidenceFixtureV2",
     "ThresholdContract",
     "ThresholdToken",
     "TypedContractV2",

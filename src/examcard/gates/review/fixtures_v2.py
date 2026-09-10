@@ -1,12 +1,19 @@
-"""Minimal v2 reviewed-candidate fixture builder."""
+"""V2 reviewed-candidate and gate-local fixture builders."""
 from __future__ import annotations
 
+from typing import Final, Literal, Sequence
 from types import SimpleNamespace
 
-from ...knowledge.contracts.admission_legacy_hash import hash_model_r8x
+from pydantic import Field, model_validator
+
+from ...knowledge.contracts.admission_fixtures_constants import HASH_PATTERN
+from ...knowledge.contracts.admission_legacy_hash import canonical_hash, hash_model_r8x
 from ...knowledge.contracts.admission_v2 import ReviewedCandidateV2
+from ...materials.schema import StrictModel
 from .decisions_v2 import HumanDecisionV2, validate_human_decision_v2
 from .queue_v2 import AdmissionQueueItemV2
+
+REVIEWED_FIXTURE_V2_VERSION: Final = "phase2r84_reviewed_typed_evidence_fixture_v2"
 
 
 def build_reviewed_candidate_v2(
@@ -45,4 +52,46 @@ def build_reviewed_candidate_v2(
     return hash_model_r8x(ReviewedCandidateV2, payload, "candidate_sha256")
 
 
-__all__ = ("build_reviewed_candidate_v2",)
+class ReviewedFixtureV2(StrictModel):
+    """Gate-local reviewed fixture with the V2 candidate family."""
+
+    schema_version: Literal["phase2r84_reviewed_typed_evidence_fixture_v2"] = REVIEWED_FIXTURE_V2_VERSION
+    phase: Literal["2R.8.4"] = "2R.8.4"
+    source_phase: Literal["2R.8.3"] = "2R.8.3"
+    queue_sha256: str = Field(pattern=HASH_PATTERN)
+    candidates: tuple[ReviewedCandidateV2, ...] = ()
+    reviewed_candidate_count: int = Field(ge=0)
+    fixture_authorized: bool = False
+    cards_created: Literal[False] = False
+    step3_authorized: Literal[False] = False
+    step4_authorized: Literal[False] = False
+    fixture_sha256: str = Field(pattern=HASH_PATTERN)
+
+    @model_validator(mode="after")
+    def validate_fixture(self) -> "ReviewedFixtureV2":
+        if self.reviewed_candidate_count != len(self.candidates):
+            raise ValueError("reviewed candidate count mismatch")
+        if self.fixture_authorized != bool(self.candidates):
+            raise ValueError("fixture authorization mismatch")
+        if len({item.candidate_id for item in self.candidates}) != len(self.candidates):
+            raise ValueError("reviewed fixture V2 candidate identities must be unique")
+        if self.fixture_sha256 != canonical_hash(self.model_dump(mode="json", exclude={"fixture_sha256"})):
+            raise ValueError("reviewed fixture V2 hash mismatch")
+        return self
+
+
+def build_reviewed_fixture_v2(queue_sha256: str, candidates: Sequence[ReviewedCandidateV2]) -> ReviewedFixtureV2:
+    payload = {
+        "source_phase": "2R.8.3",
+        "queue_sha256": queue_sha256,
+        "candidates": tuple(candidates),
+        "reviewed_candidate_count": len(candidates),
+        "fixture_authorized": bool(candidates),
+        "cards_created": False,
+        "step3_authorized": False,
+        "step4_authorized": False,
+    }
+    return hash_model_r8x(ReviewedFixtureV2, payload, "fixture_sha256")
+
+
+__all__ = ("REVIEWED_FIXTURE_V2_VERSION", "ReviewedFixtureV2", "build_reviewed_candidate_v2", "build_reviewed_fixture_v2")
