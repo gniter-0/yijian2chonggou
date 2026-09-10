@@ -49,6 +49,14 @@ from .step4_contract_models_phase import (
 )
 
 
+def render_presentation_for_source(source_presentation: str) -> str:
+    """Map source semantics to the renderer surface at the Step4 boundary."""
+
+    if source_presentation not in {"diagram", "table", "ordered_list", "constraint", "threshold", "formula"}:
+        raise ValueError(f"unsupported source presentation: {source_presentation}")
+    return "constraint" if source_presentation == "threshold" else source_presentation
+
+
 def _source_text_payload(source: Step3MergedSourceOwnedDisplayText) -> dict[str, Any]:
     return {
         "fact_id": source.fact_id,
@@ -198,7 +206,7 @@ def _derive_edge(edge: Any) -> GenericSemanticEdge:
 def _derive_card(*, source: Step3MergedReviewedReleaseCard, source_fixture_sha256: str) -> GenericCardContract:
     if source.presentation not in SOURCE_PRESENTATIONS:
         raise ValueError(f"unsupported source presentation: {source.presentation}")
-    render_presentation = "constraint" if source.presentation == "threshold" else source.presentation
+    render_presentation = render_presentation_for_source(source.presentation)
     visible = tuple(_derive_visible_text(item) for item in source.display_text_provenance)
     edges = tuple(_derive_edge(edge) for edge in source.semantic_edge_provenance)
     nodes = tuple(item.semantic_node_id for item in visible if item.semantic_node_id is not None)

@@ -77,6 +77,8 @@ LAYER_ORDER = (
     "admission_fixtures",
     "admission_v2",  # 平行 threshold authority schema；不改旧 admission facade
     "echo_release",  # P8 补链（echo-batch-release/1.0 家族）：纯数据契约，仅向后引用 admission 对
+    "step3_card_v3",  # threshold-preserving Step3 V3 contracts; depends on admission_v2 only
+    "echo_release_v2",  # typed Echo V2 contracts; depends on the Step3 V3 provenance types
 
     # cm28 拆分产物：v25_generic_contracts 的 15 个兄弟（蓝图 §3），层序排在门面之前。
     # 层 0 三个自足件 → 层 1 义务/语义图 → 层 2 载荷与提示词 → 层 3 请求模型 → 层 4 构建/评定/离线。

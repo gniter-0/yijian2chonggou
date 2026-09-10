@@ -65,7 +65,7 @@ def _parse_args() -> argparse.Namespace:
     parser.add_argument("--only-samples", type=str, default=None)
     parser.add_argument("--channel", choices=("first", "last"), default="last")
     parser.add_argument("--env-file", type=Path, default=None)
-    parser.add_argument("--step3-contract", choices=("v1", "v2"), default="v2")
+    parser.add_argument("--step3-contract", choices=("v1", "v2", "v3"), default="v2")
     parser.add_argument("--step3-mode", choices=("echo", "release-bypass"), default="echo")
     parser.add_argument("--step3-typed-fixture", type=Path, default=None)
     parser.add_argument("--step3-release-fixture", type=Path, default=None)
@@ -75,7 +75,7 @@ def _parse_args() -> argparse.Namespace:
         choices=("pilot-release", "echo-batch"),
         default="pilot-release",
         help="step4 bundle source (P8 bridge): pilot-release = r2242/r319 lane byte-unchanged; "
-        "echo-batch = echo-batch-release/1.0 + issued handoff via compilers.step4_echo_bridge",
+        "echo-batch = explicit schema-version dispatch for echo-batch-release/1.0 or /2.0",
     )
     parser.add_argument("--echo-release", type=Path, default=None, help="echo-batch release fixture json (--step4-source echo-batch)")
     parser.add_argument("--echo-handoff", type=Path, default=None, help="issued echo-batch handoff json (--step4-source echo-batch)")
@@ -478,7 +478,10 @@ def main() -> int:
     if "step3" in config.stages and config.step3_mode == "echo" and config.step3_typed_fixture:
         from examcard.pipeline.live_run import load_typed_fixture_compilation
 
-        providers["step3_card_count"] = len(load_typed_fixture_compilation(config.step3_typed_fixture).contracts)
+        providers["step3_card_count"] = len(
+            load_typed_fixture_compilation(config.step3_typed_fixture, contract_version=config.step3_contract)
+        .contracts
+        )
     if config.step3_release_fixture and config.step3_release_fixture.is_file():
         import yaml
 
@@ -491,14 +494,24 @@ def main() -> int:
             raise SystemExit("--step4-source echo-batch requires an existing --echo-release fixture json")
         if not (args.echo_handoff and args.echo_handoff.is_file()):
             raise SystemExit("--step4-source echo-batch requires an existing --echo-handoff json (issued by the review ingest gate)")
-        from examcard.compilers.step4_echo_bridge import load_step4_bundle_source
+        echo_release_payload = json.loads(args.echo_release.read_text(encoding="utf-8"))
+        release_schema = echo_release_payload.get("schema_version")
+        if release_schema == "echo-batch-release/2.0":
+            from examcard.compilers.step4_echo_bridge_v2 import load_step4_bundle_source_v2
 
-        providers["step4_bundle_loader"] = lambda fixture_path, handoff_path: load_step4_bundle_source(
-            source="echo-batch", release_fixture_path=fixture_path, handoff_path=handoff_path
-        )
+            providers["step4_bundle_loader"] = lambda fixture_path, handoff_path: load_step4_bundle_source_v2(
+                release_fixture_path=fixture_path, handoff_path=handoff_path
+            )
+        elif release_schema == "echo-batch-release/1.0":
+            from examcard.compilers.step4_echo_bridge import load_step4_bundle_source
+
+            providers["step4_bundle_loader"] = lambda fixture_path, handoff_path: load_step4_bundle_source(
+                source="echo-batch", release_fixture_path=fixture_path, handoff_path=handoff_path
+            )
+        else:
+            raise SystemExit(f"unsupported echo-batch release schema: {release_schema!r}")
         providers["step4_release_fixture"] = args.echo_release
         providers["step4_handoff"] = args.echo_handoff
-        echo_release_payload = json.loads(args.echo_release.read_text(encoding="utf-8"))
         providers["step4_card_count"] = len(echo_release_payload.get("cards", ())) or 1
 
     report, exit_code = orchestrate(config, providers)

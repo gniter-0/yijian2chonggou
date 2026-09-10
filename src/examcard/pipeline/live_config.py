@@ -37,7 +37,7 @@ class LiveRunConfig:
     only_samples: tuple[str, ...] | None = None
     channel: str = "last"
     env_file: Path | None = None
-    step3_contract: Literal["v1", "v2"] = "v2"
+    step3_contract: Literal["v1", "v2", "v3"] = "v2"
     step3_mode: Literal["echo", "release-bypass"] = "echo"
     step3_typed_fixture: Path | None = None
     step3_release_fixture: Path | None = None

@@ -83,6 +83,54 @@ def test_budget_resume_cap_mismatch_refused(repo_tmp_path: Path) -> None:
         LiveRunBudget(state, usd_cap=1.0, stage_call_caps={"step3": 4})
 
 
+def test_resume_schema_two_binds_v3_step3_contract(repo_tmp_path: Path) -> None:
+    config_v3 = LiveRunConfig(
+        exam_id=_REHEARSAL_EXAM,
+        stages=("step3",),
+        mode="dry_run",
+        run_label="resume-v3-contract",
+        step3_contract="v3",
+        repo_root=repo_tmp_path,
+    )
+    caps = derive_stage_call_caps(
+        stages=config_v3.stages,
+        sample_count=1,
+        step3_card_count=1,
+        step4_card_count=1,
+        max_attempts=config_v3.max_attempts,
+    )
+    v3 = build_run_resume_contract(
+        config_v3,
+        resolved_sample_ids=("s1",),
+        step3_card_count=1,
+        step4_card_count=1,
+        stage_call_caps=caps,
+        image_base_url="",
+        image_model="",
+    )
+    v2 = build_run_resume_contract(
+        replace(config_v3, step3_contract="v2"),
+        resolved_sample_ids=("s1",),
+        step3_card_count=1,
+        step4_card_count=1,
+        stage_call_caps=caps,
+        image_base_url="",
+        image_model="",
+    )
+    assert v3["schema_version"] == 2
+    assert v3["step3_contract"] == "v3"
+    assert canonical_hash(v3) != canonical_hash(v2)
+    assert v3 == build_run_resume_contract(
+        config_v3,
+        resolved_sample_ids=("s1",),
+        step3_card_count=1,
+        step4_card_count=1,
+        stage_call_caps=caps,
+        image_base_url="",
+        image_model="",
+    )
+
+
 # ---------------------------------------------------------------------------
 # 预检放行矩阵（§11-7）
 # ---------------------------------------------------------------------------

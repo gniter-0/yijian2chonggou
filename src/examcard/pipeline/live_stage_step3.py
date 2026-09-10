@@ -22,16 +22,17 @@ from .live_paths import MissingUpstreamArtifact
 # ---------------------------------------------------------------------------
 
 
-def load_typed_fixture_compilation(typed_fixture_path: Path) -> Any:
+def load_typed_fixture_compilation(
+    typed_fixture_path: Path,
+    *,
+    contract_version: Literal["v1", "v2", "v3"] = "v1",
+) -> Any:
     """echo 模式取材：显式 reviewed typed-evidence fixture → 离线编译。
 
     「检查点①放行产物 → typed fixture」的自动转换器在新仓缺席（设计 §7.1 已知
     开口，T4b 首项验证点已核实并 need_input 上报）；在总指挥裁决补搬运之前，
     echo 模式仅接受显式给定的既有 fixture（如 r810），缺席即 fail-closed。
     """
-
-    from ..compilers.step3_card import compile_reviewed_fixture
-    from ..knowledge.contracts.admission_fixtures import ReviewedTypedEvidenceFixture
 
     path = Path(typed_fixture_path)
     if not path.is_file():
@@ -42,14 +43,34 @@ def load_typed_fixture_compilation(typed_fixture_path: Path) -> Any:
     fixture_bytes = path.read_bytes()
     import hashlib as _hashlib
 
-    fixture = ReviewedTypedEvidenceFixture.model_validate_json(fixture_bytes.decode("utf-8"))
-    return compile_reviewed_fixture(fixture, source_fixture_sha256=_hashlib.sha256(fixture_bytes).hexdigest())
+    try:
+        top_level = json.loads(fixture_bytes.decode("utf-8"))
+    except (UnicodeDecodeError, json.JSONDecodeError) as exc:
+        raise ValueError(f"typed fixture JSON is invalid: {path}") from exc
+    schema_version = top_level.get("schema_version") if isinstance(top_level, dict) else None
+    file_sha256 = _hashlib.sha256(fixture_bytes).hexdigest()
+    if contract_version in {"v1", "v2"}:
+        expected = "phase2r810_reviewed_typed_evidence_fixture_v1"
+        if schema_version != expected:
+            raise ValueError(f"step3 {contract_version} requires the V1 typed fixture schema, got {schema_version!r}")
+        from ..compilers.step3_card import compile_reviewed_fixture
+        from ..knowledge.contracts.admission_fixtures import ReviewedTypedEvidenceFixture
+
+        fixture = ReviewedTypedEvidenceFixture.model_validate(top_level)
+        return compile_reviewed_fixture(fixture, source_fixture_sha256=file_sha256)
+    if schema_version != "phase2r810_reviewed_typed_evidence_fixture_v2":
+        raise ValueError(f"step3 v3 requires the V2 typed fixture schema, got {schema_version!r}")
+    from ..compilers.step3_card_v3 import compile_reviewed_fixture_v3
+    from ..knowledge.contracts.admission_v2 import ReviewedTypedEvidenceFixtureV2
+
+    fixture_v2 = ReviewedTypedEvidenceFixtureV2.model_validate(top_level)
+    return compile_reviewed_fixture_v3(fixture_v2, source_typed_fixture_file_sha256=file_sha256)
 
 
 def run_step3_stage(
     *,
     compilation: Any,
-    contract_version: Literal["v1", "v2"],
+    contract_version: Literal["v1", "v2", "v3"],
     chat_strict: Callable[..., Mapping[str, Any]],
     storage: Path,
     budget: LiveRunBudget,
@@ -77,6 +98,51 @@ def run_step3_stage(
             outcome["status"] = "failed"
             outcome["stop_reason"] = "step3_probe_failed"
             return outcome
+
+    if contract_version == "v3":
+        from ..compilers.step3_response_v3 import (
+            RESULT_SCHEMA_V3,
+            build_single_card_model_input_v3,
+            build_single_card_prompt_v3,
+            make_single_card_inspector_v3,
+        )
+
+        prompt_v3 = build_single_card_prompt_v3()
+        reinforcement = (
+            "Return exactly one V3 draft card echoing MODEL_INPUT_JSON. Preserve threshold as threshold, "
+            "including per-element source_role, text hash, and full provenance. Do not add text or fields."
+        )
+        passed = 0
+        v3_pairs = list(enumerate(compilation.contracts))
+        for index, contract in v3_pairs:
+            model_input_v3 = build_single_card_model_input_v3(compilation, index)
+            inspector_v3 = make_single_card_inspector_v3(model_input_v3)
+            user_content = prompt_v3.prompt_text + "\n\nMODEL_INPUT_JSON:\n" + json.dumps(model_input_v3.model_dump(mode="json"), ensure_ascii=False, sort_keys=True, separators=(",", ":"))
+            card_dir = storage / "cards" / f"{index + 1:02d}_{contract.contract_id.rsplit(':', 1)[-1]}"
+            atomic_write_json(card_dir / "model-input.json", {"model_input": model_input_v3.model_dump(mode="json"), "user_content_utf8_bytes": len(user_content.encode("utf-8"))})
+            card_report_v3: dict[str, Any] = {"index": index + 1, "contract_id": contract.contract_id, "presentation": contract.presentation, "attempts": [], "outcome": "failed"}
+            outcome["cards"].append(card_report_v3)
+            for attempt in range(1, max_attempts + 1):
+                reissue = None if attempt == 1 else f"{base_reason}-r{attempt}"
+                request_id = f"step3-v3-live-request:{canonical_hash({'model_input_id': model_input_v3.model_input_id, 'attempt': attempt, 'manual_reissue_reason': reissue})}"
+                budget.charge("step3", calls=1, usd_estimate=price_per_call)
+                result = dict(chat_strict(messages=[{"role": "system", "content": reinforcement}, {"role": "user", "content": user_content}], response_schema=RESULT_SCHEMA_V3, schema_name="step3_v3_single_card_result", max_tokens=6000))
+                content = str(result.get("content") or "")
+                envelope = json.dumps({"choices": [{"index": 0, "message": {"role": "assistant", "content": content}}]}, ensure_ascii=False).encode("utf-8")
+                (card_dir / f"attempt-{attempt}.response.raw.json").parent.mkdir(parents=True, exist_ok=True)
+                (card_dir / f"attempt-{attempt}.response.raw.json").write_bytes(envelope)
+                gate = inspector_v3(envelope) if content else None
+                if gate is not None:
+                    atomic_write_json(card_dir / f"attempt-{attempt}.gate.json", gate.model_dump(mode="json"))
+                card_report_v3["attempts"].append({"attempt": attempt, "request_id": request_id, "http_status": result.get("http_status"), "latency_ms": result.get("latency_ms"), "error_type": result.get("error_type"), "gate_valid": bool(gate and gate.valid), "gate_failures": list(gate.failure_codes) if gate is not None else ["inner-not-reached"]})
+                if gate is not None and gate.valid:
+                    card_report_v3["outcome"] = "success"
+                    passed += 1
+                    break
+        outcome["passed_cards"] = passed
+        outcome["card_count"] = len(v3_pairs)
+        outcome["status"] = "completed" if passed == len(v3_pairs) else "completed_with_failures"
+        return outcome
 
     if contract_version == "v2":
         from ..compilers.step3_response_v2 import (
@@ -144,20 +210,20 @@ def run_step3_stage(
                 ).encode("utf-8")
                 (card_dir / f"attempt-{attempt}.response.raw.json").parent.mkdir(parents=True, exist_ok=True)
                 (card_dir / f"attempt-{attempt}.response.raw.json").write_bytes(envelope)
-                gate = inspector(envelope) if content else None
-                if gate is not None:
-                    atomic_write_json(card_dir / f"attempt-{attempt}.gate.json", gate.model_dump(mode="json"))
+                gate_v2 = inspector(envelope) if content else None
+                if gate_v2 is not None:
+                    atomic_write_json(card_dir / f"attempt-{attempt}.gate.json", gate_v2.model_dump(mode="json"))
                 attempt_entry = {
                     "attempt": attempt,
                     "request_id": request_id,
                     "http_status": result.get("http_status"),
                     "latency_ms": result.get("latency_ms"),
                     "error_type": result.get("error_type"),
-                    "gate_valid": bool(gate and gate.valid),
-                    "gate_failures": list(gate.failure_codes) if gate is not None else ["inner-not-reached"],
+                    "gate_valid": bool(gate_v2 and gate_v2.valid),
+                    "gate_failures": list(gate_v2.failure_codes) if gate_v2 is not None else ["inner-not-reached"],
                 }
                 card_report["attempts"].append(attempt_entry)
-                if gate is not None and gate.valid:
+                if gate_v2 is not None and gate_v2.valid:
                     card_report["outcome"] = "success"
                     passed += 1
                     break

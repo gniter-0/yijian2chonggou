@@ -347,7 +347,9 @@ def orchestrate(config: LiveRunConfig, providers: Mapping[str, Any]) -> tuple[Li
                 )
                 state.set_stage(stage, "completed")
                 continue
-            compilation = load_typed_fixture_compilation(config.step3_typed_fixture)  # type: ignore[arg-type]
+            compilation = load_typed_fixture_compilation(
+                config.step3_typed_fixture, contract_version=config.step3_contract  # type: ignore[arg-type]
+            )
             if config.mode == "dry_run":
                 count = len(compilation.contracts)
                 stage_reports.append(build_stage_report(stage, "completed", f"dry-run compiled {count} contracts (echo lane)", samples_total=count))
