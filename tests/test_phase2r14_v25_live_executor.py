@@ -10,6 +10,7 @@ from typing import Any
 
 import pytest
 
+from migration.run_exam_pipeline import _v25_gate_evaluator
 from examcard.evidence.schema import EvidenceKind
 from examcard.knowledge.contracts.v25_generic_contracts import (
     V25BStep2BResultPayload,
@@ -26,7 +27,12 @@ from examcard.knowledge.contracts.v25_generic_contracts import (
     v25_step2a_request_payload,
 )
 from examcard.knowledge.contracts.anchors import EvidenceAnchorSpan, make_evidence_anchor_span_id
-from examcard.knowledge.contracts.phase2r14_v25_live import _execute_stage, _strict_probe
+from examcard.knowledge.contracts.phase2r14_v25_live import (
+    _execute_stage,
+    _strict_probe,
+    build_live_sample_contexts,
+    evaluate_v25_live_stage_semantics,
+)
 from examcard.knowledge.contracts.table_inputs import SectionTextInput, Step2ASectionInput
 from examcard.knowledge.llm_transport import TransportCompletion
 from examcard.knowledge.schema import FactType
@@ -227,6 +233,92 @@ def _artifact_paths(root: Path, request: Any) -> tuple[Path, Path, Path, Path]:
         root / "cache" / cache_name,
         root / "telemetry" / "journal.jsonl",
     )
+
+
+def test_shared_semantic_evaluator_step2a_matches_authoritative_gate_matrix() -> None:
+    contexts = build_live_sample_contexts(
+        repository_root=Path(__file__).resolve().parents[1],
+        model=_MODEL,
+        relay_base_url=_RELAY,
+        manual_reissue_reason="shared-evaluator-test",
+        sample_ids=("gonglu_24_table_formula",),
+    )
+    context = contexts[0]
+    valid_response = build_v25_source_fake_response(request=context.step2a_request)
+    valid = evaluate_v25_live_stage_semantics(
+        stage="step2a", context=context, record={"response": valid_response.model_dump(mode="json")}
+    )
+    invalid_payload = valid_response.model_dump(mode="json")
+    invalid_payload["proposals"][0]["label"] = "不匹配的标签"
+    invalid = evaluate_v25_live_stage_semantics(
+        stage="step2a", context=context, record={"response": invalid_payload}
+    )
+
+    assert valid["valid"] is True
+    assert invalid["valid"] is False
+    assert set(valid) == {
+        "valid",
+        "source_contract",
+        "teaching",
+        "learning_golden",
+        "table_or_diagram_bridge",
+    }
+    assert valid["source_contract"]["valid"] is True
+    assert valid["teaching"]["publishable"] is True
+    assert valid["learning_golden"]["valid"] is True
+    assert valid["table_or_diagram_bridge"]["valid"] is True
+
+
+def test_shared_semantic_evaluator_step2b_matches_authoritative_gate_matrix() -> None:
+    contexts = build_live_sample_contexts(
+        repository_root=Path(__file__).resolve().parents[1],
+        model=_MODEL,
+        relay_base_url=_RELAY,
+        manual_reissue_reason="shared-evaluator-test-b",
+        sample_ids=("gonglu_41_diagram_mixed",),
+    )
+    context = contexts[0]
+    valid_response = build_v25b_source_fake_response(request=context.step2b_request)
+    valid = evaluate_v25_live_stage_semantics(
+        stage="step2b", context=context, record={"response": valid_response.model_dump(mode="json")}
+    )
+    invalid_payload = valid_response.model_dump(mode="json")
+    invalid_payload["proposals"][0]["primary_fact_ids"] = ["fact:unknown"]
+    invalid = evaluate_v25_live_stage_semantics(
+        stage="step2b", context=context, record={"response": invalid_payload}
+    )
+
+    assert valid["valid"] is True
+    assert invalid["valid"] is False
+    assert set(valid) == {
+        "valid",
+        "source_grouping",
+        "learning_card",
+        "complete_table_cards_separate_from_atomic_rules",
+        "facts_exactly_once",
+    }
+    assert valid["source_grouping"]["valid"] is True
+    assert valid["learning_card"]["valid"] is True
+    assert valid["complete_table_cards_separate_from_atomic_rules"] is True
+    assert valid["facts_exactly_once"] is True
+
+
+def test_production_cli_gate_adapter_uses_shared_evaluator() -> None:
+    context = build_live_sample_contexts(
+        repository_root=Path(__file__).resolve().parents[1],
+        model=_MODEL,
+        relay_base_url=_RELAY,
+        manual_reissue_reason="production-adapter-test",
+        sample_ids=("gonglu_24_table_formula",),
+    )[0]
+    response = build_v25_source_fake_response(request=context.step2a_request)
+
+    result = _v25_gate_evaluator(
+        "step2a", context, {"state": "success", "response": response.model_dump(mode="json")}
+    )
+
+    assert result["valid"] is True
+    assert result["source_contract"]["valid"] is True
 
 
 def test_execute_stage_success_persists_auditable_chain(repo_tmp_path: Path) -> None:

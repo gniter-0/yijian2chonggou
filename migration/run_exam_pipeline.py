@@ -13,7 +13,7 @@
 - step3 echo 模式需显式 ``--step3-typed-fixture``（「准入放行→typed fixture」
   转换器缺席已 need_input 上报，设计 §7.1 已知开口）；主彩排走
   ``--step3-mode release-bypass``。
-- 质量门禁登记钩子（gate_evaluator）在库内已留位；pilot 驱动仍是质量测量主道。
+- live Step2 使用 Phase2R14 canonical semantic evaluator；它是纯离线门禁，不参与 provider 调用。
 
 运行示例（黄金五章伪新考试彩排，两段式）：
   uv run python migration/run_exam_pipeline.py --exam gonglu_golden5_rehearsal \
@@ -191,6 +191,14 @@ def _validate_evidence_root(
     return report_result
 
 
+def _v25_gate_evaluator(stage: str, context: object, record: dict[str, object]) -> dict[str, object]:
+    """Production live Step 2 semantic gate adapter; it never performs I/O."""
+
+    from examcard.knowledge.contracts.phase2r14_v25_live import evaluate_v25_live_stage_semantics
+
+    return evaluate_v25_live_stage_semantics(stage=stage, context=context, record=record)  # type: ignore[arg-type]
+
+
 def main() -> int:
     args = _parse_args()
     config = LiveRunConfig(
@@ -360,6 +368,7 @@ def main() -> int:
 
         providers["context_builder"] = context_builder
         providers["step2_probe"] = step2_probe
+        providers["gate_evaluator"] = _v25_gate_evaluator
 
         from openai import OpenAI
 

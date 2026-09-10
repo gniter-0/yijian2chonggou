@@ -75,6 +75,7 @@ LAYER_ORDER = (
     "admission_fixtures_offline",  # 层 5：r104 离线闸 / 冻结 / 验收家族
     "admission_fixtures_pilot",  # 层 6：r319 试点图片 / 处置 / 交接家族
     "admission_fixtures",
+    "admission_v2",  # 平行 threshold authority schema；不改旧 admission facade
     "echo_release",  # P8 补链（echo-batch-release/1.0 家族）：纯数据契约，仅向后引用 admission 对
 
     # cm28 拆分产物：v25_generic_contracts 的 15 个兄弟（蓝图 §3），层序排在门面之前。

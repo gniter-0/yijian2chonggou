@@ -171,6 +171,15 @@ def orchestrate(config: LiveRunConfig, providers: Mapping[str, Any]) -> tuple[Li
             state.set_stage(stage, "skipped")
             continue
         if state.stage_status(stage) == "completed":
+            if stage in {"step2a", "step2b"} and config.mode == "live":
+                stage_state = state.payload.get("stage_states", {}).get(stage, {})
+                if stage_state.get("semantic_gate_validated") is not True:
+                    stage_reports.append(
+                        build_stage_report(stage, "failed", "step2 semantic validation proof is missing; start a fresh run")
+                    )
+                    state.set_stage(stage, "failed", stop_reason="step2_semantic_validation_missing")
+                    failed = True
+                    continue
             stage_reports.append(build_stage_report(stage, "completed", "already completed in this run (resume skip)"))
             # ◆检查点② resume 对账（彩排收口发现的盲区）：step4 已 completed 时本分支直接
             # continue，而检查点②摄取位于 step4 分支内部（暂停时 stage 先记 completed 再退 2），
@@ -275,7 +284,22 @@ def orchestrate(config: LiveRunConfig, providers: Mapping[str, Any]) -> tuple[Li
                     samples_failed=len(outcome["samples"]) - succeeded,
                 )
             )
-            state.set_stage(stage, outcome["status"])
+            if outcome["status"] == "completed" and config.mode == "live":
+                semantic_validated = providers.get("gate_evaluator") is not None and all(
+                    item.get("semantic_gate_valid") is True for item in outcome["samples"]
+                )
+                state.set_stage(
+                    stage,
+                    outcome["status"],
+                    semantic_gate_validated=semantic_validated,
+                    **(
+                        {"semantic_gate_policy": "phase2r14-v25-semantic-gate-v1"}
+                        if semantic_validated
+                        else {}
+                    ),
+                )
+            else:
+                state.set_stage(stage, outcome["status"])
             if outcome["status"] == "completed_with_failures":
                 failed = True  # 重发轮数耗尽仍失败 → 下游 skipped（§5.2）
                 extras["stop_reason_hint"] = "completed_with_failures"

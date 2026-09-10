@@ -500,6 +500,71 @@ def _card_golden_gate(context: V25LiveSampleContext, response: V25BStep2BResultP
     }
 
 
+def evaluate_v25_live_stage_semantics(
+    *, stage: str, context: V25LiveSampleContext, record: Mapping[str, Any]
+) -> dict[str, object]:
+    """Evaluate the canonical semantic gates for one successful live Step 2 record.
+
+    This is deliberately a pure, offline projection of the gate matrix used by
+    :func:`run_v25_live_smoke`.  The sample executor owns the transport/schema
+    boundary; this function only revalidates the persisted response and returns
+    the same component verdicts that the smoke runner reports.
+    """
+
+    if stage == "step2a":
+        response_a = V25Step2AResultPayload.model_validate(record.get("response"))
+        source_gate = assess_v25_step2a_response(request=context.step2a_request, response=response_a)
+        teaching_gate = _teaching_gate(context, response_a)
+        learning_gate = _learning_fact_gate(context)
+        table_or_bridge_gate = {
+            "valid": (
+                bool(context.step2a_request.reviewed_continuation_bindings)
+                if context.sample_id == "gonglu_24_table_formula"
+                else any(fact.semantic_diagram_bridge is not None for fact in context.step2b_request.facts)
+            ),
+            "complete_table_obligation_count": sum(
+                item.kind.value == "complete_table_composition" for item in context.step2a_request.coverage_obligations
+            ),
+            "reviewed_continuation_binding_count": len(context.step2a_request.reviewed_continuation_bindings),
+            "semantic_diagram_fact_bridge_count": sum(
+                fact.semantic_diagram_bridge is not None for fact in context.step2b_request.facts
+            ),
+            "evidence_only_diagram_excluded": context.sample_id != "gonglu_24_table_formula"
+            or all(fact.semantic_diagram_bridge is None for fact in context.step2b_request.facts),
+        }
+        return {
+            "valid": bool(
+                source_gate.valid
+                and teaching_gate.publishable
+                and learning_gate["valid"]
+                and table_or_bridge_gate["valid"]
+            ),
+            "source_contract": source_gate.model_dump(mode="json"),
+            "teaching": teaching_gate.model_dump(mode="json"),
+            "learning_golden": learning_gate,
+            "table_or_diagram_bridge": table_or_bridge_gate,
+        }
+
+    if stage == "step2b":
+        response_b = V25BStep2BResultPayload.model_validate(record.get("response"))
+        grouping_gate = assess_v25b_step2b_response(request=context.step2b_request, response=response_b)
+        card_golden = _card_golden_gate(context, response_b)
+        compositions = {fact.fact_id for fact in context.step2b_request.facts if fact.fact_type.value == "composition"}
+        composition_cards = [
+            set(card.primary_fact_ids) for card in response_b.proposals if set(card.primary_fact_ids) & compositions
+        ]
+        atomic_separation = all(len(card & compositions) == 1 for card in composition_cards)
+        return {
+            "valid": bool(grouping_gate.valid and card_golden["valid"] and atomic_separation),
+            "source_grouping": grouping_gate.model_dump(mode="json"),
+            "learning_card": card_golden,
+            "complete_table_cards_separate_from_atomic_rules": atomic_separation,
+            "facts_exactly_once": grouping_gate.exactly_once,
+        }
+
+    raise ValueError(f"unsupported V25 live semantic stage: {stage}")
+
+
 def _stage_request_payload(request: Any, stage: str) -> tuple[dict[str, object], str, dict[str, object]]:
     if stage == "step2a":
         return (
@@ -789,34 +854,11 @@ def run_v25_live_smoke(
         if step2a["state"] != "success":
             report.update({"network_calls": transport.network_call_count, "stop_reason": f"{context.sample_id}_step2a_{step2a['state']}"})
             return finish(1)
-        response_a = V25Step2AResultPayload.model_validate(step2a["response"])
-        source_gate = assess_v25_step2a_response(request=context.step2a_request, response=response_a)
-        teaching_gate = _teaching_gate(context, response_a)
-        learning_gate = _learning_fact_gate(context)
-        table_or_bridge_gate = {
-            "valid": (
-                bool(context.step2a_request.reviewed_continuation_bindings)
-                if context.sample_id == "gonglu_24_table_formula"
-                else any(fact.semantic_diagram_bridge is not None for fact in context.step2b_request.facts)
-            ),
-            "complete_table_obligation_count": sum(
-                item.kind.value == "complete_table_composition" for item in context.step2a_request.coverage_obligations
-            ),
-            "reviewed_continuation_binding_count": len(context.step2a_request.reviewed_continuation_bindings),
-            "semantic_diagram_fact_bridge_count": sum(
-                fact.semantic_diagram_bridge is not None for fact in context.step2b_request.facts
-            ),
-            "evidence_only_diagram_excluded": context.sample_id != "gonglu_24_table_formula" or all(
-                fact.semantic_diagram_bridge is None for fact in context.step2b_request.facts
-            ),
-        }
+        step2a_semantics = evaluate_v25_live_stage_semantics(stage="step2a", context=context, record=step2a)
         sample_report["step2a_gates"] = {
-            "source_contract": source_gate.model_dump(mode="json"),
-            "teaching": teaching_gate.model_dump(mode="json"),
-            "learning_golden": learning_gate,
-            "table_or_diagram_bridge": table_or_bridge_gate,
+            key: value for key, value in step2a_semantics.items() if key != "valid"
         }
-        if not (source_gate.valid and teaching_gate.publishable and learning_gate["valid"] and table_or_bridge_gate["valid"]):
+        if step2a_semantics["valid"] is not True:
             report.update({"network_calls": transport.network_call_count, "stop_reason": f"{context.sample_id}_step2a_gate_failed"})
             return finish(1)
         step2b = _execute_stage(storage_root=storage, transport=transport, request=context.step2b_request, stage="step2b")
@@ -824,19 +866,11 @@ def run_v25_live_smoke(
         if step2b["state"] != "success":
             report.update({"network_calls": transport.network_call_count, "stop_reason": f"{context.sample_id}_step2b_{step2b['state']}"})
             return finish(1)
-        response_b = V25BStep2BResultPayload.model_validate(step2b["response"])
-        grouping_gate = assess_v25b_step2b_response(request=context.step2b_request, response=response_b)
-        card_golden = _card_golden_gate(context, response_b)
-        compositions = {fact.fact_id for fact in context.step2b_request.facts if fact.fact_type.value == "composition"}
-        composition_cards = [set(card.primary_fact_ids) for card in response_b.proposals if set(card.primary_fact_ids) & compositions]
-        atomic_separation = all(len(card & compositions) == 1 for card in composition_cards)
+        step2b_semantics = evaluate_v25_live_stage_semantics(stage="step2b", context=context, record=step2b)
         sample_report["step2b_gates"] = {
-            "source_grouping": grouping_gate.model_dump(mode="json"),
-            "learning_card": card_golden,
-            "complete_table_cards_separate_from_atomic_rules": atomic_separation,
-            "facts_exactly_once": grouping_gate.exactly_once,
+            key: value for key, value in step2b_semantics.items() if key != "valid"
         }
-        if not (grouping_gate.valid and card_golden["valid"] and atomic_separation):
+        if step2b_semantics["valid"] is not True:
             report.update({"network_calls": transport.network_call_count, "stop_reason": f"{context.sample_id}_step2b_gate_failed"})
             return finish(1)
         if transport.network_call_count > NETWORK_CALL_BUDGET:

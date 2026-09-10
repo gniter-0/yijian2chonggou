@@ -192,6 +192,132 @@ def test_execute_stage_samples_cache_success_is_reused(repo_tmp_path: Path) -> N
     assert budget.total_calls == 0
 
 
+def test_execute_stage_samples_cached_success_is_semantically_revalidated(repo_tmp_path: Path) -> None:
+    cache_key = "cache-s1-exam-step2a-t"
+    request_id = "req-s1-exam-step2a-t"
+    cache_path = repo_tmp_path / "cache" / f"{cache_key}.json"
+    record_path = repo_tmp_path / "records" / f"{request_id}.json"
+    cache_path.parent.mkdir(parents=True, exist_ok=True)
+    record_path.parent.mkdir(parents=True, exist_ok=True)
+    record = {"state": "success", "response": {"proposals": []}}
+    record_bytes = json.dumps(record, separators=(",", ":")).encode("utf-8")
+    record_path.write_bytes(record_bytes)
+    cache_path.write_text(
+        json.dumps({"state": "success", "request_id": request_id, "record_sha256": sha256_bytes(record_bytes)}),
+        encoding="utf-8",
+    )
+    executor = _executor_with_script(repo_tmp_path, {"s1": []})
+    evaluated: list[dict] = []
+    budget = LiveRunBudget(repo_tmp_path / "budget.json", usd_cap=10.0, stage_call_caps={"step2a": 10})
+
+    def gate(stage, context, persisted_record):
+        evaluated.append(persisted_record)
+        return {"valid": True}
+
+    outcome = execute_stage_samples(
+        stage="step2a",
+        sample_ids=("s1",),
+        context_builder=_context_builder,
+        transport=None,
+        storage=repo_tmp_path,
+        budget=budget,
+        resend=ResendPlan(base_reason="exam-step2a-t", max_attempts=3),
+        stage_executor=executor,
+        gate_evaluator=gate,
+    )
+    assert outcome["samples"][0]["outcome"] == "success"
+    assert evaluated == [record]
+    assert executor.calls == []
+    assert outcome["samples"][0]["attempts"] == [
+        {
+            "reason": "exam-step2a-t",
+            "request_id": request_id,
+            "state": "success",
+            "reused_cache": True,
+        }
+    ]
+    assert outcome["samples"][0]["semantic_gate_valid"] is True
+    assert budget.total_calls == 0
+
+
+def test_execute_stage_samples_cached_success_missing_record_fails_closed(repo_tmp_path: Path) -> None:
+    cache_path = repo_tmp_path / "cache" / "cache-s1-exam-step2a-t.json"
+    cache_path.parent.mkdir(parents=True, exist_ok=True)
+    cache_path.write_text(
+        json.dumps({"state": "success", "request_id": "req-s1-exam-step2a-t", "record_sha256": "0" * 64}),
+        encoding="utf-8",
+    )
+    executor = _executor_with_script(repo_tmp_path, {"s1": []})
+    budget = LiveRunBudget(repo_tmp_path / "budget.json", usd_cap=10.0, stage_call_caps={"step2a": 10})
+    outcome = execute_stage_samples(
+        stage="step2a",
+        sample_ids=("s1",),
+        context_builder=_context_builder,
+        transport=None,
+        storage=repo_tmp_path,
+        budget=budget,
+        resend=ResendPlan(base_reason="exam-step2a-t", max_attempts=3),
+        stage_executor=executor,
+        gate_evaluator=lambda stage, context, record: {"valid": True},
+    )
+    sample = outcome["samples"][0]
+    assert outcome["status"] == "completed_with_failures"
+    assert sample["outcome"] == "failed"
+    assert sample["semantic_gate_valid"] is False
+    assert sample["gates"]["gate_error"] == "ValueError: cached success record is missing"
+    assert len(sample["attempts"]) == 1
+    assert executor.calls == []
+    assert budget.total_calls == 0
+
+
+def test_execute_stage_samples_semantic_invalid_fails_closed(repo_tmp_path: Path) -> None:
+    budget = LiveRunBudget(repo_tmp_path / "budget.json", usd_cap=10.0, stage_call_caps={"step2a": 10})
+    executor = _executor_with_script(repo_tmp_path, {"s1": ["success"]})
+    outcome = execute_stage_samples(
+        stage="step2a",
+        sample_ids=("s1",),
+        context_builder=_context_builder,
+        transport=None,
+        storage=repo_tmp_path,
+        budget=budget,
+        resend=ResendPlan(base_reason="exam-step2a-t", max_attempts=3),
+        stage_executor=executor,
+        gate_evaluator=lambda stage, context, record: {"valid": False, "reason": "semantic mismatch"},
+    )
+    sample = outcome["samples"][0]
+    assert outcome["status"] == "completed_with_failures"
+    assert sample["outcome"] == "failed"
+    assert len(sample["attempts"]) == 1
+    assert executor.calls == ["req-s1-exam-step2a-t"]
+
+
+def test_execute_stage_samples_semantic_gate_exception_fails_closed(repo_tmp_path: Path) -> None:
+    budget = LiveRunBudget(repo_tmp_path / "budget.json", usd_cap=10.0, stage_call_caps={"step2a": 10})
+    executor = _executor_with_script(repo_tmp_path, {"s1": ["success"]})
+
+    def raise_gate(stage, context, record):
+        raise ValueError("api_key=TOP-SECRET")
+
+    outcome = execute_stage_samples(
+        stage="step2a",
+        sample_ids=("s1",),
+        context_builder=_context_builder,
+        transport=None,
+        storage=repo_tmp_path,
+        budget=budget,
+        resend=ResendPlan(base_reason="exam-step2a-t", max_attempts=3),
+        stage_executor=executor,
+        gate_evaluator=raise_gate,
+    )
+    sample = outcome["samples"][0]
+    assert outcome["status"] == "completed_with_failures"
+    assert sample["outcome"] == "failed"
+    assert len(sample["attempts"]) == 1
+    assert sample["gates"]["gate_error"] == "ValueError: [REDACTED]"
+    assert "TOP-SECRET" not in json.dumps(sample)
+    assert executor.calls == ["req-s1-exam-step2a-t"]
+
+
 def test_execute_stage_samples_rounds_exhausted_marks_failures(repo_tmp_path: Path) -> None:
     budget = LiveRunBudget(repo_tmp_path / "budget.json", usd_cap=10.0, stage_call_caps={"step2a": 10})
     executor = _executor_with_script(repo_tmp_path, {"s1": ["failed", "unknown_outcome"]})
@@ -1405,6 +1531,114 @@ def test_step1_success_allows_downstream_stage(repo_tmp_path: Path) -> None:
     assert by_stage["step1"].status == "completed"
     assert by_stage["step2a"].status == "completed"
     assert calls == ["facts"]
+
+
+def _live_step2_test_config(root: Path, stages: tuple[str, ...]) -> LiveRunConfig:
+    return LiveRunConfig(
+        exam_id=_REHEARSAL_EXAM,
+        stages=stages,
+        mode="live",
+        run_label="semantic-gate-regression",
+        budget_usd=10.0,
+        skip_preflight=True,
+        repo_root=root,
+    )
+
+
+def test_live_step2a_semantic_failure_skips_step2b(repo_tmp_path: Path) -> None:
+    _seed_step1_workspace(repo_tmp_path)
+    executor = _executor_with_script(repo_tmp_path, {"s1": ["success"]})
+    report, exit_code = orchestrate(
+        _live_step2_test_config(repo_tmp_path, ("step1", "step2a", "step2b", "step3")),
+        {
+            "pricing": {},
+            "sample_ids": ("s1",),
+            "step1_runner": lambda: {"ok": True},
+            "facts_runner": lambda: {"quality_gates_passed": True, "machine_assertions_passed": True},
+            "context_builder": _context_builder,
+            "stage_executor": executor,
+            "gate_evaluator": lambda stage, context, record: {"valid": False},
+        },
+    )
+    statuses = {item.stage: item.status for item in report.stages}
+    assert (exit_code, report.stop_reason) == (1, "completed_with_failures")
+    assert statuses == {"step1": "completed", "step2a": "completed_with_failures", "step2b": "skipped", "step3": "skipped"}
+    assert executor.calls == ["req-s1-gonglu-golden5-rehearsal-step2a-semantic-gate-regression"]
+
+
+def test_live_step2b_semantic_failure_skips_downstream(repo_tmp_path: Path) -> None:
+    _seed_step1_workspace(repo_tmp_path)
+    executor = _executor_with_script(repo_tmp_path, {"s1": ["success", "success"]})
+    report, exit_code = orchestrate(
+        _live_step2_test_config(repo_tmp_path, ("step1", "step2a", "step2b", "step3")),
+        {
+            "pricing": {},
+            "sample_ids": ("s1",),
+            "step1_runner": lambda: {"ok": True},
+            "facts_runner": lambda: {"quality_gates_passed": True, "machine_assertions_passed": True},
+            "context_builder": _context_builder,
+            "stage_executor": executor,
+            "gate_evaluator": lambda stage, context, record: {"valid": stage == "step2a"},
+        },
+    )
+    statuses = {item.stage: item.status for item in report.stages}
+    assert (exit_code, report.stop_reason) == (1, "completed_with_failures")
+    assert statuses == {"step1": "completed", "step2a": "completed", "step2b": "completed_with_failures", "step3": "skipped"}
+    assert executor.calls == [
+        "req-s1-gonglu-golden5-rehearsal-step2a-semantic-gate-regression",
+        "req-s1-gonglu-golden5-rehearsal-step2b-semantic-gate-regression",
+    ]
+    run_root = repo_tmp_path / "exams" / _REHEARSAL_EXAM / "data" / "live_runs" / report.run_id
+    assert not (run_root / "checkpoints" / "admission").exists()
+
+
+def test_live_completed_step2_without_semantic_validation_refuses_resume(repo_tmp_path: Path) -> None:
+    _seed_step1_workspace(repo_tmp_path)
+    paths = ExamPaths.resolve(repo_tmp_path, _REHEARSAL_EXAM)
+    paths.evidence_root.mkdir(parents=True, exist_ok=True)
+    run_id = "20260909-missing-semantic-proof"
+    config = _live_step2_test_config(repo_tmp_path, ("step2a",))
+    config = replace(config, resume_run_id=run_id)
+    run_root = paths.live_runs_root / run_id
+    caps = derive_stage_call_caps(
+        stages=config.stages,
+        sample_count=1,
+        step3_card_count=1,
+        step4_card_count=1,
+        max_attempts=config.max_attempts,
+    )
+    run_config = build_run_resume_contract(
+        config,
+        resolved_sample_ids=("s1",),
+        step3_card_count=0,
+        step4_card_count=0,
+        stage_call_caps=caps,
+        image_base_url="",
+        image_model="",
+    )
+    state = RunState.load_or_create(
+        run_root / "run_state.json",
+        run_id=run_id,
+        exam_id=config.exam_id,
+        stages=config.stages,
+        run_config=run_config,
+        run_config_sha256=canonical_hash(run_config),
+    )
+    state.set_stage("step2a", "completed")
+    calls: list[str] = []
+
+    def must_not_run() -> None:
+        calls.append("provider")
+
+    report, exit_code = orchestrate(
+        config,
+        {"pricing": {}, "sample_ids": ("s1",), "step1_runner": must_not_run},
+    )
+
+    assert (exit_code, report.stop_reason) == (1, "completed_with_failures")
+    assert report.stages[0].status == "failed"
+    assert "semantic validation proof is missing" in report.stages[0].detail
+    assert calls == []
 
 
 @pytest.mark.parametrize("payload", [{"ok": False}, {}, {"ok": "true"}, {"ok": 1}, {"ok": None}])

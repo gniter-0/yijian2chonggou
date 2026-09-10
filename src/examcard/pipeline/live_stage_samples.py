@@ -1,7 +1,7 @@
 """step2a/step2b 样本执行（拆分层 2；设计 §5）。
 
-cache-state 命中即跳过、失败样本走 ResendPlan 重发、门禁登记失败**不熔断**整条链——
-登记结果进报告，由预检与总编排决定去留。transport 一律注入，本模块不建真客户端。
+cache-state 命中即跳过、传输/响应失败样本走 ResendPlan 重发；语义门禁失败则
+fail-closed 且不重发。transport 一律注入，本模块不建真客户端。
 """
 from __future__ import annotations
 
@@ -9,6 +9,7 @@ from collections.abc import Callable, Mapping
 from pathlib import Path
 from typing import Any, Literal, Sequence
 
+from ..common.hashing import sha256_bytes
 from ..common.io import read_json
 from ..providers.base import sanitized_error_summary
 
@@ -21,11 +22,39 @@ from .live_resend import ResendPlan
 # ---------------------------------------------------------------------------
 
 
-def _cache_state(storage: Path, cache_key: str) -> str | None:
+def _cache_document(storage: Path, cache_key: str) -> dict[str, Any] | None:
     cache_path = storage / "cache" / f"{cache_key.replace(':', '_')}.json"
     if not cache_path.is_file():
         return None
-    return str(read_json(cache_path).get("state"))
+    try:
+        payload = read_json(cache_path)
+    except (OSError, UnicodeError, TypeError, ValueError):
+        return {"state": "invalid_cache"}
+    return payload if isinstance(payload, dict) else {"state": "invalid_cache"}
+
+
+def _cache_state(storage: Path, cache_key: str) -> str | None:
+    """Compatibility projection for callers that only need the cache state."""
+
+    cache = _cache_document(storage, cache_key)
+    return str(cache.get("state")) if cache is not None else None
+
+
+def _load_cached_success_record(storage: Path, cache: Mapping[str, Any]) -> dict[str, Any]:
+    request_id = cache.get("request_id")
+    if not isinstance(request_id, str) or not request_id:
+        raise ValueError("cached success record binding is missing")
+    record_path = storage / "records" / f"{request_id.replace(':', '_')}.json"
+    if not record_path.is_file():
+        raise ValueError("cached success record is missing")
+    raw = record_path.read_bytes()
+    expected_hash = cache.get("record_sha256")
+    if expected_hash is not None and expected_hash != sha256_bytes(raw):
+        raise ValueError("cached success record binding does not match")
+    record = read_json(record_path)
+    if not isinstance(record, dict) or record.get("state") != "success":
+        raise ValueError("cached success record is invalid")
+    return record
 
 
 def execute_stage_samples(
@@ -49,8 +78,9 @@ def execute_stage_samples(
       `failed/unknown_outcome` 落入重发道（ResendPlan 新 reason → 新身份），
       identity 拒绝复用语义由 `_execute_stage` 的三件存在性检查兜底（§5.1）。
     - 探针：stage 前置 strict 探针连败（重发 1 次的现行口径）→ 整 stage fail-closed，
-      不进样本重发道；样本级失败登记不熔断（质量测量），重发轮耗尽记 failed。
-    - 门禁登记：gate_evaluator 结果只登记不影响 outcome（pilot 口径）。
+      不进样本重发道；传输/响应失败进入样本重发道，重发轮耗尽记 failed。
+    - 语义门禁：gate_evaluator 返回的 `valid` 必须严格为 True；失败或异常均
+      fail-closed，且不会进入 ResendPlan 重发道。
     """
 
     # 兜底执行器只在调用方没传时按需导入。原先写成 `import ... as stage_executor` 直接覆盖
@@ -92,12 +122,33 @@ def execute_stage_samples(
             request = context.step2a_request if stage == "step2a" else context.step2b_request
             cache_key = request.identity.cache_key
             attempt_entry: dict[str, Any] = {"reason": reason, "request_id": request.identity.request_id}
-            cached = _cache_state(storage, cache_key)
+            cache = _cache_document(storage, cache_key)
+            cached = str(cache.get("state")) if cache is not None else None
+            if cached == "invalid_cache" and gate_evaluator is not None:
+                attempt_entry["state"] = "invalid_cache"
+                attempt_entry["reused_cache"] = True
+                entry["attempts"].append(attempt_entry)
+                entry["gates"] = {"gate_error": "cached success cache is invalid"}
+                entry["semantic_gate_valid"] = False
+                entry["outcome"] = "failed"
+                break
             if cached == "success":
                 attempt_entry["state"] = "success"
                 attempt_entry["reused_cache"] = True
                 entry["attempts"].append(attempt_entry)
-                entry["outcome"] = "success"
+                if gate_evaluator is None:
+                    entry["outcome"] = "success"
+                else:
+                    try:
+                        record = _load_cached_success_record(storage, cache or {})
+                        gates = dict(gate_evaluator(stage, context, record))
+                        entry["gates"] = gates
+                        entry["semantic_gate_valid"] = gates.get("valid") is True
+                        entry["outcome"] = "success" if entry["semantic_gate_valid"] else "failed"
+                    except Exception as error:  # semantic/cache validation must fail closed
+                        entry["gates"] = {"gate_error": sanitized_error_summary(error)}
+                        entry["semantic_gate_valid"] = False
+                        entry["outcome"] = "failed"
                 break
             if cached is not None:
                 attempt_entry["state"] = cached
@@ -111,12 +162,18 @@ def execute_stage_samples(
             attempt_entry["latency_ms"] = record.get("latency_ms")
             entry["attempts"].append(attempt_entry)
             if record.get("state") == "success":
-                entry["outcome"] = "success"
                 if gate_evaluator is not None:
                     try:
-                        entry["gates"] = dict(gate_evaluator(stage, context, record))
-                    except Exception as error:  # 门禁登记不熔断（测量面）
+                        gates = dict(gate_evaluator(stage, context, record))
+                        entry["gates"] = gates
+                        entry["semantic_gate_valid"] = gates.get("valid") is True
+                        entry["outcome"] = "success" if entry["semantic_gate_valid"] else "failed"
+                    except Exception as error:  # semantic gate errors fail closed
                         entry["gates"] = {"gate_error": sanitized_error_summary(error)}
+                        entry["semantic_gate_valid"] = False
+                        entry["outcome"] = "failed"
+                else:
+                    entry["outcome"] = "success"
                 break
         if entry["outcome"] != "success":
             failed_samples += 1

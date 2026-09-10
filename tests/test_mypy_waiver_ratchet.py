@@ -59,6 +59,7 @@ _IGNORE_CEILING: dict[str, dict[str, int]] = {
     "gates/review/extraction.py": {"misc": 1, "return-value": 1},
     "gates/review/step4_text_gate.py": {"arg-type": 1},
     "knowledge/contracts/admission_fixtures_typed.py": {"assignment": 5},
+    "knowledge/contracts/admission_v2.py": {"assignment": 1},
     "knowledge/contracts/phase2r11_generic_five_golden.py": {"import-not-found": 1},
     "knowledge/contracts/step2a_builders.py": {"call-arg": 1},
     "knowledge/quality.py": {"prop-decorator": 2},
