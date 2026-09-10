@@ -97,11 +97,31 @@ def build_run_resume_contract(
     image_model: str,
     step4_handoff: Path | None = None,
     step4_release_fixture: Path | None = None,
+    admission_contract: Literal["v2"] | None = None,
+    step3_typed_fixture_origin: Literal["admission_checkpoint"] | None = None,
 ) -> dict[str, Any]:
     """Build the secret-free immutable identity used to validate resume state."""
 
+    if (admission_contract is None) != (step3_typed_fixture_origin is None):
+        raise ValueError("admission contract and Step3 fixture origin must be supplied together")
+    admission_lane = admission_contract == "v2"
+    if admission_lane and not (
+        config.mode == "live"
+        and "step2b" in config.stages
+        and "step3" in config.stages
+        and config.step3_contract == "v3"
+    ):
+        raise ValueError("V2 admission checkpoint is only valid for live same-run Step2B to Step3 V3")
+    file_inputs = {
+        "step3_typed_fixture": {"configured": False, "origin": "admission_checkpoint"}
+        if admission_lane
+        else _file_binding(config.step3_typed_fixture),
+        "step3_release_fixture": _file_binding(config.step3_release_fixture),
+        "step4_handoff": _file_binding(step4_handoff or config.step4_handoff),
+        "step4_release_fixture": _file_binding(step4_release_fixture),
+    }
     return {
-        "schema_version": 2,
+        "schema_version": 3 if admission_lane else 2,
         "exam_id": config.exam_id,
         "mode": config.mode,
         "stages": list(config.stages),
@@ -120,12 +140,9 @@ def build_run_resume_contract(
         "stage_call_caps": dict(stage_call_caps),
         "image_base_url": image_base_url,
         "image_model": image_model,
-        "file_inputs": {
-            "step3_typed_fixture": _file_binding(config.step3_typed_fixture),
-            "step3_release_fixture": _file_binding(config.step3_release_fixture),
-            "step4_handoff": _file_binding(step4_handoff or config.step4_handoff),
-            "step4_release_fixture": _file_binding(step4_release_fixture),
-        },
+        "admission_contract": admission_contract,
+        "step3_typed_fixture_origin": step3_typed_fixture_origin,
+        "file_inputs": file_inputs,
     }
 
 
@@ -169,6 +186,9 @@ class RunState:
                 raise RunStateBindingError("run state configuration binding is tampered")
             if stored_sha256 != run_config_sha256:
                 raise RunStateBindingError("run state configuration does not match the current run")
+            stored_stages = payload.get("stages_requested")
+            if tuple(stored_stages or ()) != tuple(stages):
+                raise RunStateBindingError("resume cannot append or remove requested stages")
             for stage in stages:
                 payload.setdefault("stage_states", {}).setdefault(stage, {"status": "pending"})
             return cls(path, payload)

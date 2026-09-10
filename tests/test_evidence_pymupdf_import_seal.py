@@ -41,6 +41,7 @@ _PYMUPDF_IMPORTERS = frozenset(
     {
         "migration/b1_echo_admission_materials.py",
         "migration/b1_echo_diagram_admission_materials.py",
+        "migration/run_exam_pipeline.py",
         "src/examcard/evidence/fusion.py",
         "src/examcard/evidence/golden.py",
         "src/examcard/evidence/ingest.py",

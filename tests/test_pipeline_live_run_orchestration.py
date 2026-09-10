@@ -479,7 +479,7 @@ def test_live_run_config_validation() -> None:
 def test_stage_caps_and_rehearsal_estimate() -> None:
     caps = derive_stage_call_caps(stages=("step2a", "step3", "step4"), sample_count=5, step3_card_count=6, step4_card_count=16, max_attempts=3)
     assert caps["step2a"] == 5 * 3 + 2
-    assert caps["step3"] == 6 * 2 + 1
+    assert caps["step3"] == 6 * 3 + 1
     assert caps["step4"] == 16 * 3 + 1
     assert caps["preflight"] >= 1
     estimate = budget_rehearsal_estimate(

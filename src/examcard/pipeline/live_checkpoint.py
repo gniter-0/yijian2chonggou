@@ -9,11 +9,606 @@ from collections.abc import Callable, Mapping
 from pathlib import Path
 from typing import Any, Sequence
 
-from ..common.io import atomic_write_json, read_json
+from ..common.hashing import canonical_hash, sha256_bytes
+from ..common.io import atomic_write_bytes, atomic_write_json, png_dimensions, read_json
 from ..providers.base import sanitized_error_summary
 
 from .live_support import _utc_now_iso
 from .live_stage_step4 import Step4ImageIntegrityError, validate_step4_image_artifact
+
+
+_ADMISSION_QUEUE_V2_SCHEMA = "phase2r84_admission_queue_v2"
+_ADMISSION_QUEUE_V2_DIR = "admission"
+_ADMISSION_MANIFEST_V2_NAMES = (
+    "human-decision-manifest-v2.json",
+    "human-decision-manifest.json",
+    "decision-manifest-v2.json",
+)
+_ADMISSION_AUTHORIZATION_V2_NAMES = (
+    "explicit-production-authorization-v2.json",
+    "explicit-production-authorization.json",
+)
+
+
+def _safe_checkpoint_name(value: str) -> str:
+    """Turn an identity into a stable local filename without changing the identity."""
+
+    return value.replace(":", "_").replace("/", "_").replace("\\", "_")
+
+
+def _queue_v2_sha256(items: Sequence[Any]) -> str:
+    return canonical_hash([item.model_dump(mode="json") for item in items])
+
+
+def _page_artifact_value(
+    page_artifacts: Mapping[Any, Any] | None, page: Any
+) -> Any:
+    if page_artifacts is None:
+        return None
+    for key in (
+        page.page_ref_id,
+        (page.source_manifest_sha256, page.page),
+        page.page,
+    ):
+        if key in page_artifacts:
+            return page_artifacts[key]
+    return None
+
+
+def _artifact_bytes(value: Any, *, label: str) -> bytes:
+    if isinstance(value, bytes):
+        return value
+    if isinstance(value, bytearray):
+        return bytes(value)
+    if isinstance(value, Path) or isinstance(value, str):
+        path = Path(value)
+        if not path.is_file():
+            raise ValueError(f"{label} is missing: {path}")
+        return path.read_bytes()
+    raise ValueError(f"{label} must be bytes or a file path")
+
+
+def _artifact_parts(value: Any, *, page_ref_id: str) -> tuple[bytes, bytes]:
+    """Read a page artifact supplied by the CLI/test harness.
+
+    The accepted mapping form is intentionally small: ``image_bytes`` and
+    ``page_bytes`` may each be bytes or paths.  A two-tuple is also accepted
+    for lightweight offline tests.
+    """
+
+    if isinstance(value, Mapping):
+        image_value = value.get("image_bytes", value.get("image_path"))
+        page_value = value.get("page_bytes", value.get("page_path"))
+        if image_value is None or page_value is None:
+            raise ValueError(f"page artifact is incomplete: {page_ref_id}")
+        return (
+            _artifact_bytes(image_value, label=f"image artifact {page_ref_id}"),
+            _artifact_bytes(page_value, label=f"page artifact {page_ref_id}"),
+        )
+    if isinstance(value, (tuple, list)) and len(value) == 2:
+        return (
+            _artifact_bytes(value[0], label=f"image artifact {page_ref_id}"),
+            _artifact_bytes(value[1], label=f"page artifact {page_ref_id}"),
+        )
+    raise ValueError(f"page artifact is incomplete: {page_ref_id}")
+
+
+def _resolve_checkpoint_file(run_root: Path, checkpoint_dir: Path, value: str) -> Path:
+    raw = Path(value)
+    candidates = (raw,) if raw.is_absolute() else (run_root / raw, checkpoint_dir / raw)
+    for candidate in candidates:
+        resolved = candidate.resolve()
+        try:
+            resolved.relative_to(run_root.resolve())
+        except ValueError:
+            continue
+        if resolved.is_file():
+            return resolved
+    raise ValueError(f"checkpoint artifact is missing or outside the run: {value}")
+
+
+def _validate_v2_page_artifact(run_root: Path, checkpoint_dir: Path, page: Any) -> None:
+    image_path = _resolve_checkpoint_file(run_root, checkpoint_dir, page.image_path)
+    image_bytes = image_path.read_bytes()
+    if sha256_bytes(image_bytes) != page.image_sha256:
+        raise ValueError(f"source page image hash mismatch: {page.page_ref_id}")
+    width, height = png_dimensions(image_path)
+    if (width, height) != (page.image_width, page.image_height):
+        raise ValueError(f"source page image dimensions mismatch: {page.page_ref_id}")
+    page_json = checkpoint_dir / "pages" / f"{_safe_checkpoint_name(page.page_ref_id)}.json"
+    if not page_json.is_file():
+        raise ValueError(f"source page evidence is missing: {page.page_ref_id}")
+    if sha256_bytes(page_json.read_bytes()) != page.page_sha256:
+        raise ValueError(f"source page evidence hash mismatch: {page.page_ref_id}")
+
+
+def _load_v2_queue(run_root: Path) -> tuple[Path, dict[str, Any], tuple[Any, ...], dict[str, Any]]:
+    from ..gates.review.queue_v2 import AdmissionQueueItemV2
+
+    checkpoint_dir = run_root / "checkpoints" / _ADMISSION_QUEUE_V2_DIR
+    queue_path = checkpoint_dir / "queue-v2.json"
+    raw = read_json(queue_path)
+    if not isinstance(raw, Mapping) or raw.get("schema_version") != _ADMISSION_QUEUE_V2_SCHEMA:
+        raise ValueError("V2 admission queue envelope is missing or invalid")
+    rows = raw.get("candidates")
+    if not isinstance(rows, list) or not rows:
+        raise ValueError("V2 admission queue has no candidates")
+    items = tuple(AdmissionQueueItemV2.model_validate(row) for row in rows)
+    queue_sha256 = raw.get("queue_sha256")
+    if not isinstance(queue_sha256, str) or queue_sha256 != _queue_v2_sha256(items):
+        raise ValueError("V2 admission queue hash mismatch")
+    if raw.get("queue_count") != len(items):
+        raise ValueError("V2 admission queue count mismatch")
+    expected_step3_count = raw.get("expected_step3_count")
+    if expected_step3_count != len(items):
+        raise ValueError("V2 admission queue expected Step3 count mismatch")
+    source_provenance = raw.get("source_provenance")
+    if not isinstance(source_provenance, list) or not source_provenance:
+        raise ValueError("V2 admission queue source provenance is missing")
+    if raw.get("source_provenance_sha256") != canonical_hash(source_provenance):
+        raise ValueError("V2 admission queue source provenance hash mismatch")
+    provenance_count = 0
+    provenance_candidate_ids: list[str] = []
+    provenance_request_ids: list[str] = []
+    for row in source_provenance:
+        if not isinstance(row, Mapping):
+            raise ValueError("V2 admission queue source provenance row is invalid")
+        if not isinstance(row.get("sample_id"), str) or not row.get("sample_id"):
+            raise ValueError("V2 admission queue source provenance sample identity is missing")
+        if not isinstance(row.get("request_id"), str) or not row.get("request_id"):
+            raise ValueError("V2 admission queue source provenance request identity is missing")
+        provenance_request_ids.append(str(row["request_id"]))
+        if not isinstance(row.get("successful_attempt_reason"), str) or not row.get("successful_attempt_reason"):
+            raise ValueError("V2 admission queue source provenance successful attempt reason is missing")
+        row_count = row.get("expected_step3_count")
+        if not isinstance(row_count, int) or row_count < 1:
+            raise ValueError("V2 admission queue source provenance expected Step3 count is invalid")
+        proposal_provenance = row.get("proposal_source_provenance")
+        if not isinstance(proposal_provenance, list) or len(proposal_provenance) != row_count:
+            raise ValueError("V2 admission queue proposal source provenance count mismatch")
+        candidate_ids = row.get("candidate_ids")
+        if not isinstance(candidate_ids, list) or len(candidate_ids) != row_count or any(
+            not isinstance(candidate_id, str) for candidate_id in candidate_ids
+        ):
+            raise ValueError("V2 admission queue source provenance candidate identities are invalid")
+        provenance_candidate_ids.extend(candidate_ids)
+        provenance_count += row_count
+    if provenance_count != expected_step3_count:
+        raise ValueError("V2 admission queue source provenance total count mismatch")
+    if len({item.candidate_id for item in items}) != len(items):
+        raise ValueError("V2 admission queue candidate identities are not unique")
+    if set(provenance_candidate_ids) != {item.candidate_id for item in items}:
+        raise ValueError("V2 admission queue source provenance does not cover the queue")
+    request_ids = raw.get("request_ids")
+    if not isinstance(request_ids, list) or set(provenance_request_ids) != set(request_ids):
+        raise ValueError("V2 admission queue source provenance request identities do not match")
+    drafts: dict[str, Any] = {}
+    draft_files = raw.get("contract_draft_files")
+    if not isinstance(draft_files, Mapping):
+        raise ValueError("V2 admission queue contract draft file bindings are missing")
+    for item in items:
+        draft_path = checkpoint_dir / "contract-drafts" / f"{_safe_checkpoint_name(item.candidate_id)}.json"
+        draft = read_json(draft_path)
+        if not isinstance(draft, Mapping) or draft.get("candidate_id") != item.candidate_id:
+            raise ValueError(f"V2 typed contract draft is missing or crossed candidate: {item.candidate_id}")
+        typed_contract = draft.get("typed_contract")
+        if not isinstance(typed_contract, Mapping):
+            raise ValueError(f"V2 typed contract draft is incomplete: {item.candidate_id}")
+        if draft.get("typed_contract_sha256") != canonical_hash(typed_contract):
+            raise ValueError(f"V2 typed contract draft hash mismatch: {item.candidate_id}")
+        draft_binding = draft_files.get(item.candidate_id)
+        if not isinstance(draft_binding, Mapping):
+            raise ValueError(f"V2 typed contract draft file binding is missing: {item.candidate_id}")
+        expected_draft_path = draft_path.resolve().relative_to(run_root.resolve()).as_posix()
+        if draft_binding.get("path") != expected_draft_path:
+            raise ValueError(f"V2 typed contract draft path binding drifted: {item.candidate_id}")
+        if draft_binding.get("typed_contract_sha256") != draft.get("typed_contract_sha256"):
+            raise ValueError(f"V2 typed contract draft contract hash drifted: {item.candidate_id}")
+        if draft_binding.get("file_sha256") != sha256_bytes(draft_path.read_bytes()):
+            raise ValueError(f"V2 typed contract draft file hash mismatch: {item.candidate_id}")
+        drafts[item.candidate_id] = dict(draft)
+        for page in item.pages:
+            _validate_v2_page_artifact(run_root, checkpoint_dir, page)
+    return checkpoint_dir, dict(raw), items, drafts
+
+
+def build_admission_checkpoint_v2(
+    *,
+    run_root: Path,
+    projection: Any | Sequence[Any],
+    page_artifacts: Mapping[Any, Any] | None = None,
+    workbench_renderer: Callable[[Sequence[Mapping[str, Any]]], str] | None = None,
+    source_provenance: Sequence[Mapping[str, Any]] | None = None,
+    expected_step3_count: int | None = None,
+) -> dict[str, Any]:
+    """Materialize the V2 Step2B admission checkpoint.
+
+    The projection is produced by ``project_step2b_to_admission_v2``.  This
+    function only persists already source-bound objects; it never creates a
+    candidate, chooses an anchor, or creates human authority.
+    """
+
+    from ..gates.review.step2b_admission_v2 import AdmissionProjectionV2
+
+    projections = (projection,) if isinstance(projection, AdmissionProjectionV2) else tuple(projection)
+    if not projections or not all(isinstance(item, AdmissionProjectionV2) for item in projections):
+        raise ValueError("V2 admission checkpoint requires one or more AdmissionProjectionV2 objects")
+    items = tuple(item for value in projections for item in value.queue_items)
+    drafts = {candidate_id: draft for value in projections for candidate_id, draft in value.contract_drafts_by_candidate.items()}
+    if not items or len({item.candidate_id for item in items}) != len(items):
+        raise ValueError("V2 admission checkpoint requires unique non-empty candidates")
+    if set(drafts) != {item.candidate_id for item in items}:
+        raise ValueError("V2 admission checkpoint contract drafts do not cover the queue")
+    expected_count = len(items) if expected_step3_count is None else expected_step3_count
+    if expected_count != len(items):
+        raise ValueError("V2 admission checkpoint expected Step3 count does not match the queue")
+    if source_provenance is None:
+        provenance_rows: list[dict[str, Any]] = []
+        for value in projections:
+            value_items = tuple(value.queue_items)
+            provenance_rows.append(
+                {
+                    "sample_id": value.sample_id,
+                    "successful_attempt_reason": "direct-builder",
+                    "request_id": value.request_id,
+                    "expected_step3_count": len(value_items),
+                    "candidate_ids": [item.candidate_id for item in value_items],
+                    "proposal_source_provenance": [
+                        {
+                            "candidate_id": item.candidate_id,
+                            "queue_item_id": item.queue_item_id,
+                            "subject_id": item.subject_id,
+                            "record_id": item.record_id,
+                            "fact_id": item.fact_id,
+                            "evidence_id": item.evidence_id,
+                            "presentation": item.presentation,
+                            "source_manifest_sha256": item.source_manifest_sha256,
+                            "anchor_ids": list(item.anchor_ids),
+                            "pages": [page.model_dump(mode="json") for page in item.pages],
+                        }
+                        for item in value_items
+                    ],
+                }
+            )
+    else:
+        provenance_rows = [dict(row) for row in source_provenance]
+    if not provenance_rows:
+        raise ValueError("V2 admission checkpoint source provenance is empty")
+    if sum(int(row.get("expected_step3_count", -1)) for row in provenance_rows) != expected_count:
+        raise ValueError("V2 admission checkpoint source provenance count mismatch")
+    expected_samples = {value.sample_id for value in projections}
+    if {row.get("sample_id") for row in provenance_rows} != expected_samples:
+        raise ValueError("V2 admission checkpoint source provenance samples do not match projections")
+    for item in items:
+        for page in item.pages:
+            value = _page_artifact_value(page_artifacts, page)
+            if value is not None:
+                image_bytes, page_bytes = _artifact_parts(value, page_ref_id=page.page_ref_id)
+                if sha256_bytes(image_bytes) != page.image_sha256 or sha256_bytes(page_bytes) != page.page_sha256:
+                    raise ValueError(f"V2 page artifact bytes do not match binding: {page.page_ref_id}")
+                if page.image_path.startswith("checkpoints/"):
+                    target = Path(run_root) / page.image_path
+                else:
+                    target = Path(run_root) / "checkpoints" / "admission" / page.image_path
+                atomic_write_bytes(target, image_bytes)
+                page_json = Path(run_root) / "checkpoints" / "admission" / "pages" / f"{_safe_checkpoint_name(page.page_ref_id)}.json"
+                atomic_write_bytes(page_json, page_bytes)
+            else:
+                # A caller may have rendered the page before invoking this
+                # function.  Refuse a missing artifact rather than emitting a
+                # queue that cannot be revalidated on resume.
+                checkpoint_dir = Path(run_root) / "checkpoints" / "admission"
+                _validate_v2_page_artifact(Path(run_root), checkpoint_dir, page)
+
+    checkpoint_dir = Path(run_root) / "checkpoints" / "admission"
+    inbox = checkpoint_dir / "inbox"
+    inbox.mkdir(parents=True, exist_ok=True)
+    queue_sha256 = _queue_v2_sha256(items)
+    envelope = {
+        "schema_version": _ADMISSION_QUEUE_V2_SCHEMA,
+        "request_ids": [value.request_id for value in projections],
+        "sample_ids": [value.sample_id for value in projections],
+        "queue_sha256": queue_sha256,
+        "queue_count": len(items),
+        "candidates": [item.model_dump(mode="json") for item in items],
+    }
+    drafts_dir = checkpoint_dir / "contract-drafts"
+    drafts_dir.mkdir(parents=True, exist_ok=True)
+    draft_file_bindings: dict[str, dict[str, Any]] = {}
+    for candidate_id, draft in drafts.items():
+        draft_path = drafts_dir / f"{_safe_checkpoint_name(candidate_id)}.json"
+        atomic_write_json(draft_path, draft)
+        draft_file_bindings[candidate_id] = {
+            "path": draft_path.relative_to(Path(run_root)).as_posix(),
+            "file_sha256": sha256_bytes(draft_path.read_bytes()),
+            "typed_contract_sha256": draft["typed_contract_sha256"],
+        }
+    envelope["expected_step3_count"] = expected_count
+    envelope["source_provenance"] = provenance_rows
+    envelope["source_provenance_sha256"] = canonical_hash(provenance_rows)
+    envelope["contract_draft_files"] = draft_file_bindings
+    queue_path = checkpoint_dir / "queue-v2.json"
+    atomic_write_json(queue_path, envelope)
+    queue_file_sha256 = sha256_bytes(queue_path.read_bytes())
+    if workbench_renderer is not None:
+        html = workbench_renderer([item.model_dump(mode="json") for item in items])
+        (checkpoint_dir / "workbench-v2.html").write_text(html, encoding="utf-8")
+    atomic_write_json(
+        checkpoint_dir / "human-review-v2.template.json",
+        {
+            "schema_version": "phase2r84_human_decision_manifest_v2",
+            "manifest_id": "<human-supplied-manifest-id>",
+            "queue_sha256": queue_sha256,
+            "decisions": [],
+            "decision_count": 0,
+            "manifest_sha256": "<human-supplied-manifest-sha256>",
+            "instructions": "Replace placeholders with a fully hashed HumanDecisionManifestV2; browser output is not authority.",
+        },
+    )
+    atomic_write_json(
+        checkpoint_dir / "explicit-production-authorization.template.json",
+        {
+            "reviewer": "<human reviewer>",
+            "reason": "<explicit human authorization basis>",
+            "recorded_at": "<human recorded timestamp>",
+            "identity_period": "<identity period>",
+            "instructions": "Supply explicit human values; do not use browser-demo output or generated placeholders.",
+        },
+    )
+    (checkpoint_dir / "INSTRUCTIONS.txt").write_text(
+        "V2 admission checkpoint: place human-decision-manifest-v2.json and "
+        "explicit-production-authorization-v2.json in inbox/, then resume the same run.\n"
+        "The manifest must contain exactly one decision for every queue candidate.\n",
+        encoding="utf-8",
+    )
+    return {
+        "checkpoint": "admission",
+        "schema_version": _ADMISSION_QUEUE_V2_SCHEMA,
+        "queue_sha256": queue_sha256,
+        "queue_file_sha256": queue_file_sha256,
+        "queue_count": len(items),
+        "queue_path": str(queue_path),
+        "inbox_path": str(inbox),
+        "fixture_path": str(checkpoint_dir / "reviewed-typed-evidence-fixture-v2.json"),
+        "status": "waiting_human",
+    }
+
+
+def _first_existing(path: Path, names: Sequence[str]) -> Path | None:
+    for name in names:
+        candidate = path / name
+        if candidate.is_file():
+            return candidate
+    return None
+
+
+def _authority_identity(
+    *,
+    queue_doc: Mapping[str, Any],
+    queue_file_sha256: str,
+    manifest: Any,
+    manifest_file_sha256: str,
+    auth_input_sha256: str,
+    auth_file_sha256: str,
+    fixture: Any,
+    fixture_file_sha256: str,
+) -> dict[str, Any]:
+    return {
+        "queue_sha256": str(queue_doc["queue_sha256"]),
+        "queue_file_sha256": queue_file_sha256,
+        "human_manifest_sha256": manifest.manifest_sha256,
+        "human_manifest_file_sha256": manifest_file_sha256,
+        "authorization_input_sha256": auth_input_sha256,
+        "authorization_file_sha256": auth_file_sha256,
+        "fixture_sha256": fixture.fixture_sha256,
+        "fixture_file_sha256": fixture_file_sha256,
+        "expected_step3_count": int(queue_doc["expected_step3_count"]),
+        "released_count": int(fixture.reviewed_candidate_count),
+    }
+
+
+def _compare_authority_identity(
+    expected: Mapping[str, Any] | None, actual: Mapping[str, Any]
+) -> None:
+    if expected is None:
+        return
+    for key in (
+        "queue_sha256",
+        "queue_file_sha256",
+        "human_manifest_sha256",
+        "human_manifest_file_sha256",
+        "authorization_input_sha256",
+        "authorization_file_sha256",
+        "fixture_sha256",
+        "fixture_file_sha256",
+        "expected_step3_count",
+        "released_count",
+    ):
+        if expected.get(key) != actual.get(key):
+            raise ValueError(f"V2 authority identity drifted: {key}")
+
+
+def ingest_admission_checkpoint_v2(
+    *,
+    run_root: Path,
+    verify_only: bool = False,
+    expected_authority: Mapping[str, Any] | None = None,
+    expected_step3_count: int | None = None,
+    expected_queue_file_sha256: str | None = None,
+    source_validator: Callable[..., None] | None,
+) -> dict[str, Any]:
+    """Strictly ingest V2 human authority and close the external fixture chain."""
+
+    try:
+        from ..gates.review.typed_evidence_export import ExplicitProductionAuthorization
+        from ..gates.review.decisions_v2 import HumanDecisionManifestV2, validate_human_decision_v2
+        from ..gates.review.typed_evidence_export_v2 import export_reviewed_typed_evidence_fixture_v2
+
+        checkpoint_dir, queue_doc, queue_items, drafts = _load_v2_queue(Path(run_root))
+        queue_count = int(queue_doc["expected_step3_count"])
+        if expected_step3_count is not None and queue_count != expected_step3_count:
+            raise ValueError("V2 admission queue count does not match the current Step3 expectation")
+        if expected_queue_file_sha256 is None:
+            raise ValueError("V2 admission queue file identity is missing from the resume ticket")
+        current_queue_file_sha256 = sha256_bytes((checkpoint_dir / "queue-v2.json").read_bytes())
+        if current_queue_file_sha256 != expected_queue_file_sha256:
+            raise ValueError("V2 admission queue file identity drifted")
+        if not callable(source_validator):
+            raise ValueError("V2 admission source validator is required")
+        source_validator(
+            run_root=Path(run_root),
+            queue_doc=queue_doc,
+            queue_items=queue_items,
+        )
+        inbox = checkpoint_dir / "inbox"
+        manifest_path = _first_existing(inbox, _ADMISSION_MANIFEST_V2_NAMES)
+        auth_path = _first_existing(inbox, _ADMISSION_AUTHORIZATION_V2_NAMES)
+        if manifest_path is None or auth_path is None:
+            missing = []
+            if manifest_path is None:
+                missing.append("human-decision-manifest-v2.json")
+            if auth_path is None:
+                missing.append("explicit-production-authorization-v2.json")
+            return {"status": "waiting_human", "detail": "missing V2 authority input: " + ", ".join(missing)}
+        manifest_raw = read_json(manifest_path)
+        auth_raw = read_json(auth_path)
+        prior_audit_path = checkpoint_dir / "external-authority-audit-v2.json"
+        prior_audit = read_json(prior_audit_path) if prior_audit_path.is_file() else None
+        current_manifest_file_sha256 = sha256_bytes(manifest_path.read_bytes())
+        current_auth_file_sha256 = sha256_bytes(auth_path.read_bytes())
+        current_auth_input_sha256 = canonical_hash(auth_raw)
+        if isinstance(prior_audit, Mapping):
+            expected_external = {
+                "queue_file_sha256": current_queue_file_sha256,
+                "human_manifest_file_sha256": current_manifest_file_sha256,
+                "authorization_file_sha256": current_auth_file_sha256,
+                "authorization_input_sha256": current_auth_input_sha256,
+            }
+            for key, actual in expected_external.items():
+                if prior_audit.get(key) != actual:
+                    raise ValueError(f"V2 external authority artifact tampered: {key}")
+        manifest = HumanDecisionManifestV2.model_validate(manifest_raw)
+        authorization = ExplicitProductionAuthorization.model_validate(auth_raw)
+        queue_sha256 = str(queue_doc["queue_sha256"])
+        if manifest.queue_sha256 != queue_sha256:
+            raise ValueError("V2 human manifest crossed the frozen queue hash")
+        queue_by_candidate = {item.candidate_id: item for item in queue_items}
+        decisions_by_candidate = {item.candidate_id: item for item in manifest.decisions}
+        if len(decisions_by_candidate) != len(manifest.decisions):
+            raise ValueError("V2 human manifest contains duplicate candidates")
+        missing_candidates = set(queue_by_candidate) - set(decisions_by_candidate)
+        unknown_candidates = set(decisions_by_candidate) - set(queue_by_candidate)
+        if missing_candidates:
+            return {
+                "status": "waiting_human",
+                "detail": f"V2 human manifest is incomplete; missing candidates: {sorted(missing_candidates)}",
+            }
+        if unknown_candidates:
+            raise ValueError(f"V2 human manifest references unknown candidates: {sorted(unknown_candidates)}")
+        dispositions = {decision.disposition for decision in manifest.decisions}
+        if "blocked" in dispositions or "not_applicable" in dispositions:
+            raise ValueError("V2 human authority contains a terminal refusal disposition")
+        if "manual_review" in dispositions:
+            return {
+                "status": "waiting_human",
+                "detail": "V2 human authority still contains manual_review dispositions",
+            }
+        if len(manifest.decisions) != queue_count or dispositions != {"reviewed_candidate"}:
+            raise ValueError("V2 human authority does not release every expected Step3 candidate")
+        for decision in manifest.decisions:
+            queue_item = queue_by_candidate[decision.candidate_id]
+            validate_human_decision_v2(decision, queue_item, type("CandidateRef", (), {"candidate_id": decision.candidate_id})())
+            draft = drafts[decision.candidate_id]
+            if decision.disposition == "reviewed_candidate":
+                if decision.typed_contract is None or draft["typed_contract"] != decision.typed_contract.model_dump(mode="json"):
+                    raise ValueError(f"V2 human decision crossed typed contract draft: {decision.candidate_id}")
+        released = tuple(decisions_by_candidate[item.candidate_id] for item in queue_items)
+        if len(released) != queue_count:
+            raise ValueError("V2 human authority released an unexpected candidate count")
+        fixture = export_reviewed_typed_evidence_fixture_v2(
+            source_manifest=manifest,
+            released=released,
+            queue_items_by_candidate=queue_by_candidate,
+            authorization=authorization,
+        )
+        fixture_path = checkpoint_dir / "reviewed-typed-evidence-fixture-v2.json"
+        fixture_payload = fixture.model_dump(mode="json")
+        if fixture_path.is_file():
+            persisted = read_json(fixture_path)
+            if persisted != fixture_payload:
+                raise ValueError("persisted V2 typed fixture does not match the frozen authority inputs")
+        elif verify_only:
+            raise ValueError("persisted V2 typed fixture is missing")
+        else:
+            atomic_write_json(fixture_path, fixture_payload)
+        current_fixture_file_sha256 = sha256_bytes(fixture_path.read_bytes())
+        identity = _authority_identity(
+            queue_doc=queue_doc,
+            queue_file_sha256=current_queue_file_sha256,
+            manifest=manifest,
+            manifest_file_sha256=current_manifest_file_sha256,
+            auth_input_sha256=current_auth_input_sha256,
+            auth_file_sha256=current_auth_file_sha256,
+            fixture=fixture,
+            fixture_file_sha256=current_fixture_file_sha256,
+        )
+        _compare_authority_identity(expected_authority, identity)
+        if isinstance(prior_audit, Mapping):
+            if prior_audit.get("fixture_file_sha256") != current_fixture_file_sha256:
+                raise ValueError("V2 external authority artifact tampered: fixture_file_sha256")
+        audit = {
+            "schema_version": "examcard_admission_external_authority_audit_v2",
+            "queue_sha256": queue_sha256,
+            "queue_file_sha256": current_queue_file_sha256,
+            "human_manifest_path": str(manifest_path),
+            "human_manifest_file_sha256": current_manifest_file_sha256,
+            "human_manifest_sha256": manifest.manifest_sha256,
+            "authorization_path": str(auth_path),
+            "authorization_file_sha256": current_auth_file_sha256,
+            "authorization_input_sha256": current_auth_input_sha256,
+            "fixture_path": str(fixture_path),
+            "fixture_file_sha256": current_fixture_file_sha256,
+            "fixture_sha256": fixture.fixture_sha256,
+            "released_count": len(released),
+            "expected_step3_count": queue_count,
+        }
+        if not verify_only:
+            atomic_write_json(checkpoint_dir / "external-authority-audit-v2.json", audit)
+        return {
+            "status": "ingested",
+            "released_count": len(released),
+            "fixture_path": str(fixture_path),
+            "fixture_sha256": fixture.fixture_sha256,
+            "fixture_file_sha256": audit["fixture_file_sha256"],
+            "authority_identity": identity,
+            "audit": audit,
+        }
+    except Exception as error:
+        return {
+            "status": "refused",
+            "stop_reason": "gate_refused_admission",
+            "detail": sanitized_error_summary(error),
+        }
+
+
+def verify_admission_checkpoint_v2(
+    *,
+    run_root: Path,
+    expected_authority: Mapping[str, Any] | None = None,
+    expected_step3_count: int | None = None,
+    expected_queue_file_sha256: str | None = None,
+    source_validator: Callable[..., None] | None,
+) -> dict[str, Any]:
+    """Revalidate an already ingested V2 checkpoint without rewriting its fixture."""
+
+    return ingest_admission_checkpoint_v2(
+        run_root=run_root,
+        verify_only=True,
+        expected_authority=expected_authority,
+        expected_step3_count=expected_step3_count,
+        expected_queue_file_sha256=expected_queue_file_sha256,
+        source_validator=source_validator,
+    )
 
 
 # ---------------------------------------------------------------------------

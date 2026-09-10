@@ -20,7 +20,9 @@ from .live_stage_step3 import load_step3_release_bypass, load_typed_fixture_comp
 from .live_stage_step4 import Step4ImageIntegrityError, prepare_step4_request_bindings, run_step4_stage
 from .live_checkpoint import (
     build_admission_checkpoint,
+    build_admission_checkpoint_v2,
     emit_image_review_sheet,
+    ingest_admission_checkpoint_v2,
     ingest_admission_decisions,
     ingest_image_review_sheet,
     validate_ingested_image_review,
@@ -81,6 +83,12 @@ def orchestrate(config: LiveRunConfig, providers: Mapping[str, Any]) -> tuple[Li
     image_model = str(providers.get("image_model", ""))
     step4_handoff = config.step4_handoff or _optional_path(providers.get("step4_handoff"))
     step4_release_fixture = _optional_path(providers.get("step4_release_fixture"))
+    same_run_admission = (
+        config.mode == "live"
+        and "step2b" in config.stages
+        and "step3" in config.stages
+        and config.step3_contract == "v3"
+    )
     run_config = build_run_resume_contract(
         config,
         resolved_sample_ids=sample_ids,
@@ -91,6 +99,8 @@ def orchestrate(config: LiveRunConfig, providers: Mapping[str, Any]) -> tuple[Li
         image_model=image_model,
         step4_handoff=step4_handoff,
         step4_release_fixture=step4_release_fixture if config.step3_release_fixture is None else None,
+        admission_contract="v2" if same_run_admission else None,
+        step3_typed_fixture_origin="admission_checkpoint" if same_run_admission else None,
     )
     state = RunState.load_or_create(
         run_root / "run_state.json",
@@ -305,6 +315,43 @@ def orchestrate(config: LiveRunConfig, providers: Mapping[str, Any]) -> tuple[Li
                 extras["stop_reason_hint"] = "completed_with_failures"
             # ◆检查点①：step2b 完成后产出物料并暂停（§7.1）。
             if stage == "step2b" and not failed and config.mode == "live":
+                if same_run_admission:
+                    try:
+                        checkpoint_builder = providers.get("admission_checkpoint_builder_v2")
+                        if callable(checkpoint_builder):
+                            ticket_info = checkpoint_builder(run_root=run_root, outcome=outcome)
+                        else:
+                            projection_builder = providers.get("admission_projection_builder")
+                            if not callable(projection_builder):
+                                raise ValueError("V2 admission projection builder is not injected")
+                            projection = projection_builder(run_root=run_root, outcome=outcome)
+                            ticket_info = build_admission_checkpoint_v2(
+                                run_root=run_root,
+                                projection=projection,
+                                page_artifacts=providers.get("admission_page_artifacts"),
+                                workbench_renderer=providers.get("workbench_renderer"),
+                                source_provenance=providers.get("admission_source_provenance"),
+                                expected_step3_count=int(run_config.get("step3_card_count", step3_cards)),
+                            )
+                        if not isinstance(ticket_info, Mapping) or ticket_info.get("status") != "waiting_human":
+                            raise ValueError("V2 admission checkpoint builder returned an invalid ticket")
+                        state.set_checkpoint(
+                            "admission",
+                            "waiting_human",
+                            **{key: value for key, value in ticket_info.items() if key != "status"},
+                        )
+                        stage_reports.append(
+                            build_stage_report(
+                                "admission_checkpoint",
+                                "waiting_human",
+                                "V2 materials emitted; waiting for explicit human authority",
+                            )
+                        )
+                        return finish("waiting_human_admission", 2)
+                    except Exception as error:
+                        state.set_checkpoint("admission", "refused", detail=str(error))
+                        stage_reports.append(build_stage_report("admission_checkpoint", "failed", str(error)))
+                        return finish("gate_refused_admission", 1)
                 ticket = state.checkpoint("admission")
                 if ticket.get("status") != "ingested":
                     queue_builder = providers.get("admission_queue_builder")
@@ -320,8 +367,78 @@ def orchestrate(config: LiveRunConfig, providers: Mapping[str, Any]) -> tuple[Li
             continue
 
         if stage == "step3":
+            admission_fixture_path: Path | None = None
             # 检查点①门禁：同一 run 内跑过 step2b 才要求准入放行（bypass 语料自带 reviewed 身份）。
-            if "step2b" in config.stages and config.mode == "live":
+            if same_run_admission:
+                ticket = state.checkpoint("admission")
+                admission_source_validator = providers.get("admission_source_validator")
+                if not callable(admission_source_validator):
+                    detail = "V2 admission source validator is required for same-run resume"
+                    state.set_checkpoint("admission", "refused", detail=detail)
+                    stage_reports.append(build_stage_report("admission_checkpoint", "failed", detail))
+                    return finish("gate_refused_admission", 1)
+                if ticket.get("status") == "waiting_human":
+                    ingest = ingest_admission_checkpoint_v2(
+                        run_root=run_root,
+                        expected_step3_count=int(run_config.get("step3_card_count", step3_cards)),
+                        expected_queue_file_sha256=ticket.get("queue_file_sha256"),
+                        source_validator=admission_source_validator,
+                    )
+                    if ingest["status"] == "waiting_human":
+                        stage_reports.append(build_stage_report("admission_checkpoint", "waiting_human", str(ingest["detail"])))
+                        return finish("waiting_human_admission", 2)
+                    if ingest["status"] == "refused":
+                        state.set_checkpoint("admission", "refused", detail=str(ingest.get("detail", "V2 admission refused")))
+                        stage_reports.append(build_stage_report("admission_checkpoint", "failed", str(ingest.get("detail", "V2 admission refused"))))
+                        return finish("gate_refused_admission", 1)
+                    state.set_checkpoint(
+                        "admission",
+                        "ingested",
+                        released_count=ingest.get("released_count", 0),
+                        fixture_path=ingest.get("fixture_path"),
+                        fixture_sha256=ingest.get("fixture_sha256"),
+                        fixture_file_sha256=ingest.get("fixture_file_sha256"),
+                        expected_step3_count=ingest.get("authority_identity", {}).get("expected_step3_count"),
+                        authority_identity=ingest.get("authority_identity"),
+                    )
+                    stage_reports.append(
+                        build_stage_report(
+                            "admission_checkpoint",
+                            "completed",
+                            f"V2 admission ingested; released={ingest.get('released_count', 0)}",
+                        )
+                    )
+                elif ticket.get("status") == "ingested":
+                    expected_authority = ticket.get("authority_identity")
+                    if not isinstance(expected_authority, Mapping):
+                        state.set_checkpoint("admission", "tampered", detail="V2 authority identity is missing from the resume ticket")
+                        stage_reports.append(build_stage_report("admission_checkpoint", "failed", "V2 authority identity is missing from the resume ticket"))
+                        return finish("gate_refused_admission", 1)
+                    ingest = ingest_admission_checkpoint_v2(
+                        run_root=run_root,
+                        verify_only=True,
+                        expected_authority=expected_authority,
+                        expected_step3_count=int(run_config.get("step3_card_count", step3_cards)),
+                        expected_queue_file_sha256=ticket.get("queue_file_sha256"),
+                        source_validator=admission_source_validator,
+                    )
+                    if ingest["status"] != "ingested":
+                        state.set_checkpoint("admission", "tampered", detail=str(ingest.get("detail", "V2 admission verification failed")))
+                        stage_reports.append(build_stage_report("admission_checkpoint", "failed", str(ingest.get("detail", "V2 admission verification failed"))))
+                        return finish("gate_refused_admission", 1)
+                    admission_fixture_path = Path(str(ingest["fixture_path"]))
+                else:
+                    state.set_checkpoint("admission", "refused", detail="V2 admission checkpoint is not authorized")
+                    stage_reports.append(build_stage_report("admission_checkpoint", "failed", "V2 admission checkpoint is not authorized"))
+                    return finish("gate_refused_admission", 1)
+                if admission_fixture_path is None:
+                    ticket = state.checkpoint("admission")
+                    admission_fixture_path = Path(str(ticket.get("fixture_path", "")))
+                if not admission_fixture_path.is_file():
+                    state.set_checkpoint("admission", "tampered", detail="persisted V2 typed fixture is missing")
+                    stage_reports.append(build_stage_report("admission_checkpoint", "failed", "persisted V2 typed fixture is missing"))
+                    return finish("gate_refused_admission", 1)
+            elif "step2b" in config.stages and config.mode == "live":
                 ticket = state.checkpoint("admission")
                 if ticket.get("status") == "waiting_human":
                     ingest = ingest_admission_decisions(
@@ -348,7 +465,7 @@ def orchestrate(config: LiveRunConfig, providers: Mapping[str, Any]) -> tuple[Li
                 state.set_stage(stage, "completed")
                 continue
             compilation = load_typed_fixture_compilation(
-                config.step3_typed_fixture, contract_version=config.step3_contract  # type: ignore[arg-type]
+                admission_fixture_path or config.step3_typed_fixture, contract_version=config.step3_contract  # type: ignore[arg-type]
             )
             if config.mode == "dry_run":
                 count = len(compilation.contracts)

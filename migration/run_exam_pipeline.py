@@ -29,11 +29,13 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import sys
 import time
 from datetime import UTC, datetime
 from pathlib import Path
+from typing import Any
 
 NEW_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(NEW_ROOT / "src"))
@@ -475,7 +477,373 @@ def main() -> int:
         )
     providers["drift_classifier"] = step4_pilot.classify_benign_envelope_drift
 
-    if "step3" in config.stages and config.step3_mode == "echo" and config.step3_typed_fixture:
+    same_run_admission = (
+        config.mode == "live"
+        and "step2b" in config.stages
+        and "step3" in config.stages
+        and config.step3_contract == "v3"
+    )
+
+    if same_run_admission:
+        # Same-run V3 cardinality is source-derived from Step2B grouping
+        # obligations.  An external typed fixture is deliberately not read in
+        # this lane; it is only an input for standalone Step3 runs.
+        from examcard.gates.review.step2b_admission_v2 import project_step2b_to_admission_v2
+        from examcard.knowledge.contracts.v25_generic_contracts import V25BStep2BResultPayload
+        from examcard.knowledge.contracts.phase2r14_v25_live import build_live_sample_contexts
+        from examcard.gates.review.step2b_admission_v2 import make_source_page_binding
+
+        selected = tuple(
+            sample_id
+            for sample_id in sample_ids
+            if not config.only_samples or any(token in sample_id for token in config.only_samples)
+        )
+        precomputed_contexts = build_live_sample_contexts(
+            repository_root=NEW_ROOT,
+            model=text_model if config.mode == "live" else "offline",
+            relay_base_url=base_url if config.mode == "live" else "http://offline",
+            manual_reissue_reason=config.base_reason("step2b"),
+            sample_ids=selected,
+        )
+        providers["step3_card_count"] = sum(len(context.step2b_request.grouping_obligations) for context in precomputed_contexts)
+
+        from examcard.knowledge.contracts.v25_step2b_models import V25BStep2BRequest
+        from examcard.knowledge.contracts.phase2r14_v25_live import _stage_request_payload, canonical_step2_sha256
+
+        def _relative_run_path(run_root: Path, path: Path) -> str:
+            return path.resolve().relative_to(run_root.resolve()).as_posix()
+
+        def _load_exact_step2b_source(*, run_root: Path, sample: dict[str, object], sample_id: str):
+            successes = [
+                item
+                for item in sample.get("attempts", ())
+                if isinstance(item, dict) and item.get("state") == "success"
+            ]
+            if len(successes) != 1:
+                raise ValueError(f"Step2B successful attempt identity is ambiguous: {sample_id}")
+            attempt = successes[0]
+            reason = attempt.get("reason")
+            request_id = attempt.get("request_id")
+            if not isinstance(reason, str) or not reason or not isinstance(request_id, str) or not request_id:
+                raise ValueError(f"Step2B successful attempt authority is incomplete: {sample_id}")
+            exact_contexts = build_live_sample_contexts(
+                repository_root=NEW_ROOT,
+                model=text_model,
+                relay_base_url=base_url,
+                manual_reissue_reason=reason,
+                sample_ids=(sample_id,),
+            )
+            if len(exact_contexts) != 1:
+                raise ValueError(f"Step2B exact source context is ambiguous: {sample_id}")
+            context = exact_contexts[0]
+            if context.step2b_request.identity.request_id != request_id:
+                raise ValueError(f"Step2B successful attempt request identity drifted: {sample_id}")
+            safe_request_id = request_id.replace(":", "_")
+            request_path = run_root / "step2b" / "requests" / f"{safe_request_id}.json"
+            record_path = run_root / "step2b" / "records" / f"{safe_request_id}.json"
+            cache_key = context.step2b_request.identity.cache_key
+            cache_path = run_root / "step2b" / "cache" / f"{cache_key.replace(':', '_')}.json"
+            for path, label in ((request_path, "request"), (record_path, "record"), (cache_path, "cache")):
+                if not path.is_file():
+                    raise ValueError(f"Step2B successful attempt {label} is missing: {sample_id}")
+            request_raw = request_path.read_bytes()
+            request_doc = json.loads(request_raw)
+            persisted_request = V25BStep2BRequest.model_validate(request_doc.get("request"))
+            expected_model_input, expected_prompt, expected_schema = _stage_request_payload(
+                context.step2b_request, "step2b"
+            )
+            expected_request_doc = json.loads(
+                json.dumps(
+                    {
+                        "request": context.step2b_request.model_dump(mode="json", exclude_computed_fields=True),
+                        "model_input": expected_model_input,
+                        "prompt_sha256": hashlib.sha256(expected_prompt.encode("utf-8")).hexdigest(),
+                        "response_schema_sha256": canonical_step2_sha256(expected_schema),
+                    },
+                    ensure_ascii=False,
+                )
+            )
+            if persisted_request.model_dump(mode="json") != context.step2b_request.model_dump(mode="json") or request_doc != expected_request_doc:
+                raise ValueError(f"Step2B request source binding drifted: {sample_id}")
+            record_raw = record_path.read_bytes()
+            record = json.loads(record_raw)
+            if not isinstance(record, dict) or record.get("state") != "success" or record.get("stage") != "step2b":
+                raise ValueError(f"Step2B successful record is invalid: {sample_id}")
+            if record.get("request_id") != request_id:
+                raise ValueError(f"Step2B record identity drifted: {sample_id}")
+            response = V25BStep2BResultPayload.model_validate(record.get("response"))
+            gates = _v25_gate_evaluator("step2b", context, record)
+            if gates.get("valid") is not True:
+                raise ValueError(f"Step2B semantic gate no longer validates: {sample_id}")
+            cache_raw = cache_path.read_bytes()
+            cache = json.loads(cache_raw)
+            expected_cache = {
+                "request_id": request_id,
+                "state": "success",
+                "record_sha256": hashlib.sha256(record_raw).hexdigest(),
+            }
+            if cache != expected_cache:
+                raise ValueError(f"Step2B cache binding drifted: {sample_id}")
+            return context, response, reason, request_id, request_path, record_path, cache_path, request_raw, record_raw, cache_raw
+
+        def _proposal_source_provenance(item: Any) -> dict[str, object]:
+            return {
+                "candidate_id": item.candidate_id,
+                "queue_item_id": item.queue_item_id,
+                "subject_id": item.subject_id,
+                "record_id": item.record_id,
+                "fact_id": item.fact_id,
+                "evidence_id": item.evidence_id,
+                "presentation": item.presentation,
+                "source_manifest_sha256": item.source_manifest_sha256,
+                "anchor_ids": list(item.anchor_ids),
+                "pages": [page.model_dump(mode="json") for page in item.pages],
+            }
+
+        def _source_provenance_row(
+            *,
+            run_root: Path,
+            context: Any,
+            reason: str,
+            request_id: str,
+            request_path: Path,
+            record_path: Path,
+            cache_path: Path,
+            request_raw: bytes,
+            record_raw: bytes,
+            cache_raw: bytes,
+            queue_items: tuple[Any, ...],
+        ) -> dict[str, object]:
+            return {
+                "sample_id": context.sample_id,
+                "successful_attempt_reason": reason,
+                "request_id": request_id,
+                "request_path": _relative_run_path(run_root, request_path),
+                "request_file_sha256": hashlib.sha256(request_raw).hexdigest(),
+                "record_path": _relative_run_path(run_root, record_path),
+                "record_file_sha256": hashlib.sha256(record_raw).hexdigest(),
+                "cache_path": _relative_run_path(run_root, cache_path),
+                "cache_file_sha256": hashlib.sha256(cache_raw).hexdigest(),
+                "cache_request_id": request_id,
+                "cache_state": "success",
+                "cache_record_sha256": hashlib.sha256(record_raw).hexdigest(),
+                "expected_step3_count": len(context.step2b_request.grouping_obligations),
+                "candidate_ids": [item.candidate_id for item in queue_items],
+                "proposal_source_provenance": [_proposal_source_provenance(item) for item in queue_items],
+            }
+
+        def _page_source_bytes(context, page_num: int) -> bytes:
+            from examcard.evidence.schema import PageEvidence
+
+            expected = context.manifest_hashes[(context.sample_id, page_num)]
+            source_page = next((page for page in context.pages if page.page_num == page_num), None)
+            if source_page is None:
+                raise ValueError(f"cannot locate PageEvidence identity for {context.sample_id} page {page_num}")
+
+            roots = (
+                paths.evidence_root,
+                NEW_ROOT / "data" / "evidence_v2" / "golden",
+                NEW_ROOT / "data" / "shadow_v2",
+            )
+            candidates = sorted(
+                {
+                    candidate
+                    for root in roots
+                    if root.is_dir()
+                    for candidate in root.rglob(f"page_{page_num:04d}.json")
+                }
+            )
+            source_unit_ids = tuple(unit.evidence_id for unit in source_page.evidence_units)
+            identity_matches: list[tuple[Path, bytes]] = []
+            hash_matches: list[tuple[Path, bytes]] = []
+            for candidate in candidates:
+                raw = candidate.read_bytes()
+                if hashlib.sha256(raw).hexdigest() == expected:
+                    hash_matches.append((candidate, raw))
+                try:
+                    candidate_page = PageEvidence.model_validate_json(raw)
+                except ValueError:
+                    continue
+                if (
+                    candidate_page.page_id == source_page.page_id
+                    and tuple(unit.evidence_id for unit in candidate_page.evidence_units) == source_unit_ids
+                ):
+                    identity_matches.append((candidate, raw))
+
+            if identity_matches:
+                exact_identity_matches = [item for item in identity_matches if hashlib.sha256(item[1]).hexdigest() == expected]
+                if exact_identity_matches:
+                    return exact_identity_matches[0][1]
+                if len(identity_matches) == 1:
+                    return identity_matches[0][1]
+                paths_found = ", ".join(str(path) for path, _ in identity_matches)
+                raise ValueError(
+                    f"ambiguous immutable PageEvidence sources for {context.sample_id} page {page_num}: {paths_found}"
+                )
+            if hash_matches:
+                return hash_matches[0][1]
+            raise ValueError(f"cannot locate immutable PageEvidence source for {context.sample_id} page {page_num}")
+
+        def _build_source_projection(*, context: Any, response: Any, request_id: str):
+            bindings = []
+            page_artifacts: dict[str, tuple[bytes, bytes]] = {}
+            sample_pdf = next(
+                sample_item.pdf_relative_path
+                for sample_item in registry.samples
+                if sample_item.sample_id == context.sample_id
+            )
+            pdf_path = NEW_ROOT / sample_pdf
+            import pymupdf
+
+            for page in context.pages:
+                manifest = context.manifest_hashes[(context.sample_id, page.page_num)]
+                source_bytes = _page_source_bytes(context, page.page_num)
+                with pymupdf.open(pdf_path) as document:
+                    rendered = document[page.page_num - 1].get_pixmap(dpi=150, alpha=False)
+                    image_bytes = rendered.tobytes("png")
+                    image_width, image_height = rendered.width, rendered.height
+                page_ref_id = f"page:admission:{context.sample_id}-{page.page_num:04d}-{manifest[:12]}"
+                binding = make_source_page_binding(
+                    page_ref_id=page_ref_id,
+                    page=page.page_num,
+                    source_file=sample_pdf,
+                    image_path=f"checkpoints/admission/pages/{context.sample_id}_p{page.page_num:04d}.png",
+                    image_bytes=image_bytes,
+                    page_bytes=source_bytes,
+                    image_width=image_width,
+                    image_height=image_height,
+                    source_manifest_sha256=manifest,
+                )
+                bindings.append(binding)
+                page_artifacts[binding.page_ref_id] = (image_bytes, source_bytes)
+            projection = project_step2b_to_admission_v2(
+                request=context.step2b_request,
+                response=response,
+                sections=context.step2a_request.sections,
+                pages=context.pages,
+                page_bindings=bindings,
+                request_id=request_id,
+            )
+            return projection, page_artifacts
+
+        def _make_admission_projection(*, run_root: Path, outcome: dict) -> tuple[object, ...]:
+            projections = []
+            page_artifacts: dict[str, tuple[bytes, bytes]] = {}
+            source_rows: list[dict[str, object]] = []
+            by_sample = {str(item["sample_id"]): item for item in outcome.get("samples", ())}
+            for precomputed_context in precomputed_contexts:
+                sample = by_sample.get(precomputed_context.sample_id)
+                if sample is None or sample.get("outcome") != "success":
+                    raise ValueError(f"Step2B sample did not finish successfully: {precomputed_context.sample_id}")
+                (
+                    context,
+                    response,
+                    reason,
+                    request_id,
+                    request_path,
+                    record_path,
+                    cache_path,
+                    request_raw,
+                    record_raw,
+                    cache_raw,
+                ) = _load_exact_step2b_source(
+                    run_root=run_root,
+                    sample=sample,
+                    sample_id=precomputed_context.sample_id,
+                )
+                projection, projection_page_artifacts = _build_source_projection(
+                    context=context,
+                    response=response,
+                    request_id=request_id,
+                )
+                page_artifacts.update(projection_page_artifacts)
+                projections.append(projection)
+                source_rows.append(
+                    _source_provenance_row(
+                        run_root=run_root,
+                        context=context,
+                        reason=reason,
+                        request_id=request_id,
+                        request_path=request_path,
+                        record_path=record_path,
+                        cache_path=cache_path,
+                        request_raw=request_raw,
+                        record_raw=record_raw,
+                        cache_raw=cache_raw,
+                        queue_items=tuple(projection.queue_items),
+                    )
+                )
+            providers["admission_page_artifacts"] = page_artifacts
+            providers["admission_source_provenance"] = source_rows
+            return tuple(projections)
+
+        providers["admission_projection_builder"] = _make_admission_projection
+
+        def _validate_admission_sources(*, run_root: Path, queue_doc: dict[str, object], queue_items: tuple[Any, ...]) -> None:
+            rows = queue_doc.get("source_provenance")
+            if not isinstance(rows, list):
+                raise ValueError("Step2B source provenance is missing")
+            items_by_candidate = {item.candidate_id: item for item in queue_items}
+            if len(rows) != len(precomputed_contexts):
+                raise ValueError("Step2B source provenance sample count mismatch")
+            observed_samples: set[str] = set()
+            for row in rows:
+                if not isinstance(row, dict):
+                    raise ValueError("Step2B source provenance row is invalid")
+                sample_id = row.get("sample_id")
+                if not isinstance(sample_id, str) or sample_id in observed_samples:
+                    raise ValueError("Step2B source provenance sample identity is invalid")
+                observed_samples.add(sample_id)
+                sample = {"sample_id": sample_id, "outcome": "success", "attempts": [{"state": "success", "reason": row.get("successful_attempt_reason"), "request_id": row.get("request_id")}]}
+                (
+                    context,
+                response,
+                    reason,
+                    request_id,
+                    request_path,
+                    record_path,
+                    cache_path,
+                    request_raw,
+                    record_raw,
+                    cache_raw,
+                ) = _load_exact_step2b_source(run_root=run_root, sample=sample, sample_id=sample_id)
+                candidate_ids = row.get("candidate_ids")
+                if not isinstance(candidate_ids, list) or len(candidate_ids) != len(set(candidate_ids)) or any(
+                    candidate_id not in items_by_candidate for candidate_id in candidate_ids
+                ):
+                    raise ValueError(f"Step2B source provenance candidate binding is invalid: {sample_id}")
+                queue_for_sample = tuple(items_by_candidate[candidate_id] for candidate_id in candidate_ids)
+                expected_projection, _unused_page_artifacts = _build_source_projection(
+                    context=context,
+                    response=response,
+                    request_id=request_id,
+                )
+                expected_items = tuple(expected_projection.queue_items)
+                if tuple(candidate_ids) != tuple(item.candidate_id for item in expected_items):
+                    raise ValueError(f"Step2B queue candidate identity drifted: {sample_id}")
+                if any(actual.model_dump(mode="json") != expected.model_dump(mode="json") for actual, expected in zip(queue_for_sample, expected_items, strict=True)):
+                    raise ValueError(f"Step2B queue proposal/source binding drifted: {sample_id}")
+                current = _source_provenance_row(
+                    run_root=run_root,
+                    context=context,
+                    reason=reason,
+                    request_id=request_id,
+                    request_path=request_path,
+                    record_path=record_path,
+                    cache_path=cache_path,
+                    request_raw=request_raw,
+                    record_raw=record_raw,
+                    cache_raw=cache_raw,
+                    queue_items=expected_items,
+                )
+                if row != current:
+                    raise ValueError(f"Step2B source provenance drifted: {sample_id}")
+            if observed_samples != {context.sample_id for context in precomputed_contexts}:
+                raise ValueError("Step2B source provenance does not cover the selected samples")
+
+        providers["admission_source_validator"] = _validate_admission_sources
+
+    if "step3" in config.stages and config.step3_mode == "echo" and config.step3_typed_fixture and not same_run_admission:
         from examcard.pipeline.live_run import load_typed_fixture_compilation
 
         providers["step3_card_count"] = len(

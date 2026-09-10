@@ -36,7 +36,7 @@ def budget_rehearsal_estimate(
             calls_max = sample_count * max_attempts + 2
             price = pricing.get(f"{stage}_call", 0.0)
         elif stage == "step3":
-            calls_max = step3_card_count * 2 + 1
+            calls_max = step3_card_count * max_attempts + 1
             price = pricing.get("step3_card_call", 0.0)
         else:
             calls_max = step4_card_count * max_attempts + 1
@@ -68,7 +68,7 @@ def derive_stage_call_caps(
         if stage in {"step2a", "step2b"}:
             caps[stage] = max(1, sample_count * max_attempts + 2)
         elif stage == "step3":
-            caps[stage] = max(1, step3_card_count * 2 + 1)
+            caps[stage] = max(1, step3_card_count * max_attempts + 1)
         else:
             caps[stage] = max(1, step4_card_count * max_attempts + 1)
     return caps
