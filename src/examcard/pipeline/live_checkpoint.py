@@ -1696,3 +1696,384 @@ def ingest_image_review_sheet(
         manifest_raw=manifest_raw,
     )
     return {"status": "ingested", **authority}
+
+
+# ---------------------------------------------------------------------------
+# P4 final release closure V2.  This layer owns bytes and RunState identity;
+# the release gate itself remains a pure compiler in final_release_v2.py.
+# ---------------------------------------------------------------------------
+
+_FINAL_RELEASE_V2_DIR = "final_release"
+_FINAL_RELEASE_V2_FILES = {
+    "bundle": "final-release-bundle-v2.json",
+    "exclusion": "final-release-exclusion-ledger-v2.json",
+    "audit": "final-release-audit-v2.json",
+    "receipt": "final-release-closure-v2.json",
+}
+_FINAL_RELEASE_IDENTITY_FIELDS = frozenset(
+    {
+        "final_release_status",
+        "final_release_receipt_sha256",
+        "final_release_receipt_file_sha256",
+        "final_release_bundle_sha256",
+        "final_release_bundle_file_sha256",
+        "final_release_exclusion_sha256",
+        "final_release_exclusion_file_sha256",
+        "final_release_audit_sha256",
+        "final_release_audit_file_sha256",
+        "final_release_decision_count",
+        "final_release_released_count",
+        "final_release_rejected_count",
+        "final_release_manual_review_count",
+        "final_release_released_card_indexes",
+        "final_release_excluded_card_indexes",
+        "final_release_release_bundle_present",
+    }
+)
+
+
+def _final_release_paths(run_root: Path) -> dict[str, Path]:
+    checkpoint_dir = Path(run_root) / "checkpoints" / _FINAL_RELEASE_V2_DIR
+    return {name: checkpoint_dir / filename for name, filename in _FINAL_RELEASE_V2_FILES.items()}
+
+
+def _read_final_release_model(path: Path, model_type: type[Any]) -> tuple[Any, bytes]:
+    if not path.is_file():
+        raise Step4ImageIntegrityError(f"final release artifact is missing: {path.name}")
+    try:
+        raw = path.read_bytes()
+        model = model_type.model_validate(read_json(path))
+    except (OSError, TypeError, ValueError) as error:
+        raise Step4ImageIntegrityError(f"invalid final release artifact: {path.name}") from error
+    return model, raw
+
+
+def _require_final_release_model(path: Path, expected: Any, *, allow_create: bool) -> tuple[Any, bytes]:
+    if path.is_file():
+        actual, raw = _read_final_release_model(path, type(expected))
+        if actual.model_dump(mode="json") != expected.model_dump(mode="json"):
+            raise Step4ImageIntegrityError(f"final release artifact conflicts: {path.name}")
+        return actual, raw
+    if not allow_create:
+        raise Step4ImageIntegrityError(f"frozen final release artifact is missing: {path.name}")
+    atomic_write_json(path, expected.model_dump(mode="json"))
+    return _read_final_release_model(path, type(expected))
+
+
+def _load_final_release_p3_artifacts(
+    run_root: Path,
+) -> tuple[Any | None, Any, Any, Any, bytes, bytes | None, bytes, bytes]:
+    from ..gates.review.image_admission_materialization_v2 import (
+        BatchImageAdmissionAuditV2,
+        BatchPostReviewQueueV2,
+        BatchReviewedImageFixtureV2,
+        ImageReviewMaterializationReceiptV2,
+    )
+
+    checkpoint_dir = Path(run_root) / "checkpoints" / "image_review"
+    fixture_path = checkpoint_dir / "reviewed-image-fixture-v2.json"
+    queue_path = checkpoint_dir / "post-review-queue-v2.json"
+    audit_path = checkpoint_dir / "image-admission-audit-v2.json"
+    receipt_path = checkpoint_dir / "image-review-materialization-v2.json"
+    receipt, receipt_raw = _read_final_release_model(receipt_path, ImageReviewMaterializationReceiptV2)
+    queue, queue_raw = _read_final_release_model(queue_path, BatchPostReviewQueueV2)
+    audit, audit_raw = _read_final_release_model(audit_path, BatchImageAdmissionAuditV2)
+    fixture: Any | None = None
+    fixture_raw: bytes | None = None
+    if receipt.reviewed_fixture_present:
+        fixture, fixture_raw = _read_final_release_model(fixture_path, BatchReviewedImageFixtureV2)
+    elif fixture_path.exists():
+        raise Step4ImageIntegrityError("P3 zero-approval materialization contains a reviewed fixture")
+    return fixture, queue, audit, receipt, receipt_raw, fixture_raw, queue_raw, audit_raw
+
+
+def _p3_identity_from_receipt(
+    *,
+    fixture: Any | None,
+    queue: Any,
+    audit: Any,
+    receipt: Any,
+    receipt_raw: bytes,
+    fixture_raw: bytes | None,
+    queue_raw: bytes,
+    audit_raw: bytes,
+) -> dict[str, Any]:
+    return {
+        "materialization_status": "frozen",
+        "materialization_receipt_sha256": receipt.receipt_sha256,
+        "materialization_receipt_file_sha256": sha256_bytes(receipt_raw),
+        "reviewed_fixture_present": fixture is not None,
+        "reviewed_fixture_sha256": fixture.fixture_sha256 if fixture is not None else None,
+        "reviewed_fixture_file_sha256": sha256_bytes(fixture_raw) if fixture_raw is not None else None,
+        "post_review_queue_sha256": queue.queue_sha256,
+        "post_review_queue_file_sha256": sha256_bytes(queue_raw),
+        "admission_audit_sha256": audit.audit_sha256,
+        "admission_audit_file_sha256": sha256_bytes(audit_raw),
+        "materialized_decision_count": receipt.decision_count,
+        "materialized_approved_count": receipt.approved_count,
+        "materialized_rejected_count": receipt.rejected_count,
+        "materialized_manual_review_count": receipt.manual_review_count,
+        "materialized_reviewed_card_indexes": list(receipt.reviewed_card_indexes),
+        "materialized_post_review_card_indexes": list(receipt.post_review_card_indexes),
+    }
+
+
+def _load_and_validate_final_release_p3(
+    *, run_root: Path, expected_p3_authority: Mapping[str, Any] | None
+) -> tuple[Any | None, Any, Any, Any, bytes, bytes | None, bytes, bytes]:
+    fixture, queue, audit, receipt, receipt_raw, fixture_raw, queue_raw, audit_raw = (
+        _load_final_release_p3_artifacts(Path(run_root))
+    )
+    derived_identity = _p3_identity_from_receipt(
+        fixture=fixture,
+        queue=queue,
+        audit=audit,
+        receipt=receipt,
+        receipt_raw=receipt_raw,
+        fixture_raw=fixture_raw,
+        queue_raw=queue_raw,
+        audit_raw=audit_raw,
+    )
+    if expected_p3_authority is not None:
+        for field, expected_value in derived_identity.items():
+            if field in expected_p3_authority and expected_p3_authority[field] != expected_value:
+                raise Step4ImageIntegrityError(f"P3 materialization identity drifted: {field}")
+    p2_fields = set(_IMAGE_REVIEW_AUTHORITY_IDENTITY_FIELDS)
+    if expected_p3_authority is not None and p2_fields.issubset(expected_p3_authority):
+        expected = dict(expected_p3_authority)
+    else:
+        current_p2, _ = _load_image_review_materialization_inputs(
+            run_root=Path(run_root),
+            current_request_bindings=None,
+            expected_authority=None,
+        )
+        expected = current_p2
+    expected.update(derived_identity)
+    validate_materialized_image_review_v2(
+        run_root=Path(run_root),
+        expected_authority=expected,
+    )
+    return fixture, queue, audit, receipt, receipt_raw, fixture_raw, queue_raw, audit_raw
+
+
+def _build_final_release_receipt(
+    *,
+    p3_receipt: Any,
+    p3_receipt_raw: bytes,
+    fixture: Any | None,
+    queue: Any,
+    audit: Any,
+    p4_bundle: Any | None,
+    p4_bundle_raw: bytes | None,
+    p4_exclusion: Any,
+    p4_exclusion_raw: bytes,
+    p4_audit: Any,
+    p4_audit_raw: bytes,
+) -> Any:
+    from ..gates.release.final_release_v2 import FinalReleaseClosureReceiptV2
+
+    return hash_model(
+        FinalReleaseClosureReceiptV2,
+        {
+            "reviewed_fixture_sha256": fixture.fixture_sha256 if fixture is not None else None,
+            "reviewed_fixture_file_sha256": p3_receipt.reviewed_fixture_file_sha256,
+            "post_review_queue_sha256": queue.queue_sha256,
+            "post_review_queue_file_sha256": p3_receipt.post_review_queue_file_sha256,
+            "admission_audit_sha256": audit.audit_sha256,
+            "admission_audit_file_sha256": p3_receipt.admission_audit_file_sha256,
+            "materialization_receipt_sha256": p3_receipt.receipt_sha256,
+            "materialization_receipt_file_sha256": sha256_bytes(p3_receipt_raw),
+            "bundle_sha256": p4_bundle.bundle_sha256 if p4_bundle is not None else None,
+            "bundle_file_sha256": sha256_bytes(p4_bundle_raw) if p4_bundle_raw is not None else None,
+            "exclusion_sha256": p4_exclusion.exclusion_sha256,
+            "exclusion_file_sha256": sha256_bytes(p4_exclusion_raw),
+            "audit_sha256": p4_audit.audit_sha256,
+            "audit_file_sha256": sha256_bytes(p4_audit_raw),
+            "decision_count": p3_receipt.decision_count,
+            "released_count": p3_receipt.approved_count,
+            "rejected_count": p3_receipt.rejected_count,
+            "manual_review_count": p3_receipt.manual_review_count,
+            "released_card_indexes": tuple(p4_bundle.release_card_indexes) if p4_bundle is not None else (),
+            "excluded_card_indexes": tuple(p4_exclusion.excluded_card_indexes),
+            "release_bundle_present": p4_bundle is not None,
+        },
+        "closure_sha256",
+    )
+
+
+def _final_release_identity(
+    *,
+    receipt: Any,
+    receipt_raw: bytes,
+    bundle: Any | None,
+    bundle_raw: bytes | None,
+    exclusion: Any,
+    exclusion_raw: bytes,
+    audit: Any,
+    audit_raw: bytes,
+) -> dict[str, Any]:
+    return {
+        "final_release_status": "frozen",
+        "final_release_receipt_sha256": receipt.closure_sha256,
+        "final_release_receipt_file_sha256": sha256_bytes(receipt_raw),
+        "final_release_bundle_sha256": bundle.bundle_sha256 if bundle is not None else None,
+        "final_release_bundle_file_sha256": sha256_bytes(bundle_raw) if bundle_raw is not None else None,
+        "final_release_exclusion_sha256": exclusion.exclusion_sha256,
+        "final_release_exclusion_file_sha256": sha256_bytes(exclusion_raw),
+        "final_release_audit_sha256": audit.audit_sha256,
+        "final_release_audit_file_sha256": sha256_bytes(audit_raw),
+        "final_release_decision_count": receipt.decision_count,
+        "final_release_released_count": receipt.released_count,
+        "final_release_rejected_count": receipt.rejected_count,
+        "final_release_manual_review_count": receipt.manual_review_count,
+        "final_release_released_card_indexes": list(receipt.released_card_indexes),
+        "final_release_excluded_card_indexes": list(receipt.excluded_card_indexes),
+        "final_release_release_bundle_present": receipt.release_bundle_present,
+    }
+
+
+def materialize_final_release_v2(
+    *,
+    run_root: Path,
+    expected_p3_authority: Mapping[str, Any] | None = None,
+    expected_authority: Mapping[str, Any] | None = None,
+) -> dict[str, Any]:
+    """Materialize or recover P4 files and freeze the final closure receipt."""
+
+    from ..gates.release.final_release_v2 import derive_final_release_v2
+
+    if expected_p3_authority is not None and expected_authority is not None:
+        raise TypeError("P4 expected authority was supplied more than once")
+    p3_expected = expected_p3_authority if expected_p3_authority is not None else expected_authority
+    fixture, queue, audit, p3_receipt, p3_receipt_raw, fixture_raw, queue_raw, audit_raw = (
+        _load_and_validate_final_release_p3(run_root=Path(run_root), expected_p3_authority=p3_expected)
+    )
+    derived = derive_final_release_v2(
+        reviewed_fixture=fixture,
+        post_review_queue=queue,
+        admission_audit=audit,
+        materialization_receipt=p3_receipt,
+    )
+    paths = _final_release_paths(Path(run_root))
+    receipt_exists = paths["receipt"].is_file()
+    allow_create = not receipt_exists
+    paths["bundle"].parent.mkdir(parents=True, exist_ok=True)
+    bundle = None
+    bundle_raw: bytes | None = None
+    if derived.release_bundle is None:
+        if paths["bundle"].exists():
+            raise Step4ImageIntegrityError("zero-approved final release cannot contain a release bundle")
+    else:
+        bundle, bundle_raw = _require_final_release_model(paths["bundle"], derived.release_bundle, allow_create=allow_create)
+    exclusion, exclusion_raw = _require_final_release_model(
+        paths["exclusion"], derived.exclusion_ledger, allow_create=allow_create
+    )
+    final_audit, final_audit_raw = _require_final_release_model(paths["audit"], derived.audit, allow_create=allow_create)
+    expected_receipt = _build_final_release_receipt(
+        p3_receipt=p3_receipt,
+        p3_receipt_raw=p3_receipt_raw,
+        fixture=fixture,
+        queue=queue,
+        audit=audit,
+        p4_bundle=bundle,
+        p4_bundle_raw=bundle_raw,
+        p4_exclusion=exclusion,
+        p4_exclusion_raw=exclusion_raw,
+        p4_audit=final_audit,
+        p4_audit_raw=final_audit_raw,
+    )
+    if paths["receipt"].is_file():
+        receipt, receipt_raw = _read_final_release_model(paths["receipt"], type(expected_receipt))
+        if receipt.model_dump(mode="json") != expected_receipt.model_dump(mode="json"):
+            raise Step4ImageIntegrityError("final release closure receipt conflicts with its artifacts")
+    else:
+        atomic_write_json(paths["receipt"], expected_receipt.model_dump(mode="json"))
+        receipt, receipt_raw = _read_final_release_model(paths["receipt"], type(expected_receipt))
+    return _final_release_identity(
+        receipt=receipt,
+        receipt_raw=receipt_raw,
+        bundle=bundle,
+        bundle_raw=bundle_raw,
+        exclusion=exclusion,
+        exclusion_raw=exclusion_raw,
+        audit=final_audit,
+        audit_raw=final_audit_raw,
+    )
+
+
+def validate_materialized_final_release_v2(
+    *,
+    run_root: Path,
+    expected_authority: Mapping[str, Any] | None = None,
+) -> dict[str, Any]:
+    """Validate frozen P4 bytes and identity without regenerating anything."""
+
+    from ..gates.release.final_release_v2 import (
+        FinalReleaseAuditV2,
+        FinalReleaseBundleV2,
+        FinalReleaseClosureReceiptV2,
+        FinalReleaseExclusionLedgerV2,
+        derive_final_release_v2,
+    )
+
+    if expected_authority is None or expected_authority.get("final_release_status") != "frozen":
+        raise Step4ImageIntegrityError("frozen final release status is missing")
+    paths = _final_release_paths(Path(run_root))
+    if not paths["receipt"].is_file():
+        raise Step4ImageIntegrityError("frozen final release closure receipt is missing")
+    fixture, queue, audit, p3_receipt, p3_receipt_raw, _fixture_raw, _queue_raw, _audit_raw = (
+        _load_and_validate_final_release_p3(run_root=Path(run_root), expected_p3_authority=expected_authority)
+    )
+    derived = derive_final_release_v2(
+        reviewed_fixture=fixture,
+        post_review_queue=queue,
+        admission_audit=audit,
+        materialization_receipt=p3_receipt,
+    )
+    bundle = None
+    bundle_raw: bytes | None = None
+    if derived.release_bundle is None:
+        if paths["bundle"].exists():
+            raise Step4ImageIntegrityError("zero-approved final release has an unexpected bundle")
+    else:
+        bundle, bundle_raw = _read_final_release_model(paths["bundle"], FinalReleaseBundleV2)
+        if bundle.model_dump(mode="json") != derived.release_bundle.model_dump(mode="json"):
+            raise Step4ImageIntegrityError("frozen final release bundle drifted")
+    exclusion, exclusion_raw = _read_final_release_model(paths["exclusion"], FinalReleaseExclusionLedgerV2)
+    final_audit, final_audit_raw = _read_final_release_model(paths["audit"], FinalReleaseAuditV2)
+    if exclusion.model_dump(mode="json") != derived.exclusion_ledger.model_dump(mode="json"):
+        raise Step4ImageIntegrityError("frozen final release exclusion ledger drifted")
+    if final_audit.model_dump(mode="json") != derived.audit.model_dump(mode="json"):
+        raise Step4ImageIntegrityError("frozen final release audit drifted")
+    receipt, receipt_raw = _read_final_release_model(paths["receipt"], FinalReleaseClosureReceiptV2)
+    expected_receipt = _build_final_release_receipt(
+        p3_receipt=p3_receipt,
+        p3_receipt_raw=p3_receipt_raw,
+        fixture=fixture,
+        queue=queue,
+        audit=audit,
+        p4_bundle=bundle,
+        p4_bundle_raw=bundle_raw,
+        p4_exclusion=exclusion,
+        p4_exclusion_raw=exclusion_raw,
+        p4_audit=final_audit,
+        p4_audit_raw=final_audit_raw,
+    )
+    if receipt.model_dump(mode="json") != expected_receipt.model_dump(mode="json"):
+        raise Step4ImageIntegrityError("frozen final release closure receipt drifted")
+    current = _final_release_identity(
+        receipt=receipt,
+        receipt_raw=receipt_raw,
+        bundle=bundle,
+        bundle_raw=bundle_raw,
+        exclusion=exclusion,
+        exclusion_raw=exclusion_raw,
+        audit=final_audit,
+        audit_raw=final_audit_raw,
+    )
+    for key in _FINAL_RELEASE_IDENTITY_FIELDS:
+        if key not in expected_authority:
+            raise Step4ImageIntegrityError(f"frozen final release identity is missing: {key}")
+        if current.get(key) != expected_authority[key]:
+            raise Step4ImageIntegrityError(f"frozen final release identity drifted: {key}")
+    return current

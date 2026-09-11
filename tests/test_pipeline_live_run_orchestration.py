@@ -1167,6 +1167,42 @@ def test_resume_after_ingest_is_idempotent(repo_tmp_path: Path) -> None:
     assert (checkpoint_dir / "image-admission-audit-v2.json").is_file()
     assert (checkpoint_dir / "image-review-materialization-v2.json").is_file()
     assert state["checkpoints"]["image_review"]["materialization_status"] == "frozen"
+    image_ticket = state["checkpoints"]["image_review"]
+    assert image_ticket["final_release_status"] == "frozen"
+    assert image_ticket["final_release_released_count"] == 1
+    assert image_ticket["final_release_released_card_indexes"] == [1]
+    final_release_dir = run_root / "checkpoints" / "final_release"
+    assert (final_release_dir / "final-release-bundle-v2.json").is_file()
+    assert (final_release_dir / "final-release-exclusion-ledger-v2.json").is_file()
+    assert (final_release_dir / "final-release-audit-v2.json").is_file()
+    assert (final_release_dir / "final-release-closure-v2.json").is_file()
+
+
+def test_frozen_final_release_resume_does_not_write_checkpoint(repo_tmp_path: Path) -> None:
+    _seed_exam_workspace(repo_tmp_path)
+    run_id = "20260812-frozen-final-release-read-only"
+    run_root = _seed_paused_run(repo_tmp_path, run_id)
+    first_report, first_exit = orchestrate(_resume_config(repo_tmp_path, run_id), _resume_providers(repo_tmp_path))
+    assert (first_exit, first_report.stop_reason) == (0, "completed")
+
+    state_path = run_root / "run_state.json"
+    budget_path = run_root / "budget.json"
+    final_release_dir = run_root / "checkpoints" / "final_release"
+    state_before = state_path.read_bytes()
+    budget_before = budget_path.read_bytes()
+    artifacts_before = {path.name: path.read_bytes() for path in final_release_dir.iterdir()}
+
+    providers = _resume_providers(repo_tmp_path)
+
+    def must_not_call(*_args: object, **_kwargs: object) -> object:
+        raise AssertionError("frozen P4 resume must not execute providers")
+
+    providers["image_caller"] = must_not_call
+    second_report, second_exit = orchestrate(_resume_config(repo_tmp_path, run_id), providers)
+    assert (second_exit, second_report.stop_reason) == (0, "completed")
+    assert state_path.read_bytes() == state_before
+    assert budget_path.read_bytes() == budget_before
+    assert {path.name: path.read_bytes() for path in final_release_dir.iterdir()} == artifacts_before
 
 
 def test_p2_only_ingested_resume_upgrades_and_freezes_materialization(repo_tmp_path: Path) -> None:

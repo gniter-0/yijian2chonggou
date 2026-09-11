@@ -368,6 +368,13 @@ def test_same_run_orchestrator_pauses_then_reaches_step4_from_internal_v2_chain(
     assert image_ticket["materialization_status"] == "frozen"
     assert image_ticket["materialized_reviewed_card_indexes"] == [1]
     assert image_ticket["materialized_post_review_card_indexes"] == []
+    assert image_ticket["final_release_status"] == "frozen"
+    assert image_ticket["final_release_released_card_indexes"] == [1]
+    final_release_dir = run_root / "checkpoints" / "final_release"
+    assert (final_release_dir / "final-release-bundle-v2.json").is_file()
+    assert (final_release_dir / "final-release-exclusion-ledger-v2.json").is_file()
+    assert (final_release_dir / "final-release-audit-v2.json").is_file()
+    assert (final_release_dir / "final-release-closure-v2.json").is_file()
 
     fifth_report, fifth_exit = orchestrate(replace(config, resume_run_id=first_report.run_id), providers)
     assert (fifth_exit, fifth_report.stop_reason) == (0, "completed")

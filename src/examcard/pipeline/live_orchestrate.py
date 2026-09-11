@@ -28,8 +28,10 @@ from .live_checkpoint import (
     ingest_admission_decisions,
     ingest_echo_step3_review_checkpoint_v2,
     ingest_image_review_sheet,
+    materialize_final_release_v2,
     materialize_image_review_v2,
     validate_ingested_image_review,
+    validate_materialized_final_release_v2,
     validate_materialized_image_review_v2,
 )
 from ..common.hashing import canonical_hash
@@ -80,6 +82,42 @@ def _image_review_materialization_state(authority: Mapping[str, Any]) -> str:
         return "p2_only"
     if authority["materialization_status"] != "frozen":
         raise ValueError("image review materialization status is invalid")
+    return "frozen"
+
+
+_FINAL_RELEASE_IDENTITY_FIELDS = frozenset(
+    {
+        "final_release_status",
+        "final_release_receipt_sha256",
+        "final_release_receipt_file_sha256",
+        "final_release_bundle_sha256",
+        "final_release_bundle_file_sha256",
+        "final_release_exclusion_sha256",
+        "final_release_exclusion_file_sha256",
+        "final_release_audit_sha256",
+        "final_release_audit_file_sha256",
+        "final_release_decision_count",
+        "final_release_released_count",
+        "final_release_rejected_count",
+        "final_release_manual_review_count",
+        "final_release_released_card_indexes",
+        "final_release_excluded_card_indexes",
+        "final_release_release_bundle_present",
+    }
+)
+
+
+def _final_release_state(authority: Mapping[str, Any]) -> str:
+    """Classify the P4 ticket without permitting partial identity rebaseline."""
+
+    if "final_release_status" not in authority:
+        partial_identity = _FINAL_RELEASE_IDENTITY_FIELDS.intersection(authority)
+        if partial_identity:
+            fields = ", ".join(sorted(partial_identity))
+            raise ValueError(f"final release identity is partial: {fields}")
+        return "absent"
+    if authority["final_release_status"] != "frozen":
+        raise ValueError("final release status is invalid")
     return "frozen"
 
 
@@ -229,7 +267,7 @@ def orchestrate(config: LiveRunConfig, providers: Mapping[str, Any]) -> tuple[Li
     def materialize_ingested_image_review(
         *, authority: Mapping[str, Any], current_request_bindings: Mapping[int, Mapping[str, Any]] | None
     ) -> dict[str, Any]:
-        """Upgrade a P2-only ticket once, without rewriting an already frozen ticket."""
+        """Upgrade P2 to P3 and then freeze the downstream P4 authority once."""
 
         materialization_state = _image_review_materialization_state(authority)
         materialization = freeze_image_review_materialization(
@@ -237,23 +275,46 @@ def orchestrate(config: LiveRunConfig, providers: Mapping[str, Any]) -> tuple[Li
         )
         if materialization_state == "p2_only":
             state.set_checkpoint("image_review", "ingested", **materialization)
-        return materialization
+        p3_authority = dict(authority) | materialization
+        final_release_state = _final_release_state(p3_authority)
+        if final_release_state == "frozen":
+            final_release = validate_materialized_final_release_v2(
+                run_root=run_root,
+                expected_authority=p3_authority,
+            )
+            return materialization | final_release
+        final_release = materialize_final_release_v2(
+            run_root=run_root,
+            expected_p3_authority=p3_authority,
+        )
+        state.set_checkpoint("image_review", "ingested", **final_release)
+        return materialization | final_release
 
     def persist_ingested_image_review(
         *, authority: Mapping[str, Any], current_request_bindings: Mapping[int, Mapping[str, Any]] | None
     ) -> dict[str, Any]:
-        """Persist P2 and P3 identity together only after P3 has succeeded."""
+        """Persist P3, then derive and freeze P4 without rerunning image work."""
 
         materialization = freeze_image_review_materialization(
             authority=authority, current_request_bindings=current_request_bindings
         )
+        p3_authority = dict(authority) | materialization
         state.set_checkpoint(
             "image_review",
             "ingested",
-            **{key: value for key, value in authority.items() if key != "status"},
-            **materialization,
+            **{key: value for key, value in p3_authority.items() if key != "status"},
         )
-        return materialization
+        final_release = materialize_final_release_v2(
+            run_root=run_root,
+            expected_p3_authority=p3_authority,
+        )
+        state.set_checkpoint(
+            "image_review",
+            "ingested",
+            **materialization,
+            **final_release,
+        )
+        return materialization | final_release
 
     def finish(stop_reason: str, exit_code: int) -> tuple[LiveRunReport, int]:
         report = build_live_run_report(
