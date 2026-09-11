@@ -14,7 +14,11 @@ from ..common.io import atomic_write_bytes, atomic_write_json, png_dimensions, r
 from ..providers.base import sanitized_error_summary
 
 from .live_support import _utc_now_iso
-from .live_stage_step4 import Step4ImageIntegrityError, validate_step4_image_artifact
+from .live_stage_step4 import (
+    Step4ImageIntegrityError,
+    step4_image_provenance_path,
+    validate_step4_image_artifact,
+)
 
 
 _ADMISSION_QUEUE_V2_SCHEMA = "phase2r84_admission_queue_v2"
@@ -29,6 +33,26 @@ _ADMISSION_AUTHORIZATION_V2_NAMES = (
     "explicit-production-authorization.json",
 )
 _ECHO_REVIEW_V2_DIR = "echo_review"
+_IMAGE_REVIEW_HUMAN_FIELDS = frozenset(("disposition", "reviewer", "basis"))
+_IMAGE_REVIEW_EMISSION_IDENTITY_FIELDS = (
+    "source_binding_sha256",
+    "image_review_source_binding_sha256",
+    "request_manifest_file_sha256",
+    "reviewed_card_indexes",
+    "reviewed_card_count",
+    "provenance_file_sha256_by_card",
+)
+_IMAGE_REVIEW_AUTHORITY_IDENTITY_FIELDS = (
+    *_IMAGE_REVIEW_EMISSION_IDENTITY_FIELDS,
+    "sheet_file_sha256",
+    "review_sheet_file_sha256",
+    "manifest_sha256",
+    "manifest_file_sha256",
+    "decision_count",
+    "approved_count",
+    "rejected_count",
+    "manual_review_count",
+)
 
 
 def _safe_checkpoint_name(value: str) -> str:
@@ -1081,17 +1105,45 @@ def _request_bindings_from_manifest(run_root: Path) -> dict[int, dict[str, Any]]
     return bindings
 
 
+def _validate_request_binding_alignment(
+    *, run_root: Path, current_request_bindings: Mapping[int, Mapping[str, Any]] | None
+) -> tuple[dict[int, dict[str, Any]], dict[int, dict[str, Any]]]:
+    """Compare rebuilt Step4 bindings with the persisted request manifest."""
+
+    persisted = _request_bindings_from_manifest(run_root)
+    current = (
+        {card_index: dict(row) for card_index, row in current_request_bindings.items()}
+        if current_request_bindings is not None
+        else dict(persisted)
+    )
+    if list(current) != list(persisted):
+        raise Step4ImageIntegrityError("review rows do not cover the exact Step4 request order")
+    for card_index, persisted_row in persisted.items():
+        current_row = current.get(card_index)
+        if current_row is None:
+            raise Step4ImageIntegrityError(f"current Step4 request is missing card {card_index}")
+        for key in ("card_index", "source_card_id", "sample_id", "render_presentation", "http_payload_sha256"):
+            if str(current_row.get(key)) != str(persisted_row.get(key)):
+                raise Step4ImageIntegrityError(f"Step4 request binding drifted for card {card_index}: {key}")
+    return current, persisted
+
+
 def _validate_review_rows(
     *, run_root: Path, cards: list[Mapping[str, Any]], current_request_bindings: Mapping[int, Mapping[str, Any]] | None
-) -> None:
-    bindings = dict(current_request_bindings) if current_request_bindings is not None else _request_bindings_from_manifest(run_root)
+) -> dict[int, str]:
+    bindings, persisted = _validate_request_binding_alignment(
+        run_root=run_root, current_request_bindings=current_request_bindings
+    )
     storage = Path(run_root) / "step4"
     seen_card_indexes: set[int] = set()
+    ordered_card_indexes: list[int] = []
+    provenance_file_sha256_by_card: dict[int, str] = {}
     for row in cards:
         card_index = int(row["card_index"])
         if card_index in seen_card_indexes:
             raise Step4ImageIntegrityError(f"review sheet contains duplicate card {card_index}")
         seen_card_indexes.add(card_index)
+        ordered_card_indexes.append(card_index)
         current = bindings.get(card_index)
         if current is None:
             raise Step4ImageIntegrityError(f"review row card {card_index} is not in the current Step4 request")
@@ -1112,16 +1164,148 @@ def _validate_review_rows(
             image_sha256=str(row["image_sha256"]),
             provenance_sha256=str(row["image_provenance_sha256"]),
         )
+        provenance_path = step4_image_provenance_path(storage, card_index, str(row["source_card_id"]))
+        provenance_file_sha256_by_card[card_index] = sha256_bytes(provenance_path.read_bytes())
+    expected_card_indexes = list(persisted)
+    if ordered_card_indexes != expected_card_indexes:
+        raise Step4ImageIntegrityError("review sheet does not cover the exact Step4 request cards")
+    return provenance_file_sha256_by_card
+
+
+def _image_review_source_binding(
+    *, sheet: Mapping[str, Any], cards: Sequence[Mapping[str, Any]], provenance_file_sha256_by_card: Mapping[int, str]
+) -> str:
+    """Hash every immutable sheet/source field while excluding human-fill cells."""
+
+    payload = {key: value for key, value in sheet.items() if key != "cards"}
+    bound_cards: list[dict[str, Any]] = []
+    for row in cards:
+        bound = {key: value for key, value in row.items() if key not in _IMAGE_REVIEW_HUMAN_FIELDS}
+        card_index = int(row["card_index"])
+        bound["provenance_file_sha256"] = provenance_file_sha256_by_card[card_index]
+        bound_cards.append(bound)
+    payload["cards"] = bound_cards
+    return canonical_hash(payload)
+
+
+def _image_review_provenance_file_bindings(provenance_file_sha256_by_card: Mapping[int, str]) -> dict[str, str]:
+    return {str(card_index): value for card_index, value in provenance_file_sha256_by_card.items()}
+
+
+def _validate_expected_image_review_identity(
+    *, expected: Mapping[str, Any] | None, current: Mapping[str, Any], fields: Sequence[str]
+) -> None:
+    if expected is None:
+        raise Step4ImageIntegrityError("image review frozen authority identity is missing")
+    for field in fields:
+        if field not in expected:
+            raise Step4ImageIntegrityError(f"image review frozen authority identity is missing: {field}")
+        if expected[field] != current.get(field):
+            raise Step4ImageIntegrityError(f"image review frozen authority drifted: {field}")
+
+
+def _image_review_identity(
+    *,
+    run_root: Path,
+    sheet_path: Path,
+    sheet_raw: bytes,
+    sheet: Mapping[str, Any],
+    cards: Sequence[Mapping[str, Any]],
+    provenance_file_sha256_by_card: Mapping[int, str],
+    manifest_path: Path | None = None,
+    manifest: Any | None = None,
+    manifest_raw: bytes | None = None,
+) -> dict[str, Any]:
+    request_manifest_path = Path(run_root) / "step4" / "requests-manifest.json"
+    if not request_manifest_path.is_file():
+        raise Step4ImageIntegrityError("Step4 request manifest is missing")
+    request_manifest_raw = request_manifest_path.read_bytes()
+    reviewed_card_indexes = [int(row["card_index"]) for row in cards]
+    source_binding_sha256 = _image_review_source_binding(
+        sheet=sheet, cards=cards, provenance_file_sha256_by_card=provenance_file_sha256_by_card
+    )
+    identity: dict[str, Any] = {
+        "sheet_path": str(sheet_path),
+        "review_sheet_path": str(sheet_path),
+        "source_binding_sha256": source_binding_sha256,
+        "image_review_source_binding_sha256": source_binding_sha256,
+        "request_manifest_file_sha256": sha256_bytes(request_manifest_raw),
+        "reviewed_card_indexes": reviewed_card_indexes,
+        "reviewed_card_count": len(reviewed_card_indexes),
+        "provenance_file_sha256_by_card": _image_review_provenance_file_bindings(provenance_file_sha256_by_card),
+        "sheet_file_sha256": sha256_bytes(sheet_raw),
+        "review_sheet_file_sha256": sha256_bytes(sheet_raw),
+    }
+    if manifest is not None and manifest_path is not None and manifest_raw is not None:
+        manifest_file_sha256 = sha256_bytes(manifest_raw)
+        identity.update(
+            {
+                "manifest_path": str(manifest_path),
+                "manifest_sha256": manifest.manifest_sha256,
+                "manifest_file_sha256": manifest_file_sha256,
+                "decision_count": manifest.decision_count,
+                "approved_count": manifest.approved_count,
+                "rejected_count": manifest.rejected_count,
+                "manual_review_count": manifest.manual_review_count,
+            }
+        )
+    return identity
+
+
+def image_review_emission_identity(
+    *,
+    run_root: Path,
+    sheet_path: Path | None = None,
+    current_request_bindings: Mapping[int, Mapping[str, Any]] | None = None,
+) -> dict[str, Any]:
+    """Return the immutable identity that may survive human sheet edits."""
+
+    checkpoint_dir = Path(run_root) / "checkpoints" / "image_review"
+    path = checkpoint_dir / "image_review_sheet.json" if sheet_path is None else Path(sheet_path)
+    try:
+        path.relative_to(Path(run_root))
+    except ValueError as error:
+        raise Step4ImageIntegrityError("image review sheet is outside the current run") from error
+    try:
+        sheet_raw = path.read_bytes()
+        sheet = read_json(path)
+    except (OSError, TypeError, ValueError) as error:
+        raise Step4ImageIntegrityError("image review sheet is missing or invalid") from error
+    if not isinstance(sheet, Mapping) or sheet.get("schema") != "image-review-sheet/2.0":
+        raise Step4ImageIntegrityError("legacy or invalid image review sheet schema")
+    cards = sheet.get("cards")
+    if not isinstance(cards, list) or not all(isinstance(card, Mapping) for card in cards):
+        raise Step4ImageIntegrityError("image review sheet cards are invalid")
+    provenance_file_sha256_by_card = _validate_review_rows(
+        run_root=run_root, cards=cards, current_request_bindings=current_request_bindings
+    )
+    identity = _image_review_identity(
+        run_root=run_root,
+        sheet_path=path,
+        sheet_raw=sheet_raw,
+        sheet=sheet,
+        cards=cards,
+        provenance_file_sha256_by_card=provenance_file_sha256_by_card,
+    )
+    return {key: identity[key] for key in _IMAGE_REVIEW_EMISSION_IDENTITY_FIELDS} | {
+        "sheet_path": identity["sheet_path"],
+        "review_sheet_path": identity["review_sheet_path"],
+    }
 
 
 def validate_ingested_image_review(
-    *, run_root: Path, current_request_bindings: Mapping[int, Mapping[str, Any]]
+    *,
+    run_root: Path,
+    current_request_bindings: Mapping[int, Mapping[str, Any]],
+    expected_authority: Mapping[str, Any] | None = None,
 ) -> None:
     """Revalidate a previously ingested review chain before ordinary resume success."""
 
     checkpoint_dir = Path(run_root) / "checkpoints" / "image_review"
     try:
-        sheet = read_json(checkpoint_dir / "image_review_sheet.json")
+        sheet_path = checkpoint_dir / "image_review_sheet.json"
+        sheet_raw = sheet_path.read_bytes()
+        sheet = read_json(sheet_path)
     except (OSError, TypeError, ValueError) as error:
         raise Step4ImageIntegrityError("image review sheet is missing or invalid") from error
     if not isinstance(sheet, Mapping):
@@ -1131,47 +1315,119 @@ def validate_ingested_image_review(
     cards = sheet.get("cards")
     if not isinstance(cards, list) or not all(isinstance(card, Mapping) for card in cards):
         raise Step4ImageIntegrityError("image review sheet cards are invalid")
-    _validate_review_rows(run_root=run_root, cards=cards, current_request_bindings=current_request_bindings)
+    provenance_file_sha256_by_card = _validate_review_rows(
+        run_root=run_root, cards=cards, current_request_bindings=current_request_bindings
+    )
     from ..gates.review.image_admission_batch import BatchImageAuthorizationManifest
 
-    manifest = BatchImageAuthorizationManifest.model_validate(
-        read_json(checkpoint_dir / "image-authorization-manifest.json")
-    )
+    manifest_path = checkpoint_dir / "image-authorization-manifest.json"
+    try:
+        manifest_raw = manifest_path.read_bytes()
+        manifest = BatchImageAuthorizationManifest.model_validate(read_json(manifest_path))
+    except (OSError, TypeError, ValueError) as error:
+        raise Step4ImageIntegrityError("image authorization manifest is missing or invalid") from error
     rows_by_index = {int(row["card_index"]): row for row in cards}
-    if set(rows_by_index) != {decision.card_index for decision in manifest.decisions}:
+    row_indexes = [int(row["card_index"]) for row in cards]
+    decision_indexes = [decision.card_index for decision in manifest.decisions]
+    if row_indexes != decision_indexes:
         raise Step4ImageIntegrityError("image authorization manifest does not match the review sheet")
     for decision in manifest.decisions:
         row = rows_by_index[decision.card_index]
         for key in ("source_card_id", "render_presentation", "image_sha256", "disposition", "reviewer", "basis"):
             if str(row.get(key)) != str(getattr(decision, key)):
                 raise Step4ImageIntegrityError(f"image authorization decision drifted for card {decision.card_index}")
+    from ..gates.review.image_admission_batch import build_batch_image_authorization
+
+    rebuilt = build_batch_image_authorization(cards)
+    if rebuilt.model_dump(mode="json") != manifest.model_dump(mode="json"):
+        raise Step4ImageIntegrityError("image authorization manifest does not match the frozen review sheet")
+    current_identity = _image_review_identity(
+        run_root=run_root,
+        sheet_path=sheet_path,
+        sheet_raw=sheet_raw,
+        sheet=sheet,
+        cards=cards,
+        provenance_file_sha256_by_card=provenance_file_sha256_by_card,
+        manifest_path=manifest_path,
+        manifest=manifest,
+        manifest_raw=manifest_raw,
+    )
+    _validate_expected_image_review_identity(
+        expected=expected_authority,
+        current=current_identity,
+        fields=_IMAGE_REVIEW_AUTHORITY_IDENTITY_FIELDS,
+    )
 
 
 def ingest_image_review_sheet(
-    *, run_root: Path, current_request_bindings: Mapping[int, Mapping[str, Any]] | None = None
+    *,
+    run_root: Path,
+    current_request_bindings: Mapping[int, Mapping[str, Any]] | None = None,
+    expected_source_identity: Mapping[str, Any] | None = None,
 ) -> dict[str, Any]:
     """检查点②摄取（G-B2）：人工回填 disposition 后构建 v2 批量授权清单。"""
 
-    from ..gates.review.image_admission_batch import build_batch_image_authorization
+    from ..gates.review.image_admission_batch import (
+        BatchImageAuthorizationManifest,
+        build_batch_image_authorization,
+    )
 
     checkpoint_dir = Path(run_root) / "checkpoints" / "image_review"
     sheet_path = checkpoint_dir / "image_review_sheet.json"
+    manifest_path = checkpoint_dir / "image-authorization-manifest.json"
     if not sheet_path.is_file():
         return {"status": "waiting_human", "detail": f"image review sheet not found: {sheet_path}"}
     try:
+        sheet_raw = sheet_path.read_bytes()
         sheet = read_json(sheet_path)
         if sheet.get("schema") != "image-review-sheet/2.0":
             raise Step4ImageIntegrityError("legacy or invalid image review sheet schema")
         cards = sheet.get("cards", [])
         if not isinstance(cards, list) or not all(isinstance(card, Mapping) for card in cards):
             raise Step4ImageIntegrityError("image review sheet cards are invalid")
-        _validate_review_rows(run_root=run_root, cards=cards, current_request_bindings=current_request_bindings)
+        provenance_file_sha256_by_card = _validate_review_rows(
+            run_root=run_root, cards=cards, current_request_bindings=current_request_bindings
+        )
+        emission_identity = _image_review_identity(
+            run_root=run_root,
+            sheet_path=sheet_path,
+            sheet_raw=sheet_raw,
+            sheet=sheet,
+            cards=cards,
+            provenance_file_sha256_by_card=provenance_file_sha256_by_card,
+        )
+        if expected_source_identity is not None:
+            _validate_expected_image_review_identity(
+                expected=expected_source_identity,
+                current=emission_identity,
+                fields=_IMAGE_REVIEW_EMISSION_IDENTITY_FIELDS,
+            )
         undecided = [card["card_index"] for card in cards if card.get("disposition") is None]
         if undecided:
             return {"status": "waiting_human", "detail": f"cards without disposition: {undecided}"}
-        manifest = build_batch_image_authorization(cards)
+        rebuilt_manifest = build_batch_image_authorization(cards)
+        if manifest_path.exists():
+            manifest_raw = manifest_path.read_bytes()
+            manifest = BatchImageAuthorizationManifest.model_validate(read_json(manifest_path))
+            if manifest.model_dump(mode="json") != rebuilt_manifest.model_dump(mode="json"):
+                raise Step4ImageIntegrityError("existing image authorization manifest does not match the review sheet")
+        else:
+            atomic_write_json(manifest_path, rebuilt_manifest.model_dump(mode="json"))
+            manifest_raw = manifest_path.read_bytes()
+            manifest = BatchImageAuthorizationManifest.model_validate(read_json(manifest_path))
+            if manifest.model_dump(mode="json") != rebuilt_manifest.model_dump(mode="json"):
+                raise Step4ImageIntegrityError("persisted image authorization manifest does not match the review sheet")
     except Exception as error:
         return {"status": "refused", "stop_reason": "gate_refused_admission", "detail": sanitized_error_summary(error)}
-    atomic_write_json(checkpoint_dir / "image-authorization-manifest.json", manifest.model_dump(mode="json"))
-    approved = sum(1 for card in cards if card.get("disposition") == "approved")
-    return {"status": "ingested", "approved_count": approved, "decision_count": len(cards)}
+    authority = _image_review_identity(
+        run_root=run_root,
+        sheet_path=sheet_path,
+        sheet_raw=sheet_raw,
+        sheet=sheet,
+        cards=cards,
+        provenance_file_sha256_by_card=provenance_file_sha256_by_card,
+        manifest_path=manifest_path,
+        manifest=manifest,
+        manifest_raw=manifest_raw,
+    )
+    return {"status": "ingested", **authority}

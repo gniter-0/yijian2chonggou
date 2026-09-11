@@ -22,6 +22,7 @@ from .live_checkpoint import (
     build_admission_checkpoint,
     build_admission_checkpoint_v2,
     emit_echo_step3_review_checkpoint_v2,
+    image_review_emission_identity,
     emit_image_review_sheet,
     ingest_admission_checkpoint_v2,
     ingest_admission_decisions,
@@ -262,15 +263,27 @@ def orchestrate(config: LiveRunConfig, providers: Mapping[str, Any]) -> tuple[Li
                         return finish("gate_refused_admission", 1)
                 if ticket.get("status") == "ingested":
                     try:
-                        validate_ingested_image_review(run_root=run_root, current_request_bindings=bindings or {})
+                        validate_ingested_image_review(
+                            run_root=run_root,
+                            current_request_bindings=bindings or {},
+                            expected_authority=ticket,
+                        )
                     except (Step4ImageIntegrityError, KeyError, OSError, TypeError, ValueError) as error:
                         state.set_checkpoint("image_review", "refused", detail=str(error))
                         stage_reports.append(build_stage_report("image_review_checkpoint", "failed", str(error)))
                         return finish("gate_refused_admission", 1)
                 else:
-                    sheet_ingest = ingest_image_review_sheet(run_root=run_root, current_request_bindings=bindings)
+                    sheet_ingest = ingest_image_review_sheet(
+                        run_root=run_root,
+                        current_request_bindings=bindings,
+                        expected_source_identity=ticket if ticket.get("status") == "waiting_human" else None,
+                    )
                     if sheet_ingest["status"] == "ingested":
-                        state.set_checkpoint("image_review", "ingested", approved_count=sheet_ingest.get("approved_count", 0))
+                        state.set_checkpoint(
+                            "image_review",
+                            "ingested",
+                            **{key: value for key, value in sheet_ingest.items() if key != "status"},
+                        )
                         stage_reports.append(build_stage_report("image_review_checkpoint", "completed", f"image review ingested; approved={sheet_ingest.get('approved_count', 0)}"))
                     elif sheet_ingest["status"] == "refused":
                         state.set_checkpoint("image_review", "refused", detail=str(sheet_ingest["detail"]))
@@ -696,6 +709,7 @@ def orchestrate(config: LiveRunConfig, providers: Mapping[str, Any]) -> tuple[Li
                                 }
                                 for card in outcome.get("cards", [])
                             },
+                            expected_authority=ticket,
                         )
                     except (Step4ImageIntegrityError, KeyError, OSError, TypeError, ValueError) as error:
                         state.set_checkpoint("image_review", "refused", detail=str(error))
@@ -713,9 +727,17 @@ def orchestrate(config: LiveRunConfig, providers: Mapping[str, Any]) -> tuple[Li
                     for card in outcome.get("cards", [])
                     if card.get("outcome") == "success"
                 }
-                sheet_ingest = ingest_image_review_sheet(run_root=run_root, current_request_bindings=current_bindings)
+                sheet_ingest = ingest_image_review_sheet(
+                    run_root=run_root,
+                    current_request_bindings=current_bindings,
+                    expected_source_identity=ticket if ticket.get("status") == "waiting_human" else None,
+                )
                 if sheet_ingest["status"] == "ingested":
-                    state.set_checkpoint("image_review", "ingested", approved_count=sheet_ingest.get("approved_count", 0))
+                    state.set_checkpoint(
+                        "image_review",
+                        "ingested",
+                        **{key: value for key, value in sheet_ingest.items() if key != "status"},
+                    )
                     stage_reports.append(build_stage_report("image_review_checkpoint", "completed", f"image review ingested; approved={sheet_ingest.get('approved_count', 0)}"))
                     continue
                 if sheet_ingest["status"] == "refused":
@@ -728,7 +750,16 @@ def orchestrate(config: LiveRunConfig, providers: Mapping[str, Any]) -> tuple[Li
                     state.set_checkpoint("image_review", "refused", detail=str(error))
                     stage_reports.append(build_stage_report("image_review_checkpoint", "failed", str(error)))
                     return finish("gate_refused_admission", 1)
-                state.set_checkpoint("image_review", "waiting_human", sheet_path=str(sheet_path))
+                emission_identity = image_review_emission_identity(
+                    run_root=run_root,
+                    sheet_path=sheet_path,
+                    current_request_bindings=current_bindings,
+                )
+                state.set_checkpoint(
+                    "image_review",
+                    "waiting_human",
+                    **emission_identity,
+                )
                 stage_reports.append(build_stage_report("image_review_checkpoint", "waiting_human", "image review sheet emitted; waiting for human dispositions"))
                 return finish("waiting_human_image_review", 2)
             continue

@@ -38,6 +38,7 @@ from examcard.pipeline.live_run import (
     orchestrate,
     run_step4_stage,
 )
+from examcard.pipeline.live_checkpoint import image_review_emission_identity
 from examcard.pipeline.live_config import RunState, RunStateBindingError, build_run_resume_contract
 from examcard.pipeline.live_stage_step4 import Step4ImageIntegrityError, prepare_step4_request_bindings
 from examcard.common.hashing import canonical_hash, sha256_bytes
@@ -638,11 +639,72 @@ def test_image_review_roundtrip(repo_tmp_path: Path) -> None:
     sheet["cards"][0].update({"disposition": "approved", "reviewer": "tester", "basis": "pixel check ok"})
     sheet_path.write_text(json.dumps(sheet), encoding="utf-8")
     ingested = ingest_image_review_sheet(run_root=repo_tmp_path)
-    assert ingested == {"status": "ingested", "approved_count": 1, "decision_count": 1}
+    assert ingested["status"] == "ingested"
+    assert (ingested["approved_count"], ingested["decision_count"]) == (1, 1)
     manifest_path = repo_tmp_path / "checkpoints" / "image_review" / "image-authorization-manifest.json"
     manifest = BatchImageAuthorizationManifest.model_validate(json.loads(manifest_path.read_text(encoding="utf-8")))
     assert manifest.decision_count == 1
     assert manifest.approved_count == 1
+
+
+@pytest.mark.parametrize("existing_manifest", [False, True])
+def test_image_review_ingest_rejects_reversed_rows_without_manifest_rewrite(
+    repo_tmp_path: Path, existing_manifest: bool
+) -> None:
+    _seed_exam_workspace(repo_tmp_path)
+    run_root = _seed_paused_run(repo_tmp_path, "img-order-reversal")
+    manifest_path = run_root / "checkpoints" / "image_review" / "image-authorization-manifest.json"
+    if existing_manifest:
+        assert ingest_image_review_sheet(run_root=run_root)["status"] == "ingested"
+    manifest_before = manifest_path.read_bytes() if manifest_path.is_file() else None
+    sheet_path = run_root / "checkpoints" / "image_review" / "image_review_sheet.json"
+    sheet = json.loads(sheet_path.read_text(encoding="utf-8"))
+    sheet["cards"].reverse()
+    sheet_path.write_text(json.dumps(sheet, ensure_ascii=False, indent=2), encoding="utf-8")
+
+    result = ingest_image_review_sheet(run_root=run_root)
+
+    assert result["status"] == "refused"
+    if manifest_before is None:
+        assert not manifest_path.exists()
+    else:
+        assert manifest_path.read_bytes() == manifest_before
+
+
+def test_image_review_ingest_preserves_existing_consistent_manifest_bytes(repo_tmp_path: Path) -> None:
+    _seed_exam_workspace(repo_tmp_path)
+    run_root = _seed_paused_run(repo_tmp_path, "img-existing-consistent-manifest")
+    manifest_path = run_root / "checkpoints" / "image_review" / "image-authorization-manifest.json"
+
+    first = ingest_image_review_sheet(run_root=run_root)
+    manifest_before = manifest_path.read_bytes()
+    second = ingest_image_review_sheet(run_root=run_root)
+
+    assert first["status"] == second["status"] == "ingested"
+    assert manifest_path.read_bytes() == manifest_before
+
+
+def test_image_review_ingest_rejects_existing_different_manifest_without_overwrite(repo_tmp_path: Path) -> None:
+    _seed_exam_workspace(repo_tmp_path)
+    run_root = _seed_paused_run(repo_tmp_path, "img-existing-different-manifest")
+    manifest_path = run_root / "checkpoints" / "image_review" / "image-authorization-manifest.json"
+    assert ingest_image_review_sheet(run_root=run_root)["status"] == "ingested"
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    decision = manifest["decisions"][0]
+    decision["basis"] = "different valid basis"
+    decision["decision_sha256"] = canonical_hash(
+        {key: value for key, value in decision.items() if key not in {"schema_version", "decision_sha256"}}
+    )
+    manifest["manifest_sha256"] = canonical_hash(
+        {key: value for key, value in manifest.items() if key not in {"schema_version", "manifest_sha256"}}
+    )
+    manifest_path.write_text(json.dumps(manifest, ensure_ascii=False, indent=2), encoding="utf-8")
+    manifest_before = manifest_path.read_bytes()
+
+    result = ingest_image_review_sheet(run_root=run_root)
+
+    assert result["status"] == "refused"
+    assert manifest_path.read_bytes() == manifest_before
 
 
 def test_batch_image_manifest_rejects_duplicates_and_bad_counts() -> None:
@@ -803,6 +865,10 @@ def _seed_paused_run(root: Path, run_id: str, *, checkpoint_status: str = "waiti
     )
     assert seeded["status"] == "completed"
     sheet_path = emit_image_review_sheet(run_root=run_root, step4_outcome=seeded, storage=run_root / "step4")
+    emission_identity = image_review_emission_identity(
+        run_root=run_root,
+        sheet_path=sheet_path,
+    )
     sheet = json.loads(sheet_path.read_text(encoding="utf-8"))
     sheet["cards"][0].update({"disposition": "approved", "reviewer": "resume-tester", "basis": "clean render"})
     sheet["cards"][1].update({"disposition": "rejected", "reviewer": "resume-tester", "basis": "missing edge"})
@@ -827,7 +893,7 @@ def _seed_paused_run(root: Path, run_id: str, *, checkpoint_status: str = "waiti
     )
     state.set_stage("step3", "completed")
     state.set_stage("step4", "completed")
-    state.set_checkpoint("image_review", checkpoint_status, sheet_path=str(checkpoint_dir / "image_review_sheet.json"))
+    state.set_checkpoint("image_review", checkpoint_status, **emission_identity)
     return run_root
 
 
@@ -1058,7 +1124,25 @@ def test_resume_after_step4_completed_ingests_image_review(repo_tmp_path: Path) 
     manifest = BatchImageAuthorizationManifest.model_validate(json.loads(manifest_path.read_text(encoding="utf-8")))
     assert (manifest.decision_count, manifest.approved_count, manifest.rejected_count) == (2, 1, 1)
     state = json.loads((run_root / "run_state.json").read_text(encoding="utf-8"))
-    assert state["checkpoints"]["image_review"]["status"] == "ingested"
+    ticket = state["checkpoints"]["image_review"]
+    assert ticket["status"] == "ingested"
+    for field in (
+        "source_binding_sha256",
+        "image_review_source_binding_sha256",
+        "sheet_file_sha256",
+        "review_sheet_file_sha256",
+        "manifest_sha256",
+        "manifest_file_sha256",
+        "request_manifest_file_sha256",
+        "provenance_file_sha256_by_card",
+    ):
+        assert field in ticket
+    assert ticket["decision_count"] == 2
+    assert ticket["approved_count"] == 1
+    assert ticket["rejected_count"] == 1
+    assert ticket["manual_review_count"] == 0
+    assert ticket["reviewed_card_indexes"] == [1, 2]
+    assert ticket["reviewed_card_count"] == 2
 
 
 def test_resume_after_ingest_is_idempotent(repo_tmp_path: Path) -> None:
@@ -1091,6 +1175,86 @@ def test_resume_with_undecided_sheet_stays_waiting(repo_tmp_path: Path) -> None:
     assert report.stop_reason == "waiting_human_image_review"
     state = json.loads((run_root / "run_state.json").read_text(encoding="utf-8"))
     assert state["checkpoints"]["image_review"]["status"] == "waiting_human"
+    assert "sheet_file_sha256" not in state["checkpoints"]["image_review"]
+    assert not (run_root / "checkpoints" / "image_review" / "image-authorization-manifest.json").exists()
+
+
+@pytest.mark.parametrize(
+    "artifact",
+    ["sheet", "manifest", "request_manifest", "provenance"],
+)
+def test_already_ingested_resume_refuses_image_review_byte_tamper(
+    repo_tmp_path: Path, artifact: str
+) -> None:
+    _seed_exam_workspace(repo_tmp_path)
+    run_id = f"img-byte-{artifact}"
+    run_root = _seed_paused_run(repo_tmp_path, run_id)
+    providers = _resume_providers(repo_tmp_path)
+    first_report, first_exit = orchestrate(_resume_config(repo_tmp_path, run_id), providers)
+    assert (first_exit, first_report.stop_reason) == (0, "completed")
+
+    paths = {
+        "sheet": run_root / "checkpoints" / "image_review" / "image_review_sheet.json",
+        "manifest": run_root / "checkpoints" / "image_review" / "image-authorization-manifest.json",
+        "request_manifest": run_root / "step4" / "requests-manifest.json",
+        "provenance": next((run_root / "step4" / "image-provenance").glob("*.json")),
+    }
+    target = paths[artifact]
+    original = target.read_bytes()
+    target.write_bytes(original + b"\n")
+    calls: list[Mapping[str, object]] = []
+    providers["image_caller"] = lambda payload: (calls.append(payload) or _must_not_run())
+
+    second_report, second_exit = orchestrate(_resume_config(repo_tmp_path, run_id), providers)
+    assert (second_exit, second_report.stop_reason) == (1, "gate_refused_admission")
+    assert not calls
+    assert target.read_bytes() == original + b"\n"
+
+
+def test_already_ingested_resume_refuses_synchronized_decision_tamper(repo_tmp_path: Path) -> None:
+    _seed_exam_workspace(repo_tmp_path)
+    run_id = "img-sync-tamper"
+    run_root = _seed_paused_run(repo_tmp_path, run_id)
+    providers = _resume_providers(repo_tmp_path)
+    first_report, first_exit = orchestrate(_resume_config(repo_tmp_path, run_id), providers)
+    assert (first_exit, first_report.stop_reason) == (0, "completed")
+    sheet_path = run_root / "checkpoints" / "image_review" / "image_review_sheet.json"
+    manifest_path = run_root / "checkpoints" / "image_review" / "image-authorization-manifest.json"
+    sheet = json.loads(sheet_path.read_text(encoding="utf-8"))
+    sheet["cards"][0]["reviewer"] = "attacker"
+    sheet["cards"][0]["basis"] = "rewritten basis"
+    sheet_path.write_text(json.dumps(sheet, ensure_ascii=False, indent=2), encoding="utf-8")
+    manifest = build_batch_image_authorization(sheet["cards"])
+    manifest_path.write_text(json.dumps(manifest.model_dump(mode="json"), ensure_ascii=False, indent=2), encoding="utf-8")
+    providers["image_caller"] = _must_not_run
+
+    report, exit_code = orchestrate(_resume_config(repo_tmp_path, run_id), providers)
+    assert (exit_code, report.stop_reason) == (1, "gate_refused_admission")
+    assert manifest_path.is_file()
+
+
+@pytest.mark.parametrize(
+    "field",
+    ["sheet_file_sha256", "manifest_sha256", "manifest_file_sha256", "request_manifest_file_sha256", "decision_count", "approved_count"],
+)
+def test_already_ingested_resume_refuses_frozen_image_review_ticket_tamper(
+    repo_tmp_path: Path, field: str
+) -> None:
+    _seed_exam_workspace(repo_tmp_path)
+    run_id = f"img-ticket-{field}"
+    run_root = _seed_paused_run(repo_tmp_path, run_id)
+    providers = _resume_providers(repo_tmp_path)
+    first_report, first_exit = orchestrate(_resume_config(repo_tmp_path, run_id), providers)
+    assert (first_exit, first_report.stop_reason) == (0, "completed")
+    state_path = run_root / "run_state.json"
+    state = json.loads(state_path.read_text(encoding="utf-8"))
+    ticket = state["checkpoints"]["image_review"]
+    ticket[field] = (ticket[field] + 1) if isinstance(ticket[field], int) else "0" * 64
+    state_path.write_text(json.dumps(state, ensure_ascii=False, indent=2), encoding="utf-8")
+    providers["image_caller"] = _must_not_run
+
+    report, exit_code = orchestrate(_resume_config(repo_tmp_path, run_id), providers)
+    assert (exit_code, report.stop_reason) == (1, "gate_refused_admission")
 
 
 def test_image_base_url_drift_refuses_resume_before_provider(repo_tmp_path: Path) -> None:

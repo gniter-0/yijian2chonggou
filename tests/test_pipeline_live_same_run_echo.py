@@ -346,9 +346,28 @@ def test_same_run_orchestrator_pauses_then_reaches_step4_from_internal_v2_chain(
     assert (run_root / "checkpoints" / "echo_review" / "echo-batch-release-v2.json").is_file()
     assert (run_root / "checkpoints" / "echo_review" / "echo-batch-handoff-v2.json").is_file()
 
-    providers.pop("step4_bundle_loader_v2")
+    image_sheet = run_root / "checkpoints" / "image_review" / "image_review_sheet.json"
+    image_review = json.loads(image_sheet.read_text(encoding="utf-8"))
+    for row in image_review["cards"]:
+        row.update({"disposition": "approved", "reviewer": "image-reviewer", "basis": "clean image"})
+    image_sheet.write_text(json.dumps(image_review, ensure_ascii=False, indent=2), encoding="utf-8")
+
     fourth_report, fourth_exit = orchestrate(replace(config, resume_run_id=first_report.run_id), providers)
-    assert (fourth_exit, fourth_report.stop_reason) == (1, "gate_refused_echo_review")
+    assert (fourth_exit, fourth_report.stop_reason) == (0, "completed")
+    assert len(image_calls) == 1
+    state = json.loads((run_root / "run_state.json").read_text(encoding="utf-8"))
+    image_ticket = state["checkpoints"]["image_review"]
+    assert image_ticket["status"] == "ingested"
+    assert image_ticket["approved_count"] == 1
+    assert image_ticket["reviewed_card_indexes"] == [1]
+
+    fifth_report, fifth_exit = orchestrate(replace(config, resume_run_id=first_report.run_id), providers)
+    assert (fifth_exit, fifth_report.stop_reason) == (0, "completed")
+    assert len(image_calls) == 1
+
+    providers.pop("step4_bundle_loader_v2")
+    sixth_report, sixth_exit = orchestrate(replace(config, resume_run_id=first_report.run_id), providers)
+    assert (sixth_exit, sixth_report.stop_reason) == (1, "gate_refused_echo_review")
     assert len(image_calls) == 1
 
 
