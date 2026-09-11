@@ -1523,6 +1523,84 @@ def test_image_review_materialization_receipt_recovers_runstate_without_rewrite(
     assert state["checkpoints"]["image_review"]["materialization_status"] == "frozen"
 
 
+def test_opt_in_publication_waits_for_authorization_then_freezes_without_image_calls(
+    repo_tmp_path: Path,
+) -> None:
+    _seed_exam_workspace(repo_tmp_path)
+    run_id = "20260812-publication-v2-orchestration"
+    run_root = _seed_paused_run(repo_tmp_path, run_id)
+    providers = _resume_providers(repo_tmp_path)
+    providers["publication_enabled"] = True
+
+    first_report, first_exit = orchestrate(_resume_config(repo_tmp_path, run_id), providers)
+    assert (first_exit, first_report.stop_reason) == (2, "waiting_human_publication")
+    publication_dir = run_root / "checkpoints" / "publication"
+    manifest_path = publication_dir / "publication-manifest-v2.json"
+    assert manifest_path.is_file()
+    assert not (publication_dir / "publication-receipt-v2.json").exists()
+
+    from examcard.gates.release.publication_v2 import (
+        PUBLICATION_SCOPE_V2,
+        build_publication_authorization_v2,
+    )
+
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    p4_ticket = json.loads((run_root / "run_state.json").read_text(encoding="utf-8"))["checkpoints"]["image_review"]
+    authorization = build_publication_authorization_v2(
+        authorization_id="orchestration-human-auth",
+        publication_scope=PUBLICATION_SCOPE_V2,
+        final_release_closure_sha256=p4_ticket["final_release_receipt_sha256"],
+        publication_manifest_sha256=manifest["manifest_sha256"],
+        authorized_by="release-operator",
+        authorization_reason="controlled publication approval",
+        authorized_at="2026-09-11T00:00:00Z",
+    )
+    (publication_dir / "publication-authorization-v2.json").write_text(
+        json.dumps(authorization.model_dump(mode="json"), ensure_ascii=False, indent=2), encoding="utf-8"
+    )
+    providers["image_caller"] = _must_not_run
+
+    second_report, second_exit = orchestrate(_resume_config(repo_tmp_path, run_id), providers)
+    assert (second_exit, second_report.stop_reason) == (0, "completed")
+    state = json.loads((run_root / "run_state.json").read_text(encoding="utf-8"))
+    publication_ticket = state["checkpoints"]["publication"]
+    assert publication_ticket["status"] == "frozen"
+    assert publication_ticket["publication_status"] == "frozen"
+    assert publication_ticket["publication_artifact_count"] == 2
+    assert (publication_dir / "publication-receipt-v2.json").is_file()
+    assert len([path for path in (publication_dir / "artifacts").rglob("*") if path.is_file()]) == 2
+
+    state_before_frozen_resume = (run_root / "run_state.json").read_bytes()
+    checkpoint_bytes_before = {
+        path.relative_to(publication_dir): path.read_bytes()
+        for path in publication_dir.rglob("*")
+        if path.is_file()
+    }
+    frozen_bytes = {
+        path.name: path.read_bytes()
+        for path in publication_dir.glob("publication-*.json")
+    }
+    third_report, third_exit = orchestrate(_resume_config(repo_tmp_path, run_id), providers)
+    assert (third_exit, third_report.stop_reason) == (0, "completed")
+    assert (run_root / "run_state.json").read_bytes() == state_before_frozen_resume
+    assert {
+        path.relative_to(publication_dir): path.read_bytes()
+        for path in publication_dir.rglob("*")
+        if path.is_file()
+    } == checkpoint_bytes_before
+    assert {
+        path.name: path.read_bytes()
+        for path in publication_dir.glob("publication-*.json")
+    } == frozen_bytes
+
+    state_before_tamper = (run_root / "run_state.json").read_bytes()
+    authorization_path = publication_dir / "publication-authorization-v2.json"
+    authorization_path.write_bytes(authorization_path.read_bytes() + b"\n")
+    tampered_report, tampered_exit = orchestrate(_resume_config(repo_tmp_path, run_id), providers)
+    assert (tampered_exit, tampered_report.stop_reason) == (1, "gate_refused_publication")
+    assert (run_root / "run_state.json").read_bytes() == state_before_tamper
+
+
 def test_resume_with_undecided_sheet_stays_waiting(repo_tmp_path: Path) -> None:
     _seed_exam_workspace(repo_tmp_path)
     run_id = "20260812-resume-regression-fixture3"

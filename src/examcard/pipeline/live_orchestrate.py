@@ -30,11 +30,13 @@ from .live_checkpoint import (
     ingest_image_review_sheet,
     materialize_final_release_v2,
     materialize_image_review_v2,
+    materialize_publication_v2,
     validate_ingested_image_review,
     validate_materialized_final_release_v2,
     validate_materialized_image_review_v2,
+    validate_materialized_publication_v2,
 )
-from ..common.hashing import canonical_hash
+from ..common.hashing import canonical_hash, sha256_bytes
 from .live_config import LiveRunConfig, RunState, RunStateBindingError, build_run_resume_contract
 from .live_stage_samples import execute_stage_samples
 from .live_rehearsal import budget_rehearsal_estimate, derive_stage_call_caps, materialize_live_run
@@ -121,6 +123,58 @@ def _final_release_state(authority: Mapping[str, Any]) -> str:
     return "frozen"
 
 
+_PUBLICATION_IDENTITY_FIELDS = frozenset(
+    {
+        "publication_status",
+        "publication_manifest_sha256",
+        "publication_manifest_file_sha256",
+        "publication_authorization_sha256",
+        "publication_authorization_file_sha256",
+        "publication_receipt_sha256",
+        "publication_receipt_file_sha256",
+        "publication_artifact_count",
+        "publication_package_sha256",
+    }
+)
+
+
+def _publication_state(authority: Mapping[str, Any]) -> str:
+    """Classify P5 state while rejecting an incomplete frozen identity."""
+
+    if authority.get("status") == "refused":
+        raise ValueError("publication checkpoint is refused")
+    status = authority.get("publication_status")
+    if status is None:
+        if authority.get("status") == "frozen":
+            raise ValueError("publication status is missing from a frozen checkpoint")
+        partial = _PUBLICATION_IDENTITY_FIELDS.difference({"publication_status"}).intersection(authority)
+        if partial:
+            fields = ", ".join(sorted(partial))
+            raise ValueError(f"publication identity is partial: {fields}")
+        return "absent"
+    if status == "waiting_human":
+        if authority.get("status") not in {None, "waiting_human"}:
+            raise ValueError("publication waiting checkpoint status is invalid")
+        required = {
+            "publication_status",
+            "publication_manifest_sha256",
+            "publication_manifest_file_sha256",
+            "publication_artifact_count",
+        }
+        missing = required.difference(authority)
+        if missing:
+            raise ValueError(f"publication waiting identity is partial: {', '.join(sorted(missing))}")
+        return "waiting_human"
+    if status == "frozen":
+        if authority.get("status") not in {None, "frozen"}:
+            raise ValueError("publication frozen checkpoint status is invalid")
+        missing_fields = _PUBLICATION_IDENTITY_FIELDS.difference(authority)
+        if missing_fields:
+            raise ValueError(f"frozen publication identity is partial: {', '.join(sorted(missing_fields))}")
+        return "frozen"
+    raise ValueError("publication status is invalid")
+
+
 def orchestrate(config: LiveRunConfig, providers: Mapping[str, Any]) -> tuple[LiveRunReport, int]:
     """总编排。退出码语义（§2）：0=全部完成；2=正常暂停在人工检查点；1=失败。
 
@@ -131,6 +185,8 @@ def orchestrate(config: LiveRunConfig, providers: Mapping[str, Any]) -> tuple[Li
     decision_builder / chat_strict / step3_probe / step3_card_count /
     prompt_builder / image_caller / models_probe / drift_classifier /
     step4_card_count / image_base_url / image_model。
+    publication_enabled / publication_authorization are optional explicit P5
+    controls; P5 is not activated for the legacy P0-P4 path by default.
     """
 
     paths = ExamPaths.resolve(config.repo_root, config.exam_id)
@@ -316,6 +372,80 @@ def orchestrate(config: LiveRunConfig, providers: Mapping[str, Any]) -> tuple[Li
         )
         return materialization | final_release
 
+    publication_checkpoint = state.payload.get("checkpoints", {}).get("publication", {})
+    publication_enabled = (
+        providers.get("publication_enabled") is True
+        or providers.get("publication_authorization") is not None
+        or (isinstance(publication_checkpoint, Mapping) and bool(publication_checkpoint))
+        or (run_root / "checkpoints" / "publication").exists()
+    )
+
+    def run_publication_checkpoint(p4_authority: Mapping[str, Any]) -> str:
+        """Run the opt-in P5 boundary after P4 is frozen."""
+
+        if not publication_enabled:
+            return "disabled"
+        ticket_value = state.payload.get("checkpoints", {}).get("publication", {})
+        ticket = ticket_value if isinstance(ticket_value, Mapping) else {}
+        publication_state = _publication_state(ticket)
+        if publication_state == "frozen":
+            expected = dict(p4_authority)
+            expected.update({field: ticket[field] for field in _PUBLICATION_IDENTITY_FIELDS if field in ticket})
+            validate_materialized_publication_v2(run_root=run_root, expected_authority=expected)
+            return "completed"
+        if publication_state == "waiting_human":
+            allowed_pending = {
+                "publication_status",
+                "publication_manifest_sha256",
+                "publication_manifest_file_sha256",
+                "publication_artifact_count",
+            }
+            unexpected = set(ticket).intersection(_PUBLICATION_IDENTITY_FIELDS) - allowed_pending
+            if unexpected:
+                raise ValueError(
+                    f"publication waiting identity is partial: {', '.join(sorted(unexpected))}"
+                )
+            manifest_path = run_root / "checkpoints" / "publication" / "publication-manifest-v2.json"
+            if manifest_path.is_file() and sha256_bytes(manifest_path.read_bytes()) != ticket["publication_manifest_file_sha256"]:
+                raise ValueError("publication manifest bytes drifted before authorization")
+            receipt_path = run_root / "checkpoints" / "publication" / "publication-receipt-v2.json"
+            if receipt_path.exists():
+                raise ValueError("publication receipt exists without a frozen RunState identity")
+        result = materialize_publication_v2(
+            run_root=run_root,
+            expected_p4_authority=p4_authority,
+            authorization=providers.get("publication_authorization"),
+        )
+        if result.get("publication_status") == "waiting_human":
+            state.set_checkpoint("publication", "waiting_human", **result)
+            return "waiting_human"
+        state.set_checkpoint("publication", "frozen", **result)
+        return "completed"
+
+    def add_publication_result(p4_authority: Mapping[str, Any]) -> tuple[LiveRunReport, int] | None:
+        status = run_publication_checkpoint(p4_authority)
+        if status == "waiting_human":
+            stage_reports.append(
+                build_stage_report(
+                    "publication_checkpoint",
+                    "waiting_human",
+                    "publication manifest emitted; waiting for explicit human authorization",
+                )
+            )
+            return finish("waiting_human_publication", 2)
+        if status == "completed":
+            stage_reports.append(
+                build_stage_report("publication_checkpoint", "completed", "publication authority frozen")
+            )
+        return None
+
+    def record_publication_refusal(detail: str) -> None:
+        ticket_value = state.payload.get("checkpoints", {}).get("publication", {})
+        ticket = ticket_value if isinstance(ticket_value, Mapping) else {}
+        # A frozen P5 ticket is read-only on resume, including on tamper.
+        if ticket.get("publication_status") != "frozen" and ticket.get("status") != "frozen":
+            state.set_checkpoint("publication", "refused", detail=detail)
+
     def finish(stop_reason: str, exit_code: int) -> tuple[LiveRunReport, int]:
         report = build_live_run_report(
             run_id=run_id,
@@ -412,7 +542,7 @@ def orchestrate(config: LiveRunConfig, providers: Mapping[str, Any]) -> tuple[Li
                             current_request_bindings=bindings or {},
                             expected_authority=ticket,
                         )
-                        materialize_ingested_image_review(
+                        p4_authority = materialize_ingested_image_review(
                             authority=ticket,
                             current_request_bindings=bindings or {},
                         )
@@ -420,6 +550,14 @@ def orchestrate(config: LiveRunConfig, providers: Mapping[str, Any]) -> tuple[Li
                         state.set_checkpoint("image_review", "refused", detail=str(error))
                         stage_reports.append(build_stage_report("image_review_checkpoint", "failed", str(error)))
                         return finish("gate_refused_admission", 1)
+                    try:
+                        publication_result = add_publication_result(p4_authority)
+                    except (Step4ImageIntegrityError, KeyError, OSError, TypeError, ValueError) as error:
+                        record_publication_refusal(str(error))
+                        stage_reports.append(build_stage_report("publication_checkpoint", "failed", str(error)))
+                        return finish("gate_refused_publication", 1)
+                    if publication_result is not None:
+                        return publication_result
                 else:
                     sheet_ingest = ingest_image_review_sheet(
                         run_root=run_root,
@@ -428,7 +566,7 @@ def orchestrate(config: LiveRunConfig, providers: Mapping[str, Any]) -> tuple[Li
                     )
                     if sheet_ingest["status"] == "ingested":
                         try:
-                            persist_ingested_image_review(
+                            p4_authority = persist_ingested_image_review(
                                 authority=sheet_ingest,
                                 current_request_bindings=bindings or {},
                             )
@@ -437,6 +575,14 @@ def orchestrate(config: LiveRunConfig, providers: Mapping[str, Any]) -> tuple[Li
                             stage_reports.append(build_stage_report("image_review_checkpoint", "failed", str(error)))
                             return finish("gate_refused_admission", 1)
                         stage_reports.append(build_stage_report("image_review_checkpoint", "completed", f"image review ingested; approved={sheet_ingest.get('approved_count', 0)}"))
+                        try:
+                            publication_result = add_publication_result(p4_authority)
+                        except (Step4ImageIntegrityError, KeyError, OSError, TypeError, ValueError) as error:
+                            record_publication_refusal(str(error))
+                            stage_reports.append(build_stage_report("publication_checkpoint", "failed", str(error)))
+                            return finish("gate_refused_publication", 1)
+                        if publication_result is not None:
+                            return publication_result
                     elif sheet_ingest["status"] == "refused":
                         state.set_checkpoint("image_review", "refused", detail=str(sheet_ingest["detail"]))
                         stage_reports.append(build_stage_report("image_review_checkpoint", "failed", str(sheet_ingest["detail"])))
@@ -865,7 +1011,7 @@ def orchestrate(config: LiveRunConfig, providers: Mapping[str, Any]) -> tuple[Li
                             current_request_bindings=current_bindings,
                             expected_authority=ticket,
                         )
-                        materialize_ingested_image_review(
+                        p4_authority = materialize_ingested_image_review(
                             authority=ticket,
                             current_request_bindings=current_bindings,
                         )
@@ -873,6 +1019,14 @@ def orchestrate(config: LiveRunConfig, providers: Mapping[str, Any]) -> tuple[Li
                         state.set_checkpoint("image_review", "refused", detail=str(error))
                         stage_reports.append(build_stage_report("image_review_checkpoint", "failed", str(error)))
                         return finish("gate_refused_admission", 1)
+                    try:
+                        publication_result = add_publication_result(p4_authority)
+                    except (Step4ImageIntegrityError, KeyError, OSError, TypeError, ValueError) as error:
+                        record_publication_refusal(str(error))
+                        stage_reports.append(build_stage_report("publication_checkpoint", "failed", str(error)))
+                        return finish("gate_refused_publication", 1)
+                    if publication_result is not None:
+                        return publication_result
                     continue
                 sheet_ingest = ingest_image_review_sheet(
                     run_root=run_root,
@@ -881,7 +1035,7 @@ def orchestrate(config: LiveRunConfig, providers: Mapping[str, Any]) -> tuple[Li
                 )
                 if sheet_ingest["status"] == "ingested":
                     try:
-                        persist_ingested_image_review(
+                        p4_authority = persist_ingested_image_review(
                             authority=sheet_ingest,
                             current_request_bindings=current_bindings,
                         )
@@ -890,6 +1044,14 @@ def orchestrate(config: LiveRunConfig, providers: Mapping[str, Any]) -> tuple[Li
                         stage_reports.append(build_stage_report("image_review_checkpoint", "failed", str(error)))
                         return finish("gate_refused_admission", 1)
                     stage_reports.append(build_stage_report("image_review_checkpoint", "completed", f"image review ingested; approved={sheet_ingest.get('approved_count', 0)}"))
+                    try:
+                        publication_result = add_publication_result(p4_authority)
+                    except (Step4ImageIntegrityError, KeyError, OSError, TypeError, ValueError) as error:
+                        record_publication_refusal(str(error))
+                        stage_reports.append(build_stage_report("publication_checkpoint", "failed", str(error)))
+                        return finish("gate_refused_publication", 1)
+                    if publication_result is not None:
+                        return publication_result
                     continue
                 if sheet_ingest["status"] == "refused":
                     state.set_checkpoint("image_review", "refused", detail=str(sheet_ingest["detail"]))

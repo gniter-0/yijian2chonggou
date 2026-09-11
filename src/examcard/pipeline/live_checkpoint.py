@@ -2077,3 +2077,409 @@ def validate_materialized_final_release_v2(
         if current.get(key) != expected_authority[key]:
             raise Step4ImageIntegrityError(f"frozen final release identity drifted: {key}")
     return current
+
+
+# ---------------------------------------------------------------------------
+# P5 publication authority V2.  Publication is an explicit, downstream
+# boundary: it copies only the bytes selected by the already-frozen P4 bundle,
+# waits for a separately supplied human authorization, and writes its receipt
+# last.  No delivery or external side effect belongs here.
+# ---------------------------------------------------------------------------
+
+_PUBLICATION_V2_DIR = "publication"
+_PUBLICATION_V2_FILES = {
+    "manifest": "publication-manifest-v2.json",
+    "authorization": "publication-authorization-v2.json",
+    "receipt": "publication-receipt-v2.json",
+}
+_PUBLICATION_IDENTITY_FIELDS = frozenset(
+    {
+        "publication_status",
+        "publication_manifest_sha256",
+        "publication_manifest_file_sha256",
+        "publication_authorization_sha256",
+        "publication_authorization_file_sha256",
+        "publication_receipt_sha256",
+        "publication_receipt_file_sha256",
+        "publication_artifact_count",
+        "publication_package_sha256",
+    }
+)
+
+
+def _publication_paths(run_root: Path) -> dict[str, Path]:
+    checkpoint_dir = Path(run_root) / "checkpoints" / _PUBLICATION_V2_DIR
+    return {name: checkpoint_dir / filename for name, filename in _PUBLICATION_V2_FILES.items()}
+
+
+def _publication_artifact_path(run_root: Path, card_index: int, name: str) -> Path:
+    return Path(run_root) / "checkpoints" / _PUBLICATION_V2_DIR / "artifacts" / f"card-{card_index:04d}" / name
+
+
+def _read_publication_model(path: Path, model_type: type[Any]) -> tuple[Any, bytes]:
+    if path.is_symlink() or not path.is_file():
+        raise Step4ImageIntegrityError(f"publication artifact is missing: {path.name}")
+    try:
+        raw = path.read_bytes()
+        model = model_type.model_validate(read_json(path))
+    except (OSError, TypeError, ValueError) as error:
+        raise Step4ImageIntegrityError(f"invalid publication artifact: {path.name}") from error
+    return model, raw
+
+
+def _persist_publication_model(
+    path: Path, expected: Any, *, allow_create: bool, label: str
+) -> tuple[Any, bytes]:
+    if path.is_file():
+        actual, raw = _read_publication_model(path, type(expected))
+        if actual.model_dump(mode="json") != expected.model_dump(mode="json"):
+            raise Step4ImageIntegrityError(f"publication artifact conflicts: {label}")
+        return actual, raw
+    if path.exists() or not allow_create:
+        raise Step4ImageIntegrityError(f"publication artifact is missing or not a regular file: {label}")
+    atomic_write_json(path, expected.model_dump(mode="json"))
+    return _read_publication_model(path, type(expected))
+
+
+def _persist_publication_bytes(path: Path, content: bytes, *, allow_create: bool, label: str) -> bytes:
+    if path.is_symlink():
+        raise Step4ImageIntegrityError(f"publication byte artifact is not a regular file: {label}")
+    if path.is_file():
+        actual = path.read_bytes()
+        if actual != content:
+            raise Step4ImageIntegrityError(f"publication byte artifact conflicts: {label}")
+        return actual
+    if path.exists() or not allow_create:
+        raise Step4ImageIntegrityError(f"publication byte artifact is missing or not a regular file: {label}")
+    atomic_write_bytes(path, content)
+    return path.read_bytes()
+
+
+def _resolve_publication_p4_authority(
+    expected_p4_authority: Mapping[str, Any] | None,
+    p4_authority: Mapping[str, Any] | None,
+) -> Mapping[str, Any]:
+    if expected_p4_authority is not None and p4_authority is not None and dict(expected_p4_authority) != dict(p4_authority):
+        raise TypeError("P4 authority was supplied more than once")
+    resolved = expected_p4_authority if expected_p4_authority is not None else p4_authority
+    if resolved is None:
+        raise TypeError("frozen P4 authority is required")
+    return resolved
+
+
+def _load_publication_p4(
+    *, run_root: Path, expected_p4_authority: Mapping[str, Any]
+) -> tuple[Any, Any | None, Any, Mapping[str, Any]]:
+    from ..gates.release.final_release_v2 import (
+        FinalReleaseAuditV2,
+        FinalReleaseBundleV2,
+        FinalReleaseClosureReceiptV2,
+        FinalReleaseExclusionLedgerV2,
+    )
+
+    p4_identity = validate_materialized_final_release_v2(
+        run_root=Path(run_root), expected_authority=expected_p4_authority
+    )
+    paths = _final_release_paths(Path(run_root))
+    receipt, _receipt_raw = _read_final_release_model(paths["receipt"], FinalReleaseClosureReceiptV2)
+    bundle = None
+    if receipt.release_bundle_present:
+        bundle, _bundle_raw = _read_final_release_model(paths["bundle"], FinalReleaseBundleV2)
+    elif paths["bundle"].exists():
+        raise Step4ImageIntegrityError("zero-release P4 contains an unexpected bundle")
+    _exclusion, _exclusion_raw = _read_final_release_model(paths["exclusion"], FinalReleaseExclusionLedgerV2)
+    audit, _audit_raw = _read_final_release_model(paths["audit"], FinalReleaseAuditV2)
+    return receipt, bundle, audit, p4_identity
+
+
+def _publication_source_artifacts(
+    *, run_root: Path, p4_bundle: Any | None
+) -> tuple[list[Any], list[tuple[Path, bytes]]]:
+    from ..gates.release.publication_v2 import build_publication_artifact_v2
+
+    descriptors: list[Any] = []
+    copies: list[tuple[Path, bytes]] = []
+    if p4_bundle is None:
+        return descriptors, copies
+    storage = Path(run_root) / "step4"
+    for card in p4_bundle.release_cards:
+        provenance = validate_step4_image_artifact(
+            storage=storage,
+            card_index=card.card_index,
+            source_card_id=card.source_card_id,
+            sample_id=card.sample_id,
+            render_presentation=card.render_presentation,
+            http_payload_sha256=card.http_payload_sha256,
+            image_path_value=card.image_path,
+            image_sha256=card.image_sha256,
+            provenance_sha256=card.image_provenance_sha256,
+        )
+        if provenance.provenance_sha256 != card.image_provenance_sha256:
+            raise Step4ImageIntegrityError("P4 image provenance identity does not match the source card")
+        image_path = storage / Path(card.image_path)
+        provenance_path = step4_image_provenance_path(storage, card.card_index, card.source_card_id)
+        image_bytes = image_path.read_bytes()
+        provenance_bytes = provenance_path.read_bytes()
+        if sha256_bytes(provenance_bytes) != card.provenance_file_sha256:
+            raise Step4ImageIntegrityError("P4 provenance file bytes drifted from the source card")
+        image_descriptor = build_publication_artifact_v2(
+            artifact_id=f"card:{card.card_index}:image",
+            relative_path=f"artifacts/card-{card.card_index:04d}/image.png",
+            media_type="image/png",
+            content=image_bytes,
+            source_release_card_sha256=card.release_card_sha256,
+        )
+        provenance_descriptor = build_publication_artifact_v2(
+            artifact_id=f"card:{card.card_index}:provenance",
+            relative_path=f"artifacts/card-{card.card_index:04d}/image-provenance.json",
+            media_type="application/json",
+            content=provenance_bytes,
+            source_release_card_sha256=card.release_card_sha256,
+        )
+        descriptors.extend((image_descriptor, provenance_descriptor))
+        copies.extend(
+            (
+                (_publication_artifact_path(run_root, card.card_index, "image.png"), image_bytes),
+                (
+                    _publication_artifact_path(run_root, card.card_index, "image-provenance.json"),
+                    provenance_bytes,
+                ),
+            )
+        )
+    return descriptors, copies
+
+
+def _publication_identity(
+    *,
+    manifest: Any,
+    manifest_raw: bytes,
+    authorization: Any,
+    authorization_raw: bytes,
+    receipt: Any,
+    receipt_raw: bytes,
+) -> dict[str, Any]:
+    return {
+        "publication_status": "frozen",
+        "publication_manifest_sha256": manifest.manifest_sha256,
+        "publication_manifest_file_sha256": sha256_bytes(manifest_raw),
+        "publication_authorization_sha256": authorization.authorization_sha256,
+        "publication_authorization_file_sha256": sha256_bytes(authorization_raw),
+        "publication_receipt_sha256": receipt.receipt_sha256,
+        "publication_receipt_file_sha256": sha256_bytes(receipt_raw),
+        "publication_artifact_count": manifest.artifact_count,
+        "publication_package_sha256": receipt.package_sha256,
+    }
+
+
+def _publication_pending_identity(*, manifest: Any, manifest_raw: bytes) -> dict[str, Any]:
+    return {
+        "publication_status": "waiting_human",
+        "publication_manifest_sha256": manifest.manifest_sha256,
+        "publication_manifest_file_sha256": sha256_bytes(manifest_raw),
+        "publication_artifact_count": manifest.artifact_count,
+    }
+
+
+def _coerce_publication_authorization(value: Any | None) -> Any | None:
+    if value is None:
+        return None
+    from ..gates.release.publication_v2 import PublicationAuthorizationV2
+
+    if isinstance(value, PublicationAuthorizationV2):
+        return value
+    if isinstance(value, Mapping):
+        try:
+            return PublicationAuthorizationV2.model_validate(dict(value))
+        except (TypeError, ValueError) as error:
+            raise Step4ImageIntegrityError("publication authorization is invalid") from error
+    raise TypeError("publication authorization must be PublicationAuthorizationV2 or a mapping")
+
+
+def materialize_publication_v2(
+    *,
+    run_root: Path,
+    expected_p4_authority: Mapping[str, Any] | None = None,
+    p4_authority: Mapping[str, Any] | None = None,
+    authorization: Any | None = None,
+    publication_authorization: Any | None = None,
+) -> dict[str, Any]:
+    """Materialize or recover P5 authority; receipt creation is receipt-last."""
+
+    from ..gates.release.publication_v2 import (
+        PublicationAuthorizationV2,
+        PublicationManifestV2,
+        PublicationReceiptV2,
+        build_publication_manifest_v2,
+        derive_publication_v2,
+    )
+
+    authority = _resolve_publication_p4_authority(expected_p4_authority, p4_authority)
+    if authorization is not None and publication_authorization is not None and authorization != publication_authorization:
+        raise TypeError("publication authorization was supplied more than once")
+    supplied_authorization = _coerce_publication_authorization(
+        authorization if authorization is not None else publication_authorization
+    )
+    paths = _publication_paths(Path(run_root))
+    receipt_exists = paths["receipt"].is_file()
+    if paths["receipt"].exists() and not receipt_exists:
+        raise Step4ImageIntegrityError("publication receipt is not a regular file")
+    if receipt_exists:
+        existing_manifest, existing_manifest_raw = _read_publication_model(
+            paths["manifest"], PublicationManifestV2
+        )
+        existing_authorization, existing_authorization_raw = _read_publication_model(
+            paths["authorization"], PublicationAuthorizationV2
+        )
+        existing_receipt, existing_receipt_raw = _read_publication_model(
+            paths["receipt"], PublicationReceiptV2
+        )
+        existing_identity = _publication_identity(
+            manifest=existing_manifest,
+            manifest_raw=existing_manifest_raw,
+            authorization=existing_authorization,
+            authorization_raw=existing_authorization_raw,
+            receipt=existing_receipt,
+            receipt_raw=existing_receipt_raw,
+        )
+        for field in _PUBLICATION_IDENTITY_FIELDS.intersection(authority):
+            if authority[field] != existing_identity.get(field):
+                raise Step4ImageIntegrityError(f"frozen publication identity drifted: {field}")
+        if supplied_authorization is not None and (
+            supplied_authorization.model_dump(mode="json")
+            != existing_authorization.model_dump(mode="json")
+        ):
+            raise Step4ImageIntegrityError("publication authorization conflicts with the frozen authorization")
+        return validate_materialized_publication_v2(
+            run_root=Path(run_root),
+            expected_authority=dict(authority) | existing_identity,
+        )
+
+    p4_receipt, p4_bundle, p4_audit, p4_identity = _load_publication_p4(
+        run_root=Path(run_root), expected_p4_authority=authority
+    )
+    descriptors, copies = _publication_source_artifacts(run_root=Path(run_root), p4_bundle=p4_bundle)
+    manifest_expected = build_publication_manifest_v2(
+        final_release_receipt=p4_receipt,
+        final_release_bundle=p4_bundle,
+        final_release_audit=p4_audit,
+        p4_receipt_identity=p4_identity,
+        artifacts=descriptors,
+    )
+    allow_create = True
+    for destination, content in copies:
+        _persist_publication_bytes(destination, content, allow_create=allow_create, label=destination.name)
+    manifest, manifest_raw = _persist_publication_model(
+        paths["manifest"], manifest_expected, allow_create=allow_create, label=paths["manifest"].name
+    )
+
+    stored_authorization: PublicationAuthorizationV2 | None = None
+    authorization_raw: bytes | None = None
+    if paths["authorization"].exists():
+        if not paths["authorization"].is_file():
+            raise Step4ImageIntegrityError("publication authorization is not a regular file")
+        stored_authorization, authorization_raw = _read_publication_model(
+            paths["authorization"], PublicationAuthorizationV2
+        )
+        if supplied_authorization is not None and stored_authorization.model_dump(mode="json") != supplied_authorization.model_dump(mode="json"):
+            raise Step4ImageIntegrityError("publication authorization conflicts with the supplied authorization")
+    elif supplied_authorization is not None:
+        stored_authorization, authorization_raw = _persist_publication_model(
+            paths["authorization"],
+            supplied_authorization,
+            allow_create=True,
+            label=paths["authorization"].name,
+        )
+    else:
+        return _publication_pending_identity(manifest=manifest, manifest_raw=manifest_raw)
+
+    if stored_authorization is None or authorization_raw is None:
+        raise Step4ImageIntegrityError("publication authorization is missing")
+    derived = derive_publication_v2(
+        final_release_receipt=p4_receipt,
+        final_release_bundle=p4_bundle,
+        final_release_audit=p4_audit,
+        p4_receipt_identity=p4_identity,
+        artifacts=descriptors,
+        authorization=stored_authorization,
+        publication_manifest=manifest,
+        publication_manifest_file_sha256=sha256_bytes(manifest_raw),
+    )
+    atomic_write_json(paths["receipt"], derived.receipt.model_dump(mode="json"))
+    receipt, receipt_raw = _read_publication_model(paths["receipt"], type(derived.receipt))
+    if receipt.model_dump(mode="json") != derived.receipt.model_dump(mode="json"):
+        raise Step4ImageIntegrityError("publication receipt did not persist deterministically")
+    return _publication_identity(
+        manifest=manifest,
+        manifest_raw=manifest_raw,
+        authorization=stored_authorization,
+        authorization_raw=authorization_raw,
+        receipt=receipt,
+        receipt_raw=receipt_raw,
+    )
+
+
+def validate_materialized_publication_v2(
+    *, run_root: Path, expected_authority: Mapping[str, Any]
+) -> dict[str, Any]:
+    """Validate frozen P5 bytes and P4-derived package descriptors without writing."""
+
+    from ..gates.release.publication_v2 import (
+        PublicationAuthorizationV2,
+        PublicationManifestV2,
+        PublicationReceiptV2,
+        build_publication_manifest_v2,
+        derive_publication_v2,
+    )
+
+    if expected_authority.get("publication_status") != "frozen":
+        raise Step4ImageIntegrityError("frozen publication status is missing")
+    missing = _PUBLICATION_IDENTITY_FIELDS.difference(expected_authority)
+    if missing:
+        raise Step4ImageIntegrityError(
+            f"frozen publication identity is missing: {', '.join(sorted(missing))}"
+        )
+    p4_receipt, p4_bundle, p4_audit, p4_identity = _load_publication_p4(
+        run_root=Path(run_root), expected_p4_authority=expected_authority
+    )
+    paths = _publication_paths(Path(run_root))
+    manifest, manifest_raw = _read_publication_model(paths["manifest"], PublicationManifestV2)
+    authorization, authorization_raw = _read_publication_model(
+        paths["authorization"], PublicationAuthorizationV2
+    )
+    receipt, receipt_raw = _read_publication_model(paths["receipt"], PublicationReceiptV2)
+    descriptors, copies = _publication_source_artifacts(run_root=Path(run_root), p4_bundle=p4_bundle)
+    for destination, content in copies:
+        _persist_publication_bytes(destination, content, allow_create=False, label=destination.name)
+    expected_manifest = build_publication_manifest_v2(
+        final_release_receipt=p4_receipt,
+        final_release_bundle=p4_bundle,
+        final_release_audit=p4_audit,
+        p4_receipt_identity=p4_identity,
+        artifacts=descriptors,
+    )
+    if manifest.model_dump(mode="json") != expected_manifest.model_dump(mode="json"):
+        raise Step4ImageIntegrityError("frozen publication manifest drifted")
+    derived = derive_publication_v2(
+        final_release_receipt=p4_receipt,
+        final_release_bundle=p4_bundle,
+        final_release_audit=p4_audit,
+        p4_receipt_identity=p4_identity,
+        artifacts=descriptors,
+        authorization=authorization,
+        publication_manifest=manifest,
+        publication_manifest_file_sha256=sha256_bytes(manifest_raw),
+    )
+    if receipt.model_dump(mode="json") != derived.receipt.model_dump(mode="json"):
+        raise Step4ImageIntegrityError("frozen publication receipt drifted")
+    current = _publication_identity(
+        manifest=manifest,
+        manifest_raw=manifest_raw,
+        authorization=authorization,
+        authorization_raw=authorization_raw,
+        receipt=receipt,
+        receipt_raw=receipt_raw,
+    )
+    for field in _PUBLICATION_IDENTITY_FIELDS:
+        if current.get(field) != expected_authority[field]:
+            raise Step4ImageIntegrityError(f"frozen publication identity drifted: {field}")
+    return current

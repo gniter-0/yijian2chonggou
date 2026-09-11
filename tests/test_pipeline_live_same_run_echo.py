@@ -220,7 +220,7 @@ def _image_response(prompt: str) -> bytes:
     ).encode("utf-8")
 
 
-@pytest.mark.parametrize("review_mode", ["undecided", "rejected", "approved"])
+@pytest.mark.parametrize("review_mode", ["undecided", "rejected", "approved", "approved_publication"])
 def test_same_run_orchestrator_pauses_then_reaches_step4_from_internal_v2_chain(
     request: pytest.FixtureRequest, review_mode: str
 ) -> None:
@@ -314,6 +314,8 @@ def test_same_run_orchestrator_pauses_then_reaches_step4_from_internal_v2_chain(
             release_fixture_path=release, handoff_path=handoff
         ),
     }
+    if review_mode == "approved_publication":
+        providers["publication_enabled"] = True
 
     first_report, first_exit = orchestrate(config, providers)
     assert (first_exit, first_report.stop_reason) == (2, "waiting_human_admission"), "; ".join(
@@ -353,6 +355,33 @@ def test_same_run_orchestrator_pauses_then_reaches_step4_from_internal_v2_chain(
     image_sheet.write_text(json.dumps(image_review, ensure_ascii=False, indent=2), encoding="utf-8")
 
     fourth_report, fourth_exit = orchestrate(replace(config, resume_run_id=first_report.run_id), providers)
+    if review_mode == "approved_publication":
+        assert (fourth_exit, fourth_report.stop_reason) == (2, "waiting_human_publication")
+        publication_dir = run_root / "checkpoints" / "publication"
+        manifest = json.loads((publication_dir / "publication-manifest-v2.json").read_text(encoding="utf-8"))
+        image_ticket = json.loads((run_root / "run_state.json").read_text(encoding="utf-8"))["checkpoints"]["image_review"]
+        from examcard.gates.release.publication_v2 import (
+            PUBLICATION_SCOPE_V2,
+            build_publication_authorization_v2,
+        )
+
+        authorization = build_publication_authorization_v2(
+            authorization_id="same-run-publication-human-auth",
+            publication_scope=PUBLICATION_SCOPE_V2,
+            final_release_closure_sha256=image_ticket["final_release_receipt_sha256"],
+            publication_manifest_sha256=manifest["manifest_sha256"],
+            authorized_by="release-operator",
+            authorization_reason="same-run Echo package approved",
+            authorized_at="2026-09-11T00:00:00Z",
+        )
+        (publication_dir / "publication-authorization-v2.json").write_text(
+            json.dumps(authorization.model_dump(mode="json"), ensure_ascii=False, indent=2), encoding="utf-8"
+        )
+        fifth_report, fifth_exit = orchestrate(replace(config, resume_run_id=first_report.run_id), providers)
+        assert (fifth_exit, fifth_report.stop_reason) == (0, "completed")
+        assert (publication_dir / "publication-receipt-v2.json").is_file()
+        assert len(image_calls) == 1
+        return
     assert (fourth_exit, fourth_report.stop_reason) == (0, "completed")
     assert len(image_calls) == 1
     state = json.loads((run_root / "run_state.json").read_text(encoding="utf-8"))
