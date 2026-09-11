@@ -28,6 +28,7 @@ _ADMISSION_AUTHORIZATION_V2_NAMES = (
     "explicit-production-authorization-v2.json",
     "explicit-production-authorization.json",
 )
+_ECHO_REVIEW_V2_DIR = "echo_review"
 
 
 def _safe_checkpoint_name(value: str) -> str:
@@ -609,6 +610,288 @@ def verify_admission_checkpoint_v2(
         expected_queue_file_sha256=expected_queue_file_sha256,
         source_validator=source_validator,
     )
+
+
+def _echo_review_v2_paths(run_root: Path) -> tuple[Path, Path, Path, Path]:
+    checkpoint_dir = Path(run_root) / "checkpoints" / _ECHO_REVIEW_V2_DIR
+    return (
+        checkpoint_dir,
+        checkpoint_dir / "echo_step3_review_sheet_v2.json",
+        checkpoint_dir / "echo-step3-review-receipt-v2.json",
+        checkpoint_dir / "echo-batch-release-v2.json",
+    )
+
+
+def _validate_echo_review_v2_source(
+    *, run_root: Path, ticket: Mapping[str, Any], expected_step3_count: int, run_id: str
+) -> tuple[Path, Path, Any, Any, str, str]:
+    """Validate the immutable source side of a same-run Echo V2 checkpoint."""
+
+    from ..knowledge.contracts.admission_v2 import ReviewedTypedEvidenceFixtureV2
+    from ..knowledge.contracts.echo_release_v2 import EchoStep3ReviewSheetV2
+
+    checkpoint_dir, default_sheet_path, _receipt_path, _release_path = _echo_review_v2_paths(run_root)
+    if ticket.get("source_echo_run_id") != run_id:
+        raise ValueError("same-run Echo review checkpoint belongs to another run")
+    typed_value = ticket.get("source_typed_fixture_path")
+    sheet_value = ticket.get("review_sheet_path", str(default_sheet_path))
+    if not isinstance(typed_value, str) or not isinstance(sheet_value, str):
+        raise ValueError("same-run Echo review source paths are missing")
+    typed_path = _resolve_checkpoint_file(Path(run_root), checkpoint_dir, typed_value)
+    sheet_path = _resolve_checkpoint_file(Path(run_root), checkpoint_dir, sheet_value)
+    typed_raw = typed_path.read_bytes()
+    typed_file_sha256 = sha256_bytes(typed_raw)
+    if typed_file_sha256 != ticket.get("source_typed_fixture_file_sha256"):
+        raise ValueError("same-run Echo review typed fixture file drifted")
+    fixture = ReviewedTypedEvidenceFixtureV2.model_validate_json(typed_raw.decode("utf-8"))
+    if fixture.fixture_sha256 != ticket.get("source_typed_fixture_sha256"):
+        raise ValueError("same-run Echo review typed fixture authority drifted")
+    _validate_echo_step3_records_v3(
+        run_root=Path(run_root),
+        fixture=fixture,
+        fixture_file_sha256=typed_file_sha256,
+        expected_step3_count=expected_step3_count,
+    )
+    sheet_raw = sheet_path.read_bytes()
+    sheet = EchoStep3ReviewSheetV2.model_validate_json(sheet_raw.decode("utf-8"))
+    if sheet.source_typed_fixture_path != typed_path.as_posix():
+        raise ValueError("same-run Echo review crossed the typed fixture path")
+    if (
+        sheet.source_typed_fixture_file_sha256 != typed_file_sha256
+        or sheet.source_typed_fixture_sha256 != fixture.fixture_sha256
+    ):
+        raise ValueError("same-run Echo review crossed the typed fixture binding")
+    if Path(sheet.source_echo_run_dir).resolve() != Path(run_root).resolve():
+        raise ValueError("same-run Echo review crossed the source Echo run")
+    if len(sheet.cards) != expected_step3_count or ticket.get("expected_step3_count") != expected_step3_count:
+        raise ValueError("same-run Echo review card count drifted")
+    if sheet.sheet_sha256 != ticket.get("review_sheet_sha256"):
+        raise ValueError("same-run Echo review sheet binding drifted")
+    sheet_file_sha256 = sha256_bytes(sheet_raw)
+    if ticket.get("status") == "ingested" and sheet_file_sha256 != ticket.get("review_sheet_file_sha256"):
+        raise ValueError("same-run Echo review sheet file drifted after ingest")
+    return typed_path, sheet_path, fixture, sheet, typed_file_sha256, sheet_file_sha256
+
+
+def _validate_echo_step3_records_v3(
+    *, run_root: Path, fixture: Any, fixture_file_sha256: str, expected_step3_count: int
+) -> None:
+    """Re-inspect every persisted Step3 V3 response/gate pair before Echo use."""
+
+    from ..compilers.step3_card_v3 import compile_reviewed_fixture_v3
+    from ..compilers.step3_response_v3 import build_single_card_model_input_v3, make_single_card_inspector_v3
+
+    compilation = compile_reviewed_fixture_v3(
+        fixture, source_typed_fixture_file_sha256=fixture_file_sha256
+    )
+    if len(compilation.contracts) != expected_step3_count:
+        raise ValueError("same-run Echo Step3 record count drifted")
+    for sequence, contract in enumerate(compilation.contracts, start=1):
+        record_dir = Path(run_root) / "step3" / "cards" / f"{sequence:02d}_{contract.contract_id.rsplit(':', 1)[-1]}"
+        raw_files = sorted(record_dir.glob("attempt-*.response.raw.json"))
+        gate_files = sorted(record_dir.glob("attempt-*.gate.json"))
+        if not raw_files:
+            raise ValueError(f"same-run Echo Step3 response record is missing: {contract.contract_id}")
+        if not gate_files:
+            raise ValueError(f"same-run Echo Step3 gate record is missing: {contract.contract_id}")
+        raw_bytes = raw_files[-1].read_bytes()
+        model_input = build_single_card_model_input_v3(compilation, index=sequence - 1)
+        inspection = make_single_card_inspector_v3(model_input)(raw_bytes)
+        if not inspection.valid:
+            raise ValueError(f"same-run Echo Step3 response gate no longer validates: {contract.contract_id}")
+        stored_gate = read_json(gate_files[-1])
+        if stored_gate != inspection.model_dump(mode="json"):
+            raise ValueError(f"same-run Echo Step3 stored gate drifted: {contract.contract_id}")
+
+
+_ECHO_FROZEN_IDENTITY_FIELDS = (
+    "source_echo_run_id",
+    "source_typed_fixture_file_sha256",
+    "source_typed_fixture_sha256",
+    "review_sheet_sha256",
+    "review_sheet_file_sha256",
+    "ingest_receipt_sha256",
+    "release_sha256",
+    "release_file_sha256",
+    "handoff_sha256",
+    "handoff_file_sha256",
+    "released_count",
+    "expected_step3_count",
+)
+
+
+def _validate_frozen_echo_review_identity(ticket: Mapping[str, Any], current: Mapping[str, Any]) -> None:
+    """Refuse any change to the authority identity frozen by a prior ingest."""
+
+    for field in _ECHO_FROZEN_IDENTITY_FIELDS:
+        if field not in ticket:
+            raise ValueError(f"same-run Echo review frozen identity is missing: {field}")
+        if ticket[field] != current.get(field):
+            raise ValueError(f"same-run Echo review frozen identity drifted: {field}")
+
+
+def emit_echo_step3_review_checkpoint_v2(
+    *, run_root: Path, typed_fixture_path: Path, expected_step3_count: int, source_echo_run_id: str
+) -> dict[str, Any]:
+    """Emit and bind a same-run V2 Step3 review sheet without human authority."""
+
+    from ..compilers.step4_echo_bridge_v2 import emit_echo_step3_review_sheet_v2
+    from ..knowledge.contracts.admission_v2 import ReviewedTypedEvidenceFixtureV2
+    from ..knowledge.contracts.echo_release_v2 import EchoStep3ReviewSheetV2
+
+    run_root = Path(run_root)
+    typed_fixture_path = Path(typed_fixture_path).resolve()
+    typed_raw = typed_fixture_path.read_bytes()
+    fixture = ReviewedTypedEvidenceFixtureV2.model_validate_json(typed_raw.decode("utf-8"))
+    typed_file_sha256 = sha256_bytes(typed_raw)
+    _validate_echo_step3_records_v3(
+        run_root=run_root,
+        fixture=fixture,
+        fixture_file_sha256=typed_file_sha256,
+        expected_step3_count=expected_step3_count,
+    )
+    checkpoint_dir, _sheet_path, _receipt_path, _release_path = _echo_review_v2_paths(run_root)
+    sheet_path = emit_echo_step3_review_sheet_v2(
+        echo_run_dir=run_root,
+        typed_fixture_path=typed_fixture_path,
+        out_dir=checkpoint_dir,
+    )
+    sheet_raw = Path(sheet_path).read_bytes()
+    sheet = EchoStep3ReviewSheetV2.model_validate_json(sheet_raw.decode("utf-8"))
+    if len(sheet.cards) != expected_step3_count:
+        raise ValueError("same-run Echo review emitted an unexpected Step3 card count")
+    if Path(sheet.source_echo_run_dir).resolve() != run_root.resolve():
+        raise ValueError("same-run Echo review emitted a crossed source run")
+    if sheet.source_typed_fixture_path != typed_fixture_path.as_posix():
+        raise ValueError("same-run Echo review emitted a crossed typed fixture path")
+    if (
+        sheet.source_typed_fixture_file_sha256 != typed_file_sha256
+        or sheet.source_typed_fixture_sha256 != fixture.fixture_sha256
+    ):
+        raise ValueError("same-run Echo review emitted a crossed typed fixture binding")
+    return {
+        "checkpoint": "echo_review",
+        "schema_version": sheet.schema_version,
+        "source_echo_run_id": source_echo_run_id,
+        "source_typed_fixture_path": str(typed_fixture_path),
+        "source_typed_fixture_file_sha256": typed_file_sha256,
+        "source_typed_fixture_sha256": fixture.fixture_sha256,
+        "review_sheet_path": str(Path(sheet_path)),
+        "review_sheet_sha256": sheet.sheet_sha256,
+        "review_sheet_file_sha256": sha256_bytes(sheet_raw),
+        "expected_step3_count": expected_step3_count,
+        "status": "waiting_human",
+    }
+
+
+def ingest_echo_step3_review_checkpoint_v2(
+    *, run_root: Path, ticket: Mapping[str, Any], expected_step3_count: int, source_echo_run_id: str
+) -> dict[str, Any]:
+    """Ingest or revalidate the same-run V2 review checkpoint and its release chain."""
+
+    try:
+        from ..compilers.step4_echo_bridge_v2 import build_echo_release_fixture_v2
+        from ..gates.review.echo_step3_review_v2 import ingest_echo_step3_review_v2, issue_echo_batch_handoff_v2
+        from ..knowledge.contracts.echo_release_v2 import (
+            EchoBatchReviewedReleaseFixtureV2,
+            EchoBatchStep4HandoffV2,
+            EchoStep3ReviewReceiptV2,
+        )
+
+        run_root = Path(run_root)
+        checkpoint_dir, _sheet_path, receipt_path, release_path = _echo_review_v2_paths(run_root)
+        typed_path, sheet_path, fixture, sheet, typed_file_sha256, sheet_file_sha256 = _validate_echo_review_v2_source(
+            run_root=run_root,
+            ticket=ticket,
+            expected_step3_count=expected_step3_count,
+            run_id=source_echo_run_id,
+        )
+        ingest = ingest_echo_step3_review_v2(sheet_path=sheet_path)
+        if ingest["status"] == "waiting_human":
+            return ingest
+        if ingest["status"] != "released":
+            return {"status": "refused", "detail": str(ingest.get("detail", "V2 Echo review was refused"))}
+        receipt = ingest.get("ingest_receipt")
+        if receipt is None:
+            raise ValueError("same-run Echo review ingest did not produce a V2 receipt")
+        approved = {card.contract_id for card in sheet.cards if card.disposition == "approved"}
+        first_approved = next((card for card in sheet.cards if card.contract_id in approved), None)
+        if first_approved is None or not isinstance(first_approved.b2_review, dict):
+            raise ValueError("same-run Echo review has no explicit authorization evidence")
+        release = build_echo_release_fixture_v2(
+            typed_fixture_path=typed_path,
+            echo_run_dir=run_root,
+            review_sheet_path=sheet_path,
+            approved_rows=ingest["released"],
+            source_echo_run_id=source_echo_run_id,
+        )
+        handoff = issue_echo_batch_handoff_v2(
+            release=release,
+            authorized_by=str(first_approved.reviewer or ""),
+            authorization_evidence=dict(first_approved.b2_review),
+            ingest_receipt=receipt,
+        )
+        receipt_payload = receipt.model_dump(mode="json")
+        release_payload = release.model_dump(mode="json")
+        handoff_payload = handoff.model_dump(mode="json")
+        persisted_receipt_path = checkpoint_dir / "echo-step3-review-receipt-v2.json"
+        persisted_release_path = checkpoint_dir / "echo-batch-release-v2.json"
+        persisted_handoff_path = checkpoint_dir / "echo-batch-handoff-v2.json"
+        if ticket.get("status") == "ingested":
+            if not persisted_receipt_path.is_file() or not persisted_release_path.is_file() or not persisted_handoff_path.is_file():
+                raise ValueError("same-run Echo review persisted release chain is incomplete")
+            if read_json(persisted_receipt_path) != receipt_payload:
+                raise ValueError("same-run Echo review receipt drifted")
+            if read_json(persisted_release_path) != release_payload:
+                raise ValueError("same-run Echo release drifted from the frozen review")
+            if read_json(persisted_handoff_path) != handoff_payload:
+                raise ValueError("same-run Echo handoff drifted from the frozen release")
+        else:
+            atomic_write_json(persisted_receipt_path, receipt_payload)
+            atomic_write_json(persisted_release_path, release_payload)
+            atomic_write_json(persisted_handoff_path, handoff_payload)
+        persisted_receipt = EchoStep3ReviewReceiptV2.model_validate(read_json(persisted_receipt_path))
+        persisted_release = EchoBatchReviewedReleaseFixtureV2.model_validate(read_json(persisted_release_path))
+        persisted_handoff = EchoBatchStep4HandoffV2.model_validate(read_json(persisted_handoff_path))
+        if persisted_release.card_count != persisted_handoff.card_count or persisted_release.card_count < 1:
+            raise ValueError("same-run Echo release/handoff card count is invalid")
+        if (
+            persisted_release.source_typed_fixture_file_sha256 != typed_file_sha256
+            or persisted_release.source_typed_fixture_sha256 != fixture.fixture_sha256
+            or persisted_release.review_sheet_sha256 != sheet_file_sha256
+            or persisted_handoff.review_ingest_receipt_sha256 != persisted_receipt.receipt_sha256
+        ):
+            raise ValueError("same-run Echo release chain source binding drifted")
+        result = {
+            "status": "ingested",
+            "detail": f"released={persisted_release.card_count}",
+            "source_echo_run_id": source_echo_run_id,
+            "source_typed_fixture_path": str(typed_path),
+            "source_typed_fixture_file_sha256": typed_file_sha256,
+            "source_typed_fixture_sha256": fixture.fixture_sha256,
+            "review_sheet_path": str(sheet_path),
+            "review_sheet_sha256": sheet.sheet_sha256,
+            "review_sheet_file_sha256": sheet_file_sha256,
+            "ingest_receipt_path": str(persisted_receipt_path),
+            "ingest_receipt_sha256": persisted_receipt.receipt_sha256,
+            "release_path": str(persisted_release_path),
+            "release_sha256": persisted_release.fixture_sha256,
+            "release_file_sha256": sha256_bytes(persisted_release_path.read_bytes()),
+            "handoff_path": str(persisted_handoff_path),
+            "handoff_sha256": persisted_handoff.handoff_sha256,
+            "handoff_file_sha256": sha256_bytes(persisted_handoff_path.read_bytes()),
+            "expected_step3_count": expected_step3_count,
+            "released_count": persisted_release.card_count,
+        }
+        if ticket.get("status") == "ingested":
+            _validate_frozen_echo_review_identity(ticket, result)
+        return result
+    except Exception as error:
+        return {
+            "status": "refused",
+            "stop_reason": "gate_refused_echo_review",
+            "detail": sanitized_error_summary(error),
+        }
 
 
 # ---------------------------------------------------------------------------

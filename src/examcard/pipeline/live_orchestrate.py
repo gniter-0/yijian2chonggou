@@ -21,9 +21,11 @@ from .live_stage_step4 import Step4ImageIntegrityError, prepare_step4_request_bi
 from .live_checkpoint import (
     build_admission_checkpoint,
     build_admission_checkpoint_v2,
+    emit_echo_step3_review_checkpoint_v2,
     emit_image_review_sheet,
     ingest_admission_checkpoint_v2,
     ingest_admission_decisions,
+    ingest_echo_step3_review_checkpoint_v2,
     ingest_image_review_sheet,
     validate_ingested_image_review,
 )
@@ -72,6 +74,18 @@ def orchestrate(config: LiveRunConfig, providers: Mapping[str, Any]) -> tuple[Li
         sample_ids = tuple(s for s in sample_ids if any(token in s for token in config.only_samples))
     step3_cards = int(providers.get("step3_card_count") or 0)
     step4_cards = int(providers.get("step4_card_count") or 0)
+    same_run_admission = (
+        config.mode == "live"
+        and "step2b" in config.stages
+        and "step3" in config.stages
+        and config.step3_contract == "v3"
+    )
+    same_run_echo = same_run_admission and config.step3_mode == "echo" and "step4" in config.stages
+    if same_run_echo:
+        # The human review may release fewer cards, but the immutable run cap
+        # must cover the full source-derived Step3 cardinality.  The release
+        # itself remains the authority for the actual Step4 card count.
+        step4_cards = step3_cards
     caps = derive_stage_call_caps(
         stages=config.stages,
         sample_count=max(len(sample_ids), 1),
@@ -83,12 +97,6 @@ def orchestrate(config: LiveRunConfig, providers: Mapping[str, Any]) -> tuple[Li
     image_model = str(providers.get("image_model", ""))
     step4_handoff = config.step4_handoff or _optional_path(providers.get("step4_handoff"))
     step4_release_fixture = _optional_path(providers.get("step4_release_fixture"))
-    same_run_admission = (
-        config.mode == "live"
-        and "step2b" in config.stages
-        and "step3" in config.stages
-        and config.step3_contract == "v3"
-    )
     run_config = build_run_resume_contract(
         config,
         resolved_sample_ids=sample_ids,
@@ -97,8 +105,8 @@ def orchestrate(config: LiveRunConfig, providers: Mapping[str, Any]) -> tuple[Li
         stage_call_caps=caps,
         image_base_url=image_base_url,
         image_model=image_model,
-        step4_handoff=step4_handoff,
-        step4_release_fixture=step4_release_fixture if config.step3_release_fixture is None else None,
+        step4_handoff=None if same_run_echo else step4_handoff,
+        step4_release_fixture=None if same_run_echo else step4_release_fixture if config.step3_release_fixture is None else None,
         admission_contract="v2" if same_run_admission else None,
         step3_typed_fixture_origin="admission_checkpoint" if same_run_admission else None,
     )
@@ -115,13 +123,52 @@ def orchestrate(config: LiveRunConfig, providers: Mapping[str, Any]) -> tuple[Li
     usd_cap = config.budget_usd if config.budget_usd is not None else 1.0
     budget = LiveRunBudget(run_root / "budget.json", usd_cap=usd_cap, stage_call_caps=caps)
 
+    def same_run_v2_bundle_loader(*args: Any) -> tuple[Any, Any]:
+        loader = providers.get("step4_bundle_loader_v2")
+        if not callable(loader):
+            raise ValueError("same-run Step4 requires the V2 echo bundle loader")
+        loaded = loader(*args)
+        if not isinstance(loaded, tuple) or len(loaded) != 2:
+            raise ValueError("same-run Step4 V2 bundle loader returned an invalid result")
+        from ..compilers.step4_echo_bridge_v2 import EchoStep4BundleV2, EchoStep4InputViewV2
+
+        if not isinstance(loaded[0], EchoStep4BundleV2) or not isinstance(loaded[1], EchoStep4InputViewV2):
+            raise ValueError("same-run Step4 bundle loader is not V2")
+        return loaded
+
+    def resolve_step4_source() -> tuple[Path, Path, Any | None]:
+        if not same_run_echo:
+            return (
+                config.step3_release_fixture or Path(str(providers.get("step4_release_fixture", ""))),
+                config.step4_handoff or Path(str(providers.get("step4_handoff", ""))),
+                providers.get("step4_bundle_loader"),
+            )
+        ticket = state.checkpoint("echo_review")
+        if ticket.get("status") != "ingested":
+            raise ValueError("same-run Step4 review authority is not ingested")
+        verified = ingest_echo_step3_review_checkpoint_v2(
+            run_root=run_root,
+            ticket=ticket,
+            expected_step3_count=int(run_config.get("step3_card_count", step3_cards)),
+            source_echo_run_id=run_id,
+        )
+        if verified.get("status") != "ingested":
+            raise ValueError(str(verified.get("detail", "same-run Echo review revalidation failed")))
+        release_path = Path(str(verified["release_path"]))
+        handoff_path = Path(str(verified["handoff_path"]))
+        # Execute the injected callable once at the boundary so a pilot/V1
+        # loader can never be selected accidentally by Step4 internals.
+        same_run_v2_bundle_loader(release_path, handoff_path)
+        return release_path, handoff_path, same_run_v2_bundle_loader
+
     def current_step4_bindings() -> dict[int, dict[str, Any]]:
+        release_path, handoff_path, bundle_loader = resolve_step4_source()
         return prepare_step4_request_bindings(
-            release_fixture_path=config.step3_release_fixture or Path(str(providers.get("step4_release_fixture", ""))),
-            handoff_path=config.step4_handoff or Path(str(providers.get("step4_handoff", ""))),
+            release_fixture_path=release_path,
+            handoff_path=handoff_path,
             prompt_builder=providers["prompt_builder"],
             image_model=image_model,
-            bundle_loader=providers.get("step4_bundle_loader"),
+            bundle_loader=bundle_loader,
         )
 
     def finish(stop_reason: str, exit_code: int) -> tuple[LiveRunReport, int]:
@@ -196,6 +243,13 @@ def orchestrate(config: LiveRunConfig, providers: Mapping[str, Any]) -> tuple[Li
             # 故 resume 永远走不到摄取——检查点①因摄取位于后继 stage（step3）入口而幸免。
             # 就地对账，与 step4 分支内检查点块逐字同义（ingested/refused/仍缺三分支）。
             if stage == "step4" and config.mode == "live":
+                if same_run_echo:
+                    try:
+                        resolve_step4_source()
+                    except Exception as error:
+                        state.set_checkpoint("echo_review", "refused", detail=str(error))
+                        stage_reports.append(build_stage_report("echo_review_checkpoint", "failed", str(error)))
+                        return finish("gate_refused_echo_review", 1)
                 ticket = state.checkpoint("image_review")
                 sheet_path = run_root / "checkpoints" / "image_review" / "image_review_sheet.json"
                 bindings = None
@@ -504,12 +558,94 @@ def orchestrate(config: LiveRunConfig, providers: Mapping[str, Any]) -> tuple[Li
             state.set_stage(stage, outcome["status"])
             if outcome["status"] == "completed_with_failures":
                 failed = True
+            elif same_run_echo:
+                try:
+                    admission_ticket = state.checkpoint("admission")
+                    fixture_value = admission_ticket.get("fixture_path")
+                    fixture_path = Path(fixture_value).resolve() if isinstance(fixture_value, str) else None
+                    if fixture_path is None or not fixture_path.is_file():
+                        raise ValueError("same-run Echo review requires the persisted Admission V2 fixture")
+                    try:
+                        fixture_path.relative_to(run_root.resolve())
+                    except ValueError as error:
+                        raise ValueError("same-run Echo review fixture is outside the current run") from error
+                    ticket_info = emit_echo_step3_review_checkpoint_v2(
+                        run_root=run_root,
+                        typed_fixture_path=fixture_path,
+                        expected_step3_count=int(run_config.get("step3_card_count", step3_cards)),
+                        source_echo_run_id=run_id,
+                    )
+                    state.set_checkpoint(
+                        "echo_review",
+                        "waiting_human",
+                        **{key: value for key, value in ticket_info.items() if key != "status"},
+                    )
+                    stage_reports.append(
+                        build_stage_report(
+                            "echo_review_checkpoint",
+                            "waiting_human",
+                            "V2 Step3 review sheet emitted; waiting for explicit human review",
+                        )
+                    )
+                    return finish("waiting_human_echo_review", 2)
+                except Exception as error:
+                    state.set_checkpoint("echo_review", "refused", detail=str(error))
+                    stage_reports.append(build_stage_report("echo_review_checkpoint", "failed", str(error)))
+                    return finish("gate_refused_echo_review", 1)
             continue
 
         if stage == "step4":
+            if same_run_echo:
+                ticket = state.checkpoint("echo_review")
+                if ticket.get("status") == "waiting_human":
+                    ingest = ingest_echo_step3_review_checkpoint_v2(
+                        run_root=run_root,
+                        ticket=ticket,
+                        expected_step3_count=int(run_config.get("step3_card_count", step3_cards)),
+                        source_echo_run_id=run_id,
+                    )
+                    if ingest["status"] == "waiting_human":
+                        stage_reports.append(
+                            build_stage_report(
+                                "echo_review_checkpoint",
+                                "waiting_human",
+                                str(ingest.get("detail", "waiting for V2 Step3 review")),
+                            )
+                        )
+                        return finish("waiting_human_echo_review", 2)
+                    if ingest["status"] == "refused":
+                        detail = str(ingest.get("detail", "same-run Echo review was refused"))
+                        state.set_checkpoint("echo_review", "refused", detail=detail)
+                        stage_reports.append(build_stage_report("echo_review_checkpoint", "failed", detail))
+                        return finish("gate_refused_echo_review", 1)
+                    state.set_checkpoint(
+                        "echo_review",
+                        "ingested",
+                        **{key: value for key, value in ingest.items() if key != "status"},
+                    )
+                    stage_reports.append(
+                        build_stage_report(
+                            "echo_review_checkpoint",
+                            "completed",
+                            str(ingest.get("detail", "same-run Echo review ingested")),
+                        )
+                    )
+                elif ticket.get("status") != "ingested":
+                    detail = "same-run Echo review checkpoint is not authorized"
+                    state.set_checkpoint("echo_review", "refused", detail=detail)
+                    stage_reports.append(build_stage_report("echo_review_checkpoint", "failed", detail))
+                    return finish("gate_refused_echo_review", 1)
+                try:
+                    release_fixture_path, handoff_path, bundle_loader = resolve_step4_source()
+                except Exception as error:
+                    state.set_checkpoint("echo_review", "refused", detail=str(error))
+                    stage_reports.append(build_stage_report("echo_review_checkpoint", "failed", str(error)))
+                    return finish("gate_refused_echo_review", 1)
+            else:
+                release_fixture_path, handoff_path, bundle_loader = resolve_step4_source()
             outcome = run_step4_stage(
-                release_fixture_path=config.step3_release_fixture or Path(str(providers.get("step4_release_fixture", ""))),
-                handoff_path=config.step4_handoff or Path(str(providers.get("step4_handoff", ""))),
+                release_fixture_path=release_fixture_path,
+                handoff_path=handoff_path,
                 prompt_builder=providers["prompt_builder"],
                 image_caller=providers.get("image_caller") or (lambda payload: (0, b"")),
                 models_probe=providers.get("models_probe") if config.mode == "live" else None,
@@ -521,7 +657,7 @@ def orchestrate(config: LiveRunConfig, providers: Mapping[str, Any]) -> tuple[Li
                 probe_price=pricing.get("probe", 0.0),
                 dry_run=config.mode == "dry_run",
                 max_attempts=config.max_attempts,
-                bundle_loader=providers.get("step4_bundle_loader"),
+                bundle_loader=bundle_loader,
             )
             extras["step4"] = {key: value for key, value in outcome.items() if key != "cards"}
             extras["step4_cards"] = outcome.get("cards", [])

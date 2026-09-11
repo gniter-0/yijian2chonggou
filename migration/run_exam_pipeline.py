@@ -483,6 +483,7 @@ def main() -> int:
         and "step3" in config.stages
         and config.step3_contract == "v3"
     )
+    same_run_echo = same_run_admission and config.step3_mode == "echo" and "step4" in config.stages
 
     if same_run_admission:
         # Same-run V3 cardinality is source-derived from Step2B grouping
@@ -857,7 +858,7 @@ def main() -> int:
         providers["step4_card_count"] = len(release_payload.get("cards", ())) or 16
 
     # ---- step4 装载接缝（P8 补链：echo 批新版本号道；pilot 路径零改动） ----------
-    if args.step4_source == "echo-batch":
+    if args.step4_source == "echo-batch" and not same_run_echo:
         if not (args.echo_release and args.echo_release.is_file()):
             raise SystemExit("--step4-source echo-batch requires an existing --echo-release fixture json")
         if not (args.echo_handoff and args.echo_handoff.is_file()):
@@ -881,6 +882,16 @@ def main() -> int:
         providers["step4_release_fixture"] = args.echo_release
         providers["step4_handoff"] = args.echo_handoff
         providers["step4_card_count"] = len(echo_release_payload.get("cards", ())) or 1
+
+    if same_run_echo:
+        # The full live lane owns its release/handoff inside the run.  Keep
+        # external echo-batch arguments out of the authority path and inject
+        # the explicit V2 loader required by the orchestrator.
+        from examcard.compilers.step4_echo_bridge_v2 import load_step4_bundle_source_v2
+
+        providers["step4_bundle_loader_v2"] = lambda fixture_path, handoff_path: load_step4_bundle_source_v2(
+            release_fixture_path=fixture_path, handoff_path=handoff_path
+        )
 
     report, exit_code = orchestrate(config, providers)
     print(

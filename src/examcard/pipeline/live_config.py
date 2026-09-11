@@ -112,13 +112,24 @@ def build_run_resume_contract(
         and config.step3_contract == "v3"
     ):
         raise ValueError("V2 admission checkpoint is only valid for live same-run Step2B to Step3 V3")
+    same_run_step3_echo = admission_lane and config.step3_mode == "echo"
+    same_run_echo_lane = same_run_step3_echo and "step4" in config.stages
     file_inputs = {
         "step3_typed_fixture": {"configured": False, "origin": "admission_checkpoint"}
         if admission_lane
         else _file_binding(config.step3_typed_fixture),
-        "step3_release_fixture": _file_binding(config.step3_release_fixture),
-        "step4_handoff": _file_binding(step4_handoff or config.step4_handoff),
-        "step4_release_fixture": _file_binding(step4_release_fixture),
+        # The Admission + Echo Step3 lane resolves its release from the
+        # authenticated same-run checkpoint.  Release-bypass still consumes
+        # the configured external release and must bind it for resume.
+        "step3_release_fixture": {"configured": False}
+        if same_run_step3_echo
+        else _file_binding(config.step3_release_fixture),
+        "step4_handoff": {"configured": False}
+        if same_run_echo_lane
+        else _file_binding(step4_handoff or config.step4_handoff),
+        "step4_release_fixture": {"configured": False}
+        if same_run_echo_lane
+        else _file_binding(step4_release_fixture),
     }
     return {
         "schema_version": 3 if admission_lane else 2,
