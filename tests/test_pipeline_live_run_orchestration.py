@@ -1161,6 +1161,331 @@ def test_resume_after_ingest_is_idempotent(repo_tmp_path: Path) -> None:
     state = json.loads((run_root / "run_state.json").read_text(encoding="utf-8"))
     assert state["checkpoints"]["image_review"]["status"] == "ingested"
 
+    checkpoint_dir = run_root / "checkpoints" / "image_review"
+    assert (checkpoint_dir / "reviewed-image-fixture-v2.json").is_file()
+    assert (checkpoint_dir / "post-review-queue-v2.json").is_file()
+    assert (checkpoint_dir / "image-admission-audit-v2.json").is_file()
+    assert (checkpoint_dir / "image-review-materialization-v2.json").is_file()
+    assert state["checkpoints"]["image_review"]["materialization_status"] == "frozen"
+
+
+def test_p2_only_ingested_resume_upgrades_and_freezes_materialization(repo_tmp_path: Path) -> None:
+    _seed_exam_workspace(repo_tmp_path)
+    run_id = "20260812-resume-p2-only-materialization-upgrade"
+    run_root = _seed_paused_run(repo_tmp_path, run_id)
+
+    authority = ingest_image_review_sheet(run_root=run_root)
+    assert authority["status"] == "ingested"
+    state_path = run_root / "run_state.json"
+    state = json.loads(state_path.read_text(encoding="utf-8"))
+    state["checkpoints"]["image_review"] = {
+        key: value for key, value in authority.items() if key != "status"
+    } | {"status": "ingested"}
+    state_path.write_text(json.dumps(state, ensure_ascii=False, indent=2), encoding="utf-8")
+    checkpoint_dir = run_root / "checkpoints" / "image_review"
+    assert not any(
+        (checkpoint_dir / filename).exists()
+        for filename in (
+            "reviewed-image-fixture-v2.json",
+            "post-review-queue-v2.json",
+            "image-admission-audit-v2.json",
+            "image-review-materialization-v2.json",
+        )
+    )
+
+    providers = _resume_providers(repo_tmp_path)
+    providers["image_caller"] = _must_not_run
+    first_report, first_exit = orchestrate(_resume_config(repo_tmp_path, run_id), providers)
+    assert (first_exit, first_report.stop_reason) == (0, "completed")
+    first_state = json.loads(state_path.read_text(encoding="utf-8"))
+    first_ticket = first_state["checkpoints"]["image_review"]
+    assert first_ticket["status"] == "ingested"
+    assert first_ticket["materialization_status"] == "frozen"
+    for field in (
+        "materialization_receipt_sha256",
+        "materialization_receipt_file_sha256",
+        "post_review_queue_sha256",
+        "post_review_queue_file_sha256",
+        "admission_audit_sha256",
+        "admission_audit_file_sha256",
+        "materialized_decision_count",
+        "materialized_approved_count",
+        "materialized_rejected_count",
+        "materialized_manual_review_count",
+        "materialized_reviewed_card_indexes",
+        "materialized_post_review_card_indexes",
+    ):
+        assert field in first_ticket
+    first_artifacts = {
+        filename: (checkpoint_dir / filename).read_bytes()
+        for filename in (
+            "reviewed-image-fixture-v2.json",
+            "post-review-queue-v2.json",
+            "image-admission-audit-v2.json",
+            "image-review-materialization-v2.json",
+        )
+    }
+
+    second_report, second_exit = orchestrate(_resume_config(repo_tmp_path, run_id), providers)
+    assert (second_exit, second_report.stop_reason) == (0, "completed")
+    assert {
+        filename: (checkpoint_dir / filename).read_bytes()
+        for filename in first_artifacts
+    } == first_artifacts
+    second_state = json.loads(state_path.read_text(encoding="utf-8"))
+    assert second_state["checkpoints"]["image_review"] == first_ticket
+
+
+def test_frozen_materialization_status_deletion_refuses_without_rebaseline(repo_tmp_path: Path) -> None:
+    _seed_exam_workspace(repo_tmp_path)
+    run_id = "20260812-image-review-p3-status-deletion"
+    run_root = _seed_paused_run(repo_tmp_path, run_id)
+    providers = _resume_providers(repo_tmp_path)
+    first_report, first_exit = orchestrate(_resume_config(repo_tmp_path, run_id), providers)
+    assert (first_exit, first_report.stop_reason) == (0, "completed")
+
+    state_path = run_root / "run_state.json"
+    state = json.loads(state_path.read_text(encoding="utf-8"))
+    ticket = state["checkpoints"]["image_review"]
+    del ticket["materialization_status"]
+    state_path.write_text(json.dumps(state, ensure_ascii=False, indent=2), encoding="utf-8")
+    checkpoint_dir = run_root / "checkpoints" / "image_review"
+    before = {
+        name: (checkpoint_dir / name).read_bytes()
+        for name in (
+            "reviewed-image-fixture-v2.json",
+            "post-review-queue-v2.json",
+            "image-admission-audit-v2.json",
+            "image-review-materialization-v2.json",
+        )
+    }
+    providers["image_caller"] = _must_not_run
+
+    report, exit_code = orchestrate(_resume_config(repo_tmp_path, run_id), providers)
+
+    assert (exit_code, report.stop_reason) == (1, "gate_refused_admission")
+    assert {name: (checkpoint_dir / name).read_bytes() for name in before} == before
+    refused_state = json.loads(state_path.read_text(encoding="utf-8"))
+    refused_ticket = refused_state["checkpoints"]["image_review"]
+    assert refused_ticket["status"] == "refused"
+    assert "materialization_status" not in refused_ticket
+
+
+def test_partial_materialization_identity_on_p2_only_ticket_refuses(repo_tmp_path: Path) -> None:
+    _seed_exam_workspace(repo_tmp_path)
+    run_id = "20260812-image-review-p3-partial-ticket"
+    run_root = _seed_paused_run(repo_tmp_path, run_id)
+    authority = ingest_image_review_sheet(run_root=run_root)
+    state_path = run_root / "run_state.json"
+    state = json.loads(state_path.read_text(encoding="utf-8"))
+    state["checkpoints"]["image_review"] = {
+        key: value for key, value in authority.items() if key != "status"
+    } | {"status": "ingested", "materialization_receipt_sha256": "0" * 64}
+    state_path.write_text(json.dumps(state, ensure_ascii=False, indent=2), encoding="utf-8")
+    providers = _resume_providers(repo_tmp_path)
+    providers["image_caller"] = _must_not_run
+
+    report, exit_code = orchestrate(_resume_config(repo_tmp_path, run_id), providers)
+
+    assert (exit_code, report.stop_reason) == (1, "gate_refused_admission")
+    refused_state = json.loads(state_path.read_text(encoding="utf-8"))
+    refused_ticket = refused_state["checkpoints"]["image_review"]
+    assert refused_ticket["status"] == "refused"
+    assert refused_ticket["materialization_receipt_sha256"] == "0" * 64
+    checkpoint_dir = run_root / "checkpoints" / "image_review"
+    assert not (checkpoint_dir / "image-review-materialization-v2.json").exists()
+
+
+def test_invalid_materialization_status_refuses_without_rebaseline(repo_tmp_path: Path) -> None:
+    _seed_exam_workspace(repo_tmp_path)
+    run_id = "20260812-image-review-p3-invalid-status"
+    run_root = _seed_paused_run(repo_tmp_path, run_id)
+    providers = _resume_providers(repo_tmp_path)
+    first_report, first_exit = orchestrate(_resume_config(repo_tmp_path, run_id), providers)
+    assert (first_exit, first_report.stop_reason) == (0, "completed")
+
+    state_path = run_root / "run_state.json"
+    state = json.loads(state_path.read_text(encoding="utf-8"))
+    state["checkpoints"]["image_review"]["materialization_status"] = "pending"
+    state_path.write_text(json.dumps(state, ensure_ascii=False, indent=2), encoding="utf-8")
+    providers["image_caller"] = _must_not_run
+
+    report, exit_code = orchestrate(_resume_config(repo_tmp_path, run_id), providers)
+
+    assert (exit_code, report.stop_reason) == (1, "gate_refused_admission")
+    refused_state = json.loads(state_path.read_text(encoding="utf-8"))
+    refused_ticket = refused_state["checkpoints"]["image_review"]
+    assert refused_ticket["status"] == "refused"
+    assert refused_ticket["materialization_status"] == "pending"
+
+
+def test_image_review_materialization_zero_approved_is_valid_without_fixture(repo_tmp_path: Path) -> None:
+    _seed_exam_workspace(repo_tmp_path)
+    run_id = "20260812-image-review-zero-approved"
+    run_root = _seed_paused_run(repo_tmp_path, run_id)
+    sheet_path = run_root / "checkpoints" / "image_review" / "image_review_sheet.json"
+    sheet = json.loads(sheet_path.read_text(encoding="utf-8"))
+    for row in sheet["cards"]:
+        row.update({"disposition": "rejected", "reviewer": "resume-tester", "basis": "not suitable"})
+    sheet_path.write_text(json.dumps(sheet, ensure_ascii=False, indent=2), encoding="utf-8")
+
+    providers = _resume_providers(repo_tmp_path)
+    providers["image_caller"] = _must_not_run
+    report, exit_code = orchestrate(_resume_config(repo_tmp_path, run_id), providers)
+
+    assert (exit_code, report.stop_reason) == (0, "completed")
+    checkpoint_dir = run_root / "checkpoints" / "image_review"
+    assert not (checkpoint_dir / "reviewed-image-fixture-v2.json").exists()
+    queue = json.loads((checkpoint_dir / "post-review-queue-v2.json").read_text(encoding="utf-8"))
+    audit = json.loads((checkpoint_dir / "image-admission-audit-v2.json").read_text(encoding="utf-8"))
+    receipt = json.loads((checkpoint_dir / "image-review-materialization-v2.json").read_text(encoding="utf-8"))
+    assert queue["queue_count"] == 2
+    assert audit["decision_count"] == 2
+    assert audit["approved_count"] == 0
+    assert receipt["reviewed_fixture_present"] is False
+    assert receipt["reviewed_fixture_sha256"] is None
+    assert receipt["reviewed_fixture_file_sha256"] is None
+
+
+def test_image_review_materialization_rejects_frozen_artifact_tamper_without_calls(repo_tmp_path: Path) -> None:
+    _seed_exam_workspace(repo_tmp_path)
+    run_id = "20260812-image-review-p3-byte-tamper"
+    run_root = _seed_paused_run(repo_tmp_path, run_id)
+    providers = _resume_providers(repo_tmp_path)
+    first_report, first_exit = orchestrate(_resume_config(repo_tmp_path, run_id), providers)
+    assert (first_exit, first_report.stop_reason) == (0, "completed")
+    queue_path = run_root / "checkpoints" / "image_review" / "post-review-queue-v2.json"
+    original = queue_path.read_bytes()
+    queue_path.write_bytes(original + b"\n")
+    calls: list[Mapping[str, object]] = []
+    providers["image_caller"] = lambda payload: (calls.append(payload) or _must_not_run())
+
+    second_report, second_exit = orchestrate(_resume_config(repo_tmp_path, run_id), providers)
+
+    assert (second_exit, second_report.stop_reason) == (1, "gate_refused_admission")
+    assert not calls
+    assert queue_path.read_bytes() == original + b"\n"
+
+
+def test_image_review_materialization_rejects_semantic_tamper_with_valid_child_hash(repo_tmp_path: Path) -> None:
+    _seed_exam_workspace(repo_tmp_path)
+    run_id = "20260812-image-review-p3-semantic-tamper"
+    run_root = _seed_paused_run(repo_tmp_path, run_id)
+    providers = _resume_providers(repo_tmp_path)
+    first_report, first_exit = orchestrate(_resume_config(repo_tmp_path, run_id), providers)
+    assert (first_exit, first_report.stop_reason) == (0, "completed")
+    queue_path = run_root / "checkpoints" / "image_review" / "post-review-queue-v2.json"
+    queue = json.loads(queue_path.read_text(encoding="utf-8"))
+    item = queue["items"][0]
+    item["basis"] = "rewritten after freeze"
+    item["item_sha256"] = canonical_hash(
+        {key: value for key, value in item.items() if key not in {"schema_version", "item_sha256"}}
+    )
+    queue["queue_sha256"] = canonical_hash(
+        {key: value for key, value in queue.items() if key not in {"schema_version", "queue_sha256"}}
+    )
+    queue_path.write_text(json.dumps(queue, ensure_ascii=False, indent=2), encoding="utf-8")
+    providers["image_caller"] = _must_not_run
+
+    report, exit_code = orchestrate(_resume_config(repo_tmp_path, run_id), providers)
+
+    assert (exit_code, report.stop_reason) == (1, "gate_refused_admission")
+
+
+def test_image_review_materialization_receipt_missing_child_refuses_without_regeneration(repo_tmp_path: Path) -> None:
+    _seed_exam_workspace(repo_tmp_path)
+    run_id = "20260812-image-review-p3-receipt-missing-child"
+    run_root = _seed_paused_run(repo_tmp_path, run_id)
+    providers = _resume_providers(repo_tmp_path)
+    first_report, first_exit = orchestrate(_resume_config(repo_tmp_path, run_id), providers)
+    assert (first_exit, first_report.stop_reason) == (0, "completed")
+    checkpoint_dir = run_root / "checkpoints" / "image_review"
+    queue_path = checkpoint_dir / "post-review-queue-v2.json"
+    queue_path.unlink()
+    providers["image_caller"] = _must_not_run
+
+    report, exit_code = orchestrate(_resume_config(repo_tmp_path, run_id), providers)
+
+    assert (exit_code, report.stop_reason) == (1, "gate_refused_admission")
+    assert not queue_path.exists()
+
+
+def test_image_review_materialization_zero_approved_rejects_unexpected_fixture(repo_tmp_path: Path) -> None:
+    _seed_exam_workspace(repo_tmp_path)
+    run_id = "20260812-image-review-zero-approved-unexpected-fixture"
+    run_root = _seed_paused_run(repo_tmp_path, run_id)
+    sheet_path = run_root / "checkpoints" / "image_review" / "image_review_sheet.json"
+    sheet = json.loads(sheet_path.read_text(encoding="utf-8"))
+    for row in sheet["cards"]:
+        row.update({"disposition": "rejected", "reviewer": "resume-tester", "basis": "not suitable"})
+    sheet_path.write_text(json.dumps(sheet, ensure_ascii=False, indent=2), encoding="utf-8")
+    fixture_path = run_root / "checkpoints" / "image_review" / "reviewed-image-fixture-v2.json"
+    fixture_path.write_text("unexpected", encoding="utf-8")
+    providers = _resume_providers(repo_tmp_path)
+    providers["image_caller"] = _must_not_run
+
+    report, exit_code = orchestrate(_resume_config(repo_tmp_path, run_id), providers)
+
+    assert (exit_code, report.stop_reason) == (1, "gate_refused_admission")
+    assert fixture_path.read_bytes() == b"unexpected"
+
+
+def test_image_review_materialization_recovers_matching_partial_files_without_rewrite(repo_tmp_path: Path) -> None:
+    _seed_exam_workspace(repo_tmp_path)
+    run_id = "20260812-image-review-p3-partial-recovery"
+    run_root = _seed_paused_run(repo_tmp_path, run_id)
+    authority = ingest_image_review_sheet(run_root=run_root)
+    assert authority["status"] == "ingested"
+    from examcard.pipeline.live_checkpoint import materialize_image_review_v2
+
+    materialize_image_review_v2(run_root=run_root, expected_authority=authority)
+    checkpoint_dir = run_root / "checkpoints" / "image_review"
+    queue_path = checkpoint_dir / "post-review-queue-v2.json"
+    audit_path = checkpoint_dir / "image-admission-audit-v2.json"
+    queue_before = queue_path.read_bytes()
+    audit_before = audit_path.read_bytes()
+    (checkpoint_dir / "reviewed-image-fixture-v2.json").unlink()
+    (checkpoint_dir / "image-review-materialization-v2.json").unlink()
+
+    materialize_image_review_v2(run_root=run_root, expected_authority=authority)
+
+    assert queue_path.read_bytes() == queue_before
+    assert audit_path.read_bytes() == audit_before
+    assert (checkpoint_dir / "reviewed-image-fixture-v2.json").is_file()
+
+
+def test_image_review_materialization_receipt_recovers_runstate_without_rewrite(repo_tmp_path: Path) -> None:
+    _seed_exam_workspace(repo_tmp_path)
+    run_id = "20260812-image-review-p3-receipt-recovery"
+    run_root = _seed_paused_run(repo_tmp_path, run_id)
+    authority = ingest_image_review_sheet(run_root=run_root)
+    assert authority["status"] == "ingested"
+    from examcard.pipeline.live_checkpoint import materialize_image_review_v2
+
+    materialize_image_review_v2(run_root=run_root, expected_authority=authority)
+    checkpoint_dir = run_root / "checkpoints" / "image_review"
+    before = {
+        name: (checkpoint_dir / name).read_bytes()
+        for name in (
+            "reviewed-image-fixture-v2.json",
+            "post-review-queue-v2.json",
+            "image-admission-audit-v2.json",
+            "image-review-materialization-v2.json",
+        )
+    }
+    providers = _resume_providers(repo_tmp_path)
+    providers["image_caller"] = _must_not_run
+
+    report, exit_code = orchestrate(_resume_config(repo_tmp_path, run_id), providers)
+
+    assert (exit_code, report.stop_reason) == (0, "completed")
+    assert {
+        name: (checkpoint_dir / name).read_bytes()
+        for name in before
+    } == before
+    state = json.loads((run_root / "run_state.json").read_text(encoding="utf-8"))
+    assert state["checkpoints"]["image_review"]["materialization_status"] == "frozen"
+
 
 def test_resume_with_undecided_sheet_stays_waiting(repo_tmp_path: Path) -> None:
     _seed_exam_workspace(repo_tmp_path)
@@ -1235,7 +1560,17 @@ def test_already_ingested_resume_refuses_synchronized_decision_tamper(repo_tmp_p
 
 @pytest.mark.parametrize(
     "field",
-    ["sheet_file_sha256", "manifest_sha256", "manifest_file_sha256", "request_manifest_file_sha256", "decision_count", "approved_count"],
+    [
+        "sheet_file_sha256",
+        "manifest_sha256",
+        "manifest_file_sha256",
+        "request_manifest_file_sha256",
+        "decision_count",
+        "approved_count",
+        "materialization_receipt_sha256",
+        "materialized_decision_count",
+        "materialized_reviewed_card_indexes",
+    ],
 )
 def test_already_ingested_resume_refuses_frozen_image_review_ticket_tamper(
     repo_tmp_path: Path, field: str

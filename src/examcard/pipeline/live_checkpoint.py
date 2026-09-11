@@ -9,9 +9,10 @@ from collections.abc import Callable, Mapping
 from pathlib import Path
 from typing import Any, Sequence
 
-from ..common.hashing import canonical_hash, sha256_bytes
+from ..common.hashing import canonical_hash, hash_model, sha256_bytes
 from ..common.io import atomic_write_bytes, atomic_write_json, png_dimensions, read_json
 from ..providers.base import sanitized_error_summary
+from ..gates.review.image_admission_batch import BatchImageAuthorizationManifest
 
 from .live_support import _utc_now_iso
 from .live_stage_step4 import (
@@ -1040,6 +1041,270 @@ def ingest_admission_decisions(
     }
     atomic_write_json(Path(run_root) / "checkpoints" / "admission" / "ingest-audit.json", audit)
     return {"status": "ingested", "released_count": len(released), "released": released, "audit": audit}
+
+
+_IMAGE_REVIEW_MATERIALIZATION_DIR = "image_review"
+_IMAGE_REVIEW_MATERIALIZATION_FILES = {
+    "fixture": "reviewed-image-fixture-v2.json",
+    "queue": "post-review-queue-v2.json",
+    "audit": "image-admission-audit-v2.json",
+    "receipt": "image-review-materialization-v2.json",
+}
+
+
+def _image_review_materialization_paths(run_root: Path) -> dict[str, Path]:
+    checkpoint_dir = Path(run_root) / "checkpoints" / _IMAGE_REVIEW_MATERIALIZATION_DIR
+    return {name: checkpoint_dir / filename for name, filename in _IMAGE_REVIEW_MATERIALIZATION_FILES.items()}
+
+
+def _load_image_review_materialization_inputs(
+    *,
+    run_root: Path,
+    current_request_bindings: Mapping[int, Mapping[str, Any]] | None,
+    expected_authority: Mapping[str, Any] | None,
+) -> tuple[dict[str, Any], Any]:
+    """Load P2 authority and derive P3 inputs without trusting P3 files."""
+
+    checkpoint_dir = Path(run_root) / "checkpoints" / "image_review"
+    sheet_path = checkpoint_dir / "image_review_sheet.json"
+    manifest_path = checkpoint_dir / "image-authorization-manifest.json"
+    try:
+        sheet_raw = sheet_path.read_bytes()
+        sheet = read_json(sheet_path)
+        manifest_raw = manifest_path.read_bytes()
+        manifest = BatchImageAuthorizationManifest.model_validate(read_json(manifest_path))
+    except (OSError, TypeError, ValueError) as error:
+        raise Step4ImageIntegrityError("image review P2 authority is missing or invalid") from error
+    if not isinstance(sheet, Mapping) or sheet.get("schema") != "image-review-sheet/2.0":
+        raise Step4ImageIntegrityError("legacy or invalid image review sheet schema")
+    cards = sheet.get("cards")
+    if not isinstance(cards, list) or not all(isinstance(card, Mapping) for card in cards):
+        raise Step4ImageIntegrityError("image review sheet cards are invalid")
+    provenance_file_sha256_by_card = _validate_review_rows(
+        run_root=Path(run_root), cards=cards, current_request_bindings=current_request_bindings
+    )
+    current_authority = _image_review_identity(
+        run_root=Path(run_root),
+        sheet_path=sheet_path,
+        sheet_raw=sheet_raw,
+        sheet=sheet,
+        cards=cards,
+        provenance_file_sha256_by_card=provenance_file_sha256_by_card,
+        manifest_path=manifest_path,
+        manifest=manifest,
+        manifest_raw=manifest_raw,
+    )
+    if expected_authority is not None:
+        _validate_expected_image_review_identity(
+            expected=expected_authority,
+            current=current_authority,
+            fields=_IMAGE_REVIEW_AUTHORITY_IDENTITY_FIELDS,
+        )
+    from ..gates.review.image_admission_materialization_v2 import derive_image_review_materialization_v2
+
+    artifacts = derive_image_review_materialization_v2(
+        rows=cards,
+        authorization_manifest=manifest,
+        image_review_source_binding_sha256=current_authority["image_review_source_binding_sha256"],
+        review_sheet_file_sha256=current_authority["review_sheet_file_sha256"],
+        authorization_manifest_file_sha256=current_authority["manifest_file_sha256"],
+        request_manifest_file_sha256=current_authority["request_manifest_file_sha256"],
+        provenance_file_sha256_by_card=provenance_file_sha256_by_card,
+    )
+    return current_authority, artifacts
+
+
+def _read_materialization_model(path: Path, model_type: type[Any]) -> tuple[Any, bytes]:
+    try:
+        raw = path.read_bytes()
+        model = model_type.model_validate(read_json(path))
+    except (OSError, TypeError, ValueError) as error:
+        raise Step4ImageIntegrityError(f"invalid image review materialization artifact: {path.name}") from error
+    return model, raw
+
+
+def _require_materialization_model(path: Path, expected: Any, *, allow_create: bool) -> tuple[Any, bytes]:
+    if path.is_file():
+        actual, raw = _read_materialization_model(path, type(expected))
+        if actual.model_dump(mode="json") != expected.model_dump(mode="json"):
+            raise Step4ImageIntegrityError(f"image review materialization artifact conflicts: {path.name}")
+        return actual, raw
+    if not allow_create:
+        raise Step4ImageIntegrityError(f"image review materialization artifact is missing: {path.name}")
+    atomic_write_json(path, expected.model_dump(mode="json"))
+    return _read_materialization_model(path, type(expected))
+
+
+def _image_review_materialization_identity(
+    *,
+    receipt: Any,
+    receipt_raw: bytes,
+    fixture_raw: bytes | None,
+    queue_raw: bytes,
+    audit_raw: bytes,
+) -> dict[str, Any]:
+    return {
+        "materialization_status": "frozen",
+        "materialization_receipt_sha256": receipt.receipt_sha256,
+        "materialization_receipt_file_sha256": sha256_bytes(receipt_raw),
+        "reviewed_fixture_present": receipt.reviewed_fixture_present,
+        "reviewed_fixture_sha256": receipt.reviewed_fixture_sha256,
+        "reviewed_fixture_file_sha256": sha256_bytes(fixture_raw) if fixture_raw is not None else None,
+        "post_review_queue_sha256": receipt.post_review_queue_sha256,
+        "post_review_queue_file_sha256": sha256_bytes(queue_raw),
+        "admission_audit_sha256": receipt.admission_audit_sha256,
+        "admission_audit_file_sha256": sha256_bytes(audit_raw),
+        "materialized_decision_count": receipt.decision_count,
+        "materialized_approved_count": receipt.approved_count,
+        "materialized_rejected_count": receipt.rejected_count,
+        "materialized_manual_review_count": receipt.manual_review_count,
+        "materialized_reviewed_card_indexes": list(receipt.reviewed_card_indexes),
+        "materialized_post_review_card_indexes": list(receipt.post_review_card_indexes),
+    }
+
+
+def _build_image_review_materialization_receipt(
+    *,
+    authority: Mapping[str, Any],
+    artifacts: Any,
+    fixture_raw: bytes | None,
+    queue_raw: bytes,
+    audit_raw: bytes,
+) -> Any:
+    from ..gates.review.image_admission_materialization_v2 import ImageReviewMaterializationReceiptV2
+
+    fixture = artifacts.reviewed_fixture
+    queue = artifacts.post_review_queue
+    audit = artifacts.admission_audit
+    return hash_model(
+        ImageReviewMaterializationReceiptV2,
+        {
+            "image_review_source_binding_sha256": authority["image_review_source_binding_sha256"],
+            "review_sheet_file_sha256": authority["review_sheet_file_sha256"],
+            "authorization_manifest_sha256": authority["manifest_sha256"],
+            "authorization_manifest_file_sha256": authority["manifest_file_sha256"],
+            "request_manifest_file_sha256": authority["request_manifest_file_sha256"],
+            "reviewed_fixture_present": fixture is not None,
+            "reviewed_fixture_sha256": fixture.fixture_sha256 if fixture is not None else None,
+            "reviewed_fixture_file_sha256": sha256_bytes(fixture_raw) if fixture_raw is not None else None,
+            "post_review_queue_sha256": queue.queue_sha256,
+            "post_review_queue_file_sha256": sha256_bytes(queue_raw),
+            "admission_audit_sha256": audit.audit_sha256,
+            "admission_audit_file_sha256": sha256_bytes(audit_raw),
+            "decision_count": authority["decision_count"],
+            "approved_count": authority["approved_count"],
+            "rejected_count": authority["rejected_count"],
+            "manual_review_count": authority["manual_review_count"],
+            "reviewed_card_indexes": tuple(fixture.reviewed_card_indexes) if fixture is not None else (),
+            "post_review_card_indexes": tuple(queue.card_indexes),
+        },
+        "receipt_sha256",
+    )
+
+
+def materialize_image_review_v2(
+    *,
+    run_root: Path,
+    current_request_bindings: Mapping[int, Mapping[str, Any]] | None = None,
+    expected_authority: Mapping[str, Any] | None = None,
+) -> dict[str, Any]:
+    """Materialize or recover P3 files, freezing only after the full chain validates.
+
+    A pre-existing receipt changes recovery semantics: all child files must
+    already exist and match, because the receipt is written last.
+    """
+
+    authority, artifacts = _load_image_review_materialization_inputs(
+        run_root=Path(run_root),
+        current_request_bindings=current_request_bindings,
+        expected_authority=expected_authority,
+    )
+    paths = _image_review_materialization_paths(Path(run_root))
+    receipt_exists = paths["receipt"].is_file()
+    allow_create_children = not receipt_exists
+    fixture_raw: bytes | None = None
+    if artifacts.reviewed_fixture is None:
+        if paths["fixture"].exists():
+            raise Step4ImageIntegrityError("zero-approved image review cannot contain a reviewed fixture")
+    else:
+        _fixture, fixture_raw = _require_materialization_model(
+            paths["fixture"], artifacts.reviewed_fixture, allow_create=allow_create_children
+        )
+    _queue, queue_raw = _require_materialization_model(
+        paths["queue"], artifacts.post_review_queue, allow_create=allow_create_children
+    )
+    _audit, audit_raw = _require_materialization_model(
+        paths["audit"], artifacts.admission_audit, allow_create=allow_create_children
+    )
+    expected_receipt = _build_image_review_materialization_receipt(
+        authority=authority,
+        artifacts=artifacts,
+        fixture_raw=fixture_raw,
+        queue_raw=queue_raw,
+        audit_raw=audit_raw,
+    )
+    if paths["receipt"].is_file():
+        receipt, receipt_raw = _read_materialization_model(paths["receipt"], type(expected_receipt))
+        if receipt.model_dump(mode="json") != expected_receipt.model_dump(mode="json"):
+            raise Step4ImageIntegrityError("image review materialization receipt conflicts with its artifacts")
+    else:
+        atomic_write_json(paths["receipt"], expected_receipt.model_dump(mode="json"))
+        receipt, receipt_raw = _read_materialization_model(paths["receipt"], type(expected_receipt))
+    return _image_review_materialization_identity(
+        receipt=receipt,
+        receipt_raw=receipt_raw,
+        fixture_raw=fixture_raw,
+        queue_raw=queue_raw,
+        audit_raw=audit_raw,
+    )
+
+
+def validate_materialized_image_review_v2(
+    *,
+    run_root: Path,
+    current_request_bindings: Mapping[int, Mapping[str, Any]] | None = None,
+    expected_authority: Mapping[str, Any] | None = None,
+) -> dict[str, Any]:
+    """Read-only validation of a frozen P3 chain; never regenerates artifacts."""
+
+    if expected_authority is None or expected_authority.get("materialization_status") != "frozen":
+        raise Step4ImageIntegrityError("frozen image review materialization status is missing")
+    paths = _image_review_materialization_paths(Path(run_root))
+    if not paths["receipt"].is_file():
+        raise Step4ImageIntegrityError("frozen image review materialization receipt is missing")
+    identity = materialize_image_review_v2(
+        run_root=Path(run_root),
+        current_request_bindings=current_request_bindings,
+        expected_authority=expected_authority,
+    )
+    for key, expected in (
+        ("materialization_receipt_sha256", expected_authority.get("materialization_receipt_sha256") if expected_authority else None),
+        ("materialization_receipt_file_sha256", expected_authority.get("materialization_receipt_file_sha256") if expected_authority else None),
+        ("post_review_queue_sha256", expected_authority.get("post_review_queue_sha256") if expected_authority else None),
+        ("post_review_queue_file_sha256", expected_authority.get("post_review_queue_file_sha256") if expected_authority else None),
+        ("admission_audit_sha256", expected_authority.get("admission_audit_sha256") if expected_authority else None),
+        ("admission_audit_file_sha256", expected_authority.get("admission_audit_file_sha256") if expected_authority else None),
+    ):
+        if expected is None:
+            raise Step4ImageIntegrityError(f"frozen image review materialization identity is missing: {key}")
+        if identity.get(key) != expected:
+            raise Step4ImageIntegrityError(f"frozen image review materialization identity drifted: {key}")
+    for key in (
+        "reviewed_fixture_present",
+        "reviewed_fixture_sha256",
+        "reviewed_fixture_file_sha256",
+        "materialized_decision_count",
+        "materialized_approved_count",
+        "materialized_rejected_count",
+        "materialized_manual_review_count",
+        "materialized_reviewed_card_indexes",
+        "materialized_post_review_card_indexes",
+    ):
+        if expected_authority is None or key not in expected_authority:
+            raise Step4ImageIntegrityError(f"frozen image review materialization identity is missing: {key}")
+        if identity.get(key) != expected_authority[key]:
+            raise Step4ImageIntegrityError(f"frozen image review materialization identity drifted: {key}")
+    return identity
 
 
 def emit_image_review_sheet(*, run_root: Path, step4_outcome: Mapping[str, Any], storage: Path) -> Path:

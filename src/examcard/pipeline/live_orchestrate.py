@@ -28,7 +28,9 @@ from .live_checkpoint import (
     ingest_admission_decisions,
     ingest_echo_step3_review_checkpoint_v2,
     ingest_image_review_sheet,
+    materialize_image_review_v2,
     validate_ingested_image_review,
+    validate_materialized_image_review_v2,
 )
 from ..common.hashing import canonical_hash
 from .live_config import LiveRunConfig, RunState, RunStateBindingError, build_run_resume_contract
@@ -44,6 +46,41 @@ _STATUS_TO_DETAIL = {
     "completed": "completed",
     "completed_with_failures": "completed with sample-level failures (resend rounds exhausted)",
 }
+
+_IMAGE_REVIEW_MATERIALIZATION_IDENTITY_FIELDS = frozenset(
+    {
+        "materialization_status",
+        "materialization_receipt_sha256",
+        "materialization_receipt_file_sha256",
+        "reviewed_fixture_present",
+        "reviewed_fixture_sha256",
+        "reviewed_fixture_file_sha256",
+        "post_review_queue_sha256",
+        "post_review_queue_file_sha256",
+        "admission_audit_sha256",
+        "admission_audit_file_sha256",
+        "materialized_decision_count",
+        "materialized_approved_count",
+        "materialized_rejected_count",
+        "materialized_manual_review_count",
+        "materialized_reviewed_card_indexes",
+        "materialized_post_review_card_indexes",
+    }
+)
+
+
+def _image_review_materialization_state(authority: Mapping[str, Any]) -> str:
+    """Classify an image-review ticket without permitting P3 downgrade."""
+
+    if "materialization_status" not in authority:
+        partial_identity = _IMAGE_REVIEW_MATERIALIZATION_IDENTITY_FIELDS.intersection(authority)
+        if partial_identity:
+            fields = ", ".join(sorted(partial_identity))
+            raise ValueError(f"image review materialization identity is partial: {fields}")
+        return "p2_only"
+    if authority["materialization_status"] != "frozen":
+        raise ValueError("image review materialization status is invalid")
+    return "frozen"
 
 
 def orchestrate(config: LiveRunConfig, providers: Mapping[str, Any]) -> tuple[LiveRunReport, int]:
@@ -172,6 +209,52 @@ def orchestrate(config: LiveRunConfig, providers: Mapping[str, Any]) -> tuple[Li
             bundle_loader=bundle_loader,
         )
 
+    def freeze_image_review_materialization(
+        *, authority: Mapping[str, Any], current_request_bindings: Mapping[int, Mapping[str, Any]] | None
+    ) -> dict[str, Any]:
+        """Complete P3 from frozen P2 authority without rerunning Step4."""
+
+        if authority.get("materialization_status") == "frozen":
+            return validate_materialized_image_review_v2(
+                run_root=run_root,
+                current_request_bindings=current_request_bindings,
+                expected_authority=authority,
+            )
+        return materialize_image_review_v2(
+            run_root=run_root,
+            current_request_bindings=current_request_bindings,
+            expected_authority=authority,
+        )
+
+    def materialize_ingested_image_review(
+        *, authority: Mapping[str, Any], current_request_bindings: Mapping[int, Mapping[str, Any]] | None
+    ) -> dict[str, Any]:
+        """Upgrade a P2-only ticket once, without rewriting an already frozen ticket."""
+
+        materialization_state = _image_review_materialization_state(authority)
+        materialization = freeze_image_review_materialization(
+            authority=authority, current_request_bindings=current_request_bindings
+        )
+        if materialization_state == "p2_only":
+            state.set_checkpoint("image_review", "ingested", **materialization)
+        return materialization
+
+    def persist_ingested_image_review(
+        *, authority: Mapping[str, Any], current_request_bindings: Mapping[int, Mapping[str, Any]] | None
+    ) -> dict[str, Any]:
+        """Persist P2 and P3 identity together only after P3 has succeeded."""
+
+        materialization = freeze_image_review_materialization(
+            authority=authority, current_request_bindings=current_request_bindings
+        )
+        state.set_checkpoint(
+            "image_review",
+            "ingested",
+            **{key: value for key, value in authority.items() if key != "status"},
+            **materialization,
+        )
+        return materialization
+
     def finish(stop_reason: str, exit_code: int) -> tuple[LiveRunReport, int]:
         report = build_live_run_report(
             run_id=run_id,
@@ -268,6 +351,10 @@ def orchestrate(config: LiveRunConfig, providers: Mapping[str, Any]) -> tuple[Li
                             current_request_bindings=bindings or {},
                             expected_authority=ticket,
                         )
+                        materialize_ingested_image_review(
+                            authority=ticket,
+                            current_request_bindings=bindings or {},
+                        )
                     except (Step4ImageIntegrityError, KeyError, OSError, TypeError, ValueError) as error:
                         state.set_checkpoint("image_review", "refused", detail=str(error))
                         stage_reports.append(build_stage_report("image_review_checkpoint", "failed", str(error)))
@@ -279,11 +366,15 @@ def orchestrate(config: LiveRunConfig, providers: Mapping[str, Any]) -> tuple[Li
                         expected_source_identity=ticket if ticket.get("status") == "waiting_human" else None,
                     )
                     if sheet_ingest["status"] == "ingested":
-                        state.set_checkpoint(
-                            "image_review",
-                            "ingested",
-                            **{key: value for key, value in sheet_ingest.items() if key != "status"},
-                        )
+                        try:
+                            persist_ingested_image_review(
+                                authority=sheet_ingest,
+                                current_request_bindings=bindings or {},
+                            )
+                        except (Step4ImageIntegrityError, KeyError, OSError, TypeError, ValueError) as error:
+                            state.set_checkpoint("image_review", "refused", detail=str(error))
+                            stage_reports.append(build_stage_report("image_review_checkpoint", "failed", str(error)))
+                            return finish("gate_refused_admission", 1)
                         stage_reports.append(build_stage_report("image_review_checkpoint", "completed", f"image review ingested; approved={sheet_ingest.get('approved_count', 0)}"))
                     elif sheet_ingest["status"] == "refused":
                         state.set_checkpoint("image_review", "refused", detail=str(sheet_ingest["detail"]))
@@ -695,27 +786,6 @@ def orchestrate(config: LiveRunConfig, providers: Mapping[str, Any]) -> tuple[Li
             # ◆检查点②：出图完成产出底稿并暂停（§7.2）。
             if config.mode == "live":
                 ticket = state.checkpoint("image_review")
-                if ticket.get("status") == "ingested":
-                    try:
-                        validate_ingested_image_review(
-                            run_root=run_root,
-                            current_request_bindings={
-                                int(card["card_index"]): {
-                                    "card_index": card["card_index"],
-                                    "source_card_id": card["source_card_id"],
-                                    "sample_id": card["sample_id"],
-                                    "render_presentation": card["render_presentation"],
-                                    "http_payload_sha256": card["http_payload_sha256"],
-                                }
-                                for card in outcome.get("cards", [])
-                            },
-                            expected_authority=ticket,
-                        )
-                    except (Step4ImageIntegrityError, KeyError, OSError, TypeError, ValueError) as error:
-                        state.set_checkpoint("image_review", "refused", detail=str(error))
-                        stage_reports.append(build_stage_report("image_review_checkpoint", "failed", str(error)))
-                        return finish("gate_refused_admission", 1)
-                    continue
                 current_bindings = {
                     int(card["card_index"]): {
                         "card_index": card["card_index"],
@@ -727,17 +797,37 @@ def orchestrate(config: LiveRunConfig, providers: Mapping[str, Any]) -> tuple[Li
                     for card in outcome.get("cards", [])
                     if card.get("outcome") == "success"
                 }
+                if ticket.get("status") == "ingested":
+                    try:
+                        validate_ingested_image_review(
+                            run_root=run_root,
+                            current_request_bindings=current_bindings,
+                            expected_authority=ticket,
+                        )
+                        materialize_ingested_image_review(
+                            authority=ticket,
+                            current_request_bindings=current_bindings,
+                        )
+                    except (Step4ImageIntegrityError, KeyError, OSError, TypeError, ValueError) as error:
+                        state.set_checkpoint("image_review", "refused", detail=str(error))
+                        stage_reports.append(build_stage_report("image_review_checkpoint", "failed", str(error)))
+                        return finish("gate_refused_admission", 1)
+                    continue
                 sheet_ingest = ingest_image_review_sheet(
                     run_root=run_root,
                     current_request_bindings=current_bindings,
                     expected_source_identity=ticket if ticket.get("status") == "waiting_human" else None,
                 )
                 if sheet_ingest["status"] == "ingested":
-                    state.set_checkpoint(
-                        "image_review",
-                        "ingested",
-                        **{key: value for key, value in sheet_ingest.items() if key != "status"},
-                    )
+                    try:
+                        persist_ingested_image_review(
+                            authority=sheet_ingest,
+                            current_request_bindings=current_bindings,
+                        )
+                    except (Step4ImageIntegrityError, KeyError, OSError, TypeError, ValueError) as error:
+                        state.set_checkpoint("image_review", "refused", detail=str(error))
+                        stage_reports.append(build_stage_report("image_review_checkpoint", "failed", str(error)))
+                        return finish("gate_refused_admission", 1)
                     stage_reports.append(build_stage_report("image_review_checkpoint", "completed", f"image review ingested; approved={sheet_ingest.get('approved_count', 0)}"))
                     continue
                 if sheet_ingest["status"] == "refused":

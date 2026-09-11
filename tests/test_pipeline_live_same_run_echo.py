@@ -360,6 +360,14 @@ def test_same_run_orchestrator_pauses_then_reaches_step4_from_internal_v2_chain(
     assert image_ticket["status"] == "ingested"
     assert image_ticket["approved_count"] == 1
     assert image_ticket["reviewed_card_indexes"] == [1]
+    image_checkpoint_dir = run_root / "checkpoints" / "image_review"
+    assert (image_checkpoint_dir / "reviewed-image-fixture-v2.json").is_file()
+    assert (image_checkpoint_dir / "post-review-queue-v2.json").is_file()
+    assert (image_checkpoint_dir / "image-admission-audit-v2.json").is_file()
+    assert (image_checkpoint_dir / "image-review-materialization-v2.json").is_file()
+    assert image_ticket["materialization_status"] == "frozen"
+    assert image_ticket["materialized_reviewed_card_indexes"] == [1]
+    assert image_ticket["materialized_post_review_card_indexes"] == []
 
     fifth_report, fifth_exit = orchestrate(replace(config, resume_run_id=first_report.run_id), providers)
     assert (fifth_exit, fifth_report.stop_reason) == (0, "completed")
