@@ -29,14 +29,28 @@ from .live_checkpoint import (
     ingest_echo_step3_review_checkpoint_v2,
     ingest_image_review_sheet,
     materialize_final_release_v2,
+    materialize_delivery_v2,
     materialize_image_review_v2,
     materialize_publication_v2,
     validate_ingested_image_review,
     validate_materialized_final_release_v2,
+    validate_materialized_delivery_v2,
     validate_materialized_image_review_v2,
     validate_materialized_publication_v2,
+    delivery_v2_paths,
 )
 from ..common.hashing import canonical_hash, sha256_bytes
+from ..common.io import read_json
+from ..gates.release.delivery_v2 import (
+    DeliveryExecutionV2,
+    DeliveryTargetV2,
+    build_delivery_execution_v2,
+    build_delivery_receipt_v2,
+    build_delivery_request_v2,
+    normalize_adapter_result,
+    delivery_status_from_adapter,
+)
+from ..gates.release.publication_v2 import PUBLICATION_SCOPE_V2
 from .live_config import LiveRunConfig, RunState, RunStateBindingError, build_run_resume_contract
 from .live_stage_samples import execute_stage_samples
 from .live_rehearsal import budget_rehearsal_estimate, derive_stage_call_caps, materialize_live_run
@@ -134,6 +148,22 @@ _PUBLICATION_IDENTITY_FIELDS = frozenset(
         "publication_receipt_file_sha256",
         "publication_artifact_count",
         "publication_package_sha256",
+    }
+)
+
+_DELIVERY_IDENTITY_FIELDS = frozenset(
+    {
+        "delivery_status",
+        "delivery_request_sha256",
+        "delivery_request_file_sha256",
+        "delivery_target_sha256",
+        "delivery_operation_id",
+        "delivery_identity",
+        "idempotency_key",
+        "delivery_execution_sha256",
+        "delivery_execution_file_sha256",
+        "delivery_receipt_sha256",
+        "delivery_receipt_file_sha256",
     }
 )
 
@@ -373,12 +403,254 @@ def orchestrate(config: LiveRunConfig, providers: Mapping[str, Any]) -> tuple[Li
         return materialization | final_release
 
     publication_checkpoint = state.payload.get("checkpoints", {}).get("publication", {})
+    delivery_checkpoint_value = state.payload.get("checkpoints", {}).get("delivery", {})
+    delivery_enabled = (
+        providers.get("delivery_enabled") is True
+        or providers.get("delivery_target") is not None
+        or providers.get("delivery_adapter") is not None
+        or (isinstance(delivery_checkpoint_value, Mapping) and bool(delivery_checkpoint_value))
+        or (run_root / "checkpoints" / "delivery").exists()
+    )
     publication_enabled = (
         providers.get("publication_enabled") is True
         or providers.get("publication_authorization") is not None
+        or delivery_enabled
         or (isinstance(publication_checkpoint, Mapping) and bool(publication_checkpoint))
         or (run_root / "checkpoints" / "publication").exists()
     )
+
+    def _coerce_delivery_target() -> DeliveryTargetV2:
+        value = providers.get("delivery_target")
+        if isinstance(value, DeliveryTargetV2):
+            target = value
+        elif isinstance(value, Mapping):
+            target = DeliveryTargetV2.model_validate(dict(value))
+        else:
+            raise ValueError("P6 delivery target is required")
+        if target.allowed_scope != PUBLICATION_SCOPE_V2:
+            raise ValueError("delivery target is outside the publication scope")
+        return target
+
+    def _delivery_adapter_result(request: Any) -> Any:
+        adapter = providers.get("delivery_adapter")
+        if adapter is None:
+            raise ValueError("P6 delivery adapter is required")
+        method = getattr(adapter, "deliver", None)
+        if callable(method):
+            value = method(
+                package_sha256=request.package_sha256,
+                target_sha256=request.target_sha256,
+                idempotency_key=request.idempotency_key,
+            )
+        elif callable(adapter):
+            value = adapter(
+                package_sha256=request.package_sha256,
+                target_sha256=request.target_sha256,
+                idempotency_key=request.idempotency_key,
+            )
+        else:
+            raise TypeError("P6 delivery adapter must provide deliver()")
+        return normalize_adapter_result(value)
+
+    def _delivery_lookup_result(request: Any) -> Any:
+        adapter = providers.get("delivery_adapter")
+        method = getattr(adapter, "lookup", None) if adapter is not None else None
+        if not callable(method):
+            method = getattr(adapter, "lookup_status", None) if adapter is not None else None
+        if not callable(method):
+            return None
+        try:
+            return normalize_adapter_result(method(idempotency_key=request.idempotency_key))
+        except Exception:
+            return None
+
+    def _delivery_execution_from_file(path: Path) -> DeliveryExecutionV2:
+        if not path.is_file():
+            raise ValueError("delivery execution is missing")
+        return DeliveryExecutionV2.model_validate(read_json(path))
+
+    def _persist_delivery_outcome(
+        *,
+        request: Any,
+        execution: DeliveryExecutionV2,
+        adapter_result: Any,
+    ) -> dict[str, Any]:
+        if adapter_result is None:
+            raise ValueError("delivery adapter returned no result")
+        status = delivery_status_from_adapter(adapter_result.status)
+        completed_execution = build_delivery_execution_v2(
+            delivery_identity=request.delivery_identity,
+            attempt_number=execution.attempt_number,
+            adapter_type=execution.adapter_type,
+            started_at=execution.started_at,
+            execution_status=status,
+        )
+        receipt = build_delivery_receipt_v2(
+            request=request,
+            delivery_status=status,
+            remote_reference=adapter_result.remote_reference,
+        )
+        try:
+            result = materialize_delivery_v2(
+                run_root=run_root,
+                request=request,
+                execution=completed_execution,
+                receipt=receipt,
+                allow_retry_replace=True,
+            )
+        except Exception:
+            # The external outcome is no longer safely representable locally.
+            # Preserve the same execution identity and make resume query the
+            # adapter instead of creating a duplicate delivery.
+            try:
+                partial = materialize_delivery_v2(
+                    run_root=run_root,
+                    request=request,
+                    execution=completed_execution,
+                    allow_retry_replace=True,
+                )
+            except Exception:
+                partial = {
+                    "delivery_status": "unknown",
+                    "delivery_request_sha256": request.request_sha256,
+                    "delivery_target_sha256": request.target_sha256,
+                    "delivery_operation_id": request.delivery_operation_id,
+                    "delivery_identity": request.delivery_identity,
+                    "idempotency_key": request.idempotency_key,
+                    "delivery_execution_sha256": completed_execution.execution_sha256,
+                    "delivery_execution_file_sha256": sha256_bytes(
+                        delivery_v2_paths(run_root)["execution"].read_bytes()
+                    )
+                    if delivery_v2_paths(run_root)["execution"].is_file()
+                    else None,
+                }
+            partial["delivery_status"] = "unknown"
+            state.set_checkpoint("delivery", "unknown", **partial)
+            return partial
+        state.set_checkpoint("delivery", "frozen", **result)
+        return result
+
+    def _delivery_p5_identity(p4_authority: Mapping[str, Any]) -> dict[str, Any]:
+        ticket_value = state.payload.get("checkpoints", {}).get("publication", {})
+        ticket = ticket_value if isinstance(ticket_value, Mapping) else {}
+        if _publication_state(ticket) != "frozen":
+            raise ValueError("P6 requires a frozen P5 publication receipt")
+        expected = dict(p4_authority)
+        expected.update({field: ticket[field] for field in _PUBLICATION_IDENTITY_FIELDS if field in ticket})
+        identity = validate_materialized_publication_v2(
+            run_root=run_root,
+            expected_authority=expected,
+        )
+        if int(identity["publication_artifact_count"]) == 0 or identity["publication_package_sha256"] == "0" * 64:
+            raise ValueError("P6 cannot deliver a zero-release publication package")
+        return identity
+
+    def run_delivery_checkpoint(p4_authority: Mapping[str, Any]) -> dict[str, Any]:
+        """Execute one P6 delivery operation from the frozen P5 receipt."""
+
+        if not delivery_enabled:
+            return {"delivery_status": "disabled"}
+        publication_identity = _delivery_p5_identity(p4_authority)
+        target = _coerce_delivery_target()
+        paths = delivery_v2_paths(run_root)
+        ticket_value = state.payload.get("checkpoints", {}).get("delivery", {})
+        ticket = ticket_value if isinstance(ticket_value, Mapping) else {}
+
+        if paths["receipt"].exists():
+            missing = _DELIVERY_IDENTITY_FIELDS.difference(ticket)
+            if ticket.get("status") != "frozen" or missing:
+                raise ValueError("delivery receipt exists without a frozen RunState identity")
+            if ticket.get("delivery_target_sha256") != target.target_sha256:
+                raise ValueError("frozen delivery target does not match the requested target")
+            return validate_materialized_delivery_v2(run_root=run_root, expected_authority=ticket)
+
+        if paths["request"].exists() and not ticket:
+            raise ValueError("delivery request exists without a RunState identity")
+        if ticket.get("status") == "frozen" or ticket.get("delivery_status") in {"completed", "failed"}:
+            raise ValueError("frozen delivery identity exists without a receipt")
+        if "delivery_receipt_sha256" in ticket or "delivery_receipt_file_sha256" in ticket:
+            raise ValueError("partial frozen delivery identity cannot be resumed")
+
+        request = build_delivery_request_v2(
+            publication_receipt_sha256=str(publication_identity["publication_receipt_sha256"]),
+            publication_receipt_file_sha256=str(publication_identity["publication_receipt_file_sha256"]),
+            publication_manifest_sha256=str(publication_identity["publication_manifest_sha256"]),
+            publication_manifest_file_sha256=str(publication_identity["publication_manifest_file_sha256"]),
+            package_sha256=str(publication_identity["publication_package_sha256"]),
+            artifact_count=int(publication_identity["publication_artifact_count"]),
+            target_sha256=target.target_sha256,
+        )
+        prepared = materialize_delivery_v2(run_root=run_root, request=request)
+        for field in (
+            "delivery_request_sha256",
+            "delivery_request_file_sha256",
+            "delivery_target_sha256",
+            "delivery_operation_id",
+            "delivery_identity",
+            "idempotency_key",
+        ):
+            if field in ticket and ticket[field] != prepared[field]:
+                raise ValueError(f"delivery identity drifted: {field}")
+        state.set_checkpoint("delivery", "prepared", **prepared)
+
+        execution_path = paths["execution"]
+        existing_execution: DeliveryExecutionV2 | None = None
+        if execution_path.exists():
+            existing_execution = _delivery_execution_from_file(execution_path)
+            if existing_execution.delivery_identity != request.delivery_identity:
+                raise ValueError("delivery execution identity does not match request")
+
+        if existing_execution is None:
+            execution = build_delivery_execution_v2(
+                delivery_identity=request.delivery_identity,
+                attempt_number=1,
+                adapter_type=str(providers.get("delivery_adapter_type") or "injected"),
+                execution_status="executing",
+            )
+            materialize_delivery_v2(run_root=run_root, request=request, execution=execution)
+        elif existing_execution.execution_status == "completed":
+            return _persist_delivery_outcome(
+                request=request,
+                execution=existing_execution,
+                adapter_result={"status": "success"},
+            )
+        elif existing_execution.execution_status in {"executing", "unknown"}:
+            lookup = _delivery_lookup_result(request)
+            return _persist_delivery_outcome(
+                request=request,
+                execution=existing_execution,
+                adapter_result=lookup or {"status": "unknown"},
+            )
+        elif existing_execution.execution_status == "failed":
+            execution = build_delivery_execution_v2(
+                delivery_identity=request.delivery_identity,
+                attempt_number=existing_execution.attempt_number + 1,
+                adapter_type=existing_execution.adapter_type,
+                execution_status="executing",
+            )
+            materialize_delivery_v2(
+                run_root=run_root,
+                request=request,
+                execution=execution,
+                allow_retry_replace=True,
+            )
+        else:
+            raise ValueError("delivery execution status is invalid")
+
+        state.set_checkpoint(
+            "delivery",
+            "executing",
+            **materialize_delivery_v2(run_root=run_root, request=request, execution=execution),
+        )
+        try:
+            adapter_result = _delivery_adapter_result(request)
+        except Exception:
+            adapter_result = normalize_adapter_result({"status": "unknown"})
+        return _persist_delivery_outcome(
+            request=request,
+            execution=execution,
+            adapter_result=adapter_result,
+        )
 
     def run_publication_checkpoint(p4_authority: Mapping[str, Any]) -> str:
         """Run the opt-in P5 boundary after P4 is frozen."""
@@ -437,6 +709,26 @@ def orchestrate(config: LiveRunConfig, providers: Mapping[str, Any]) -> tuple[Li
             stage_reports.append(
                 build_stage_report("publication_checkpoint", "completed", "publication authority frozen")
             )
+            if delivery_enabled:
+                try:
+                    delivery_result = run_delivery_checkpoint(p4_authority)
+                except Exception as error:
+                    stage_reports.append(build_stage_report("delivery", "failed", str(error)))
+                    return finish("delivery_failed", 1)
+                delivery_status = str(delivery_result.get("delivery_status", "unknown"))
+                if delivery_status == "completed":
+                    stage_reports.append(build_stage_report("delivery", "completed", "publication package delivered"))
+                else:
+                    detail = (
+                        "delivery outcome is unknown; resume must query the same idempotency key"
+                        if delivery_status == "unknown"
+                        else f"delivery {delivery_status}"
+                    )
+                    stage_reports.append(build_stage_report("delivery", "failed", detail))
+                    return finish(
+                        "delivery_outcome_unknown" if delivery_status == "unknown" else "delivery_failed",
+                        1,
+                    )
         return None
 
     def record_publication_refusal(detail: str) -> None:

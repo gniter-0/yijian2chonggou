@@ -1601,6 +1601,150 @@ def test_opt_in_publication_waits_for_authorization_then_freezes_without_image_c
     assert (run_root / "run_state.json").read_bytes() == state_before_tamper
 
 
+def test_p6_delivery_uses_frozen_publication_identity_and_is_idempotent(repo_tmp_path: Path) -> None:
+    _seed_exam_workspace(repo_tmp_path)
+    run_id = "20260812-delivery-v2-orchestration"
+    run_root = _seed_paused_run(repo_tmp_path, run_id)
+    from examcard.gates.release.delivery_v2 import build_delivery_target_v2
+    from examcard.gates.release.publication_v2 import (
+        PUBLICATION_SCOPE_V2,
+        build_publication_authorization_v2,
+    )
+
+    target = build_delivery_target_v2(
+        target_id="target:orchestration",
+        target_type="archive",
+        destination_reference="offline://orchestration",
+        destination_config_sha256="6" * 64,
+        allowed_scope=PUBLICATION_SCOPE_V2,
+    )
+
+    class Adapter:
+        def __init__(self) -> None:
+            self.calls = 0
+
+        def deliver(self, *, package_sha256: str, target_sha256: str, idempotency_key: str) -> dict[str, str]:
+            assert package_sha256
+            assert target_sha256 == target.target_sha256
+            assert idempotency_key
+            self.calls += 1
+            return {"status": "success", "remote_reference": "remote:delivery-1"}
+
+    adapter = Adapter()
+    providers = _resume_providers(repo_tmp_path)
+    providers.update({"delivery_enabled": True, "delivery_target": target, "delivery_adapter": adapter})
+
+    first_report, first_exit = orchestrate(_resume_config(repo_tmp_path, run_id), providers)
+    assert (first_exit, first_report.stop_reason) == (2, "waiting_human_publication")
+    publication_dir = run_root / "checkpoints" / "publication"
+    manifest = json.loads((publication_dir / "publication-manifest-v2.json").read_text(encoding="utf-8"))
+    image_ticket = json.loads((run_root / "run_state.json").read_text(encoding="utf-8"))["checkpoints"]["image_review"]
+    authorization = build_publication_authorization_v2(
+        authorization_id="delivery-publication-auth",
+        publication_scope=PUBLICATION_SCOPE_V2,
+        final_release_closure_sha256=image_ticket["final_release_receipt_sha256"],
+        publication_manifest_sha256=manifest["manifest_sha256"],
+        authorized_by="release-operator",
+        authorization_reason="controlled P6 delivery test",
+        authorized_at="2026-09-12T00:00:00Z",
+    )
+    (publication_dir / "publication-authorization-v2.json").write_text(
+        json.dumps(authorization.model_dump(mode="json"), ensure_ascii=False, indent=2), encoding="utf-8"
+    )
+
+    second_report, second_exit = orchestrate(_resume_config(repo_tmp_path, run_id), providers)
+    assert (second_exit, second_report.stop_reason) == (0, "completed")
+    assert adapter.calls == 1
+    delivery_dir = run_root / "checkpoints" / "delivery"
+    assert (delivery_dir / "delivery-request-v2.json").is_file()
+    assert (delivery_dir / "delivery-execution-v2.json").is_file()
+    assert (delivery_dir / "delivery-receipt-v2.json").is_file()
+    state = json.loads((run_root / "run_state.json").read_text(encoding="utf-8"))
+    assert state["checkpoints"]["delivery"]["status"] == "frozen"
+    assert state["checkpoints"]["delivery"]["delivery_status"] == "completed"
+    assert state["checkpoints"]["delivery"]["delivery_execution_file_sha256"] == sha256_bytes(
+        (delivery_dir / "delivery-execution-v2.json").read_bytes()
+    )
+
+    request_before = (delivery_dir / "delivery-request-v2.json").read_bytes()
+    execution_before = (delivery_dir / "delivery-execution-v2.json").read_bytes()
+    receipt_before = (delivery_dir / "delivery-receipt-v2.json").read_bytes()
+    state_before = (run_root / "run_state.json").read_bytes()
+    third_report, third_exit = orchestrate(_resume_config(repo_tmp_path, run_id), providers)
+    assert (third_exit, third_report.stop_reason) == (0, "completed")
+    assert adapter.calls == 1
+    assert (delivery_dir / "delivery-request-v2.json").read_bytes() == request_before
+    assert (delivery_dir / "delivery-execution-v2.json").read_bytes() == execution_before
+    assert (delivery_dir / "delivery-receipt-v2.json").read_bytes() == receipt_before
+    assert (run_root / "run_state.json").read_bytes() == state_before
+
+
+def test_frozen_delivery_resume_does_not_write_checkpoint(repo_tmp_path: Path) -> None:
+    _seed_exam_workspace(repo_tmp_path)
+    run_id = "20260812-delivery-v2-frozen-read-only"
+    run_root = _seed_paused_run(repo_tmp_path, run_id)
+    from examcard.gates.release.delivery_v2 import build_delivery_target_v2
+    from examcard.gates.release.publication_v2 import (
+        PUBLICATION_SCOPE_V2,
+        build_publication_authorization_v2,
+    )
+
+    target = build_delivery_target_v2(
+        target_id="target:frozen-read-only",
+        target_type="archive",
+        destination_reference="offline://frozen-read-only",
+        destination_config_sha256="7" * 64,
+        allowed_scope=PUBLICATION_SCOPE_V2,
+    )
+
+    class Adapter:
+        def __init__(self) -> None:
+            self.calls = 0
+
+        def deliver(self, *, package_sha256: str, target_sha256: str, idempotency_key: str) -> dict[str, str]:
+            self.calls += 1
+            return {"status": "success", "remote_reference": "remote:frozen-read-only"}
+
+    adapter = Adapter()
+    providers = _resume_providers(repo_tmp_path)
+    providers.update({"delivery_enabled": True, "delivery_target": target, "delivery_adapter": adapter})
+    first_report, first_exit = orchestrate(_resume_config(repo_tmp_path, run_id), providers)
+    assert (first_exit, first_report.stop_reason) == (2, "waiting_human_publication")
+    publication_dir = run_root / "checkpoints" / "publication"
+    manifest = json.loads((publication_dir / "publication-manifest-v2.json").read_text(encoding="utf-8"))
+    image_ticket = json.loads((run_root / "run_state.json").read_text(encoding="utf-8"))["checkpoints"]["image_review"]
+    authorization = build_publication_authorization_v2(
+        authorization_id="delivery-frozen-read-only-auth",
+        publication_scope=PUBLICATION_SCOPE_V2,
+        final_release_closure_sha256=image_ticket["final_release_receipt_sha256"],
+        publication_manifest_sha256=manifest["manifest_sha256"],
+        authorized_by="release-operator",
+        authorization_reason="frozen P6 delivery resume test",
+        authorized_at="2026-09-12T00:00:00Z",
+    )
+    (publication_dir / "publication-authorization-v2.json").write_text(
+        json.dumps(authorization.model_dump(mode="json"), ensure_ascii=False, indent=2), encoding="utf-8"
+    )
+    second_report, second_exit = orchestrate(_resume_config(repo_tmp_path, run_id), providers)
+    assert (second_exit, second_report.stop_reason) == (0, "completed")
+    assert adapter.calls == 1
+
+    delivery_dir = run_root / "checkpoints" / "delivery"
+    before = {
+        path: path.read_bytes()
+        for path in (run_root / "run_state.json", *delivery_dir.glob("delivery-*.json"))
+    }
+    blocked = Adapter()
+    providers["delivery_adapter"] = blocked
+    third_report, third_exit = orchestrate(_resume_config(repo_tmp_path, run_id), providers)
+    assert (third_exit, third_report.stop_reason) == (0, "completed")
+    assert blocked.calls == 0
+    assert {
+        path: path.read_bytes()
+        for path in (run_root / "run_state.json", *delivery_dir.glob("delivery-*.json"))
+    } == before
+
+
 def test_resume_with_undecided_sheet_stays_waiting(repo_tmp_path: Path) -> None:
     _seed_exam_workspace(repo_tmp_path)
     run_id = "20260812-resume-regression-fixture3"

@@ -2483,3 +2483,317 @@ def validate_materialized_publication_v2(
         if current.get(field) != expected_authority[field]:
             raise Step4ImageIntegrityError(f"frozen publication identity drifted: {field}")
     return current
+
+
+# ---------------------------------------------------------------------------
+# P6 external delivery V2.  Delivery is downstream of P5 and owns a separate
+# checkpoint; it never rewrites publication artifacts or publication authority.
+# ---------------------------------------------------------------------------
+
+_DELIVERY_V2_DIR = "delivery"
+_DELIVERY_V2_FILES = {
+    "request": "delivery-request-v2.json",
+    "execution": "delivery-execution-v2.json",
+    "receipt": "delivery-receipt-v2.json",
+}
+_DELIVERY_IDENTITY_FIELDS = frozenset(
+    {
+        "delivery_status",
+        "delivery_request_sha256",
+        "delivery_request_file_sha256",
+        "delivery_target_sha256",
+        "delivery_operation_id",
+        "delivery_identity",
+        "idempotency_key",
+        "delivery_execution_sha256",
+        "delivery_execution_file_sha256",
+        "delivery_receipt_sha256",
+        "delivery_receipt_file_sha256",
+    }
+)
+
+
+def _delivery_paths(run_root: Path) -> dict[str, Path]:
+    checkpoint_dir = Path(run_root) / "checkpoints" / _DELIVERY_V2_DIR
+    return {name: checkpoint_dir / filename for name, filename in _DELIVERY_V2_FILES.items()}
+
+
+def delivery_v2_paths(run_root: Path) -> dict[str, Path]:
+    """Return the P6 checkpoint paths without creating any files."""
+
+    return _delivery_paths(Path(run_root))
+
+
+def _read_delivery_model(path: Path, model_type: type[Any]) -> tuple[Any, bytes]:
+    if not path.is_file():
+        raise Step4ImageIntegrityError(f"delivery artifact is missing: {path.name}")
+    try:
+        raw = path.read_bytes()
+        model = model_type.model_validate(read_json(path))
+    except (OSError, TypeError, ValueError) as error:
+        raise Step4ImageIntegrityError(f"invalid delivery artifact: {path.name}") from error
+    return model, raw
+
+
+def _persist_delivery_model(
+    path: Path,
+    expected: Any,
+    *,
+    allow_create: bool,
+    label: str,
+    allow_retry_replace: bool = False,
+) -> tuple[Any, bytes]:
+    if path.is_symlink() or (path.exists() and not path.is_file()):
+        raise Step4ImageIntegrityError(f"delivery artifact is not a regular file: {label}")
+    if path.is_file():
+        actual, raw = _read_delivery_model(path, type(expected))
+        if actual.model_dump(mode="json") == expected.model_dump(mode="json"):
+            return actual, raw
+        if not allow_retry_replace:
+            raise Step4ImageIntegrityError(f"delivery artifact conflicts: {label}")
+        from ..gates.release.delivery_v2 import DeliveryExecutionV2
+
+        if not isinstance(actual, DeliveryExecutionV2) or not isinstance(expected, DeliveryExecutionV2):
+            raise Step4ImageIntegrityError(f"delivery artifact conflicts: {label}")
+        same_attempt_completion = (
+            actual.delivery_identity == expected.delivery_identity
+            and actual.attempt_number == expected.attempt_number
+            and (
+                (
+                    actual.execution_status == "executing"
+                    and expected.execution_status in {"completed", "failed", "unknown"}
+                )
+                or (actual.execution_status == "prepared" and expected.execution_status == "executing")
+            )
+        )
+        next_attempt = (
+            actual.delivery_identity == expected.delivery_identity
+            and expected.attempt_number > actual.attempt_number
+            and actual.execution_status in {"failed", "unknown"}
+            and expected.execution_status in {"prepared", "executing"}
+        )
+        if not (same_attempt_completion or next_attempt):
+            raise Step4ImageIntegrityError(f"delivery artifact conflicts: {label}")
+        atomic_write_json(path, expected.model_dump(mode="json"))
+        return _read_delivery_model(path, type(expected))
+    if not allow_create:
+        raise Step4ImageIntegrityError(f"frozen delivery artifact is missing: {label}")
+    atomic_write_json(path, expected.model_dump(mode="json"))
+    return _read_delivery_model(path, type(expected))
+
+
+def _validate_delivery_models(
+    *,
+    request: Any,
+    execution: Any,
+    receipt: Any,
+) -> None:
+    from ..gates.release.delivery_v2 import (
+        DeliveryExecutionV2,
+        DeliveryReceiptV2,
+        DeliveryRequestV2,
+    )
+
+    if not isinstance(request, DeliveryRequestV2):
+        raise Step4ImageIntegrityError("delivery request is not V2")
+    if not isinstance(execution, DeliveryExecutionV2):
+        raise Step4ImageIntegrityError("delivery execution is not V2")
+    if not isinstance(receipt, DeliveryReceiptV2):
+        raise Step4ImageIntegrityError("delivery receipt is not V2")
+    if execution.delivery_identity != request.delivery_identity:
+        raise Step4ImageIntegrityError("delivery execution identity does not match request")
+    from ..gates.release.delivery_v2 import build_delivery_receipt_v2
+
+    expected_receipt = build_delivery_receipt_v2(
+        request=request,
+        delivery_status=receipt.delivery_status,
+        remote_reference=receipt.remote_reference,
+    )
+    if receipt.model_dump(mode="json") != expected_receipt.model_dump(mode="json"):
+        raise Step4ImageIntegrityError("delivery receipt identity does not match request")
+    if receipt.delivery_status != execution.execution_status:
+        raise Step4ImageIntegrityError("delivery receipt status does not match execution")
+
+
+def _delivery_identity(
+    *,
+    paths: Mapping[str, Path],
+    request: Any,
+    request_raw: bytes,
+    execution: Any,
+    execution_raw: bytes,
+    receipt: Any | None,
+    receipt_raw: bytes | None,
+) -> dict[str, Any]:
+    result: dict[str, Any] = {
+        "delivery_status": receipt.delivery_status if receipt is not None else execution.execution_status,
+        "delivery_request_sha256": request.request_sha256,
+        "delivery_request_file_sha256": sha256_bytes(request_raw),
+        "delivery_target_sha256": request.target_sha256,
+        "delivery_operation_id": request.delivery_operation_id,
+        "delivery_identity": request.delivery_identity,
+        "idempotency_key": request.idempotency_key,
+        "delivery_execution_sha256": execution.execution_sha256,
+        "delivery_execution_file_sha256": sha256_bytes(execution_raw),
+        "delivery_request_path": str(paths["request"]),
+        "delivery_execution_path": str(paths["execution"]),
+    }
+    if receipt is not None and receipt_raw is not None:
+        result.update(
+            {
+                "delivery_receipt_sha256": receipt.receipt_sha256,
+                "delivery_receipt_file_sha256": sha256_bytes(receipt_raw),
+                "delivery_receipt_path": str(paths["receipt"]),
+            }
+        )
+    return result
+
+
+def materialize_delivery_v2(
+    *,
+    run_root: Path,
+    request: Any,
+    execution: Any | None = None,
+    receipt: Any | None = None,
+    allow_retry_replace: bool = False,
+) -> dict[str, Any]:
+    """Persist P6 request/execution and, last, its frozen receipt.
+
+    Existing request and receipt bytes are immutable.  A non-frozen execution
+    may be replaced only for an explicit same-identity retry after a failed or
+    unknown attempt; callers must never use that escape to change the request.
+    """
+
+    from ..gates.release.delivery_v2 import (
+        DeliveryExecutionV2,
+        DeliveryReceiptV2,
+        DeliveryRequestV2,
+    )
+
+    if not isinstance(request, DeliveryRequestV2):
+        raise TypeError("delivery request must be DeliveryRequestV2")
+    if execution is not None and not isinstance(execution, DeliveryExecutionV2):
+        raise TypeError("delivery execution must be DeliveryExecutionV2")
+    if receipt is not None and not isinstance(receipt, DeliveryReceiptV2):
+        raise TypeError("delivery receipt must be DeliveryReceiptV2")
+    if receipt is not None and execution is None:
+        raise ValueError("delivery receipt requires its execution")
+
+    paths = _delivery_paths(Path(run_root))
+    receipt_exists = paths["receipt"].exists()
+    if receipt_exists:
+        existing_request, request_raw = _read_delivery_model(paths["request"], DeliveryRequestV2)
+        existing_execution, execution_raw = _read_delivery_model(paths["execution"], DeliveryExecutionV2)
+        existing_receipt, receipt_raw = _read_delivery_model(paths["receipt"], DeliveryReceiptV2)
+        _validate_delivery_models(
+            request=existing_request,
+            execution=existing_execution,
+            receipt=existing_receipt,
+        )
+        if existing_request.model_dump(mode="json") != request.model_dump(mode="json"):
+            raise Step4ImageIntegrityError("frozen delivery request conflicts")
+        if execution is not None and existing_execution.model_dump(mode="json") != execution.model_dump(mode="json"):
+            raise Step4ImageIntegrityError("frozen delivery execution conflicts")
+        if receipt is not None and existing_receipt.model_dump(mode="json") != receipt.model_dump(mode="json"):
+            raise Step4ImageIntegrityError("frozen delivery receipt conflicts")
+        return _delivery_identity(
+            paths=paths,
+            request=existing_request,
+            request_raw=request_raw,
+            execution=existing_execution,
+            execution_raw=execution_raw,
+            receipt=existing_receipt,
+            receipt_raw=receipt_raw,
+        )
+
+    stored_request, request_raw = _persist_delivery_model(
+        paths["request"], request, allow_create=True, label=paths["request"].name
+    )
+    if execution is None:
+        return {
+            "delivery_status": "prepared",
+            "delivery_request_sha256": stored_request.request_sha256,
+            "delivery_request_file_sha256": sha256_bytes(request_raw),
+            "delivery_target_sha256": stored_request.target_sha256,
+            "delivery_operation_id": stored_request.delivery_operation_id,
+            "delivery_identity": stored_request.delivery_identity,
+            "idempotency_key": stored_request.idempotency_key,
+            "delivery_request_path": str(paths["request"]),
+        }
+
+    stored_execution, execution_raw = _persist_delivery_model(
+        paths["execution"],
+        execution,
+        allow_create=True,
+        label=paths["execution"].name,
+        allow_retry_replace=allow_retry_replace,
+    )
+    if stored_execution.delivery_identity != stored_request.delivery_identity:
+        raise Step4ImageIntegrityError("delivery execution identity does not match request")
+    if receipt is None:
+        return _delivery_identity(
+            paths=paths,
+            request=stored_request,
+            request_raw=request_raw,
+            execution=stored_execution,
+            execution_raw=execution_raw,
+            receipt=None,
+            receipt_raw=None,
+        )
+
+    stored_receipt, receipt_raw = _persist_delivery_model(
+        paths["receipt"], receipt, allow_create=True, label=paths["receipt"].name
+    )
+    _validate_delivery_models(
+        request=stored_request,
+        execution=stored_execution,
+        receipt=stored_receipt,
+    )
+    return _delivery_identity(
+        paths=paths,
+        request=stored_request,
+        request_raw=request_raw,
+        execution=stored_execution,
+        execution_raw=execution_raw,
+        receipt=stored_receipt,
+        receipt_raw=receipt_raw,
+    )
+
+
+def validate_materialized_delivery_v2(
+    *,
+    run_root: Path,
+    expected_authority: Mapping[str, Any] | None = None,
+) -> dict[str, Any]:
+    """Read and validate a frozen P6 receipt without writing any files."""
+
+    from ..gates.release.delivery_v2 import (
+        DeliveryExecutionV2,
+        DeliveryReceiptV2,
+        DeliveryRequestV2,
+    )
+
+    paths = _delivery_paths(Path(run_root))
+    request, request_raw = _read_delivery_model(paths["request"], DeliveryRequestV2)
+    execution, execution_raw = _read_delivery_model(paths["execution"], DeliveryExecutionV2)
+    receipt, receipt_raw = _read_delivery_model(paths["receipt"], DeliveryReceiptV2)
+    _validate_delivery_models(request=request, execution=execution, receipt=receipt)
+    current = _delivery_identity(
+        paths=paths,
+        request=request,
+        request_raw=request_raw,
+        execution=execution,
+        execution_raw=execution_raw,
+        receipt=receipt,
+        receipt_raw=receipt_raw,
+    )
+    if expected_authority is not None:
+        missing = _DELIVERY_IDENTITY_FIELDS.difference(expected_authority)
+        if missing:
+            raise Step4ImageIntegrityError(
+                f"frozen delivery identity is partial: {', '.join(sorted(missing))}"
+            )
+        for field in _DELIVERY_IDENTITY_FIELDS:
+            if current.get(field) != expected_authority[field]:
+                raise Step4ImageIntegrityError(f"frozen delivery identity drifted: {field}")
+    return current
