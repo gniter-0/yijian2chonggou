@@ -9,6 +9,7 @@ from .checkpoint_inspection_v1 import (
     inspect_run,
     render_inspection,
 )
+from .delivery_audit_v1 import DeliveryAuditError, inspect_delivery_audit
 
 __all__ = (
     "CHECKPOINT_NAMES",
@@ -18,4 +19,6 @@ __all__ = (
     "inspect_delivery",
     "inspect_run",
     "render_inspection",
+    "DeliveryAuditError",
+    "inspect_delivery_audit",
 )

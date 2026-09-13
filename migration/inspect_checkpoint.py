@@ -16,6 +16,10 @@ from examcard.diagnostics.checkpoint_inspection_v1 import (  # noqa: E402
     inspect_run,
     render_inspection,
 )
+from examcard.diagnostics.delivery_audit_v1 import (  # noqa: E402
+    DeliveryAuditError,
+    inspect_delivery_audit,
+)
 
 
 def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
@@ -35,6 +39,15 @@ def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
 
     delivery = kinds.add_parser("delivery", help="inspect delivery state and receipt references")
     delivery.add_argument("--run-root", type=Path, required=True)
+
+    audit = kinds.add_parser("delivery-audit", help="observe the durable delivery snapshot only")
+    audit.add_argument("--run-root", type=Path, required=True)
+    audit.add_argument(
+        "--destination-root",
+        type=Path,
+        default=None,
+        help="optional explicit filesystem destination for marker observation",
+    )
     return parser.parse_args(argv)
 
 
@@ -45,9 +58,14 @@ def main(argv: list[str] | None = None) -> int:
             result = inspect_run(args.run_root)
         elif args.kind == "checkpoint":
             result = inspect_checkpoint(args.run_root, args.name)
+        elif args.kind == "delivery-audit":
+            result = inspect_delivery_audit(
+                args.run_root,
+                destination_root=args.destination_root,
+            )
         else:
             result = inspect_delivery(args.run_root)
-    except InspectionError:
+    except (InspectionError, DeliveryAuditError):
         print("inspection failed: invalid explicit inspection input", file=sys.stderr)
         return 2
     sys.stdout.buffer.write(render_inspection(result))
