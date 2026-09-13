@@ -1745,6 +1745,510 @@ def test_frozen_delivery_resume_does_not_write_checkpoint(repo_tmp_path: Path) -
     } == before
 
 
+def test_p7_filesystem_delivery_preserves_frozen_p5_bytes_and_p6_resume(
+    repo_tmp_path: Path,
+) -> None:
+    _seed_exam_workspace(repo_tmp_path)
+    run_id = "20260912-p7-filesystem-delivery"
+    run_root = _seed_paused_run(repo_tmp_path, run_id)
+    destination_root = repo_tmp_path / "external-delivery"
+    destination_root.mkdir()
+
+    from examcard.delivery.filesystem_v1 import (
+        FilesystemDirectoryDeliveryAdapter,
+        build_filesystem_delivery_target,
+    )
+    from examcard.gates.release.publication_v2 import (
+        PUBLICATION_SCOPE_V2,
+        build_publication_authorization_v2,
+    )
+
+    target = build_filesystem_delivery_target(destination_root)
+    adapter = FilesystemDirectoryDeliveryAdapter(
+        publication_dir=run_root / "checkpoints" / "publication",
+        destination_root=destination_root,
+        target=target,
+    )
+    providers = _resume_providers(repo_tmp_path)
+    providers.update({"delivery_enabled": True, "delivery_target": target, "delivery_adapter": adapter})
+
+    first_report, first_exit = orchestrate(_resume_config(repo_tmp_path, run_id), providers)
+    assert (first_exit, first_report.stop_reason) == (2, "waiting_human_publication")
+    publication_dir = run_root / "checkpoints" / "publication"
+    manifest = json.loads((publication_dir / "publication-manifest-v2.json").read_text(encoding="utf-8"))
+    image_ticket = json.loads((run_root / "run_state.json").read_text(encoding="utf-8"))["checkpoints"]["image_review"]
+    authorization = build_publication_authorization_v2(
+        authorization_id="p7-filesystem-auth",
+        publication_scope=PUBLICATION_SCOPE_V2,
+        final_release_closure_sha256=image_ticket["final_release_receipt_sha256"],
+        publication_manifest_sha256=manifest["manifest_sha256"],
+        authorized_by="release-operator",
+        authorization_reason="filesystem delivery integration test",
+        authorized_at="2026-09-12T00:00:00Z",
+    )
+    (publication_dir / "publication-authorization-v2.json").write_text(
+        json.dumps(authorization.model_dump(mode="json"), ensure_ascii=False, indent=2), encoding="utf-8"
+    )
+
+    second_report, second_exit = orchestrate(_resume_config(repo_tmp_path, run_id), providers)
+    assert (second_exit, second_report.stop_reason) == (0, "completed")
+    delivery_dir = run_root / "checkpoints" / "delivery"
+    receipt = json.loads((delivery_dir / "delivery-receipt-v2.json").read_text(encoding="utf-8"))
+    key = receipt["idempotency_key"]
+    remote_dir = destination_root / key
+    assert receipt["remote_reference"] == remote_dir.resolve().as_uri()
+    assert (remote_dir / "publication-manifest-v2.json").read_bytes() == (
+        publication_dir / "publication-manifest-v2.json"
+    ).read_bytes()
+    for artifact in manifest["artifacts"]:
+        assert (remote_dir / artifact["relative_path"]).read_bytes() == (
+            publication_dir / artifact["relative_path"]
+        ).read_bytes()
+    assert (remote_dir / "delivery-complete-v1.json").is_file()
+    assert adapter.lookup(idempotency_key=key).status == "success"
+
+    before = {
+        path.relative_to(destination_root): path.read_bytes()
+        for path in destination_root.rglob("*")
+        if path.is_file()
+    }
+    request_before = (delivery_dir / "delivery-request-v2.json").read_bytes()
+    execution_before = (delivery_dir / "delivery-execution-v2.json").read_bytes()
+    receipt_before = (delivery_dir / "delivery-receipt-v2.json").read_bytes()
+    state_before = (run_root / "run_state.json").read_bytes()
+    third_report, third_exit = orchestrate(_resume_config(repo_tmp_path, run_id), providers)
+    assert (third_exit, third_report.stop_reason) == (0, "completed")
+    assert (delivery_dir / "delivery-request-v2.json").read_bytes() == request_before
+    assert (delivery_dir / "delivery-execution-v2.json").read_bytes() == execution_before
+    assert (delivery_dir / "delivery-receipt-v2.json").read_bytes() == receipt_before
+    assert (run_root / "run_state.json").read_bytes() == state_before
+    assert {
+        path.relative_to(destination_root): path.read_bytes()
+        for path in destination_root.rglob("*")
+        if path.is_file()
+    } == before
+
+
+def test_p7_filesystem_remote_success_reconciles_after_receipt_write_failure(
+    repo_tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    _seed_exam_workspace(repo_tmp_path)
+    run_id = "20260912-p7-filesystem-receipt-recovery"
+    run_root = _seed_paused_run(repo_tmp_path, run_id)
+    destination_root = repo_tmp_path / "external-delivery"
+    destination_root.mkdir()
+
+    from examcard.delivery.filesystem_v1 import (
+        FilesystemDirectoryDeliveryAdapter,
+        build_filesystem_delivery_target,
+    )
+    from examcard.gates.release.publication_v2 import (
+        PUBLICATION_SCOPE_V2,
+        build_publication_authorization_v2,
+    )
+
+    target = build_filesystem_delivery_target(destination_root)
+    adapter = FilesystemDirectoryDeliveryAdapter(
+        publication_dir=run_root / "checkpoints" / "publication",
+        destination_root=destination_root,
+        target=target,
+    )
+
+    class AmbiguousAdapter:
+        def __init__(self) -> None:
+            self.deliver_calls = 0
+            self.lookup_calls = 0
+
+        def deliver(self, **kwargs: object) -> dict[str, str]:
+            self.deliver_calls += 1
+            result = adapter.deliver(**kwargs)  # type: ignore[arg-type]
+            assert result.status == "success"
+            return {"status": "unknown"}
+
+        def lookup(self, *, idempotency_key: str) -> object:
+            self.lookup_calls += 1
+            return adapter.lookup(idempotency_key=idempotency_key)
+
+    ambiguous_adapter = AmbiguousAdapter()
+    providers = _resume_providers(repo_tmp_path)
+    providers.update(
+        {"delivery_enabled": True, "delivery_target": target, "delivery_adapter": ambiguous_adapter}
+    )
+    first_report, first_exit = orchestrate(_resume_config(repo_tmp_path, run_id), providers)
+    assert (first_exit, first_report.stop_reason) == (2, "waiting_human_publication")
+    publication_dir = run_root / "checkpoints" / "publication"
+    manifest = json.loads((publication_dir / "publication-manifest-v2.json").read_text(encoding="utf-8"))
+    image_ticket = json.loads((run_root / "run_state.json").read_text(encoding="utf-8"))["checkpoints"]["image_review"]
+    authorization = build_publication_authorization_v2(
+        authorization_id="p7-filesystem-recovery-auth",
+        publication_scope=PUBLICATION_SCOPE_V2,
+        final_release_closure_sha256=image_ticket["final_release_receipt_sha256"],
+        publication_manifest_sha256=manifest["manifest_sha256"],
+        authorized_by="release-operator",
+        authorization_reason="filesystem receipt recovery test",
+        authorized_at="2026-09-12T00:00:00Z",
+    )
+    (publication_dir / "publication-authorization-v2.json").write_text(
+        json.dumps(authorization.model_dump(mode="json"), ensure_ascii=False, indent=2), encoding="utf-8"
+    )
+
+    import examcard.pipeline.live_orchestrate as live_orchestrate_module
+
+    real_materialize = live_orchestrate_module.materialize_delivery_v2
+
+    def fail_local_receipt(*args: object, **kwargs: object) -> dict[str, object]:
+        execution = kwargs.get("execution")
+        if kwargs.get("receipt") is not None or getattr(execution, "execution_status", None) == "unknown":
+            raise OSError("forced local receipt persistence failure")
+        return real_materialize(*args, **kwargs)
+
+    monkeypatch.setattr(live_orchestrate_module, "materialize_delivery_v2", fail_local_receipt)
+    failed_report, failed_exit = orchestrate(_resume_config(repo_tmp_path, run_id), providers)
+    assert (failed_exit, failed_report.stop_reason) == (1, "delivery_outcome_unknown")
+    delivery_dir = run_root / "checkpoints" / "delivery"
+    state = json.loads((run_root / "run_state.json").read_text(encoding="utf-8"))
+    key = state["checkpoints"]["delivery"]["idempotency_key"]
+    remote_dir = destination_root / key
+    assert (remote_dir / "delivery-complete-v1.json").is_file()
+    remote_before = {
+        path.relative_to(destination_root): path.read_bytes()
+        for path in destination_root.rglob("*")
+        if path.is_file()
+    }
+    assert not (delivery_dir / "delivery-receipt-v2.json").exists()
+    assert adapter.lookup(idempotency_key=key).status == "success"
+
+    monkeypatch.setattr(live_orchestrate_module, "materialize_delivery_v2", real_materialize)
+    recovered_report, recovered_exit = orchestrate(_resume_config(repo_tmp_path, run_id), providers)
+    assert (recovered_exit, recovered_report.stop_reason) == (0, "completed")
+    recovered = json.loads((delivery_dir / "delivery-receipt-v2.json").read_text(encoding="utf-8"))
+    assert recovered["idempotency_key"] == key
+    assert recovered["remote_reference"] == remote_dir.resolve().as_uri()
+    assert ambiguous_adapter.deliver_calls == 1
+    assert ambiguous_adapter.lookup_calls == 1
+    assert {
+        path.relative_to(destination_root): path.read_bytes()
+        for path in destination_root.rglob("*")
+        if path.is_file()
+    } == remote_before
+
+
+def test_p7_real_filesystem_success_recovers_local_receipt_write_failure(
+    repo_tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    _seed_exam_workspace(repo_tmp_path)
+    run_id = "20260912-p7-filesystem-real-success-recovery"
+    run_root = _seed_paused_run(repo_tmp_path, run_id)
+    destination_root = repo_tmp_path / "external-delivery"
+    destination_root.mkdir()
+
+    from examcard.delivery.filesystem_v1 import (
+        FilesystemDirectoryDeliveryAdapter,
+        build_filesystem_delivery_target,
+    )
+    from examcard.gates.release.publication_v2 import (
+        PUBLICATION_SCOPE_V2,
+        build_publication_authorization_v2,
+    )
+
+    target = build_filesystem_delivery_target(destination_root)
+    adapter = FilesystemDirectoryDeliveryAdapter(
+        publication_dir=run_root / "checkpoints" / "publication",
+        destination_root=destination_root,
+        target=target,
+    )
+
+    real_deliver = adapter.deliver
+    real_lookup = adapter.lookup
+    deliver_calls = 0
+    lookup_calls = 0
+
+    def counted_deliver(*, package_sha256: str, target_sha256: str, idempotency_key: str) -> object:
+        nonlocal deliver_calls
+        deliver_calls += 1
+        return real_deliver(
+            package_sha256=package_sha256,
+            target_sha256=target_sha256,
+            idempotency_key=idempotency_key,
+        )
+
+    def counted_lookup(*, idempotency_key: str) -> object:
+        nonlocal lookup_calls
+        lookup_calls += 1
+        return real_lookup(idempotency_key=idempotency_key)
+
+    monkeypatch.setattr(adapter, "deliver", counted_deliver)
+    monkeypatch.setattr(adapter, "lookup", counted_lookup)
+    providers = _resume_providers(repo_tmp_path)
+    providers.update(
+        {"delivery_enabled": True, "delivery_target": target, "delivery_adapter": adapter}
+    )
+    first_report, first_exit = orchestrate(_resume_config(repo_tmp_path, run_id), providers)
+    assert (first_exit, first_report.stop_reason) == (2, "waiting_human_publication")
+    publication_dir = run_root / "checkpoints" / "publication"
+    manifest = json.loads((publication_dir / "publication-manifest-v2.json").read_text(encoding="utf-8"))
+    image_ticket = json.loads((run_root / "run_state.json").read_text(encoding="utf-8"))["checkpoints"]["image_review"]
+    authorization = build_publication_authorization_v2(
+        authorization_id="p7-filesystem-real-success-auth",
+        publication_scope=PUBLICATION_SCOPE_V2,
+        final_release_closure_sha256=image_ticket["final_release_receipt_sha256"],
+        publication_manifest_sha256=manifest["manifest_sha256"],
+        authorized_by="release-operator",
+        authorization_reason="filesystem receipt persistence recovery test",
+        authorized_at="2026-09-12T00:00:00Z",
+    )
+    (publication_dir / "publication-authorization-v2.json").write_text(
+        json.dumps(authorization.model_dump(mode="json"), ensure_ascii=False, indent=2), encoding="utf-8"
+    )
+
+    import examcard.pipeline.live_orchestrate as live_orchestrate_module
+
+    real_materialize = live_orchestrate_module.materialize_delivery_v2
+    receipt_write_failed = False
+
+    def fail_local_receipt_persistence(*args: object, **kwargs: object) -> dict[str, object]:
+        nonlocal receipt_write_failed
+        if kwargs.get("receipt") is not None:
+            receipt_write_failed = True
+            raise OSError("forced local receipt persistence failure")
+        return real_materialize(*args, **kwargs)
+
+    monkeypatch.setattr(live_orchestrate_module, "materialize_delivery_v2", fail_local_receipt_persistence)
+    failed_report, failed_exit = orchestrate(_resume_config(repo_tmp_path, run_id), providers)
+    assert (failed_exit, failed_report.stop_reason) == (1, "delivery_outcome_unknown")
+    assert receipt_write_failed is True
+    assert deliver_calls == 1
+    delivery_dir = run_root / "checkpoints" / "delivery"
+    state_after_failure = json.loads((run_root / "run_state.json").read_text(encoding="utf-8"))
+    key = state_after_failure["checkpoints"]["delivery"]["idempotency_key"]
+    remote_dir = destination_root / key
+    assert (remote_dir / "delivery-complete-v1.json").is_file()
+    request_before = (delivery_dir / "delivery-request-v2.json").read_bytes()
+    execution_before = (delivery_dir / "delivery-execution-v2.json").read_bytes()
+    execution_before_payload = json.loads(execution_before.decode("utf-8"))
+    assert execution_before_payload["execution_status"] == "completed"
+    identity_before = state_after_failure["checkpoints"]["delivery"]["delivery_identity"]
+    remote_before = {
+        path.relative_to(destination_root): path.read_bytes()
+        for path in destination_root.rglob("*")
+        if path.is_file()
+    }
+    assert not (delivery_dir / "delivery-receipt-v2.json").exists()
+
+    monkeypatch.setattr(live_orchestrate_module, "materialize_delivery_v2", real_materialize)
+    recovered_report, recovered_exit = orchestrate(_resume_config(repo_tmp_path, run_id), providers)
+    assert (recovered_exit, recovered_report.stop_reason) == (0, "completed"), [
+        (stage.stage, stage.status, stage.detail) for stage in recovered_report.stages
+    ]
+    recovered = json.loads((delivery_dir / "delivery-receipt-v2.json").read_text(encoding="utf-8"))
+    assert recovered["idempotency_key"] == key
+    assert recovered["delivery_identity"] == identity_before
+    assert recovered["remote_reference"] == remote_dir.resolve().as_uri()
+    assert deliver_calls == 1
+    assert lookup_calls == 1
+    assert (delivery_dir / "delivery-request-v2.json").read_bytes() == request_before
+    assert (delivery_dir / "delivery-execution-v2.json").read_bytes() == execution_before
+    assert {
+        path.relative_to(destination_root): path.read_bytes()
+        for path in destination_root.rglob("*")
+        if path.is_file()
+    } == remote_before
+
+
+def test_p6_completed_resume_without_lookup_recovers_local_receipt(
+    repo_tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    _seed_exam_workspace(repo_tmp_path)
+    run_id = "20260912-p6-no-lookup-recovery"
+    run_root = _seed_paused_run(repo_tmp_path, run_id)
+
+    from examcard.gates.release.delivery_v2 import build_delivery_target_v2
+    from examcard.gates.release.publication_v2 import (
+        PUBLICATION_SCOPE_V2,
+        build_publication_authorization_v2,
+    )
+
+    target = build_delivery_target_v2(
+        target_id="target:p6-no-lookup",
+        target_type="archive",
+        destination_reference="offline://p6-no-lookup",
+        destination_config_sha256="8" * 64,
+        allowed_scope=PUBLICATION_SCOPE_V2,
+    )
+
+    class NoLookupAdapter:
+        def __init__(self) -> None:
+            self.deliver_calls = 0
+
+        def deliver(
+            self, *, package_sha256: str, target_sha256: str, idempotency_key: str
+        ) -> dict[str, str]:
+            assert package_sha256
+            assert target_sha256 == target.target_sha256
+            assert idempotency_key
+            self.deliver_calls += 1
+            return {"status": "success", "remote_reference": "remote:p6-no-lookup"}
+
+    adapter = NoLookupAdapter()
+    providers = _resume_providers(repo_tmp_path)
+    providers.update(
+        {"delivery_enabled": True, "delivery_target": target, "delivery_adapter": adapter}
+    )
+    first_report, first_exit = orchestrate(_resume_config(repo_tmp_path, run_id), providers)
+    assert (first_exit, first_report.stop_reason) == (2, "waiting_human_publication")
+    publication_dir = run_root / "checkpoints" / "publication"
+    manifest = json.loads((publication_dir / "publication-manifest-v2.json").read_text(encoding="utf-8"))
+    image_ticket = json.loads((run_root / "run_state.json").read_text(encoding="utf-8"))["checkpoints"]["image_review"]
+    authorization = build_publication_authorization_v2(
+        authorization_id="p6-no-lookup-auth",
+        publication_scope=PUBLICATION_SCOPE_V2,
+        final_release_closure_sha256=image_ticket["final_release_receipt_sha256"],
+        publication_manifest_sha256=manifest["manifest_sha256"],
+        authorized_by="release-operator",
+        authorization_reason="completed execution no-lookup recovery test",
+        authorized_at="2026-09-12T00:00:00Z",
+    )
+    (publication_dir / "publication-authorization-v2.json").write_text(
+        json.dumps(authorization.model_dump(mode="json"), ensure_ascii=False, indent=2), encoding="utf-8"
+    )
+
+    import examcard.pipeline.live_orchestrate as live_orchestrate_module
+
+    real_materialize = live_orchestrate_module.materialize_delivery_v2
+
+    def fail_local_receipt(*args: object, **kwargs: object) -> dict[str, object]:
+        if kwargs.get("receipt") is not None:
+            raise OSError("forced local receipt persistence failure")
+        return real_materialize(*args, **kwargs)
+
+    monkeypatch.setattr(live_orchestrate_module, "materialize_delivery_v2", fail_local_receipt)
+    failed_report, failed_exit = orchestrate(_resume_config(repo_tmp_path, run_id), providers)
+    assert (failed_exit, failed_report.stop_reason) == (1, "delivery_outcome_unknown")
+    assert adapter.deliver_calls == 1
+
+    delivery_dir = run_root / "checkpoints" / "delivery"
+    request_before = (delivery_dir / "delivery-request-v2.json").read_bytes()
+    execution_before = (delivery_dir / "delivery-execution-v2.json").read_bytes()
+    state_before = json.loads((run_root / "run_state.json").read_text(encoding="utf-8"))
+    identity_before = state_before["checkpoints"]["delivery"]["delivery_identity"]
+    key = state_before["checkpoints"]["delivery"]["idempotency_key"]
+    assert json.loads(execution_before.decode("utf-8"))["execution_status"] == "completed"
+    assert not (delivery_dir / "delivery-receipt-v2.json").exists()
+
+    monkeypatch.setattr(live_orchestrate_module, "materialize_delivery_v2", real_materialize)
+    recovered_report, recovered_exit = orchestrate(_resume_config(repo_tmp_path, run_id), providers)
+    assert (recovered_exit, recovered_report.stop_reason) == (0, "completed")
+    assert adapter.deliver_calls == 1
+    recovered = json.loads((delivery_dir / "delivery-receipt-v2.json").read_text(encoding="utf-8"))
+    assert recovered["delivery_status"] == "completed"
+    assert recovered["remote_reference"] is None
+    assert recovered["delivery_identity"] == identity_before
+    assert recovered["idempotency_key"] == key
+    assert (delivery_dir / "delivery-request-v2.json").read_bytes() == request_before
+    assert (delivery_dir / "delivery-execution-v2.json").read_bytes() == execution_before
+
+
+def test_p6_completed_resume_with_unresolved_lookup_stays_reconciliation_required(
+    repo_tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    _seed_exam_workspace(repo_tmp_path)
+    run_id = "20260912-p6-unresolved-lookup"
+    run_root = _seed_paused_run(repo_tmp_path, run_id)
+
+    from examcard.gates.release.delivery_v2 import build_delivery_target_v2
+    from examcard.gates.release.publication_v2 import (
+        PUBLICATION_SCOPE_V2,
+        build_publication_authorization_v2,
+    )
+
+    target = build_delivery_target_v2(
+        target_id="target:p6-unresolved-lookup",
+        target_type="archive",
+        destination_reference="offline://p6-unresolved-lookup",
+        destination_config_sha256="9" * 64,
+        allowed_scope=PUBLICATION_SCOPE_V2,
+    )
+
+    class UnresolvedLookupAdapter:
+        def __init__(self) -> None:
+            self.deliver_calls = 0
+            self.lookup_keys: list[str] = []
+
+        def deliver(
+            self, *, package_sha256: str, target_sha256: str, idempotency_key: str
+        ) -> dict[str, str]:
+            assert package_sha256
+            assert target_sha256 == target.target_sha256
+            assert idempotency_key
+            self.deliver_calls += 1
+            return {"status": "success", "remote_reference": "remote:p6-unresolved-lookup"}
+
+        def lookup(self, *, idempotency_key: str) -> dict[str, str]:
+            self.lookup_keys.append(idempotency_key)
+            return {"status": "unknown"}
+
+    adapter = UnresolvedLookupAdapter()
+    providers = _resume_providers(repo_tmp_path)
+    providers.update(
+        {"delivery_enabled": True, "delivery_target": target, "delivery_adapter": adapter}
+    )
+    first_report, first_exit = orchestrate(_resume_config(repo_tmp_path, run_id), providers)
+    assert (first_exit, first_report.stop_reason) == (2, "waiting_human_publication")
+    publication_dir = run_root / "checkpoints" / "publication"
+    manifest = json.loads((publication_dir / "publication-manifest-v2.json").read_text(encoding="utf-8"))
+    image_ticket = json.loads((run_root / "run_state.json").read_text(encoding="utf-8"))["checkpoints"]["image_review"]
+    authorization = build_publication_authorization_v2(
+        authorization_id="p6-unresolved-lookup-auth",
+        publication_scope=PUBLICATION_SCOPE_V2,
+        final_release_closure_sha256=image_ticket["final_release_receipt_sha256"],
+        publication_manifest_sha256=manifest["manifest_sha256"],
+        authorized_by="release-operator",
+        authorization_reason="completed execution unresolved lookup test",
+        authorized_at="2026-09-12T00:00:00Z",
+    )
+    (publication_dir / "publication-authorization-v2.json").write_text(
+        json.dumps(authorization.model_dump(mode="json"), ensure_ascii=False, indent=2), encoding="utf-8"
+    )
+
+    import examcard.pipeline.live_orchestrate as live_orchestrate_module
+
+    real_materialize = live_orchestrate_module.materialize_delivery_v2
+
+    def fail_local_receipt(*args: object, **kwargs: object) -> dict[str, object]:
+        if kwargs.get("receipt") is not None:
+            raise OSError("forced local receipt persistence failure")
+        return real_materialize(*args, **kwargs)
+
+    monkeypatch.setattr(live_orchestrate_module, "materialize_delivery_v2", fail_local_receipt)
+    failed_report, failed_exit = orchestrate(_resume_config(repo_tmp_path, run_id), providers)
+    assert (failed_exit, failed_report.stop_reason) == (1, "delivery_outcome_unknown")
+    assert adapter.deliver_calls == 1
+
+    delivery_dir = run_root / "checkpoints" / "delivery"
+    request_before = (delivery_dir / "delivery-request-v2.json").read_bytes()
+    execution_before = (delivery_dir / "delivery-execution-v2.json").read_bytes()
+    state_before = json.loads((run_root / "run_state.json").read_text(encoding="utf-8"))
+    key = state_before["checkpoints"]["delivery"]["idempotency_key"]
+    assert json.loads(execution_before.decode("utf-8"))["execution_status"] == "completed"
+    assert not (delivery_dir / "delivery-receipt-v2.json").exists()
+
+    monkeypatch.setattr(live_orchestrate_module, "materialize_delivery_v2", real_materialize)
+    recovered_report, recovered_exit = orchestrate(_resume_config(repo_tmp_path, run_id), providers)
+    assert (recovered_exit, recovered_report.stop_reason) == (1, "delivery_outcome_unknown")
+    assert adapter.deliver_calls == 1
+    assert adapter.lookup_keys == [key]
+    assert not (delivery_dir / "delivery-receipt-v2.json").exists()
+    assert (delivery_dir / "delivery-request-v2.json").read_bytes() == request_before
+    assert (delivery_dir / "delivery-execution-v2.json").read_bytes() == execution_before
+
+    later_report, later_exit = orchestrate(_resume_config(repo_tmp_path, run_id), providers)
+    assert (later_exit, later_report.stop_reason) == (1, "delivery_outcome_unknown")
+    assert adapter.deliver_calls == 1
+    assert adapter.lookup_keys == [key, key]
+    assert not (delivery_dir / "delivery-receipt-v2.json").exists()
+    assert (delivery_dir / "delivery-execution-v2.json").read_bytes() == execution_before
+
+
 def test_resume_with_undecided_sheet_stays_waiting(repo_tmp_path: Path) -> None:
     _seed_exam_workspace(repo_tmp_path)
     run_id = "20260812-resume-regression-fixture3"

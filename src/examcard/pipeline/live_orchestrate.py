@@ -42,6 +42,7 @@ from .live_checkpoint import (
 from ..common.hashing import canonical_hash, sha256_bytes
 from ..common.io import read_json
 from ..gates.release.delivery_v2 import (
+    DeliveryAdapterResult,
     DeliveryExecutionV2,
     DeliveryTargetV2,
     build_delivery_execution_v2,
@@ -452,17 +453,17 @@ def orchestrate(config: LiveRunConfig, providers: Mapping[str, Any]) -> tuple[Li
             raise TypeError("P6 delivery adapter must provide deliver()")
         return normalize_adapter_result(value)
 
-    def _delivery_lookup_result(request: Any) -> Any:
+    def _delivery_lookup_result(request: Any) -> tuple[bool, DeliveryAdapterResult | None]:
         adapter = providers.get("delivery_adapter")
         method = getattr(adapter, "lookup", None) if adapter is not None else None
         if not callable(method):
             method = getattr(adapter, "lookup_status", None) if adapter is not None else None
         if not callable(method):
-            return None
+            return False, None
         try:
-            return normalize_adapter_result(method(idempotency_key=request.idempotency_key))
+            return True, normalize_adapter_result(method(idempotency_key=request.idempotency_key))
         except Exception:
-            return None
+            return True, None
 
     def _delivery_execution_from_file(path: Path) -> DeliveryExecutionV2:
         if not path.is_file():
@@ -528,6 +529,32 @@ def orchestrate(config: LiveRunConfig, providers: Mapping[str, Any]) -> tuple[Li
             state.set_checkpoint("delivery", "unknown", **partial)
             return partial
         state.set_checkpoint("delivery", "frozen", **result)
+        return result
+
+    def _mark_delivery_outcome_unknown(
+        *,
+        request: Any,
+        execution: DeliveryExecutionV2,
+    ) -> dict[str, Any]:
+        paths = delivery_v2_paths(run_root)
+        result = {
+            "delivery_status": "unknown",
+            "delivery_request_sha256": request.request_sha256,
+            "delivery_request_file_sha256": sha256_bytes(paths["request"].read_bytes())
+            if paths["request"].is_file()
+            else None,
+            "delivery_target_sha256": request.target_sha256,
+            "delivery_operation_id": request.delivery_operation_id,
+            "delivery_identity": request.delivery_identity,
+            "idempotency_key": request.idempotency_key,
+            "delivery_execution_sha256": execution.execution_sha256,
+            "delivery_execution_file_sha256": sha256_bytes(paths["execution"].read_bytes())
+            if paths["execution"].is_file()
+            else None,
+            "delivery_request_path": str(paths["request"]),
+            "delivery_execution_path": str(paths["execution"]),
+        }
+        state.set_checkpoint("delivery", "unknown", **result)
         return result
 
     def _delivery_p5_identity(p4_authority: Mapping[str, Any]) -> dict[str, Any]:
@@ -609,17 +636,29 @@ def orchestrate(config: LiveRunConfig, providers: Mapping[str, Any]) -> tuple[Li
             )
             materialize_delivery_v2(run_root=run_root, request=request, execution=execution)
         elif existing_execution.execution_status == "completed":
+            lookup_supported, lookup = _delivery_lookup_result(request)
+            if lookup_supported:
+                if lookup is not None and lookup.status == "success":
+                    return _persist_delivery_outcome(
+                        request=request,
+                        execution=existing_execution,
+                        adapter_result=lookup,
+                    )
+                return _mark_delivery_outcome_unknown(
+                    request=request,
+                    execution=existing_execution,
+                )
             return _persist_delivery_outcome(
                 request=request,
                 execution=existing_execution,
-                adapter_result={"status": "success"},
+                adapter_result=DeliveryAdapterResult(status="success"),
             )
         elif existing_execution.execution_status in {"executing", "unknown"}:
-            lookup = _delivery_lookup_result(request)
+            _, lookup = _delivery_lookup_result(request)
             return _persist_delivery_outcome(
                 request=request,
                 execution=existing_execution,
-                adapter_result=lookup or {"status": "unknown"},
+                adapter_result=lookup or DeliveryAdapterResult(status="unknown"),
             )
         elif existing_execution.execution_status == "failed":
             execution = build_delivery_execution_v2(
