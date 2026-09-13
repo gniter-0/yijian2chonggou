@@ -64,6 +64,14 @@ def test_duplicate_registration_is_rejected_without_replacement() -> None:
     assert registry.create("test") is first
 
 
+def test_registry_does_not_persist_registration_state() -> None:
+    before = sorted(path.name for path in Path.cwd().iterdir())
+    registry = DeliveryBackendRegistryV1()
+    registry.register("test", _RecordingAdapter)
+
+    assert sorted(path.name for path in Path.cwd().iterdir()) == before
+
+
 def test_filesystem_adapter_is_compatible_with_the_frozen_p6_seam() -> None:
     # Only construct the adapter here; no delivery is invoked and therefore
     # the existing workspace directory is not modified.

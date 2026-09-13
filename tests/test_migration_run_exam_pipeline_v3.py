@@ -9,6 +9,11 @@ from types import SimpleNamespace
 import pytest
 
 from migration import run_exam_pipeline
+from examcard.delivery.backend_registry_v1 import DeliveryBackendRegistryV1
+from examcard.delivery.filesystem_v1 import (
+    FilesystemDirectoryDeliveryAdapter,
+    build_filesystem_delivery_target,
+)
 from examcard.gates.release.publication_v2 import (
     PUBLICATION_SCOPE_V2,
     PublicationAuthorizationV2,
@@ -161,10 +166,20 @@ def test_configure_operator_providers_publication_only(monkeypatch, tmp_path: Pa
     assert calls == [publication_dir]
 
 
-def test_configure_operator_providers_builds_frozen_p7_adapter(tmp_path: Path) -> None:
+def test_configure_operator_providers_builds_frozen_p7_adapter_through_registry(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
     destination = tmp_path / "delivery"
     destination.mkdir()
     run_root = tmp_path / "runs" / "run-1"
+    create_calls: list[str] = []
+    original_create = DeliveryBackendRegistryV1.create
+
+    def record_create(self, backend_type: str, **kwargs: object) -> object:
+        create_calls.append(backend_type)
+        return original_create(self, backend_type, **kwargs)
+
+    monkeypatch.setattr(DeliveryBackendRegistryV1, "create", record_create)
     args = SimpleNamespace(
         enable_publication=True,
         resume="run-1",
@@ -180,9 +195,13 @@ def test_configure_operator_providers_builds_frozen_p7_adapter(tmp_path: Path) -
     )
 
     adapter = providers["delivery_adapter"]
+    assert isinstance(adapter, FilesystemDirectoryDeliveryAdapter)
     assert providers["publication_enabled"] is True
     assert providers["delivery_enabled"] is True
     assert providers["delivery_target"] is adapter.target
+    assert create_calls == ["filesystem-directory-v1"]
+    expected_target = build_filesystem_delivery_target(destination)
+    assert adapter.target.model_dump(mode="json") == expected_target.model_dump(mode="json")
     assert adapter.publication_dir == run_root / "checkpoints" / "publication"
     assert adapter.destination_root == destination
 

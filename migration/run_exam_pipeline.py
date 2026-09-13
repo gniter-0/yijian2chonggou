@@ -53,6 +53,10 @@ from examcard.pipeline.live_run import (  # noqa: E402
     load_run_env,
     orchestrate,
 )
+from examcard.delivery.backend_registry_v1 import (  # noqa: E402
+    DeliveryBackendCapabilities,
+    DeliveryBackendRegistryV1,
+)
 from examcard.evidence.golden import GoldenSampleRegistry  # noqa: E402
 
 
@@ -192,11 +196,17 @@ def _build_filesystem_delivery(*, run_root: Path, destination_root: Path) -> tup
     except (OSError, TypeError, ValueError) as error:
         raise SystemExit(f"invalid filesystem delivery destination: {destination_root}") from error
     publication_dir = Path(run_root) / "checkpoints" / "publication"
-    adapter = FilesystemDirectoryDeliveryAdapter(
-        publication_dir=publication_dir,
-        destination_root=destination_root,
-        target=target,
+    registry = DeliveryBackendRegistryV1()
+    registry.register(
+        "filesystem-directory-v1",
+        lambda: FilesystemDirectoryDeliveryAdapter(
+            publication_dir=publication_dir,
+            destination_root=destination_root,
+            target=target,
+        ),
+        capabilities=DeliveryBackendCapabilities(supports_lookup=True),
     )
+    adapter = registry.create("filesystem-directory-v1")
     return target, adapter
 
 
