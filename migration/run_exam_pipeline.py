@@ -95,10 +95,150 @@ def _parse_args() -> argparse.Namespace:
     parser.add_argument("--skip-preflight", action="store_true")
     parser.add_argument("--resume", type=str, default=None)
     parser.add_argument("--max-attempts", type=int, default=3)
+    parser.add_argument(
+        "--enable-publication",
+        action="store_true",
+        help="enable the P5 publication checkpoint (does not create human authorization)",
+    )
+    parser.add_argument(
+        "--publication-authorization",
+        type=Path,
+        default=None,
+        help="existing human-created PublicationAuthorizationV2 JSON for a resume",
+    )
+    parser.add_argument(
+        "--delivery-filesystem-root",
+        type=Path,
+        default=None,
+        help="existing destination root for the frozen filesystem-directory-v1 delivery backend",
+    )
     args = parser.parse_args()
     if args.allow_live == args.dry_run:
         parser.error("choose exactly one of --allow-live or --dry-run")
+    if args.delivery_filesystem_root is not None and args.dry_run:
+        parser.error("external delivery is unavailable in --dry-run")
+    p8_requested = (
+        args.enable_publication
+        or args.publication_authorization is not None
+        or args.delivery_filesystem_root is not None
+    )
+    if p8_requested and not args.allow_live:
+        parser.error("publication and delivery controls require --allow-live")
+    if args.publication_authorization is not None and args.resume is None:
+        parser.error("--publication-authorization requires --resume")
+    if args.delivery_filesystem_root is not None and args.resume is None:
+        parser.error("--delivery-filesystem-root requires --resume")
     return args
+
+
+def _load_publication_authorization(path: Path) -> Any:
+    """Load a complete human-supplied P5 authorization without rewriting it."""
+
+    from examcard.gates.release.publication_v2 import PublicationAuthorizationV2
+
+    path = Path(path)
+    if path.suffix.lower() != ".json":
+        raise SystemExit(f"publication authorization must be a JSON file: {path}")
+    if path.is_symlink() or not path.is_file():
+        raise SystemExit(f"publication authorization file is missing or not a regular file: {path}")
+    try:
+        raw = path.read_bytes()
+        authorization = PublicationAuthorizationV2.model_validate_json(raw)
+    except (OSError, TypeError, ValueError) as error:
+        raise SystemExit(f"invalid PublicationAuthorizationV2: {path}") from error
+    return authorization
+
+
+def _validate_publication_manifest_binding(*, publication_dir: Path, authorization: Any) -> None:
+    """Give operators an early mismatch error; P5 remains the final authority."""
+
+    from examcard.gates.release.publication_v2 import PublicationManifestV2
+
+    manifest_path = Path(publication_dir) / "publication-manifest-v2.json"
+    if manifest_path.is_symlink() or not manifest_path.is_file():
+        raise SystemExit(f"frozen publication manifest is missing: {manifest_path}")
+    try:
+        manifest = PublicationManifestV2.model_validate_json(manifest_path.read_bytes())
+    except (OSError, TypeError, ValueError) as error:
+        raise SystemExit(f"frozen publication manifest is invalid: {manifest_path}") from error
+    if authorization.publication_manifest_sha256 != manifest.manifest_sha256:
+        raise SystemExit("publication authorization does not bind the existing publication manifest")
+
+
+def _build_filesystem_delivery(*, run_root: Path, destination_root: Path) -> tuple[Any, Any]:
+    """Construct the frozen P7 target and adapter for one known resumed run."""
+
+    from examcard.delivery.filesystem_v1 import (
+        FilesystemDirectoryDeliveryAdapter,
+        build_filesystem_delivery_target,
+    )
+
+    destination_root = Path(destination_root)
+    if destination_root.is_symlink():
+        raise SystemExit("filesystem delivery destination must not be a symlink")
+    checkpoints_root = (Path(run_root) / "checkpoints").resolve()
+    try:
+        canonical_destination = destination_root.resolve(strict=True)
+    except OSError as error:
+        raise SystemExit(f"filesystem delivery destination cannot be resolved: {destination_root}") from error
+    try:
+        canonical_destination.relative_to(checkpoints_root)
+    except ValueError:
+        pass
+    else:
+        raise SystemExit("filesystem delivery destination must be outside the current run checkpoints")
+    try:
+        target = build_filesystem_delivery_target(destination_root)
+    except (OSError, TypeError, ValueError) as error:
+        raise SystemExit(f"invalid filesystem delivery destination: {destination_root}") from error
+    publication_dir = Path(run_root) / "checkpoints" / "publication"
+    adapter = FilesystemDirectoryDeliveryAdapter(
+        publication_dir=publication_dir,
+        destination_root=destination_root,
+        target=target,
+    )
+    return target, adapter
+
+
+def _configure_operator_providers(
+    *, args: argparse.Namespace, paths: ExamPaths, providers: dict[str, object]
+) -> None:
+    """Expose frozen P5/P7 seams to the CLI without creating new authority."""
+
+    if getattr(args, "enable_publication", False):
+        providers["publication_enabled"] = True
+
+    if args.resume is None:
+        if (
+            getattr(args, "publication_authorization", None) is not None
+            or getattr(args, "delivery_filesystem_root", None) is not None
+        ):
+            raise SystemExit("publication authorization and delivery require --resume")
+        return
+
+    run_root = paths.live_runs_root / args.resume
+    publication_dir = run_root / "checkpoints" / "publication"
+
+    publication_authorization = getattr(args, "publication_authorization", None)
+    if publication_authorization is not None:
+        authorization = _load_publication_authorization(publication_authorization)
+        _validate_publication_manifest_binding(
+            publication_dir=publication_dir,
+            authorization=authorization,
+        )
+        providers["publication_enabled"] = True
+        providers["publication_authorization"] = authorization
+
+    delivery_filesystem_root = getattr(args, "delivery_filesystem_root", None)
+    if delivery_filesystem_root is not None:
+        target, adapter = _build_filesystem_delivery(
+            run_root=run_root,
+            destination_root=delivery_filesystem_root,
+        )
+        providers["publication_enabled"] = True
+        providers["delivery_enabled"] = True
+        providers["delivery_target"] = target
+        providers["delivery_adapter"] = adapter
 
 
 def _resolve_channel(env_path: Path, channel: str) -> dict:
@@ -235,6 +375,7 @@ def main() -> int:
 
     providers: dict[str, object] = {"pricing": pricing, "sample_ids": sample_ids}
     providers["image_model"] = env.get("IMAGE_MODEL") or ""
+    _configure_operator_providers(args=args, paths=paths, providers=providers)
 
     # ---- step1 / 事实底座（纯离线闭包） -------------------------------------
     def step1_runner() -> dict:
@@ -909,7 +1050,20 @@ def main() -> int:
         )
     )
     if exit_code == 2:
-        print("PAUSED at a human checkpoint. Fill the decision file, then resume with: --resume " + report.run_id)
+        publication_waiting = any(
+            item.stage == "publication_checkpoint" and item.status == "waiting_human"
+            for item in report.stages
+        )
+        if publication_waiting:
+            manifest_path = paths.live_runs_root / report.run_id / "checkpoints" / "publication" / "publication-manifest-v2.json"
+            print("PUBLICATION MANIFEST READY: " + str(manifest_path))
+            print(
+                "Create the complete human authorization JSON, then resume with: "
+                f"--exam {args.exam} --stages {args.stages} --allow-live --resume {report.run_id} "
+                "--enable-publication --publication-authorization <path>"
+            )
+        else:
+            print("PAUSED at a human checkpoint. Fill the decision file, then resume with: --resume " + report.run_id)
     return exit_code
 
 
