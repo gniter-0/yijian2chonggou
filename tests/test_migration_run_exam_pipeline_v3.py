@@ -9,6 +9,7 @@ from types import SimpleNamespace
 import pytest
 
 from migration import run_exam_pipeline
+from examcard.config import DeliveryBackendConfigV1, DeliveryBackendType
 from examcard.delivery.backend_registry_v1 import DeliveryBackendRegistryV1
 from examcard.delivery.filesystem_v1 import (
     FilesystemDirectoryDeliveryAdapter,
@@ -52,6 +53,288 @@ def test_run_exam_pipeline_keeps_v2_defaults(monkeypatch) -> None:
     args = run_exam_pipeline._parse_args()
     assert args.step3_contract == "v2"
     assert args.step4_source == "pilot-release"
+    assert args.delivery_backend is None
+    assert args.delivery_backend_config is None
+
+
+def _write_object_storage_config(path: Path, **overrides: object) -> Path:
+    payload: dict[str, object] = {
+        "backend_type": "object-storage-v1",
+        "provider_type": "s3",
+        "endpoint": "objects.example.test",
+        "bucket": "exam-artifacts",
+    }
+    payload.update(overrides)
+    path.write_text(json.dumps(payload), encoding="utf-8")
+    return path
+
+
+def test_run_exam_pipeline_accepts_object_storage_backend_config(monkeypatch, tmp_path: Path) -> None:
+    config_path = _write_object_storage_config(tmp_path / "delivery.json")
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        [
+            "run_exam_pipeline.py",
+            "--exam",
+            "demo",
+            "--stages",
+            "step4",
+            "--allow-live",
+            "--resume",
+            "run-1",
+            "--delivery-backend",
+            "object-storage-v1",
+            "--delivery-backend-config",
+            str(config_path),
+        ],
+    )
+
+    args = run_exam_pipeline._parse_args()
+
+    assert args.delivery_backend == DeliveryBackendType.OBJECT_STORAGE.value
+    assert args.delivery_backend_config == config_path
+    assert isinstance(args.delivery_backend_config_model, DeliveryBackendConfigV1)
+    assert args.delivery_backend_config_model.backend_type is DeliveryBackendType.OBJECT_STORAGE
+
+
+def test_configure_operator_providers_exposes_typed_object_storage_input_without_delivery(
+    tmp_path: Path,
+) -> None:
+    config_path = _write_object_storage_config(tmp_path / "delivery.json")
+    config = DeliveryBackendConfigV1.object_storage(
+        provider_type="s3",
+        endpoint="objects.example.test",
+        bucket="exam-artifacts",
+    )
+    args = SimpleNamespace(
+        enable_publication=False,
+        resume="run-1",
+        publication_authorization=None,
+        delivery_filesystem_root=None,
+        delivery_backend=DeliveryBackendType.OBJECT_STORAGE.value,
+        delivery_backend_config=config_path,
+        delivery_backend_config_model=config,
+    )
+    providers: dict[str, object] = {}
+
+    run_exam_pipeline._configure_operator_providers(
+        args=args,
+        paths=SimpleNamespace(live_runs_root=tmp_path / "runs"),
+        providers=providers,
+    )
+
+    assert providers["delivery_backend_config"] is config
+    assert providers["publication_enabled"] is True
+    assert "delivery_adapter" not in providers
+    assert "delivery_enabled" not in providers
+
+
+def test_object_storage_config_missing_file_fails_closed(monkeypatch, tmp_path: Path, capsys) -> None:
+    missing = tmp_path / "missing.json"
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        [
+            "run_exam_pipeline.py",
+            "--exam",
+            "demo",
+            "--stages",
+            "step4",
+            "--allow-live",
+            "--resume",
+            "run-1",
+            "--delivery-backend",
+            "object-storage-v1",
+            "--delivery-backend-config",
+            str(missing),
+        ],
+    )
+
+    with pytest.raises(SystemExit, match="missing or not a regular JSON file"):
+        run_exam_pipeline._parse_args()
+    assert "credential" not in capsys.readouterr().err.lower()
+
+
+def test_object_storage_config_invalid_file_fails_without_echoing_input(monkeypatch, tmp_path: Path, capsys) -> None:
+    config_path = _write_object_storage_config(
+        tmp_path / "invalid.json",
+        token="do-not-echo-this-secret",
+    )
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        [
+            "run_exam_pipeline.py",
+            "--exam",
+            "demo",
+            "--stages",
+            "step4",
+            "--allow-live",
+            "--resume",
+            "run-1",
+            "--delivery-backend",
+            "object-storage-v1",
+            "--delivery-backend-config",
+            str(config_path),
+        ],
+    )
+
+    with pytest.raises(SystemExit, match="invalid delivery backend configuration"):
+        run_exam_pipeline._parse_args()
+    assert "do-not-echo-this-secret" not in capsys.readouterr().err
+
+
+def test_object_storage_config_missing_required_field_fails_closed(monkeypatch, tmp_path: Path) -> None:
+    config_path = tmp_path / "invalid.json"
+    config_path.write_text(
+        json.dumps(
+            {
+                "backend_type": "object-storage-v1",
+                "provider_type": "s3",
+                "endpoint": "objects.example.test",
+            }
+        ),
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        [
+            "run_exam_pipeline.py",
+            "--exam",
+            "demo",
+            "--stages",
+            "step4",
+            "--allow-live",
+            "--resume",
+            "run-1",
+            "--delivery-backend",
+            "object-storage-v1",
+            "--delivery-backend-config",
+            str(config_path),
+        ],
+    )
+
+    with pytest.raises(SystemExit, match="invalid delivery backend configuration"):
+        run_exam_pipeline._parse_args()
+
+
+def test_run_exam_pipeline_rejects_unknown_delivery_backend(monkeypatch, capsys) -> None:
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        [
+            "run_exam_pipeline.py",
+            "--exam",
+            "demo",
+            "--stages",
+            "step4",
+            "--allow-live",
+            "--delivery-backend",
+            "unknown-backend",
+        ],
+    )
+
+    with pytest.raises(SystemExit):
+        run_exam_pipeline._parse_args()
+    assert "invalid choice" in capsys.readouterr().err
+
+
+@pytest.mark.parametrize(
+    ("extra", "message"),
+    [
+        (
+            ("--delivery-backend", "object-storage-v1", "--delivery-backend-config", "delivery.json"),
+            "requires --resume",
+        ),
+        (
+            ("--delivery-backend", "object-storage-v1"),
+            "requires --delivery-backend-config",
+        ),
+        (
+            ("--delivery-backend-config", "delivery.json"),
+            "requires --delivery-backend object-storage-v1",
+        ),
+        (
+            ("--delivery-backend", "object-storage-v1", "--delivery-filesystem-root", "delivery"),
+            "conflicts",
+        ),
+        (
+            ("--delivery-backend", "filesystem-directory-v1"),
+            "requires --delivery-filesystem-root",
+        ),
+    ],
+)
+def test_run_exam_pipeline_rejects_object_storage_option_conflicts(monkeypatch, capsys, extra, message) -> None:
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        ["run_exam_pipeline.py", "--exam", "demo", "--stages", "step4", "--allow-live", *extra],
+    )
+
+    with pytest.raises(SystemExit):
+        run_exam_pipeline._parse_args()
+    assert message in capsys.readouterr().err
+
+
+def test_object_storage_backend_is_rejected_in_dry_run(monkeypatch, tmp_path: Path, capsys) -> None:
+    config_path = _write_object_storage_config(tmp_path / "delivery.json")
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        [
+            "run_exam_pipeline.py",
+            "--exam",
+            "demo",
+            "--stages",
+            "step4",
+            "--dry-run",
+            "--resume",
+            "run-1",
+            "--delivery-backend",
+            "object-storage-v1",
+            "--delivery-backend-config",
+            str(config_path),
+        ],
+    )
+
+    with pytest.raises(SystemExit):
+        run_exam_pipeline._parse_args()
+    assert "require --allow-live" in capsys.readouterr().err
+
+
+def test_object_storage_parse_does_not_invoke_delivery(monkeypatch, tmp_path: Path) -> None:
+    config_path = _write_object_storage_config(tmp_path / "delivery.json")
+    calls: list[object] = []
+    monkeypatch.setattr(run_exam_pipeline, "_build_filesystem_delivery", lambda **_: calls.append("delivery"))
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        [
+            "run_exam_pipeline.py",
+            "--exam",
+            "demo",
+            "--stages",
+            "step4",
+            "--allow-live",
+            "--resume",
+            "run-1",
+            "--delivery-backend",
+            "object-storage-v1",
+            "--delivery-backend-config",
+            str(config_path),
+        ],
+    )
+
+    args = run_exam_pipeline._parse_args()
+    run_exam_pipeline._configure_operator_providers(
+        args=args,
+        paths=SimpleNamespace(live_runs_root=tmp_path / "runs"),
+        providers={},
+    )
+
+    assert calls == []
 
 
 def test_run_exam_pipeline_accepts_p8_publication_and_delivery_options(monkeypatch) -> None:

@@ -53,11 +53,33 @@ from examcard.pipeline.live_run import (  # noqa: E402
     load_run_env,
     orchestrate,
 )
+from examcard.config.delivery_backend_config_v1 import (  # noqa: E402
+    DeliveryBackendConfigV1,
+    DeliveryBackendType,
+)
 from examcard.delivery.backend_registry_v1 import (  # noqa: E402
     DeliveryBackendCapabilities,
     DeliveryBackendRegistryV1,
 )
 from examcard.evidence.golden import GoldenSampleRegistry  # noqa: E402
+
+
+def _load_delivery_backend_config(path: Path) -> DeliveryBackendConfigV1:
+    """Load one typed, non-secret backend configuration without exposing input."""
+
+    path = Path(path)
+    if path.suffix.lower() != ".json" or path.is_symlink() or not path.is_file():
+        raise SystemExit(f"delivery backend configuration is missing or not a regular JSON file: {path}")
+    try:
+        payload = json.loads(path.read_bytes())
+        config = DeliveryBackendConfigV1.from_mapping(payload)
+    except (OSError, UnicodeError, TypeError, ValueError):
+        # Do not include validation details: pydantic error details may echo
+        # an operator-supplied secret value.
+        raise SystemExit(f"invalid delivery backend configuration: {path}") from None
+    if config.backend_type is not DeliveryBackendType.OBJECT_STORAGE:
+        raise SystemExit(f"delivery backend configuration must be object-storage-v1: {path}")
+    return config
 
 
 def _parse_args() -> argparse.Namespace:
@@ -116,7 +138,29 @@ def _parse_args() -> argparse.Namespace:
         default=None,
         help="existing destination root for the frozen filesystem-directory-v1 delivery backend",
     )
+    parser.add_argument(
+        "--delivery-backend",
+        choices=tuple(item.value for item in DeliveryBackendType),
+        default=None,
+        help="explicit delivery backend selection; existing filesystem options remain compatible",
+    )
+    parser.add_argument(
+        "--delivery-backend-config",
+        type=Path,
+        default=None,
+        help="JSON file containing non-secret object-storage backend configuration",
+    )
     args = parser.parse_args()
+    object_storage_backend = DeliveryBackendType.OBJECT_STORAGE.value
+    filesystem_backend = DeliveryBackendType.FILESYSTEM.value
+    if args.delivery_backend_config is not None and args.delivery_backend != object_storage_backend:
+        parser.error("--delivery-backend-config requires --delivery-backend object-storage-v1")
+    if args.delivery_backend == object_storage_backend and args.delivery_filesystem_root is not None:
+        parser.error("--delivery-filesystem-root conflicts with --delivery-backend object-storage-v1")
+    if args.delivery_backend == filesystem_backend and args.delivery_filesystem_root is None:
+        parser.error("--delivery-backend filesystem-directory-v1 requires --delivery-filesystem-root")
+    if args.delivery_backend == object_storage_backend and args.delivery_backend_config is None:
+        parser.error("--delivery-backend object-storage-v1 requires --delivery-backend-config")
     if args.allow_live == args.dry_run:
         parser.error("choose exactly one of --allow-live or --dry-run")
     if args.delivery_filesystem_root is not None and args.dry_run:
@@ -125,6 +169,8 @@ def _parse_args() -> argparse.Namespace:
         args.enable_publication
         or args.publication_authorization is not None
         or args.delivery_filesystem_root is not None
+        or args.delivery_backend is not None
+        or args.delivery_backend_config is not None
     )
     if p8_requested and not args.allow_live:
         parser.error("publication and delivery controls require --allow-live")
@@ -132,6 +178,10 @@ def _parse_args() -> argparse.Namespace:
         parser.error("--publication-authorization requires --resume")
     if args.delivery_filesystem_root is not None and args.resume is None:
         parser.error("--delivery-filesystem-root requires --resume")
+    if args.delivery_backend == object_storage_backend and args.resume is None:
+        parser.error("--delivery-backend object-storage-v1 requires --resume")
+    if args.delivery_backend_config is not None:
+        args.delivery_backend_config_model = _load_delivery_backend_config(args.delivery_backend_config)
     return args
 
 
@@ -218,6 +268,22 @@ def _configure_operator_providers(
     if getattr(args, "enable_publication", False):
         providers["publication_enabled"] = True
 
+    delivery_backend = getattr(args, "delivery_backend", None)
+    object_storage_backend = DeliveryBackendType.OBJECT_STORAGE.value
+    filesystem_backend = DeliveryBackendType.FILESYSTEM.value
+    delivery_backend_config_path = getattr(args, "delivery_backend_config", None)
+    if delivery_backend_config_path is not None and delivery_backend != object_storage_backend:
+        raise SystemExit("--delivery-backend-config requires --delivery-backend object-storage-v1")
+    if delivery_backend == object_storage_backend:
+        if getattr(args, "delivery_filesystem_root", None) is not None:
+            raise SystemExit("--delivery-filesystem-root conflicts with --delivery-backend object-storage-v1")
+        if delivery_backend_config_path is None:
+            raise SystemExit("--delivery-backend object-storage-v1 requires --delivery-backend-config")
+        if args.resume is None:
+            raise SystemExit("--delivery-backend object-storage-v1 requires --resume")
+    elif delivery_backend == filesystem_backend and getattr(args, "delivery_filesystem_root", None) is None:
+        raise SystemExit("--delivery-backend filesystem-directory-v1 requires --delivery-filesystem-root")
+
     if args.resume is None:
         if (
             getattr(args, "publication_authorization", None) is not None
@@ -228,6 +294,18 @@ def _configure_operator_providers(
 
     run_root = paths.live_runs_root / args.resume
     publication_dir = run_root / "checkpoints" / "publication"
+
+    if delivery_backend == object_storage_backend:
+        config = getattr(args, "delivery_backend_config_model", None)
+        if config is None:
+            assert delivery_backend_config_path is not None
+            config = _load_delivery_backend_config(delivery_backend_config_path)
+        if not isinstance(config, DeliveryBackendConfigV1) or config.backend_type is not DeliveryBackendType.OBJECT_STORAGE:
+            raise SystemExit("invalid delivery backend configuration")
+        # This task exposes typed P8 input only.  Provider credentials and the
+        # object-storage delivery adapter remain outside the CLI boundary.
+        providers["delivery_backend_config"] = config
+        providers["publication_enabled"] = True
 
     publication_authorization = getattr(args, "publication_authorization", None)
     if publication_authorization is not None:
@@ -241,6 +319,7 @@ def _configure_operator_providers(
 
     delivery_filesystem_root = getattr(args, "delivery_filesystem_root", None)
     if delivery_filesystem_root is not None:
+        providers["delivery_backend_config"] = DeliveryBackendConfigV1.filesystem(delivery_filesystem_root)
         target, adapter = _build_filesystem_delivery(
             run_root=run_root,
             destination_root=delivery_filesystem_root,
