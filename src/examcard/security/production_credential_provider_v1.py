@@ -75,7 +75,7 @@ class ProductionCredentialProviderV1:
         object.__setattr__(
             self,
             "_ProductionCredentialProviderV1__client_factory",
-            client_factory or materialize_credential_lease_v1,
+            client_factory if client_factory is not None else materialize_credential_lease_v1,
         )
 
     def __setattr__(self, name: str, value: object) -> NoReturn:

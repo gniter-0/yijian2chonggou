@@ -8,7 +8,6 @@ boundary.
 """
 from __future__ import annotations
 
-import os
 from collections.abc import Callable, Mapping
 from typing import Final, Literal, NoReturn, Protocol, SupportsIndex, TypeAlias, runtime_checkable
 
@@ -119,6 +118,9 @@ class CredentialLeaseV1:
         """Materialize once through the credential-layer factory seam."""
 
         materializer = object.__getattribute__(self, "_CredentialLeaseV1__materializer")
+        if materializer is None:
+            raise CredentialSourceError("invalid_lease")
+        object.__setattr__(self, "_CredentialLeaseV1__materializer", None)
         return materializer()
 
 
@@ -191,8 +193,9 @@ class InjectedDeploymentCredentialSourceV1(_OpaqueCredentialSourceBase):
 class EnvironmentCredentialSourceV1(_OpaqueCredentialSourceBase):
     """Environment-backed source with an injected provider-client builder.
 
-    Environment values are captured only by the private lease materializer.
-    They are never returned by ``resolve`` or included in source/lease output.
+    The environment mapping is always injected by the caller.  Environment
+    values are captured only by the private lease materializer.  They are
+    never returned by ``resolve`` or included in source/lease output.
     """
 
     __slots__ = ("__client_builder", "__variable_names", "__environ")
@@ -203,7 +206,7 @@ class EnvironmentCredentialSourceV1(_OpaqueCredentialSourceBase):
         *,
         client_builder: CredentialClientBuilderV1,
         variable_names: Mapping[str, str],
-        environ: Mapping[str, str] | None = None,
+        environ: Mapping[str, str],
     ) -> None:
         if not callable(client_builder):
             raise TypeError("environment credential client builder must be callable")
@@ -218,7 +221,7 @@ class EnvironmentCredentialSourceV1(_OpaqueCredentialSourceBase):
             raise ValueError("at least one credential environment variable is required")
         self.__client_builder = client_builder
         self.__variable_names = normalized_names
-        self.__environ = environ if environ is not None else os.environ
+        self.__environ = environ
 
     def resolve(self, *, config: DeliveryBackendConfigV1) -> CredentialLeaseV1:
         _require_object_storage_config(config)
