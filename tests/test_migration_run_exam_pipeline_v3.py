@@ -15,6 +15,7 @@ from examcard.delivery.filesystem_v1 import (
     FilesystemDirectoryDeliveryAdapter,
     build_filesystem_delivery_target,
 )
+from examcard.delivery.object_storage_v1 import ObjectStorageDeliveryAdapter
 from examcard.gates.release.publication_v2 import (
     PUBLICATION_SCOPE_V2,
     PublicationAuthorizationV2,
@@ -69,6 +70,52 @@ def _write_object_storage_config(path: Path, **overrides: object) -> Path:
     return path
 
 
+class _FakeObjectStorageProvider:
+    provider_type = "s3"
+
+    def __init__(self) -> None:
+        self.upload_calls: list[dict[str, str]] = []
+        self.lookup_calls: list[dict[str, str]] = []
+
+    def upload(self, *, package_sha256: str, target_sha256: str, idempotency_key: str) -> dict[str, str]:
+        call = {
+            "package_sha256": package_sha256,
+            "target_sha256": target_sha256,
+            "idempotency_key": idempotency_key,
+        }
+        self.upload_calls.append(call)
+        return {"status": "success", "remote_reference": "objects/exam-artifacts/package"}
+
+    def lookup(self, *, idempotency_key: str) -> dict[str, str]:
+        self.lookup_calls.append({"idempotency_key": idempotency_key})
+        return {"status": "success", "remote_reference": "objects/exam-artifacts/package"}
+
+
+class _FakeCredentialProvider:
+    provider_type = "s3"
+
+    def __init__(self, client: _FakeObjectStorageProvider) -> None:
+        self.client = client
+        self.resolve_calls = 0
+
+    def resolve(self, *, config: DeliveryBackendConfigV1) -> _FakeObjectStorageProvider:
+        assert config.backend_type is DeliveryBackendType.OBJECT_STORAGE
+        self.resolve_calls += 1
+        return self.client
+
+
+class _MismatchedCredentialProvider(_FakeCredentialProvider):
+    provider_type = "gcs"
+
+
+class _FailingCredentialProvider:
+    provider_type = "s3"
+
+    def resolve(self, *, config: DeliveryBackendConfigV1) -> _FakeObjectStorageProvider:
+        del config
+        raise RuntimeError("secret-value-must-not-escape")
+
+
 def test_run_exam_pipeline_accepts_object_storage_backend_config(monkeypatch, tmp_path: Path) -> None:
     config_path = _write_object_storage_config(tmp_path / "delivery.json")
     monkeypatch.setattr(
@@ -98,7 +145,7 @@ def test_run_exam_pipeline_accepts_object_storage_backend_config(monkeypatch, tm
     assert args.delivery_backend_config_model.backend_type is DeliveryBackendType.OBJECT_STORAGE
 
 
-def test_configure_operator_providers_exposes_typed_object_storage_input_without_delivery(
+def test_configure_operator_providers_assembles_object_storage_adapter(
     tmp_path: Path,
 ) -> None:
     config_path = _write_object_storage_config(tmp_path / "delivery.json")
@@ -116,6 +163,166 @@ def test_configure_operator_providers_exposes_typed_object_storage_input_without
         delivery_backend_config=config_path,
         delivery_backend_config_model=config,
     )
+    provider_client = _FakeObjectStorageProvider()
+    credential_provider = _FakeCredentialProvider(provider_client)
+    providers: dict[str, object] = {}
+
+    run_exam_pipeline._configure_operator_providers(
+        args=args,
+        paths=SimpleNamespace(live_runs_root=tmp_path / "runs"),
+        providers=providers,
+        credential_provider=credential_provider,
+    )
+
+    assert providers["delivery_backend_config"] is config
+    assert providers["publication_enabled"] is True
+    assert providers["delivery_enabled"] is True
+    assert providers["delivery_adapter_type"] == "object-storage-v1"
+    assert isinstance(providers["delivery_adapter"], ObjectStorageDeliveryAdapter)
+    assert providers["delivery_target"].destination_config_sha256 == config.canonical_sha256()
+    assert credential_provider.resolve_calls == 1
+    assert provider_client.upload_calls == []
+    assert provider_client.lookup_calls == []
+
+
+def test_object_storage_assembly_preserves_p6_bindings_and_lookup(tmp_path: Path) -> None:
+    config = DeliveryBackendConfigV1.object_storage(
+        provider_type="s3",
+        endpoint="objects.example.test",
+        bucket="exam-artifacts",
+    )
+    provider_client = _FakeObjectStorageProvider()
+    args = SimpleNamespace(
+        enable_publication=False,
+        resume="run-1",
+        publication_authorization=None,
+        delivery_filesystem_root=None,
+        delivery_backend=DeliveryBackendType.OBJECT_STORAGE.value,
+        delivery_backend_config=tmp_path / "delivery.json",
+        delivery_backend_config_model=config,
+    )
+    providers: dict[str, object] = {}
+
+    run_exam_pipeline._configure_operator_providers(
+        args=args,
+        paths=SimpleNamespace(live_runs_root=tmp_path / "runs"),
+        providers=providers,
+        credential_provider=_FakeCredentialProvider(provider_client),
+    )
+
+    adapter = providers["delivery_adapter"]
+    result = adapter.deliver(
+        package_sha256="a" * 64,
+        target_sha256="b" * 64,
+        idempotency_key="c" * 64,
+    )
+
+    assert result.status == "success"
+    assert provider_client.upload_calls == [
+        {
+            "package_sha256": "a" * 64,
+            "target_sha256": "b" * 64,
+            "idempotency_key": "c" * 64,
+        }
+    ]
+    assert adapter.lookup(idempotency_key="c" * 64).status == "success"
+    assert provider_client.lookup_calls == [{"idempotency_key": "c" * 64}]
+
+
+def test_object_storage_missing_credential_provider_fails_closed(tmp_path: Path) -> None:
+    config = DeliveryBackendConfigV1.object_storage(
+        provider_type="s3",
+        endpoint="objects.example.test",
+        bucket="exam-artifacts",
+    )
+    args = SimpleNamespace(
+        enable_publication=False,
+        resume="run-1",
+        publication_authorization=None,
+        delivery_filesystem_root=None,
+        delivery_backend=DeliveryBackendType.OBJECT_STORAGE.value,
+        delivery_backend_config=tmp_path / "delivery.json",
+        delivery_backend_config_model=config,
+    )
+
+    with pytest.raises(SystemExit, match="injected credential provider"):
+        run_exam_pipeline._configure_operator_providers(
+            args=args,
+            paths=SimpleNamespace(live_runs_root=tmp_path / "runs"),
+            providers={},
+        )
+
+
+def test_object_storage_provider_mismatch_fails_closed(tmp_path: Path) -> None:
+    config = DeliveryBackendConfigV1.object_storage(
+        provider_type="s3",
+        endpoint="objects.example.test",
+        bucket="exam-artifacts",
+    )
+    args = SimpleNamespace(
+        enable_publication=False,
+        resume="run-1",
+        publication_authorization=None,
+        delivery_filesystem_root=None,
+        delivery_backend=DeliveryBackendType.OBJECT_STORAGE.value,
+        delivery_backend_config=tmp_path / "delivery.json",
+        delivery_backend_config_model=config,
+    )
+
+    with pytest.raises(SystemExit, match="provider does not match"):
+        run_exam_pipeline._configure_operator_providers(
+            args=args,
+            paths=SimpleNamespace(live_runs_root=tmp_path / "runs"),
+            providers={},
+            credential_provider=_MismatchedCredentialProvider(_FakeObjectStorageProvider()),
+        )
+
+
+def test_object_storage_provider_error_is_redacted(tmp_path: Path) -> None:
+    config = DeliveryBackendConfigV1.object_storage(
+        provider_type="s3",
+        endpoint="objects.example.test",
+        bucket="exam-artifacts",
+    )
+    args = SimpleNamespace(
+        enable_publication=False,
+        resume="run-1",
+        publication_authorization=None,
+        delivery_filesystem_root=None,
+        delivery_backend=DeliveryBackendType.OBJECT_STORAGE.value,
+        delivery_backend_config=tmp_path / "delivery.json",
+        delivery_backend_config_model=config,
+    )
+
+    with pytest.raises(SystemExit) as error:
+        run_exam_pipeline._configure_operator_providers(
+            args=args,
+            paths=SimpleNamespace(live_runs_root=tmp_path / "runs"),
+            providers={},
+            credential_provider=_FailingCredentialProvider(),
+        )
+    assert "secret-value-must-not-escape" not in str(error.value)
+
+
+def test_completed_object_storage_resume_does_not_require_credentials(tmp_path: Path) -> None:
+    run_root = tmp_path / "runs" / "run-1"
+    receipt_path = run_root / "checkpoints" / "delivery" / "delivery-receipt-v2.json"
+    receipt_path.parent.mkdir(parents=True)
+    receipt_path.write_text("{}", encoding="utf-8")
+    config = DeliveryBackendConfigV1.object_storage(
+        provider_type="s3",
+        endpoint="objects.example.test",
+        bucket="exam-artifacts",
+    )
+    args = SimpleNamespace(
+        enable_publication=False,
+        resume="run-1",
+        publication_authorization=None,
+        delivery_filesystem_root=None,
+        delivery_backend=DeliveryBackendType.OBJECT_STORAGE.value,
+        delivery_backend_config=tmp_path / "delivery.json",
+        delivery_backend_config_model=config,
+    )
     providers: dict[str, object] = {}
 
     run_exam_pipeline._configure_operator_providers(
@@ -124,10 +331,8 @@ def test_configure_operator_providers_exposes_typed_object_storage_input_without
         providers=providers,
     )
 
-    assert providers["delivery_backend_config"] is config
-    assert providers["publication_enabled"] is True
+    assert providers["delivery_enabled"] is True
     assert "delivery_adapter" not in providers
-    assert "delivery_enabled" not in providers
 
 
 def test_object_storage_config_missing_file_fails_closed(monkeypatch, tmp_path: Path, capsys) -> None:
@@ -306,8 +511,7 @@ def test_object_storage_backend_is_rejected_in_dry_run(monkeypatch, tmp_path: Pa
 
 def test_object_storage_parse_does_not_invoke_delivery(monkeypatch, tmp_path: Path) -> None:
     config_path = _write_object_storage_config(tmp_path / "delivery.json")
-    calls: list[object] = []
-    monkeypatch.setattr(run_exam_pipeline, "_build_filesystem_delivery", lambda **_: calls.append("delivery"))
+    provider_client = _FakeObjectStorageProvider()
     monkeypatch.setattr(
         sys,
         "argv",
@@ -332,9 +536,11 @@ def test_object_storage_parse_does_not_invoke_delivery(monkeypatch, tmp_path: Pa
         args=args,
         paths=SimpleNamespace(live_runs_root=tmp_path / "runs"),
         providers={},
+        credential_provider=_FakeCredentialProvider(provider_client),
     )
 
-    assert calls == []
+    assert provider_client.upload_calls == []
+    assert provider_client.lookup_calls == []
 
 
 def test_run_exam_pipeline_accepts_p8_publication_and_delivery_options(monkeypatch) -> None:

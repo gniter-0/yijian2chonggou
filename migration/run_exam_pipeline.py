@@ -61,6 +61,16 @@ from examcard.delivery.backend_registry_v1 import (  # noqa: E402
     DeliveryBackendCapabilities,
     DeliveryBackendRegistryV1,
 )
+from examcard.gates.release.delivery_v2 import (  # noqa: E402
+    DeliveryTargetV2,
+    build_delivery_target_v2,
+)
+from examcard.gates.release.publication_v2 import PUBLICATION_SCOPE_V2  # noqa: E402
+from examcard.pipeline.delivery_runtime_assembly_v1 import (  # noqa: E402
+    DeliveryRuntimeAssemblyError,
+    assemble_object_storage_delivery_v1,
+)
+from examcard.security.credential_provider_v1 import CredentialProvider  # noqa: E402
 from examcard.evidence.golden import GoldenSampleRegistry  # noqa: E402
 
 
@@ -260,8 +270,32 @@ def _build_filesystem_delivery(*, run_root: Path, destination_root: Path) -> tup
     return target, adapter
 
 
+def _build_object_storage_delivery_target(config: DeliveryBackendConfigV1) -> DeliveryTargetV2:
+    """Build the P6 target from the validated, non-secret backend config."""
+
+    configuration_sha256 = config.canonical_sha256()
+    return build_delivery_target_v2(
+        target_id=f"object-storage:{configuration_sha256[:32]}",
+        target_type=DeliveryBackendType.OBJECT_STORAGE.value,
+        destination_reference=f"object-storage-config:{configuration_sha256}",
+        destination_config_sha256=configuration_sha256,
+        allowed_scope=PUBLICATION_SCOPE_V2,
+    )
+
+
+def _has_frozen_delivery_receipt(run_root: Path) -> bool:
+    """Avoid credential resolution when P6 can complete a frozen resume read-only."""
+
+    receipt_path = Path(run_root) / "checkpoints" / "delivery" / "delivery-receipt-v2.json"
+    return receipt_path.is_file() and not receipt_path.is_symlink()
+
+
 def _configure_operator_providers(
-    *, args: argparse.Namespace, paths: ExamPaths, providers: dict[str, object]
+    *,
+    args: argparse.Namespace,
+    paths: ExamPaths,
+    providers: dict[str, object],
+    credential_provider: CredentialProvider | None = None,
 ) -> None:
     """Expose frozen P5/P7 seams to the CLI without creating new authority."""
 
@@ -302,10 +336,23 @@ def _configure_operator_providers(
             config = _load_delivery_backend_config(delivery_backend_config_path)
         if not isinstance(config, DeliveryBackendConfigV1) or config.backend_type is not DeliveryBackendType.OBJECT_STORAGE:
             raise SystemExit("invalid delivery backend configuration")
-        # This task exposes typed P8 input only.  Provider credentials and the
-        # object-storage delivery adapter remain outside the CLI boundary.
+        target = _build_object_storage_delivery_target(config)
         providers["delivery_backend_config"] = config
         providers["publication_enabled"] = True
+        providers["delivery_enabled"] = True
+        providers["delivery_target"] = target
+        providers["delivery_adapter_type"] = object_storage_backend
+        if not _has_frozen_delivery_receipt(run_root):
+            if credential_provider is None:
+                raise SystemExit("object-storage delivery requires an injected credential provider")
+            try:
+                assembly = assemble_object_storage_delivery_v1(
+                    config=config,
+                    credential_provider=credential_provider,
+                )
+            except DeliveryRuntimeAssemblyError as error:
+                raise SystemExit(str(error)) from None
+            providers["delivery_adapter"] = assembly.adapter
 
     publication_authorization = getattr(args, "publication_authorization", None)
     if publication_authorization is not None:
@@ -430,7 +477,7 @@ def _v25_gate_evaluator(stage: str, context: object, record: dict[str, object]) 
     return evaluate_v25_live_stage_semantics(stage=stage, context=context, record=record)  # type: ignore[arg-type]
 
 
-def main() -> int:
+def main(*, credential_provider: CredentialProvider | None = None) -> int:
     args = _parse_args()
     config = LiveRunConfig(
         exam_id=args.exam,
@@ -464,7 +511,12 @@ def main() -> int:
 
     providers: dict[str, object] = {"pricing": pricing, "sample_ids": sample_ids}
     providers["image_model"] = env.get("IMAGE_MODEL") or ""
-    _configure_operator_providers(args=args, paths=paths, providers=providers)
+    _configure_operator_providers(
+        args=args,
+        paths=paths,
+        providers=providers,
+        credential_provider=credential_provider,
+    )
 
     # ---- step1 / 事实底座（纯离线闭包） -------------------------------------
     def step1_runner() -> dict:
