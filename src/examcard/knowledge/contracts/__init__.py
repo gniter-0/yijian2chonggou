@@ -137,6 +137,7 @@ from .proposals import (
     Step2AV21ModelFactProposal,
     Step2AV22ModelFactProposal,
     Step2AV23ModelFactProposal,
+    Step2AProductionSourceOwnedArbitraryPDFModelFactProposal,
     make_step2a_v13_proposal_key,
     make_step2a_v14_proposal_key,
     make_step2a_v15_proposal_key,
@@ -161,10 +162,76 @@ from .responses import (
     Step2AV21ResultPayload,
     Step2AV22ResultPayload,
     Step2AV23ResultPayload,
+    Step2AProductionSourceOwnedArbitraryPDFResultPayload,
     step2a_result_payload_model,
 )
 from .step2a_builders import build_step2a_request, build_step2a_section
 from .step2a_request import Step2ARequest
+from .source_owned_contract import (
+    CanonicalFactAssemblyStatus,
+    SourceOwnedCanonicalProposal,
+    SourceOwnedCanonicalFact,
+    SourceOwnedAnchorSelectionResult,
+    SourceOwnedAnchorSelectionStatus,
+    SourceOwnedLocalDerivedFacts,
+    SourceOwnedLocalDerivationResult,
+    SourceOwnedModelProposal,
+    SourceOwnedTableAtomicDerivationStatus,
+    SourceOwnedStep2ACanonicalizer,
+    Step2AContractProfile,
+    Step2AExtractionPath,
+    Step2AResponseHandlingMode,
+    canonicalize_source_owned_model_proposals,
+    source_owned_assemble_canonical_fact,
+    source_owned_derive_atomic_numeric_claims,
+    source_owned_derive_table_atomic_numeric_claims,
+    source_owned_select_anchor_spans,
+    select_step2a_extraction_path,
+    source_owned_derive_from_evidence,
+    source_owned_local_derivation,
+    step2a_request_version_for_profile,
+    step2a_response_handling_mode,
+)
+from .source_owned_card_adapter import (
+    SourceOwnedCardCandidateGenerationStatus,
+    SourceOwnedKnowledgeCardCandidate,
+    source_owned_fact_to_card_candidate,
+)
+from .source_owned_card_admission import (
+    SourceOwnedCardAdmissionRejectionReason,
+    SourceOwnedCardAdmissionResult,
+    SourceOwnedCardAdmissionStatus,
+    source_owned_admit_card_candidate,
+)
+from .source_owned_card_pipeline_bridge import (
+    SourceOwnedKnowledgeCardBridgeResult,
+    SourceOwnedKnowledgeCardBridgeStatus,
+    source_owned_bridge_to_knowledge_card,
+)
+from .source_owned_card_materialization import (
+    SourceOwnedKnowledgeCardMaterializationInput,
+    SourceOwnedKnowledgeCardMaterializationResult,
+    SourceOwnedKnowledgeCardMaterializationStatus,
+    source_owned_materialize_knowledge_card,
+)
+from .source_owned_extraction import (
+    SourceOwnedEvidenceCollection,
+    source_owned_extract_document_proposals_from_evidence,
+)
+from .source_owned_provider_dispatch import (
+    SourceOwnedProviderCompletion,
+    SourceOwnedProviderDispatchResult,
+    SourceOwnedProviderDispatchStatus,
+    SourceOwnedProviderRequest,
+    SourceOwnedProviderRequestIdentity,
+    SourceOwnedProviderResponseMetadata,
+    SourceOwnedProviderResponseStatus,
+    SourceOwnedProviderTransport,
+    SOURCE_OWNED_PROVIDER_MAX_RETRIES,
+    build_source_owned_provider_request,
+    decode_source_owned_provider_completion,
+    dispatch_source_owned_provider_request,
+)
 from .step2b import (
     ContinuationTitleProjectionProvenance,
     FactSummaryInput,
@@ -229,6 +296,9 @@ from .versions import (
     SOURCE_OWNED_STRUCTURAL_PROJECTION_STEP2A_MODEL_INPUT_VERSION,
     SOURCE_OWNED_STRUCTURAL_PROJECTION_STEP2A_PROMPT_VERSION,
     SOURCE_OWNED_STRUCTURAL_PROJECTION_STEP2A_REQUEST_VERSION,
+    PRODUCTION_SOURCE_OWNED_ARBITRARY_PDF_STEP2A_MODEL_INPUT_VERSION,
+    PRODUCTION_SOURCE_OWNED_ARBITRARY_PDF_STEP2A_PROMPT_VERSION,
+    PRODUCTION_SOURCE_OWNED_ARBITRARY_PDF_STEP2A_REQUEST_VERSION,
     STEP2A_COVERAGE_OBLIGATION_CONTEXT_INPUT_VERSION,
     STEP2A_COVERAGE_OBLIGATION_INPUT_VERSION,
     STEP2A_MODEL_INPUT_VERSION,

@@ -7,7 +7,30 @@ from pathlib import Path
 
 from ..evidence.schema import EvidenceKind, EvidenceUnit, PageEvidence
 from ..materials.schema import ContentPolicy, PolicyDisposition
-
+from .continuation.repair_sidecar import (
+    TableRepairReviewSidecar,
+    TableRepairReviewState,
+    verify_reviewed_table_repair,
+)
+from .contracts import (
+    PREVIOUS_STEP2A_SEMANTIC_PROJECTION_VERSION,
+    STEP2A_SEMANTIC_PROJECTION_VERSION,
+    ContinuationRecord,
+    EvidenceAnchorSpan,
+    ProjectionDecisionRecord,
+    ProjectionSelection,
+    ReviewedDiagramEdgeInput,
+    ReviewedDiagramNodeInput,
+    ReviewedStructuralDiagramInput,
+    Step2ASectionInput,
+    Step2ASemanticProjection,
+    TableGridIntegrityRecord,
+    TableGridIntegrityStatus,
+    build_step2a_section,
+    canonical_step2_sha256,
+    make_continuation_record_id,
+    make_evidence_anchor_span_id,
+)
 from .diagram.disposition import DiagramDisposition, DiagramDispositionSidecar
 from .diagram.sidecar import (
     DiagramReviewSidecar,
@@ -15,31 +38,6 @@ from .diagram.sidecar import (
     DiagramSemanticContractVersion,
 )
 from .fact_engine import decide_policy
-from .contracts import (
-    EvidenceAnchorSpan,
-    ContinuationRecord,
-    PREVIOUS_STEP2A_SEMANTIC_PROJECTION_VERSION,
-    ProjectionDecisionRecord,
-    ProjectionSelection,
-    ReviewedDiagramEdgeInput,
-    ReviewedDiagramNodeInput,
-    ReviewedStructuralDiagramInput,
-    STEP2A_SEMANTIC_PROJECTION_VERSION,
-    Step2ASemanticProjection,
-    Step2ASectionInput,
-    TableGridIntegrityRecord,
-    TableGridIntegrityStatus,
-    build_step2a_section,
-    canonical_step2_sha256,
-    make_evidence_anchor_span_id,
-    make_continuation_record_id,
-)
-from .continuation.repair_sidecar import (
-    TableRepairReviewSidecar,
-    TableRepairReviewState,
-    verify_reviewed_table_repair,
-)
-
 
 _TABLE_KINDS = frozenset({EvidenceKind.TABLE, EvidenceKind.TABLE_ROW, EvidenceKind.TABLE_CELL})
 _DIRECT_TEXT_KINDS = frozenset(
@@ -82,8 +80,20 @@ def _bbox_center_within(*, inner: EvidenceUnit, outer: EvidenceUnit) -> bool:
 
 def _manifest_bound_page(*, source_manifest_path: Path, page: PageEvidence) -> PageEvidence:
     """Reject a caller-supplied page that is not exactly the hashed manifest."""
-    manifest_page = PageEvidence.model_validate_json(source_manifest_path.read_bytes())
-    if page.model_dump(mode="json") != manifest_page.model_dump(mode="json"):
+    try:
+        manifest_page = PageEvidence.model_validate_json(source_manifest_path.read_bytes())
+    except (OSError, TypeError, ValueError):
+        raise ValueError("source manifest page binding is invalid") from None
+    try:
+        supplied_page = PageEvidence.model_validate(page.model_dump(mode="json"))
+    except (TypeError, ValueError):
+        raise ValueError("supplied PageEvidence does not exactly match the source manifest") from None
+    # Normalize caller-owned Any metadata through the existing PageEvidence
+    # contract before typed comparison.  Evidence fusion may retain tuples in
+    # memory (for example OCR polygons), while the JSON page record contains
+    # the equivalent arrays.  Every typed field remains bound; only this
+    # contract-defined JSON representation difference is normalized.
+    if supplied_page != manifest_page:
         raise ValueError("supplied PageEvidence does not exactly match the source manifest")
     return manifest_page
 

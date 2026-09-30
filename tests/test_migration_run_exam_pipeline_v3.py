@@ -16,6 +16,14 @@ from examcard.delivery.filesystem_v1 import (
     build_filesystem_delivery_target,
 )
 from examcard.delivery.object_storage_v1 import ObjectStorageDeliveryAdapter
+from examcard.pipeline.live_run import orchestrate
+from tests.test_pipeline_live_run_orchestration import (
+    _REHEARSAL_EXAM,
+    _resume_config,
+    _resume_providers,
+    _seed_exam_workspace,
+    _seed_paused_run,
+)
 from examcard.gates.release.publication_v2 import (
     PUBLICATION_SCOPE_V2,
     PublicationAuthorizationV2,
@@ -228,6 +236,199 @@ def test_object_storage_assembly_preserves_p6_bindings_and_lookup(tmp_path: Path
     assert adapter.lookup(idempotency_key="c" * 64).status == "success"
     assert provider_client.lookup_calls == [{"idempotency_key": "c" * 64}]
 
+
+
+def _object_storage_operator_args(
+    *,
+    root: Path,
+    run_id: str,
+    config_path: Path,
+    config: DeliveryBackendConfigV1,
+    publication_authorization: Path | None = None,
+) -> SimpleNamespace:
+    return SimpleNamespace(
+        enable_publication=False,
+        resume=run_id,
+        publication_authorization=publication_authorization,
+        delivery_filesystem_root=None,
+        delivery_backend=DeliveryBackendType.OBJECT_STORAGE.value,
+        delivery_backend_config=config_path,
+        delivery_backend_config_model=config,
+    )
+
+
+def _write_operator_publication_authorization(run_root: Path) -> Path:
+    publication_dir = run_root / "checkpoints" / "publication"
+    manifest = json.loads((publication_dir / "publication-manifest-v2.json").read_text(encoding="utf-8"))
+    image_ticket = json.loads((run_root / "run_state.json").read_text(encoding="utf-8"))["checkpoints"]["image_review"]
+    authorization = build_publication_authorization_v2(
+        authorization_id="object-storage-operator-auth",
+        publication_scope=PUBLICATION_SCOPE_V2,
+        final_release_closure_sha256=image_ticket["final_release_receipt_sha256"],
+        publication_manifest_sha256=manifest["manifest_sha256"],
+        authorized_by="release-operator",
+        authorization_reason="object-storage operator path test",
+        authorized_at="2026-09-27T00:00:00Z",
+    )
+    path = publication_dir / "publication-authorization-v2.json"
+    path.write_text(json.dumps(authorization.model_dump(mode="json"), ensure_ascii=False, indent=2), encoding="utf-8")
+    return path
+
+
+def test_object_storage_operator_path_reaches_live_p6_with_frozen_identity(repo_tmp_path: Path) -> None:
+    _seed_exam_workspace(repo_tmp_path)
+    run_id = "object-storage-operator-p6"
+    run_root = _seed_paused_run(repo_tmp_path, run_id)
+    config_path = _write_object_storage_config(repo_tmp_path / "delivery.json")
+    config = DeliveryBackendConfigV1.object_storage(
+        provider_type="s3", endpoint="objects.example.test", bucket="exam-artifacts"
+    )
+    provider_client = _FakeObjectStorageProvider()
+    credential_provider = _FakeCredentialProvider(provider_client)
+    paths = SimpleNamespace(
+        live_runs_root=repo_tmp_path / "exams" / _REHEARSAL_EXAM / "data" / "live_runs"
+    )
+
+    providers = _resume_providers(repo_tmp_path)
+    run_exam_pipeline._configure_operator_providers(
+        args=_object_storage_operator_args(
+            root=repo_tmp_path, run_id=run_id, config_path=config_path, config=config
+        ),
+        paths=paths,
+        providers=providers,
+        credential_provider=credential_provider,
+    )
+    waiting_report, waiting_exit = orchestrate(_resume_config(repo_tmp_path, run_id), providers)
+    assert (waiting_exit, waiting_report.stop_reason) == (2, "waiting_human_publication")
+    assert provider_client.upload_calls == []
+
+    authorization_path = _write_operator_publication_authorization(run_root)
+    providers = _resume_providers(repo_tmp_path)
+    run_exam_pipeline._configure_operator_providers(
+        args=_object_storage_operator_args(
+            root=repo_tmp_path,
+            run_id=run_id,
+            config_path=config_path,
+            config=config,
+            publication_authorization=authorization_path,
+        ),
+        paths=paths,
+        providers=providers,
+        credential_provider=credential_provider,
+    )
+    report, exit_code = orchestrate(_resume_config(repo_tmp_path, run_id), providers)
+
+    assert (exit_code, report.stop_reason) == (0, "completed")
+    assert providers["delivery_adapter_type"] == DeliveryBackendType.OBJECT_STORAGE.value
+    assert isinstance(providers["delivery_adapter"], ObjectStorageDeliveryAdapter)
+    assert credential_provider.resolve_calls == 2
+    assert len(provider_client.upload_calls) == 1
+    request = json.loads(
+        (run_root / "checkpoints" / "delivery" / "delivery-request-v2.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    assert provider_client.upload_calls == [
+        {
+            "package_sha256": request["package_sha256"],
+            "target_sha256": request["target_sha256"],
+            "idempotency_key": request["idempotency_key"],
+        }
+    ]
+    state = json.loads((run_root / "run_state.json").read_text(encoding="utf-8"))
+    assert state["checkpoints"]["delivery"]["status"] == "frozen"
+    assert state["checkpoints"]["delivery"]["delivery_identity"] == request["delivery_identity"]
+
+
+def test_object_storage_operator_frozen_resume_is_credential_free_and_read_only(repo_tmp_path: Path) -> None:
+    _seed_exam_workspace(repo_tmp_path)
+    run_id = "object-storage-frozen-resume"
+    run_root = _seed_paused_run(repo_tmp_path, run_id)
+    config_path = _write_object_storage_config(repo_tmp_path / "delivery.json")
+    config = DeliveryBackendConfigV1.object_storage(
+        provider_type="s3", endpoint="objects.example.test", bucket="exam-artifacts"
+    )
+    provider_client = _FakeObjectStorageProvider()
+    credential_provider = _FakeCredentialProvider(provider_client)
+    paths = SimpleNamespace(
+        live_runs_root=repo_tmp_path / "exams" / _REHEARSAL_EXAM / "data" / "live_runs"
+    )
+
+    providers = _resume_providers(repo_tmp_path)
+    run_exam_pipeline._configure_operator_providers(
+        args=_object_storage_operator_args(
+            root=repo_tmp_path, run_id=run_id, config_path=config_path, config=config
+        ),
+        paths=paths,
+        providers=providers,
+        credential_provider=credential_provider,
+    )
+    orchestrate(_resume_config(repo_tmp_path, run_id), providers)
+    authorization_path = _write_operator_publication_authorization(run_root)
+    providers = _resume_providers(repo_tmp_path)
+    run_exam_pipeline._configure_operator_providers(
+        args=_object_storage_operator_args(
+            root=repo_tmp_path,
+            run_id=run_id,
+            config_path=config_path,
+            config=config,
+            publication_authorization=authorization_path,
+        ),
+        paths=paths,
+        providers=providers,
+        credential_provider=credential_provider,
+    )
+    first_report, first_exit = orchestrate(_resume_config(repo_tmp_path, run_id), providers)
+    assert (first_exit, first_report.stop_reason) == (0, "completed")
+    assert len(provider_client.upload_calls) == 1
+
+    class _NeverResolveCredentialProvider:
+        provider_type = "s3"
+
+        def __init__(self) -> None:
+            self.resolve_calls = 0
+
+        def resolve(self, *, config: DeliveryBackendConfigV1) -> _FakeObjectStorageProvider:
+            del config
+            self.resolve_calls += 1
+            raise AssertionError("frozen delivery resume must not resolve credentials")
+
+    frozen_credential_provider = _NeverResolveCredentialProvider()
+    before = {
+        path: path.read_bytes()
+        for path in (
+            run_root / "run_state.json",
+            *(run_root / "checkpoints" / "delivery").glob("delivery-*.json"),
+        )
+    }
+    frozen_providers = _resume_providers(repo_tmp_path)
+    run_exam_pipeline._configure_operator_providers(
+        args=_object_storage_operator_args(
+            root=repo_tmp_path,
+            run_id=run_id,
+            config_path=config_path,
+            config=config,
+            publication_authorization=authorization_path,
+        ),
+        paths=paths,
+        providers=frozen_providers,
+        credential_provider=frozen_credential_provider,
+    )
+    assert "delivery_adapter" not in frozen_providers
+    frozen_report, frozen_exit = orchestrate(_resume_config(repo_tmp_path, run_id), frozen_providers)
+
+    assert (frozen_exit, frozen_report.stop_reason) == (0, "completed")
+    assert frozen_credential_provider.resolve_calls == 0
+    assert provider_client.upload_calls == [provider_client.upload_calls[0]]
+    assert provider_client.lookup_calls == []
+    after = {
+        path: path.read_bytes()
+        for path in (
+            run_root / "run_state.json",
+            *(run_root / "checkpoints" / "delivery").glob("delivery-*.json"),
+        )
+    }
+    assert after == before
 
 def test_object_storage_missing_credential_provider_fails_closed(tmp_path: Path) -> None:
     config = DeliveryBackendConfigV1.object_storage(

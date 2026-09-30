@@ -59,6 +59,12 @@ SOURCE_OWNED_STRUCTURAL_PROJECTION_STEP2A_REQUEST_VERSION = "step2a_contract_v23
 SOURCE_OWNED_STRUCTURAL_PROJECTION_STEP2A_PROMPT_VERSION = "step2a_prompt_v23_source_owned_structural_projection"
 
 
+PRODUCTION_SOURCE_OWNED_ARBITRARY_PDF_STEP2A_REQUEST_VERSION = "step2a_contract_production_source_owned_arbitrary_pdf_v1"
+
+
+PRODUCTION_SOURCE_OWNED_ARBITRARY_PDF_STEP2A_PROMPT_VERSION = "step2a_prompt_production_source_owned_arbitrary_pdf_v1"
+
+
 CONTROLLED_DIAGRAM_ANCHOR_STEP2A_REQUEST_VERSION = "step2a_contract_v24_controlled_diagram_node_anchors"
 
 
@@ -129,6 +135,9 @@ STRUCTURAL_INDEX_OCCURRENCE_STEP2A_MODEL_INPUT_VERSION = "step2a_model_input_v17
 
 
 SOURCE_OWNED_STRUCTURAL_PROJECTION_STEP2A_MODEL_INPUT_VERSION = "step2a_model_input_v18_source_owned_structural_projection"
+
+
+PRODUCTION_SOURCE_OWNED_ARBITRARY_PDF_STEP2A_MODEL_INPUT_VERSION = "step2a_model_input_production_source_owned_arbitrary_pdf_v1"
 
 
 _REVIEWED_MULTIPAGE_STEP2A_REQUEST_VERSIONS = frozenset(

@@ -19,6 +19,7 @@ from .proposals import (
     Step2AV21ModelFactProposal,
     Step2AV22ModelFactProposal,
     Step2AV23ModelFactProposal,
+    Step2AProductionSourceOwnedArbitraryPDFModelFactProposal,
 )
 from .request_identity import Step2RequestIdentity
 from .versions import (
@@ -33,6 +34,7 @@ from .versions import (
     TABLE_COVERAGE_OBLIGATION_CONTEXT_STEP2A_REQUEST_VERSION,
     TABLE_COVERAGE_OBLIGATION_STEP2A_REQUEST_VERSION,
     TABLE_STIFFNESS_ATOMIC_THRESHOLD_COVERAGE_STEP2A_REQUEST_VERSION,
+    PRODUCTION_SOURCE_OWNED_ARBITRARY_PDF_STEP2A_REQUEST_VERSION,
 )
 
 
@@ -286,6 +288,25 @@ class Step2AV23ResultPayload(StrictModel):
         return self
 
 
+class Step2AProductionSourceOwnedArbitraryPDFResultPayload(StrictModel):
+    """The minimal relay-bound shape for arbitrary-PDF source-owned extraction."""
+
+    proposals: tuple[Step2AProductionSourceOwnedArbitraryPDFModelFactProposal, ...] = Field(
+        description=(
+            "Non-empty semantic proposal array. The model returns only Fact type, label, assertion, and selected "
+            "semantic anchors; numeric claims, table occurrences, structural indexes, proposal identity, Evidence, "
+            "coverage metadata, and all derived provenance are local-only."
+        )
+    )
+
+    @model_validator(mode="after")
+    def validate_payload(self) -> "Step2AProductionSourceOwnedArbitraryPDFResultPayload":
+        keys = [proposal.derived_proposal_key for proposal in self.proposals]
+        if not self.proposals or len(keys) != len(set(keys)):
+            raise ValueError("production source-owned Step 2A result payload requires unique locally-derived proposals")
+        return self
+
+
 def step2a_result_payload_model(request_version: str):
     """Return the exact relay-bound payload model for one immutable request version."""
 
@@ -311,4 +332,6 @@ def step2a_result_payload_model(request_version: str):
         return Step2AV22ResultPayload
     if request_version == SOURCE_OWNED_STRUCTURAL_PROJECTION_STEP2A_REQUEST_VERSION:
         return Step2AV23ResultPayload
+    if request_version == PRODUCTION_SOURCE_OWNED_ARBITRARY_PDF_STEP2A_REQUEST_VERSION:
+        return Step2AProductionSourceOwnedArbitraryPDFResultPayload
     return Step2AResultPayload

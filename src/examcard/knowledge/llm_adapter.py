@@ -7,8 +7,8 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
-from typing import Any
-from openai import APIConnectionError, APIStatusError, APITimeoutError
+from typing import Any, Literal, TypedDict
+from openai import APIConnectionError, APIError, APIStatusError, APITimeoutError
 from pydantic import ValidationError
 
 from ..providers.base import sanitize_error_text
@@ -26,6 +26,9 @@ from .contracts import (
     Step2AFailure,
     Step2ARequest,
     Step2AResponse,
+    Step2AResponseHandlingMode,
+    Step2AProductionSourceOwnedArbitraryPDFResultPayload,
+    SourceOwnedCanonicalProposal,
     Step2ACoverageObligationForensic,
     Step2BRequest,
     Step2BResponse,
@@ -40,7 +43,9 @@ from .contracts import (
     derive_step2a_anchor_span_selection,
     derive_step2a_table_cell_anchors,
     fingerprint_step2_prompt,
+    canonicalize_source_owned_model_proposals,
     step2a_result_payload_model,
+    step2a_response_handling_mode,
     validate_step2a_response,
     validate_step2b_response,
 )
@@ -63,6 +68,20 @@ from .llm_transport import Step2Transport, TransportCompletion
 from .llm_records import Step2AExecutionRecord, Step2BExecutionRecord
 
 
+class Step2ParseDiagnostic(TypedDict):
+    """Safe, non-content metadata for a received Step 2 completion."""
+
+    parse_result: Literal["success", "json_decode_error"]
+    response_length: int
+    finish_reason: str | None
+    completion_received: bool
+
+
+_SAFE_FINISH_REASONS = frozenset(
+    {"stop", "length", "tool_calls", "content_filter", "function_call"}
+)
+
+
 class Step2OpenAIAdapter:
     """Persisted V2-only execution with cache, journal and unknown-outcome safety."""
 
@@ -76,6 +95,65 @@ class Step2OpenAIAdapter:
         self.storage_root = Path(storage_root)
         self.transport = transport
         self.idempotency_supported = idempotency_supported
+        self._last_parse_diagnostic: Step2ParseDiagnostic | None = None
+
+    @staticmethod
+    def response_handling_mode(request_version: str) -> Step2AResponseHandlingMode:
+        """Expose future source-owned dispatch without changing execution yet."""
+
+        return step2a_response_handling_mode(request_version)
+
+    @staticmethod
+    def decode_source_owned_completion(
+        *, request_version: str, completion: TransportCompletion
+    ) -> tuple[SourceOwnedCanonicalProposal, ...]:
+        """Decode a fake/provider completion at the source-owned boundary only.
+
+        This is an isolated seam for the future production adapter branch.  It
+        deliberately refuses legacy versions before parsing, so the existing
+        V10 and continuation parser paths remain untouched.  Canonicalization
+        here stops at semantic fields and selected anchor references; no local
+        numeric, table, grounding, or provenance derivation is performed.
+        """
+
+        if step2a_response_handling_mode(request_version) != Step2AResponseHandlingMode.PRODUCTION_SOURCE_OWNED_ARBITRARY_PDF:
+            raise ValueError("source-owned completion requires the production arbitrary-PDF contract")
+        payload = Step2AProductionSourceOwnedArbitraryPDFResultPayload.model_validate(
+            Step2OpenAIAdapter._json_payload(completion.content)
+        )
+        return canonicalize_source_owned_model_proposals(payload.proposals)
+
+    @property
+    def last_parse_diagnostic(self) -> Step2ParseDiagnostic | None:
+        """Return safe parse metadata without exposing completion content."""
+
+        diagnostic = self._last_parse_diagnostic
+        if diagnostic is None:
+            return None
+        return {
+            "parse_result": diagnostic["parse_result"],
+            "response_length": diagnostic["response_length"],
+            "finish_reason": diagnostic["finish_reason"],
+            "completion_received": diagnostic["completion_received"],
+        }
+
+    @staticmethod
+    def _parse_diagnostic(
+        *,
+        completion: TransportCompletion,
+        parse_result: Literal["success", "json_decode_error"],
+    ) -> Step2ParseDiagnostic:
+        finish_reason = completion.finish_reason
+        return {
+            "parse_result": parse_result,
+            "response_length": len(completion.content),
+            "finish_reason": (
+                finish_reason
+                if finish_reason in _SAFE_FINISH_REASONS
+                else None
+            ),
+            "completion_received": True,
+        }
 
     @property
     def _journal_path(self) -> Path:
@@ -266,12 +344,39 @@ class Step2OpenAIAdapter:
         )
 
     @staticmethod
-    def _failure_state(error: Exception, *, unknown_outcome: bool) -> Step2FailureState:
+    def _failure_classification(
+        error: Exception, *, unknown_outcome: bool
+    ) -> tuple[Step2FailureState, str | None]:
+        """Classify provider failures without widening the persisted state enum.
+
+        ``failure.message`` is the existing persisted diagnostic slot.  Provider
+        paths receive only a fixed diagnostic code there; raw exception text is
+        deliberately not carried into response records or journal events.
+        Unknown-outcome precedence remains first because a timeout, connection
+        loss, or non-idempotent 5xx may have occurred after provider acceptance.
+        """
+
         if unknown_outcome:
-            return Step2FailureState.UNKNOWN_OUTCOME
+            if isinstance(error, (APITimeoutError, TimeoutError)):
+                return Step2FailureState.UNKNOWN_OUTCOME, "provider_timeout"
+            return Step2FailureState.UNKNOWN_OUTCOME, "provider_unavailable"
         if isinstance(error, APIStatusError):
-            return Step2FailureState.UPSTREAM_UNAVAILABLE
-        return Step2FailureState.INVALID_RESPONSE
+            if error.status_code == 429:
+                return Step2FailureState.UPSTREAM_UNAVAILABLE, "provider_rate_limited"
+            return Step2FailureState.UPSTREAM_UNAVAILABLE, "provider_unavailable"
+        if isinstance(error, APIError):
+            return Step2FailureState.UPSTREAM_UNAVAILABLE, "provider_unavailable"
+        return Step2FailureState.INVALID_RESPONSE, None
+
+    @staticmethod
+    def _failure_state(error: Exception, *, unknown_outcome: bool) -> Step2FailureState:
+        """Return the compatibility state for callers of the old private helper."""
+
+        return Step2OpenAIAdapter._failure_classification(error, unknown_outcome=unknown_outcome)[0]
+
+    @staticmethod
+    def _diagnostic_message(diagnostic_code: str) -> str:
+        return f"step2 provider diagnostic: {diagnostic_code}"
 
     @staticmethod
     def _error_http_status(error: Exception) -> int | None:
@@ -398,6 +503,7 @@ class Step2OpenAIAdapter:
         *,
         prompt_template: str | None = None,
     ) -> Step2AExecutionRecord:
+        self._last_parse_diagnostic = None
         resumed = self._resume_record_a(request)
         if resumed is not None:
             return resumed
@@ -412,9 +518,28 @@ class Step2OpenAIAdapter:
                 use_idempotency_key=self.idempotency_supported,
             )
             raw_response_sha256 = _sha256(completion.content)
-            payload = step2a_result_payload_model(request.identity.request_version).model_validate(
-                self._json_payload(completion.content)
-            )
+            try:
+                json_payload = self._json_payload(completion.content)
+            except json.JSONDecodeError:
+                self._last_parse_diagnostic = self._parse_diagnostic(
+                    completion=completion,
+                    parse_result="json_decode_error",
+                )
+                raise
+            except ValueError:
+                # ``_json_payload`` has already completed JSON decoding when
+                # it raises this for a non-object top-level value.
+                self._last_parse_diagnostic = self._parse_diagnostic(
+                    completion=completion,
+                    parse_result="success",
+                )
+                raise
+            else:
+                self._last_parse_diagnostic = self._parse_diagnostic(
+                    completion=completion,
+                    parse_result="success",
+                )
+            payload = step2a_result_payload_model(request.identity.request_version).model_validate(json_payload)
             selected = derive_step2a_anchor_span_selection(request=request, proposals=payload.proposals)
             canonical = derive_step2a_table_cell_anchors(request=request, proposals=selected.proposals)
             selection_errors = tuple(
@@ -519,7 +644,11 @@ class Step2OpenAIAdapter:
             response_received = completion is not None
             unknown_outcome = False if response_received else self._is_unknown_outcome(exc)
             outcome = Step2JournalOutcome.UNKNOWN_OUTCOME if unknown_outcome else Step2JournalOutcome.FAILED
-            state = Step2FailureState.INVALID_RESPONSE if response_received else self._failure_state(exc, unknown_outcome=unknown_outcome)
+            state, diagnostic_code = (
+                (Step2FailureState.INVALID_RESPONSE, None)
+                if response_received
+                else self._failure_classification(exc, unknown_outcome=unknown_outcome)
+            )
             # 失败道另起一个可空的名字：try 道里同名量的首次绑定是 str（一定有 completion
             # 才走到那里），这里的取值是 str | None，沿用同名就报 assignment。改名后收窄由
             # 下面那句 is not None 承担，取值与控制流不变。
@@ -534,13 +663,13 @@ class Step2OpenAIAdapter:
                 if failure_raw_response_sha256 is not None
                 else None
             )
-            response = self._failed_a(
-                request,
-                state,
-                self._safe_rejected_response_message("payload_schema_validation_failed")
-                if rejected_response_forensics is not None
-                else _sanitized_error_message(exc),
-            )
+            if rejected_response_forensics is not None:
+                failure_message = self._safe_rejected_response_message("payload_schema_validation_failed")
+            elif diagnostic_code is not None:
+                failure_message = self._diagnostic_message(diagnostic_code)
+            else:
+                failure_message = _sanitized_error_message(exc)
+            response = self._failed_a(request, state, failure_message)
             record = Step2AExecutionRecord(
                 request=request,
                 response=response,
@@ -561,7 +690,13 @@ class Step2OpenAIAdapter:
                 request=request.identity,
                 provider_request_id=completion.provider_request_id if completion is not None else None,
                 http_status=completion.http_status if completion is not None else self._error_http_status(exc),
-                error=ValueError("model payload failed local schema validation") if rejected_response_forensics else exc,
+                error=(
+                    ValueError("model payload failed local schema validation")
+                    if rejected_response_forensics
+                    else ValueError(self._diagnostic_message(diagnostic_code))
+                    if diagnostic_code is not None
+                    else exc
+                ),
             )
             return record
 
@@ -571,6 +706,7 @@ class Step2OpenAIAdapter:
         *,
         prompt_template: str | None = None,
     ) -> Step2BExecutionRecord:
+        self._last_parse_diagnostic = None
         resumed = self._resume_record_b(request)
         if resumed is not None:
             return resumed
@@ -613,8 +749,14 @@ class Step2OpenAIAdapter:
         except Exception as exc:
             unknown_outcome = self._is_unknown_outcome(exc)
             outcome = Step2JournalOutcome.UNKNOWN_OUTCOME if unknown_outcome else Step2JournalOutcome.FAILED
-            state = self._failure_state(exc, unknown_outcome=unknown_outcome)
-            response = self._failed_b(request, state, _sanitized_error_message(exc))
+            state, diagnostic_code = self._failure_classification(exc, unknown_outcome=unknown_outcome)
+            response = self._failed_b(
+                request,
+                state,
+                self._diagnostic_message(diagnostic_code)
+                if diagnostic_code is not None
+                else _sanitized_error_message(exc),
+            )
             record = Step2BExecutionRecord(
                 request=request,
                 response=response,
@@ -631,6 +773,6 @@ class Step2OpenAIAdapter:
                 outcome=outcome,
                 request=request.identity,
                 http_status=self._error_http_status(exc),
-                error=exc,
+                error=ValueError(self._diagnostic_message(diagnostic_code)) if diagnostic_code is not None else exc,
             )
             return record

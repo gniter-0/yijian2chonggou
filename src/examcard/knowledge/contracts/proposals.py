@@ -16,6 +16,7 @@ from .versions import (
     DETERMINISTIC_NUMERIC_CLAIM_STEP2A_REQUEST_VERSION,
     MINIMAL_REVIEWED_MULTIPAGE_STEP2A_REQUEST_VERSION,
     NUMERIC_EXPRESSION_GROUNDING_STEP2A_REQUEST_VERSION,
+    PRODUCTION_SOURCE_OWNED_ARBITRARY_PDF_STEP2A_REQUEST_VERSION,
     SINGLE_ROLE_ANCHOR_STEP2A_REQUEST_VERSION,
     SOURCE_OWNED_STRUCTURAL_PROJECTION_STEP2A_REQUEST_VERSION,
     STRUCTURAL_INDEX_OCCURRENCE_STEP2A_REQUEST_VERSION,
@@ -469,6 +470,35 @@ class Step2AV23ModelFactProposal(StrictModel):
         digest = _canonical_sha256(
             {
                 "contract": SOURCE_OWNED_STRUCTURAL_PROJECTION_STEP2A_REQUEST_VERSION,
+                "fact_type": self.fact_type.value,
+                "normalized_assertion": normalized_compare_text(self.assertion),
+                "primary_anchor_span_ids": sorted(self.primary_anchor_span_ids),
+            }
+        )
+        return f"proposal:{digest[:24]}"
+
+
+class Step2AProductionSourceOwnedArbitraryPDFModelFactProposal(StrictModel):
+    """Production arbitrary-PDF proposal with source-owned derived metadata."""
+
+    fact_type: FactType
+    label: str = Field(min_length=2, max_length=64)
+    assertion: str = Field(min_length=2)
+    primary_anchor_span_ids: tuple[str, ...]
+
+    @model_validator(mode="after")
+    def validate_single_role_proposal(self) -> "Step2AProductionSourceOwnedArbitraryPDFModelFactProposal":
+        if not self.primary_anchor_span_ids:
+            raise ValueError("production source-owned Fact proposals require primary anchor spans")
+        if len(self.primary_anchor_span_ids) != len(set(self.primary_anchor_span_ids)):
+            raise ValueError("production source-owned primary anchor spans must be unique")
+        return self
+
+    @property
+    def derived_proposal_key(self) -> str:
+        digest = _canonical_sha256(
+            {
+                "contract": PRODUCTION_SOURCE_OWNED_ARBITRARY_PDF_STEP2A_REQUEST_VERSION,
                 "fact_type": self.fact_type.value,
                 "normalized_assertion": normalized_compare_text(self.assertion),
                 "primary_anchor_span_ids": sorted(self.primary_anchor_span_ids),

@@ -45,3 +45,11 @@ htmlcov/
 # 也悄悄吞掉。cm30 已用 .test-tmp/leakscan.py 扫过这两份：SCANNED=2 HIT_FILES=0 HIT_LINES=0。
 /census_s2.log
 /vision_s2.log
+# Local debugging and generated run artifacts
+/.c2c*/
+/.pytest-tmp-*/
+/.cursor/
+/t/
+/t[0-9]/
+/tmp/
+/pilot_runs/

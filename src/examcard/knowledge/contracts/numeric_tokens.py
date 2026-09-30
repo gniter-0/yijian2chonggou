@@ -12,7 +12,7 @@ from .enums import NumericTokenClass
 _NUMERIC_DECIMAL = r"\d+(?:\.\d+)?"
 
 
-_NUMERIC_UNIT = r"(?:%|‰|mm/h|mm|cm|MPa|kPa|Pa|m|h|小时|分钟|天|年|倍|万元|亿元|万|台|个)"
+_NUMERIC_UNIT = r"(?:%|‰|mm/h|mm|cm|MPa|kPa|Pa|m|h|小时|分钟|天|年|倍|万元|亿元|万|台|个|题)"
 
 
 _QUANTITATIVE_RATIO_PATTERN = re.compile(

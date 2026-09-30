@@ -111,6 +111,33 @@ class OpenAICompatibleStep2Transport:
                 return candidate
         return None
 
+    @staticmethod
+    def _response_format_for_mode(
+        *,
+        mode: Step2ResponseFormat,
+        response_schema: Mapping[str, Any],
+        schema_name: str,
+    ) -> _ChatResponseFormatParam:
+        """Map the typed Step 2 mode to one provider wire shape.
+
+        The decoder mode is selected before request identity construction.  The
+        transport only maps that already-bound mode to the provider's typed
+        request parameter; it never retries or changes the mode implicitly.
+        """
+
+        if mode == Step2ResponseFormat.JSON_SCHEMA_STRICT:
+            return {
+                "type": "json_schema",
+                "json_schema": {
+                    "name": schema_name,
+                    "strict": True,
+                    "schema": dict(response_schema),
+                },
+            }
+        if mode == Step2ResponseFormat.JSON_OBJECT:
+            return {"type": "json_object"}
+        raise ValueError("unsupported Step 2 response format")
+
     def _raw_create(
         self,
         *,
@@ -241,17 +268,11 @@ class OpenAICompatibleStep2Transport:
         """
 
         decoder = identity.decoder
-        if decoder.response_format == Step2ResponseFormat.JSON_SCHEMA_STRICT:
-            response_format: _ChatResponseFormatParam = {
-                "type": "json_schema",
-                "json_schema": {
-                    "name": f"{identity.stage.value}_result",
-                    "strict": True,
-                    "schema": dict(response_schema),
-                },
-            }
-        else:
-            response_format = {"type": "json_object"}
+        response_format = self._response_format_for_mode(
+            mode=decoder.response_format,
+            response_schema=response_schema,
+            schema_name=f"{identity.stage.value}_result",
+        )
         messages = self._messages_for_model_payload(
             prompt=self._system_prompt_with_suffix(prompt), model_payload=model_payload
         )

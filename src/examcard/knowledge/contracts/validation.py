@@ -1,6 +1,12 @@
 """Contract validation for Step 2A/2B responses (fail-closed report)."""
 from __future__ import annotations
 from collections.abc import Iterable
+import re
+from typing import Any, Literal, cast
+import unicodedata
+
+from pydantic import Field
+from pydantic.json_schema import GetJsonSchemaHandler, JsonSchemaValue
 
 from ...evidence.layout import normalized_compare_text
 from ...materials.schema import StrictModel
@@ -51,7 +57,101 @@ from .versions import (
 )
 
 
+NumericClaimFailureClassification = Literal[
+    "quantitative_value",
+    "section_number",
+    "list_index",
+    "material_grade",
+    "identifier",
+    "unmatched",
+    "unknown",
+]
+NumericClaimFailureCategory = Literal[
+    "non_quantitative_token",
+    "unmatched_assertion_expression",
+]
+NumericClaimFailureMatchState = Literal[
+    "no_assertion_token",
+    "normalization_mismatch",
+    "matched_but_rejected",
+    "unknown",
+]
+NumericClaimFailureMismatchReason = Literal[
+    "whitespace_only",
+    "punctuation_only",
+    "unit_suffix_difference",
+    "prefix_suffix_difference",
+    "multiple_token_difference",
+    "unknown",
+]
+NumericClaimCandidateClassification = Literal[
+    "quantitative_value",
+    "section_number",
+    "list_index",
+    "material_grade",
+    "identifier",
+    "unmatched",
+]
+NumericClaimCandidateCountCategory = Literal["none", "single", "multiple"]
+NumericClaimFailureRelationState = Literal[
+    "single_candidate_available",
+    "multiple_candidates_available",
+    "no_candidate_available",
+    "rejected_candidate_available",
+    "unknown",
+]
+NumericClaimAnchorQuantitativeCountCategory = Literal["none", "single", "multiple"]
+NumericClaimAnchorRelationState = Literal[
+    "exact_anchor_quantitative_token",
+    "claim_wraps_single_anchor_token",
+    "claim_is_subexpression_of_single_anchor_token",
+    "multiple_anchor_quantitative_tokens",
+    "no_anchor_quantitative_token",
+    "unknown",
+]
+
+
+class NumericClaimFailureDiagnostic(StrictModel):
+    """Non-content diagnostics for an invalid model-owned numeric claim."""
+
+    proposal_key: str = Field(pattern=r"^proposal:[a-z0-9][a-z0-9._-]*$")
+    claim_index: int = Field(ge=0)
+    classification: NumericClaimFailureClassification
+    match_state: NumericClaimFailureMatchState
+    anchor_exists: bool
+    failure_category: NumericClaimFailureCategory
+    # This additive field is defaulted and omitted only for the unknown state so
+    # older serialized sidecars remain readable without inventing a relation.
+    relation_state: NumericClaimFailureRelationState = Field(
+        default="unknown", exclude_if=lambda value: value == "unknown"
+    )
+    # Only normalization-mismatch diagnostics carry this field.  Omitting the
+    # default keeps the pre-existing non-mismatch sidecar shape stable.
+    mismatch_reason: NumericClaimFailureMismatchReason | None = Field(
+        default=None, exclude_if=lambda value: value is None
+    )
+    # Only normalization-mismatch diagnostics carry candidate metadata.  The
+    # values are deliberately limited to counts and tokenizer classifications.
+    candidate_count: int | None = Field(default=None, ge=0, exclude_if=lambda value: value is None)
+    candidate_classifications: tuple[NumericClaimCandidateClassification, ...] | None = Field(
+        default=None, exclude_if=lambda value: value is None
+    )
+    candidate_count_category: NumericClaimCandidateCountCategory | None = Field(
+        default=None, exclude_if=lambda value: value is None
+    )
+    anchor_quantitative_count: int | None = Field(default=None, ge=0, exclude_if=lambda value: value is None)
+    anchor_quantitative_count_category: NumericClaimAnchorQuantitativeCountCategory | None = Field(
+        default=None, exclude_if=lambda value: value is None
+    )
+    anchor_relation_state: NumericClaimAnchorRelationState = Field(
+        default="unknown", exclude_if=lambda value: value == "unknown"
+    )
+
+
 class ContractValidationReport(StrictModel):
+    # This sidecar is deliberately omitted from the published JSON schema.
+    # It is local observability metadata, not part of the Step 2 contract or
+    # any request identity/cache projection.
     stage: Step2Stage
     valid: bool
     errors: tuple[str, ...] = ()
@@ -65,6 +165,287 @@ class ContractValidationReport(StrictModel):
     table_atomic_subfact_audit: tuple[Step2ATableAtomicSubfactAudit, ...] = ()
     coverage_obligation_audit: tuple[Step2ACoverageObligationAudit, ...] = ()
     continuation_audit: tuple[Step2AContinuationAudit, ...] = ()
+    numeric_claim_failure_diagnostics: tuple[NumericClaimFailureDiagnostic, ...] = ()
+
+    @classmethod
+    def __get_pydantic_json_schema__(
+        cls, core_schema: Any, handler: GetJsonSchemaHandler
+    ) -> JsonSchemaValue:
+        schema = handler(core_schema)
+        properties = schema.get("properties")
+        if isinstance(properties, dict):
+            properties.pop("numeric_claim_failure_diagnostics", None)
+        definitions = schema.get("$defs")
+        if isinstance(definitions, dict):
+            definitions.pop("NumericClaimFailureDiagnostic", None)
+        return schema
+
+
+_SAFE_NUMERIC_CLAIM_CLASSIFICATIONS = frozenset(
+    {
+        "quantitative_value",
+        "section_number",
+        "list_index",
+        "material_grade",
+        "identifier",
+        "unmatched",
+        "unknown",
+    }
+)
+
+
+def _safe_numeric_claim_classification(classification: object) -> NumericClaimFailureClassification:
+    """Return only the fixed classification vocabulary used by diagnostics."""
+
+    candidate = classification.value if isinstance(classification, NumericTokenClass) else classification
+    if isinstance(candidate, str) and candidate in _SAFE_NUMERIC_CLAIM_CLASSIFICATIONS:
+        return cast(NumericClaimFailureClassification, candidate)
+    return "unknown"
+
+
+_DIAGNOSTIC_UNITS = (
+    "mm/h",
+    "分钟",
+    "小时",
+    "万元",
+    "亿元",
+    "MPa",
+    "kPa",
+    "mm",
+    "cm",
+    "Pa",
+    "%",
+    "‰",
+    "天",
+    "年",
+    "倍",
+    "万",
+    "台",
+    "个",
+    "题",
+    "m",
+    "h",
+)
+_DIAGNOSTIC_NUMBER_PATTERN = re.compile(r"\d+(?:\.\d+)?")
+_DIAGNOSTIC_ZERO_WIDTH_WHITESPACE = frozenset({"\u200b", "\u200c", "\u200d", "\ufeff"})
+
+
+def _diagnostic_without_extended_whitespace(value: str) -> str:
+    return "".join(
+        character
+        for character in value
+        if not character.isspace()
+        and not unicodedata.category(character).startswith("Z")
+        and character not in _DIAGNOSTIC_ZERO_WIDTH_WHITESPACE
+    )
+
+
+def _diagnostic_without_punctuation(value: str) -> str:
+    return "".join(
+        character
+        for character in _diagnostic_without_extended_whitespace(value)
+        if not unicodedata.category(character).startswith("P")
+    )
+
+
+def _diagnostic_without_unit_suffix(value: str) -> str:
+    normalized = normalized_compare_text(value)
+    folded = normalized.casefold()
+    for unit in sorted(_DIAGNOSTIC_UNITS, key=len, reverse=True):
+        folded_unit = unit.casefold()
+        if folded.endswith(folded_unit) and len(folded) > len(folded_unit):
+            return folded[: -len(folded_unit)]
+    return folded
+
+
+def _pair_mismatch_reason(claim_value: str, candidate_value: str) -> NumericClaimFailureMismatchReason | None:
+    """Classify one rejected pair without retaining either value."""
+
+    normalized_claim = normalized_compare_text(claim_value)
+    normalized_candidate = normalized_compare_text(candidate_value)
+    if normalized_claim == normalized_candidate:
+        return None
+    if _diagnostic_without_extended_whitespace(claim_value) == _diagnostic_without_extended_whitespace(candidate_value):
+        return "whitespace_only"
+    if _diagnostic_without_punctuation(claim_value) == _diagnostic_without_punctuation(candidate_value):
+        return "punctuation_only"
+    if _diagnostic_without_unit_suffix(claim_value) == _diagnostic_without_unit_suffix(candidate_value):
+        return "unit_suffix_difference"
+    if (
+        normalized_claim.startswith(normalized_candidate)
+        or normalized_claim.endswith(normalized_candidate)
+        or normalized_candidate.startswith(normalized_claim)
+        or normalized_candidate.endswith(normalized_claim)
+    ):
+        return "prefix_suffix_difference"
+    return None
+
+
+def _numeric_claim_mismatch_reason(
+    *, claim_value: str, quantitative_candidate_values: tuple[str, ...]
+) -> NumericClaimFailureMismatchReason:
+    """Return a conservative, non-content reason for a failed normalized match."""
+
+    unmatched_candidates = tuple(
+        candidate
+        for candidate in quantitative_candidate_values
+        if normalized_compare_text(candidate) != normalized_compare_text(claim_value)
+    )
+    if len(unmatched_candidates) > 1 and len(_DIAGNOSTIC_NUMBER_PATTERN.findall(claim_value)) > 1:
+        return "multiple_token_difference"
+    reasons = {
+        reason
+        for candidate in unmatched_candidates
+        if (reason := _pair_mismatch_reason(claim_value, candidate)) is not None
+    }
+    if len(reasons) == 1:
+        return next(iter(reasons))
+    return "unknown"
+
+
+def _numeric_claim_candidate_count_category(count: int) -> NumericClaimCandidateCountCategory:
+    if count == 0:
+        return "none"
+    if count == 1:
+        return "single"
+    return "multiple"
+
+
+def _numeric_claim_anchor_local_relation(
+    *, claim_value: str, anchor_canonical_text: str | None
+) -> tuple[int | None, NumericClaimAnchorQuantitativeCountCategory | None, NumericClaimAnchorRelationState]:
+    """Classify a failed claim against quantitative tokens in its own anchor only."""
+
+    if anchor_canonical_text is None:
+        return None, None, "unknown"
+    anchor_quantitative_values = tuple(
+        token.value
+        for token in classify_numeric_tokens(anchor_canonical_text)
+        if token.classification == NumericTokenClass.QUANTITATIVE_VALUE
+    )
+    anchor_quantitative_count = len(anchor_quantitative_values)
+    anchor_quantitative_count_category = _numeric_claim_candidate_count_category(anchor_quantitative_count)
+    if anchor_quantitative_count == 0:
+        return anchor_quantitative_count, anchor_quantitative_count_category, "no_anchor_quantitative_token"
+    if anchor_quantitative_count > 1:
+        return anchor_quantitative_count, anchor_quantitative_count_category, "multiple_anchor_quantitative_tokens"
+    normalized_claim = normalized_compare_text(claim_value)
+    normalized_token = normalized_compare_text(anchor_quantitative_values[0])
+    if normalized_claim == normalized_token:
+        relation_state: NumericClaimAnchorRelationState = "exact_anchor_quantitative_token"
+    elif normalized_token in normalized_claim:
+        relation_state = "claim_wraps_single_anchor_token"
+    elif normalized_claim in normalized_token:
+        relation_state = "claim_is_subexpression_of_single_anchor_token"
+    else:
+        relation_state = "unknown"
+    return anchor_quantitative_count, anchor_quantitative_count_category, relation_state
+
+
+def _numeric_claim_failure_diagnostic(
+    *,
+    proposal_key: str,
+    claim_index: int,
+    claim_value: str,
+    anchor_span_id: str,
+    classified_tokens: tuple[object, ...],
+    selected_span_ids: tuple[str, ...],
+    known_anchor_span_ids: set[str],
+    comparison_quantitative_values: set[str] | None = None,
+    anchor_canonical_text: str | None = None,
+) -> NumericClaimFailureDiagnostic:
+    """Build a claim-level diagnostic without retaining any source content."""
+
+    classification: NumericClaimFailureClassification = "unmatched"
+    match_state: NumericClaimFailureMatchState = "unknown"
+    category: NumericClaimFailureCategory = "unmatched_assertion_expression"
+    mismatch_reason: NumericClaimFailureMismatchReason | None = None
+    candidate_count: int | None = None
+    candidate_classifications: tuple[NumericClaimCandidateClassification, ...] | None = None
+    candidate_count_category: NumericClaimCandidateCountCategory | None = None
+    relation_state: NumericClaimFailureRelationState = "unknown"
+    (
+        anchor_quantitative_count,
+        anchor_quantitative_count_category,
+        anchor_relation_state,
+    ) = _numeric_claim_anchor_local_relation(
+        claim_value=claim_value,
+        anchor_canonical_text=anchor_canonical_text,
+    )
+    normalized_claim = normalized_compare_text(claim_value)
+    quantitative_candidate_values_list: list[str] = []
+    for token in classified_tokens:
+        token_value = getattr(token, "value", None)
+        if (
+            isinstance(token_value, str)
+            and getattr(token, "classification", None) == NumericTokenClass.QUANTITATIVE_VALUE
+        ):
+            quantitative_candidate_values_list.append(token_value)
+    quantitative_candidate_values = tuple(quantitative_candidate_values_list)
+    quantitative_candidate_set = (
+        comparison_quantitative_values
+        if comparison_quantitative_values is not None
+        else {
+            normalized_value
+            for normalized_value in (
+                normalized_compare_text(candidate) for candidate in quantitative_candidate_values_list
+            )
+        }
+    )
+    has_quantitative_candidate = any(
+        getattr(token, "classification", None) == NumericTokenClass.QUANTITATIVE_VALUE
+        for token in classified_tokens
+    )
+    has_any_token = bool(classified_tokens)
+    for token in classified_tokens:
+        token_value = getattr(token, "value", None)
+        if not isinstance(token_value, str) or normalized_compare_text(token_value) != normalized_claim:
+            continue
+        classification = _safe_numeric_claim_classification(getattr(token, "classification", None))
+        if classification != "quantitative_value":
+            match_state = "matched_but_rejected"
+            category = "non_quantitative_token"
+            relation_state = "rejected_candidate_available"
+        break
+    else:
+        if not has_any_token:
+            match_state = "no_assertion_token"
+            relation_state = "no_candidate_available"
+        elif has_quantitative_candidate:
+            match_state = "normalization_mismatch"
+            mismatch_reason = _numeric_claim_mismatch_reason(
+                claim_value=claim_value,
+                quantitative_candidate_values=quantitative_candidate_values,
+            )
+            candidate_count = len(quantitative_candidate_set)
+            candidate_classifications = tuple("quantitative_value" for _ in range(candidate_count))
+            candidate_count_category = _numeric_claim_candidate_count_category(candidate_count)
+            relation_state = cast(
+                NumericClaimFailureRelationState,
+                {
+                    "single": "single_candidate_available",
+                    "multiple": "multiple_candidates_available",
+                    "none": "no_candidate_available",
+                }[candidate_count_category],
+            )
+        else:
+            relation_state = "no_candidate_available"
+    return NumericClaimFailureDiagnostic(
+        proposal_key=proposal_key,
+        claim_index=claim_index,
+        classification=classification,
+        match_state=match_state,
+        anchor_exists=anchor_span_id in selected_span_ids and anchor_span_id in known_anchor_span_ids,
+        failure_category=category,
+        relation_state=relation_state,
+        mismatch_reason=mismatch_reason,
+        candidate_count=candidate_count,
+        candidate_classifications=candidate_classifications,
+        candidate_count_category=candidate_count_category,
+        anchor_quantitative_count=anchor_quantitative_count,
+        anchor_quantitative_count_category=anchor_quantitative_count_category,
+        anchor_relation_state=anchor_relation_state,
+    )
 
 
 def _claim_values(claims: Iterable[GroundedNumericClaim]) -> set[str]:
@@ -74,6 +455,7 @@ def _claim_values(claims: Iterable[GroundedNumericClaim]) -> set[str]:
 def validate_step2a_response(*, request: Step2ARequest, response: Step2AResponse) -> ContractValidationReport:
     errors: list[str] = []
     numeric_token_audit: list[ProposalNumericTokenAudit] = []
+    numeric_claim_failure_diagnostics: list[NumericClaimFailureDiagnostic] = []
     if response.request != request.identity:
         errors.append("response request identity does not match the source request")
     if response.state != Step2ResultState.SUCCEEDED:
@@ -221,9 +603,23 @@ def validate_step2a_response(*, request: Step2ARequest, response: Step2AResponse
                 for token in classified_tokens
                 if token.classification == NumericTokenClass.QUANTITATIVE_VALUE
             }
-            for claim in proposal.numeric_claims:
+            for claim_index, claim in enumerate(proposal.numeric_claims):
                 if normalized_compare_text(claim.value) not in quantitative_values:
                     errors.append(f"{proposal.proposal_key}: numeric claim is not classified as a quantitative value")
+                    anchor_span = spans_by_id.get(claim.anchor_span_id)
+                    numeric_claim_failure_diagnostics.append(
+                        _numeric_claim_failure_diagnostic(
+                            proposal_key=proposal.proposal_key,
+                            claim_index=claim_index,
+                            claim_value=claim.value,
+                            anchor_span_id=claim.anchor_span_id,
+                            classified_tokens=classified_tokens,
+                            selected_span_ids=selected_span_ids,
+                            known_anchor_span_ids=known_anchor_span_ids,
+                            comparison_quantitative_values=quantitative_values,
+                            anchor_canonical_text=anchor_span.canonical_text if anchor_span is not None else None,
+                        )
+                    )
             for token in classified_tokens:
                 if token.classification == NumericTokenClass.QUANTITATIVE_VALUE and normalized_compare_text(token.value) not in numeric_claim_values:
                     errors.append(f"{proposal.proposal_key}: quantitative token {token.value!r} lacks an exact grounded numeric_claim")
@@ -251,6 +647,7 @@ def validate_step2a_response(*, request: Step2ARequest, response: Step2AResponse
         table_atomic_subfact_audit=table_atomic_subfacts,
         coverage_obligation_audit=coverage_obligation_audit,
         continuation_audit=continuation_audit,
+        numeric_claim_failure_diagnostics=tuple(numeric_claim_failure_diagnostics),
     )
 
 

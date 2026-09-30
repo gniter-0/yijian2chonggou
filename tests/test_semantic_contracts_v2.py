@@ -9,7 +9,24 @@ from pydantic import ValidationError
 
 ROOT = Path(__file__).resolve().parents[1]
 
-from examcard.evidence.schema import EvidenceKind, PageEvidence
+from examcard.evidence.identity import (
+    make_document_id,
+    make_evidence_fingerprint,
+    make_evidence_id,
+    make_evidence_revision_id,
+    make_page_id,
+    make_source_locator_id,
+)
+from examcard.evidence.schema import (
+    EvidenceKind,
+    EvidenceProvenance,
+    EvidenceUnit,
+    PageEvidence,
+    PageQuality,
+    SourceChannel,
+    SourceLocator,
+    SourceQuality,
+)
 from examcard.knowledge.schema import FactType
 from examcard.knowledge.contracts import (
     AnchorSpanSelectionDerivationState,
@@ -33,6 +50,7 @@ from examcard.knowledge.contracts import (
 from examcard.knowledge.llm import OpenAICompatibleStep2Transport
 from examcard.knowledge.projection import build_step2a_semantic_projection
 from examcard.materials.catalog import load_content_policy
+from examcard.materials.schema import SemanticRole
 
 # T5 金样镜像守护：镜像缺席（冷克隆）时整模块优雅跳过，镜像在场则正常执行。
 _REPO_ROOT = Path(__file__).resolve().parents[1]
@@ -71,6 +89,64 @@ def _request():
         decoder=Step2DecoderConfig(max_tokens=1000, response_format=Step2ResponseFormat.JSON_SCHEMA_STRICT),
     )
     return request, built
+
+
+def _numeric_45_request(tmp_path: Path):
+    source = "路基工程共计45 题。"
+    pdf_sha256 = "b" * 64
+    document_id = make_document_id(pdf_sha256)
+    locator = SourceLocator(document_sha256=pdf_sha256, page_num=1, native_block_index=0)
+    fingerprint = make_evidence_fingerprint(kind=EvidenceKind.PARAGRAPH.value, canonical_text=source)
+    evidence_id = make_evidence_id(locator_id=make_source_locator_id(locator), fingerprint=fingerprint)
+    unit = EvidenceUnit(
+        evidence_id=evidence_id,
+        fingerprint=fingerprint,
+        revision_id=make_evidence_revision_id(
+            fingerprint=fingerprint,
+            raw_text=source,
+            source_channels=(SourceChannel.NATIVE_TEXT.value,),
+            engine_versions={"test": "1"},
+            config_hash="test-config",
+        ),
+        document_id=document_id,
+        kind=EvidenceKind.PARAGRAPH,
+        locator=locator,
+        raw_text=source,
+        canonical_text=source,
+        semantic_role=SemanticRole.CORE,
+        source_quality=SourceQuality.NATIVE_ONLY,
+        confidence=1,
+        order=0,
+        provenance=EvidenceProvenance(
+            source_channels=frozenset({SourceChannel.NATIVE_TEXT}),
+            engine_versions={"test": "1"},
+            config_hash="test-config",
+            generated_at_utc="2026-01-01T00:00:00Z",
+        ),
+    )
+    page = PageEvidence(
+        page_id=make_page_id(document_id=document_id, page_num=1),
+        page_num=1,
+        width=100,
+        height=100,
+        evidence_units=(unit,),
+        quality=PageQuality(native_text_coverage=1, ocr_alignment_rate=0, unresolved_regions=0, conflict_count=0),
+    )
+    page_path = tmp_path / "page_0001.json"
+    page_path.write_text(page.model_dump_json(), encoding="utf-8")
+    built = build_step2a_semantic_projection(
+        sample_id="exam-counter-45",
+        page=page,
+        source_manifest_path=page_path,
+        content_policy=load_content_policy(ROOT / "configs/v2/content_policies/core_only_v1.yaml"),
+    )
+    return build_step2a_request(
+        sample_id="exam-counter-45",
+        material_profile_id="yijian_gonglu_2026",
+        projection=built.projection,
+        sections=(built.section,),
+        model="deterministic-fake-v1",
+    )
 
 
 def _condition_span(built):
@@ -308,6 +384,69 @@ def test_numeric_expression_tokenization_keeps_ratios_ranges_units_and_ordinals_
         ("65 MPa", NumericTokenClass.QUANTITATIVE_VALUE),
         ("20%", NumericTokenClass.QUANTITATIVE_VALUE),
     ]
+
+
+def test_exam_question_counts_are_complete_quantitative_tokens():
+    for source, expected in (("45题", "45题"), ("45 题", "45 题")):
+        tokens = classify_numeric_tokens(source)
+
+        assert len(tokens) == 1
+        assert tokens[0].value == expected
+        assert tokens[0].classification == NumericTokenClass.QUANTITATIVE_VALUE
+
+
+def test_exam_question_count_and_existing_numeric_classifications_remain_stable():
+    cases = {
+        "2020、": NumericTokenClass.LIST_INDEX,
+        "3.2-1": NumericTokenClass.SECTION_NUMBER,
+        "P6": NumericTokenClass.IDENTIFIER,
+        "HPB300": NumericTokenClass.MATERIAL_GRADE,
+        "65 MPa": NumericTokenClass.QUANTITATIVE_VALUE,
+        "10-20mm": NumericTokenClass.QUANTITATIVE_VALUE,
+        "20%": NumericTokenClass.QUANTITATIVE_VALUE,
+        "45年": NumericTokenClass.QUANTITATIVE_VALUE,
+    }
+
+    for source, classification in cases.items():
+        tokens = classify_numeric_tokens(source)
+
+        assert len(tokens) == 1
+        assert tokens[0].classification == classification
+
+
+def test_exam_question_count_numeric_grounding_is_strict_and_normalized(tmp_path: Path):
+    request = _numeric_45_request(tmp_path)
+    span = request.projection.anchor_spans[0]
+
+    def response_for(proposal):
+        selected = derive_step2a_anchor_span_selection(request=request, proposals=(proposal,))
+        canonical = derive_step2a_condition_claims(request=request, proposals=selected.proposals)
+        return Step2AResponse(
+            request=request.identity,
+            state=Step2ResultState.SUCCEEDED,
+            proposals=canonical.proposals,
+        )
+
+    proposal = _proposal(
+        request,
+        span,
+        assertion="路基工程共计45 题。",
+        numeric_claims=(ModelNumericClaim(value="45题", anchor_span_id=span.anchor_span_id),),
+        fact_type=FactType.THRESHOLD,
+    )
+    valid_response = response_for(proposal)
+    assert validate_step2a_response(request=request, response=valid_response).valid is True
+
+    wrong_value = proposal.model_copy(
+        update={"numeric_claims": (ModelNumericClaim(value="44题", anchor_span_id=span.anchor_span_id),)}
+    )
+    assert validate_step2a_response(request=request, response=response_for(wrong_value)).valid is False
+
+    wrong_anchor = proposal.model_copy(
+        update={"numeric_claims": (ModelNumericClaim(value="45题", anchor_span_id="span:" + "e" * 24),)}
+    )
+    with pytest.raises(ValueError, match="successful Step 2A responses require proposals and no failure"):
+        response_for(wrong_anchor)
 
 
 def test_ratio_expression_is_one_claimable_token_not_two_bare_numbers():

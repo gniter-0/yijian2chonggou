@@ -106,6 +106,13 @@ LAYER_ORDER = (
     "phase2r14_v25_live",
     "phase2r142_v25_projection",
     "v25_teaching_gate_layers",
+    "source_owned_contract",
+    "source_owned_extraction",
+    "source_owned_card_adapter",
+    "source_owned_card_admission",
+    "source_owned_card_pipeline_bridge",
+    "source_owned_card_materialization",
+    "source_owned_provider_dispatch",
 )
 
 PACKAGE_NAME = "examcard.knowledge.contracts"
