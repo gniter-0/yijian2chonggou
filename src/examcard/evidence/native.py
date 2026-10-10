@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import hashlib
 from collections.abc import Iterable
+from typing import Final
 
 import pymupdf
 
@@ -38,6 +39,53 @@ def _union_rect(rects: Iterable[tuple[float, float, float, float]]) -> tuple[flo
     )
 
 
+_GRID_TOLERANCE: Final = 1.0
+
+
+def _grid_lines(values: list[float]) -> list[float]:
+    lines: list[float] = []
+    for value in sorted(values):
+        if not lines or value - lines[-1] > _GRID_TOLERANCE:
+            lines.append(value)
+    return lines
+
+
+def _covered_intervals(start: float, end: float, lines: list[float]) -> int:
+    return sum(
+        1
+        for low, high in zip(lines, lines[1:], strict=False)
+        if low >= start - _GRID_TOLERANCE and high <= end + _GRID_TOLERANCE
+    )
+
+
+def _geometric_spans(
+    raw_cells: list[tuple[int, int, tuple[float, float, float, float] | None, str]],
+    *,
+    row_count: int,
+    column_count: int,
+) -> dict[tuple[int, int], tuple[int, int]]:
+    """Derive merged-cell spans from where each cell box sits on the table grid.
+
+    PyMuPDF leaves the positions a merged cell covers empty (``None``) and gives
+    the merged cell one box, so its span is how many grid intervals that box
+    covers.  An empty result means the grid lines do not match the declared
+    row/column count, and callers keep their other evidence for the span.
+    """
+    boxes = [bbox for _, _, bbox, _ in raw_cells if bbox is not None]
+    columns = _grid_lines([edge for bbox in boxes for edge in (bbox[0], bbox[2])])
+    rows = _grid_lines([edge for bbox in boxes for edge in (bbox[1], bbox[3])])
+    if len(columns) - 1 != column_count or len(rows) - 1 != row_count:
+        return {}
+    spans: dict[tuple[int, int], tuple[int, int]] = {}
+    for row_index, column_index, bbox, _ in raw_cells:
+        if bbox is None:
+            continue
+        row_span = min(max(_covered_intervals(bbox[1], bbox[3], rows), 1), row_count - row_index)
+        col_span = min(max(_covered_intervals(bbox[0], bbox[2], columns), 1), column_count - column_index)
+        spans[(row_index, column_index)] = (row_span, col_span)
+    return spans
+
+
 def _extract_tables(page: pymupdf.Page) -> tuple[NativeTable, ...]:
     try:
         detected = page.find_tables().tables
@@ -66,10 +114,15 @@ def _extract_tables(page: pymupdf.Page) -> tuple[NativeTable, ...]:
                 raw_cells.append((row_index, column_index, bbox, text))
                 if bbox is not None:
                     seen.setdefault(bbox, []).append((row_index, column_index))
+        geometric = _geometric_spans(raw_cells, row_count=table.row_count, column_count=table.col_count)
         for row_index, column_index, bbox, text in raw_cells:
             positions = seen.get(bbox, []) if bbox is not None else []
-            row_span = len({position[0] for position in positions}) or 1
-            col_span = len({position[1] for position in positions}) or 1
+            # Older PyMuPDF repeated a merged cell's box at every covered position;
+            # current releases leave those positions empty, so the grid geometry
+            # is the span source and the repeated-box count only a fallback.
+            geometric_rows, geometric_columns = geometric.get((row_index, column_index), (1, 1))
+            row_span = max(len({position[0] for position in positions}), geometric_rows, 1)
+            col_span = max(len({position[1] for position in positions}), geometric_columns, 1)
             cells.append(
                 NativeTableCell(
                     row=row_index,

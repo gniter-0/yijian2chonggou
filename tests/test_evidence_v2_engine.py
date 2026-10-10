@@ -453,3 +453,45 @@ def test_watermark_crossing_a_table_is_removed_from_cell_text_only(tmp_path):
     assert cleaned and set("".join(cleaned[0].metadata["overlay_removed"])) <= {"7", "9"}
     # The body digit 8 shares no glyph with the watermark and survives.
     assert any(normalized_compare_text(text) == "Value8" for text in texts)
+
+
+def test_merged_table_cells_keep_their_spans_so_the_grid_is_complete(tmp_path):
+    from examcard.knowledge.projection import _table_grid_integrity
+
+    pdf = tmp_path / "merged.pdf"
+    doc = pymupdf.open()
+    page = doc.new_page(width=300, height=200)
+    black = (0, 0, 0)
+    page.draw_rect(pymupdf.Rect(20, 40, 260, 160), color=black, width=1)
+    page.draw_line((20, 80), (260, 80), color=black, width=1)
+    page.draw_line((100, 120), (260, 120), color=black, width=1)  # left column spans rows 1-2
+    page.draw_line((100, 40), (100, 160), color=black, width=1)
+    page.draw_line((180, 80), (180, 160), color=black, width=1)  # header spans columns 1-2
+    for point, text in (
+        ((30, 65), "Name"), ((150, 65), "Range"), ((30, 125), "Group"),
+        ((110, 105), "A"), ((190, 105), "1"), ((110, 145), "B"), ((190, 145), "2"),
+    ):
+        page.insert_text(point, text, fontsize=11)
+    doc.save(pdf)
+    doc.close()
+
+    result = _engine(tmp_path, NoOCRProvider()).process_pages(pdf, page_numbers=(1,))
+    units = result.pages[0].evidence_units
+    tables = [unit for unit in units if unit.kind == EvidenceKind.TABLE]
+    assert len(tables) == 1 and (tables[0].metadata["rows"], tables[0].metadata["columns"]) == (3, 3)
+    spans = {
+        unit.canonical_text: (unit.metadata["row_span"], unit.metadata["col_span"])
+        for unit in units
+        if unit.kind == EvidenceKind.TABLE_CELL
+    }
+    assert spans["Range"] == (1, 2)
+    assert spans["Group"] == (2, 1)
+    assert spans["A"] == (1, 1)
+
+    by_parent: dict[str, list] = {}
+    for unit in units:
+        if unit.parent_id:
+            by_parent.setdefault(unit.parent_id, []).append(unit)
+    rows = [unit for unit in by_parent[tables[0].evidence_id] if unit.kind == EvidenceKind.TABLE_ROW]
+    record, _ = _table_grid_integrity(table=tables[0], rows=rows, by_parent=by_parent)
+    assert record.issue_codes == ()

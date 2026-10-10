@@ -32,7 +32,7 @@ class EvidenceEngineConfig(StrictModel):
     minimum_ocr_confidence: float = Field(default=0.55, ge=0, le=1)
     # Bump whenever fusion or semantic classification changes so old extraction
     # artifacts and their derived evidence cannot silently retain stale roles.
-    cache_schema_version: str = "evidence-engine-v3"
+    cache_schema_version: str = "evidence-engine-v4"
     enable_visual_review: bool = True
 
 
