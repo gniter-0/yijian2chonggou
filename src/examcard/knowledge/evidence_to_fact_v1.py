@@ -5,6 +5,14 @@ is not allowed to author the final card content.  This module resolves the
 canonical proposal's Evidence IDs, reconstructs the assertion from source
 Evidence, and delegates the actual Fact/Card schema assembly to the existing
 deterministic builders.
+
+Primary ownership is exclusive with one deliberate exception for tables.  The
+Step 2A v10 table contract requires a complete-table ``composition`` Fact *and*
+a separate atomic ``threshold``/``condition`` Fact that selects the rule cell as
+primary.  A table cell may therefore have at most one composition owner plus
+any number of atomic owners (one cell can hold several numbered rules, and the
+Step 2A audit already requires exactly one atomic Fact per detected rule).
+Every other overlap still fails closed.
 """
 from __future__ import annotations
 
@@ -20,7 +28,15 @@ from .fact_policy import decide_policy
 from .fact_render import _group_text, _render_evidence_map
 from .fact_types import FactBundle
 from .identity import make_fact_id
-from .schema import AtomicFact, CardPlan, FactType, KnowledgeCard
+from .schema import AtomicFact, CardPlan, CompletenessMode, FactType, KnowledgeCard
+
+_TABLE_EVIDENCE_KINDS = frozenset({EvidenceKind.TABLE, EvidenceKind.TABLE_ROW, EvidenceKind.TABLE_CELL})
+# The only Fact types a Step 2A table atomic sub-fact requirement can demand
+# (TableAtomicSubfactRequirement.expected_fact_type).
+_TABLE_ATOMIC_FACT_TYPES = frozenset({FactType.THRESHOLD, FactType.CONDITION})
+_PRIMARY_ROLE_FACT = "fact"
+_PRIMARY_ROLE_TABLE_COMPOSITION = "table_composition"
+_PRIMARY_ROLE_TABLE_ATOMIC = "table_atomic"
 
 
 @dataclass(frozen=True)
@@ -61,6 +77,63 @@ def _validate_formula_grounding(*, proposal: Step2AFactProposal, units: tuple[Ev
     source = "\n".join(unit.canonical_text for unit in units)
     if EvidenceKind.FORMULA not in {unit.kind for unit in units} and "=" not in source:
         raise ValueError("formula proposal has no formula-bearing source Evidence")
+
+
+def _primary_role(
+    *,
+    proposal: Step2AFactProposal,
+    primary_units: tuple[EvidenceUnit, ...],
+    secondary_units: tuple[EvidenceUnit, ...],
+) -> str:
+    """Classify how a proposal owns its primary Evidence."""
+
+    if not primary_units or any(unit.kind not in _TABLE_EVIDENCE_KINDS for unit in primary_units):
+        return _PRIMARY_ROLE_FACT
+    if proposal.fact_type == FactType.COMPOSITION:
+        return _PRIMARY_ROLE_TABLE_COMPOSITION
+    if (
+        proposal.fact_type in _TABLE_ATOMIC_FACT_TYPES
+        and proposal.completeness_mode == CompletenessMode.ATOMIC
+        and all(unit.kind in _TABLE_EVIDENCE_KINDS for unit in secondary_units)
+    ):
+        return _PRIMARY_ROLE_TABLE_ATOMIC
+    return _PRIMARY_ROLE_FACT
+
+
+def _check_primary_ownership(
+    owners: dict[str, frozenset[str]],
+    *,
+    primary_ids: tuple[str, ...],
+    role: str,
+) -> None:
+    for evidence_id in primary_ids:
+        existing = owners.get(evidence_id, frozenset())
+        if not existing:
+            continue
+        if (
+            role == _PRIMARY_ROLE_FACT
+            or _PRIMARY_ROLE_FACT in existing
+            or (role == _PRIMARY_ROLE_TABLE_COMPOSITION and _PRIMARY_ROLE_TABLE_COMPOSITION in existing)
+        ):
+            raise ValueError("one Evidence unit cannot have multiple primary Fact owners")
+
+
+def _as_table_atomic_fact(*, fact: AtomicFact, proposal: Step2AFactProposal) -> AtomicFact:
+    """Re-type a table-cell Fact as the atomic rule the Step 2A contract required.
+
+    ``_make_fact`` types any table-cell selection as a composition.  For a
+    validated table atomic proposal the source text stays exactly as rendered
+    from Evidence; only the type and completeness follow the contract.
+    """
+
+    return AtomicFact.model_validate(
+        {
+            **fact.model_dump(),
+            "fact_type": proposal.fact_type,
+            "completeness_mode": CompletenessMode.ATOMIC,
+            "ordered_member_ids": (),
+        }
+    )
 
 
 def _fact_with_proposal_metadata(
@@ -133,19 +206,19 @@ def ground_step2a_proposals(
 
     grounded: list[GroundedFactCard] = []
     proposal_keys: set[str] = set()
-    claimed_primary_ids: set[str] = set()
+    primary_owners: dict[str, frozenset[str]] = {}
     for proposal in proposals:
         if proposal.proposal_key in proposal_keys:
             raise ValueError("duplicate Step 2A proposal keys are not accepted")
         proposal_keys.add(proposal.proposal_key)
         primary_ids = tuple(proposal.primary_evidence_ids)
         secondary_ids = tuple(proposal.secondary_evidence_ids)
-        if claimed_primary_ids.intersection(primary_ids):
-            raise ValueError("one Evidence unit cannot have multiple primary Fact owners")
         if any(evidence_id not in by_id for evidence_id in (*primary_ids, *secondary_ids)):
             raise ValueError("Step 2A proposal references Evidence outside the document manifest")
         primary_units = tuple(by_id[evidence_id] for evidence_id in primary_ids)
         secondary_units = tuple(by_id[evidence_id] for evidence_id in secondary_ids)
+        role = _primary_role(proposal=proposal, primary_units=primary_units, secondary_units=secondary_units)
+        _check_primary_ownership(primary_owners, primary_ids=primary_ids, role=role)
         all_units = (*primary_units, *secondary_units)
         if any(decisions[unit.evidence_id].disposition != PolicyDisposition.INCLUDED for unit in all_units):
             raise ValueError("Step 2A proposal selects Evidence excluded by Content Policy")
@@ -158,6 +231,8 @@ def ground_step2a_proposals(
         if not source_assertion:
             raise ValueError("selected Evidence cannot produce a non-empty Fact assertion")
         fact = _make_fact(units=all_units, rendered=rendered)
+        if role == _PRIMARY_ROLE_TABLE_ATOMIC:
+            fact = _as_table_atomic_fact(fact=fact, proposal=proposal)
         fact = _fact_with_proposal_metadata(
             proposal=proposal,
             fact=fact,
@@ -180,7 +255,8 @@ def ground_step2a_proposals(
                 proposal_key=proposal.proposal_key,
             )
         )
-        claimed_primary_ids.update(primary_ids)
+        for evidence_id in primary_ids:
+            primary_owners[evidence_id] = primary_owners.get(evidence_id, frozenset()) | {role}
     return tuple(grounded)
 
 
