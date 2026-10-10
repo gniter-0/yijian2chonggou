@@ -724,6 +724,31 @@ def _diagnose(
     return None
 
 
+def overlay_warnings(prepared: PreparedAgentDocument, facts: Sequence[Any]) -> list[dict[str, Any]]:
+    """List Facts that cite Evidence still sharing glyphs with the page watermark.
+
+    The Evidence layer removes watermark glyphs it can explain geometrically and tags
+    the remainder ``overlay_overlap``; such Facts deserve a human look before release.
+    """
+    tagged = {
+        unit.evidence_id: (page.page_num, unit.raw_text)
+        for page in prepared.manifest.pages
+        for unit in page.evidence_units
+        if "overlay_overlap" in unit.risk_tags
+    }
+    findings: list[dict[str, Any]] = []
+    for fact in facts:
+        cited = [*fact.primary_evidence_ids, *fact.secondary_evidence_ids]
+        cited += [number.evidence_id for number in fact.numbers if number.evidence_id]
+        for evidence_id in dict.fromkeys(cited):
+            if evidence_id in tagged:
+                page_num, text = tagged[evidence_id]
+                findings.append(
+                    {"fact_label": fact.label, "page_num": page_num, "evidence_id": evidence_id, "evidence_text": text[:60]}
+                )
+    return findings
+
+
 def run_agent_document(
     prepared: PreparedAgentDocument,
     workspace: AgentStep2Workspace,
@@ -770,6 +795,7 @@ def run_agent_document(
     summary["card_count"] = len(result.cards)
     summary["image_request_count"] = len(result.requests)
     summary["cards_by_page"] = _cards_by_page(result)
+    summary["overlay_warnings"] = overlay_warnings(prepared, result.fact_pipeline.facts)
     if durable:
         _write_json(workspace.result_dir / "cards.json", [card.model_dump(mode="json") for card in result.cards])
         _write_json(workspace.result_dir / "facts.json", [fact.model_dump(mode="json") for fact in result.fact_pipeline.facts])
@@ -879,6 +905,11 @@ def main(argv: Sequence[str] | None = None) -> int:
     summary = run_agent_document(prepared, workspace, durable=args.command == "run")
     _print_checks(summary)
     _write_json(workspace.agent_root / f"last_{args.command}.json", summary)
+    for warning in summary.get("overlay_warnings") or []:
+        print(
+            f"warning: page {warning['page_num']} fact {warning['fact_label']!r} cites Evidence that still "
+            f"overlaps the watermark: {warning['evidence_text']!r}"
+        )
     if summary["status"] == "completed":
         print(
             f"{args.command}: completed - {summary['fact_count']} fact(s), "
