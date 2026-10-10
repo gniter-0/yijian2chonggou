@@ -87,6 +87,12 @@ jobs:
       # 带覆盖率本机跑 70~105s，随机器负载浮动。门槛只许往上棘轮，不许往下调；掉下去
       # 说明新代码没带测试。覆盖率配置见 pyproject [tool.coverage.*]。
       #
+      # 2026-10-10 重定 CI 档为 66（经仓主确认，两档制）：cm32 之后新增代码的测试大多依赖
+      # 仓内 gitignore 金样（exams/*/input_pdf/、data/evidence_v2/golden/），冷克隆里这些用例
+      # 按 T5 金样闸门跳过（-rs 逐条列出，前缀「金样镜像缺席」）。实测冷克隆 30,394 条语句、
+      # 1561 过 / 0 败、66.4%，75 在 CI 上已不可达，CI 自 9/30 起持续红。66 = 实测向下取整，
+      # 仍只许往上棘轮；本机带金样的全量跑法继续以 75 为准。
+      #
       # --basetemp 收进仓内 .test-tmp/（规范 T3，强制条款见 docs/engineering_skeleton.md §4.1）：
       # 与本地跑法逐字一致，产物位置可预期、失败时可直接当 artifact 上传，也绕开某些机器上
       # 系统 TEMP 不可写的坑（本机 %TEMP%\pytest-of-* 已 ACL 损伤，裸跑上百条 ERROR）。
@@ -96,4 +102,4 @@ jobs:
       # 在此之前这条纪律唯一的执行手段是一个 gitignore 掉的脚本 + 人记得手跑，工作台一删就没牙。
       # 工作区那一档仍由 tools/eolaudit.py 负责（改完文件跑一次，要求 VIOLATIONS=0）。
       - name: pytest（带覆盖率门槛）
-        run: uv run pytest -q -rs --cov --cov-report=term-missing --cov-fail-under=75 --basetemp .test-tmp/ci
+        run: uv run pytest -q -rs --cov --cov-report=term-missing --cov-fail-under=66 --basetemp .test-tmp/ci

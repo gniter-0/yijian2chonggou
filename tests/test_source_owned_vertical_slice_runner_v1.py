@@ -9,8 +9,10 @@ from migration.run_source_owned_vertical_slice_v1 import (
     SourceOwnedVerticalSliceSummary,
     run_source_owned_vertical_slice,
 )
+from tests.conftest import GOLDEN_EVIDENCE_DIR, requires_golden_assets
 
 
+@requires_golden_assets(GOLDEN_EVIDENCE_DIR)
 def test_successful_offline_vertical_slice_reaches_knowledge_card() -> None:
     summary = run_source_owned_vertical_slice()
 
@@ -25,6 +27,7 @@ def test_successful_offline_vertical_slice_reaches_knowledge_card() -> None:
     assert summary.knowledge_card_id.startswith("card:")
 
 
+@requires_golden_assets(GOLDEN_EVIDENCE_DIR)
 @pytest.mark.parametrize(
     ("scenario", "expected_selection", "expected_derivation", "expected_assembly"),
     (
@@ -49,6 +52,7 @@ def test_upstream_failures_fail_closed_without_downstream_admission(
     assert summary.knowledge_card_id == ""
 
 
+@requires_golden_assets(GOLDEN_EVIDENCE_DIR)
 @pytest.mark.parametrize("scenario", ("identity_mismatch", "incomplete_materialization"))
 def test_materialization_boundary_failures_are_reported_without_card(
     scenario: str,
@@ -65,6 +69,7 @@ def test_materialization_boundary_failures_are_reported_without_card(
     assert summary.knowledge_card_id == ""
 
 
+@requires_golden_assets(GOLDEN_EVIDENCE_DIR)
 def test_runner_uses_existing_evidence_fixture() -> None:
     assert DEFAULT_EVIDENCE_FIXTURE.is_file()
     summary = run_source_owned_vertical_slice(evidence_fixture=DEFAULT_EVIDENCE_FIXTURE)
@@ -72,6 +77,7 @@ def test_runner_uses_existing_evidence_fixture() -> None:
     assert summary.materialization_status == "materialized"
 
 
+@requires_golden_assets(GOLDEN_EVIDENCE_DIR)
 def test_summary_is_typed_and_contains_only_safe_stage_fields() -> None:
     summary = run_source_owned_vertical_slice()
     dumped = summary.model_dump(mode="json")

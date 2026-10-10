@@ -97,6 +97,40 @@ def pytest_terminal_summary(terminalreporter: pytest.TerminalReporter) -> None:
         f"或设 {REQUIRE_LEGACY_CORPUS_ENV}=1 让缺席直接失败。"
     )
 
+# ---------------------------------------------------------------------------
+# T5 金样镜像闸门（骨架§3）：`data/`、`exams/*/input_pdf/` 等 gitignore 大资产不入库，
+# 冷克隆（CI）里不存在。依赖它们的用例在缺席时跳过，跳过原因统一带前缀，CI 的 -rs
+# 会逐条列出，不许静默蒸发。与上面的旧仓语料闸门（../yijian2）是两类资产，各走各的入口。
+# ---------------------------------------------------------------------------
+GOLDEN_ASSET_SKIP_PREFIX = "金样镜像缺席"
+GOLDEN_REHEARSAL_PDF_DIR = "exams/gonglu_golden5_rehearsal/input_pdf"
+GOLDEN_EVIDENCE_DIR = "data/evidence_v2/golden/gonglu_phase0_v1"
+
+
+def _golden_asset_reason(missing: tuple[str, ...]) -> str:
+    return f"{GOLDEN_ASSET_SKIP_PREFIX}（T5/骨架§3：{', '.join(missing)} 不入库，冷克隆合法跳过）"
+
+
+def requires_golden_assets(*relatives: str) -> pytest.MarkDecorator:
+    """仓内 gitignore 金样资产齐备则照常跑，缺席则带原因跳过（装饰器形式）。"""
+    missing = tuple(item for item in relatives if not (ROOT / item).exists())
+    return pytest.mark.skipif(bool(missing), reason=_golden_asset_reason(missing) if missing else "金样镜像就位")
+
+
+def skip_unless_golden_assets(*relatives: str) -> None:
+    """同上，供夹具/辅助函数在运行期调用。"""
+    missing = tuple(item for item in relatives if not (ROOT / item).exists())
+    if missing:
+        pytest.skip(_golden_asset_reason(missing))
+
+
+def pytest_configure(config: pytest.Config) -> None:
+    """`--basetemp .test-tmp/<name>`：pytest 只建末级目录，冷克隆里 `.test-tmp/`（gitignore）不存在。"""
+    basetemp = config.getoption("basetemp", None)
+    if basetemp:
+        Path(basetemp).resolve().parent.mkdir(parents=True, exist_ok=True)
+
+
 _LOOPBACK_HOSTS = {"localhost", "127.0.0.1", "::1"}
 
 

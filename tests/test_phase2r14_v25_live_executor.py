@@ -11,6 +11,7 @@ from typing import Any
 import pytest
 
 from migration.run_exam_pipeline import _v25_gate_evaluator
+from tests.conftest import GOLDEN_EVIDENCE_DIR, requires_golden_assets
 from examcard.evidence.schema import EvidenceKind
 from examcard.knowledge.contracts.v25_generic_contracts import (
     V25BStep2BResultPayload,
@@ -235,6 +236,7 @@ def _artifact_paths(root: Path, request: Any) -> tuple[Path, Path, Path, Path]:
     )
 
 
+@requires_golden_assets(GOLDEN_EVIDENCE_DIR)
 def test_shared_semantic_evaluator_step2a_matches_authoritative_gate_matrix() -> None:
     contexts = build_live_sample_contexts(
         repository_root=Path(__file__).resolve().parents[1],
@@ -269,6 +271,7 @@ def test_shared_semantic_evaluator_step2a_matches_authoritative_gate_matrix() ->
     assert valid["table_or_diagram_bridge"]["valid"] is True
 
 
+@requires_golden_assets(GOLDEN_EVIDENCE_DIR)
 def test_shared_semantic_evaluator_step2b_matches_authoritative_gate_matrix() -> None:
     contexts = build_live_sample_contexts(
         repository_root=Path(__file__).resolve().parents[1],
@@ -303,6 +306,7 @@ def test_shared_semantic_evaluator_step2b_matches_authoritative_gate_matrix() ->
     assert valid["facts_exactly_once"] is True
 
 
+@requires_golden_assets(GOLDEN_EVIDENCE_DIR)
 def test_production_cli_gate_adapter_uses_shared_evaluator() -> None:
     context = build_live_sample_contexts(
         repository_root=Path(__file__).resolve().parents[1],

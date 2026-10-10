@@ -64,6 +64,7 @@ from examcard.knowledge.contracts.phase2r14_v25_live import (
     run_v25_live_smoke,
 )
 from migration import run_exam_pipeline
+from tests.conftest import GOLDEN_EVIDENCE_DIR, requires_golden_assets
 
 
 SOURCE_MANIFEST = "a" * 64
@@ -640,6 +641,7 @@ class _AdapterTransport:
         return TransportCompletion(content=self.completions.pop(0), provider_request_id="adapter-test", http_status=200)
 
 
+@requires_golden_assets(GOLDEN_EVIDENCE_DIR)
 def test_production_v25_adapter_accepts_legal_step2b_responses(tmp_path: Path) -> None:
     repo_root = Path(__file__).resolve().parents[1]
     contexts = build_live_sample_contexts(
@@ -911,6 +913,7 @@ def test_same_run_orchestrator_uses_emitted_queue_identity_before_ingest(request
     assert not (run_root / "checkpoints" / "admission" / "reviewed-typed-evidence-fixture-v2.json").exists()
 
 
+@requires_golden_assets(GOLDEN_EVIDENCE_DIR)
 def test_production_admission_providers_bind_successful_step2b_retry_identity(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:

@@ -44,6 +44,7 @@ from examcard.pipeline.live_stage_step4 import Step4ImageIntegrityError, prepare
 from examcard.common.hashing import canonical_hash, sha256_bytes
 from examcard.evidence.golden import GoldenSampleRegistry, load_golden_registry
 from examcard.evidence.golden_runner import _assertion_page
+from tests.conftest import skip_unless_golden_assets
 from tests.fixtures.compilers_synthetic import _hex, _page
 
 # ---------------------------------------------------------------------------
@@ -746,6 +747,7 @@ def _seed_exam_workspace(root: Path) -> None:
         target.parent.mkdir(parents=True, exist_ok=True)
         shutil.copyfile(_REAL_REPO / rel, target)
     registry = load_golden_registry(root / registry_rel)
+    skip_unless_golden_assets(*(sample.pdf_relative_path for sample in registry.samples))
     for sample in registry.samples:
         source = _REAL_REPO / sample.pdf_relative_path
         target = root / sample.pdf_relative_path
