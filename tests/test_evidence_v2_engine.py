@@ -418,3 +418,38 @@ def test_table_cell_tokens_are_removed_only_beyond_the_body_glyph_count():
     # A body "8" in the same cell keeps one "8"; only the surplus is watermark.
     assert strip_overlay_lines("压实度 8 8", bbox=cell, mask=mask, body=Counter("压实度8")) == ("压实度 8", ("8",), False)
     assert strip_overlay_lines("压实度 8", bbox=cell, mask=mask, body=Counter("压实度8")) == ("压实度 8", (), True)
+
+
+class NoOCRProvider:
+    name = "fake_no_ocr"
+    version = "1"
+
+    def audit(self, page: pymupdf.Page, *, page_num: int, render_dpi: int) -> OCRPage:
+        return OCRPage(page_num=page_num, render_dpi=render_dpi, engine_name=self.name, engine_version=self.version, elapsed_seconds=0.0, lines=())
+
+
+def test_watermark_crossing_a_table_is_removed_from_cell_text_only(tmp_path):
+    pdf = tmp_path / "table.pdf"
+    doc = pymupdf.open()
+    page = doc.new_page(width=300, height=300)
+    for x0, x1 in ((20, 140), (140, 280)):
+        for y0, y1 in ((40, 120), (120, 200)):
+            page.draw_rect(pymupdf.Rect(x0, y0, x1, y1), color=(0, 0, 0), width=1)
+    page.insert_text((30, 70), "Item", fontsize=12)
+    page.insert_text((150, 70), "Value 8", fontsize=12)
+    page.insert_text((30, 150), "Other", fontsize=12)
+    page.insert_text((150, 150), "Text", fontsize=12)
+    pivot = pymupdf.Point(160, 115)
+    page.insert_text(pivot, "79", fontsize=14, morph=(pivot, pymupdf.Matrix(45)))
+    doc.save(pdf)
+    doc.close()
+
+    result = _engine(tmp_path, NoOCRProvider()).process_pages(pdf, page_numbers=(1,))
+    cells = [unit for unit in result.pages[0].evidence_units if unit.kind == EvidenceKind.TABLE_CELL]
+    assert cells, "the bordered table must be detected"
+    texts = [unit.raw_text for unit in cells]
+    assert all("7" not in text and "9" not in text for text in texts)
+    cleaned = [unit for unit in cells if unit.metadata.get("overlay_removed")]
+    assert cleaned and set("".join(cleaned[0].metadata["overlay_removed"])) <= {"7", "9"}
+    # The body digit 8 shares no glyph with the watermark and survives.
+    assert any(normalized_compare_text(text) == "Value8" for text in texts)
