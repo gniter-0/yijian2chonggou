@@ -56,7 +56,9 @@ from examcard.knowledge.agent_file_transport import (  # noqa: E402
     load_agent_step2_response,
     verify_agent_step2_response_binding,
 )
+from examcard.compilers.step4_knowledge_card_bridge_v1 import build_knowledge_card_image_request_v1  # noqa: E402
 from examcard.knowledge.contracts import (  # noqa: E402
+    Step2AFactProposal,
     Step2ARequest,
     Step2DecoderConfig,
     Step2ResponseFormat,
@@ -64,7 +66,8 @@ from examcard.knowledge.contracts import (  # noqa: E402
     default_step2_prompt_template,
     step2a_result_payload_model,
 )
-from examcard.knowledge.extraction_v1 import iter_document_step2a_requests  # noqa: E402
+from examcard.knowledge.evidence_to_fact_v1 import ground_step2a_proposals  # noqa: E402
+from examcard.knowledge.extraction_v1 import iter_document_step2a_requests, run_document_fact_pipeline  # noqa: E402
 from examcard.knowledge.llm_adapter import Step2OpenAIAdapter  # noqa: E402
 from examcard.materials.catalog import load_content_policy, load_material_profile  # noqa: E402
 from examcard.pipeline.exam_project_ai_runtime_v1 import (  # noqa: E402
@@ -332,6 +335,27 @@ def _response_template(request: Step2ARequest) -> dict[str, Any]:
     }
 
 
+_GROUNDING_RULES: Final = (
+    "## Grounding rules (checked after the Step 2A contract)",
+    "",
+    "Grounding derives `fact_type`/`completeness_mode` from ALL selected Evidence (primary and secondary)",
+    "and rejects any proposal whose declared pair differs. First matching rule wins:",
+    "",
+    "1. any figure/diagram node/diagram edge -> `diagram_relation` / `full_diagram_subgraph`",
+    "2. formula Evidence or a `=` in the text -> `formula` / `complete_formula`",
+    "3. any table/table row/table cell -> `composition` / `full_table_row` (select every cell span of the table).",
+    "   Exception: a `threshold`/`condition` proposal with mode `atomic` whose primary and secondary spans are",
+    "   all table Evidence keeps its type - put the rule cell in primary and header cells in secondary.",
+    "4. every unit is a list item -> `enumeration` / `all_items` (do not add the paragraph lead-in line)",
+    "5. a constraint term (不得 不应 严禁 除外 至少 不少于 不超过) -> `exception` / `atomic`",
+    "6. a digit -> `threshold` / `atomic`; otherwise `definition` / `atomic`",
+    "",
+    "Also: `proposal_key` must be unique across the whole document (prefix the page, e.g. `proposal:p3-...`);",
+    "a table cell may be primary in one composition and in several atomic proposals, any other shared",
+    "primary Evidence is rejected. `check` names each rejected proposal when the runner fails.",
+)
+
+
 def _span_lines(spans: Sequence[dict[str, Any]], indent: str) -> Iterator[str]:
     for span in spans:
         text = str(span.get("text", "")).replace("\n", " ")
@@ -351,6 +375,8 @@ def _worksheet(request: Step2ARequest, model_input: dict[str, Any]) -> str:
         f"- request_id: `{identity.request_id}`",
         f"- request_version: `{identity.request_version}`",
         f"- model: `{identity.model}`",
+        "",
+        *_GROUNDING_RULES,
         "",
     ]
     heading_only = model_input.get("heading_only_allowed_anchor_span_ids") or []
@@ -485,6 +511,7 @@ class PageCheck:
     proposal_count: int = 0
     detail: tuple[str, ...] = ()
     forensics: dict[str, Any] | None = None
+    proposals: tuple[Step2AFactProposal, ...] = ()
 
     @property
     def accepted(self) -> bool:
@@ -541,7 +568,14 @@ def _check_one(request: Step2ARequest, workspace: AgentStep2Workspace) -> PageCh
         record = adapter.complete_step2a(request)
     response = record.response
     if response.state == Step2ResultState.SUCCEEDED:
-        return PageCheck(page_num, request_id, "accepted", raw_sha256, proposal_count=len(response.proposals))
+        return PageCheck(
+            page_num,
+            request_id,
+            "accepted",
+            raw_sha256,
+            proposal_count=len(response.proposals),
+            proposals=tuple(response.proposals),
+        )
     detail: list[str] = []
     if response.failure is not None:
         detail.append(f"{response.failure.state.value}: {response.failure.message}")
@@ -608,6 +642,88 @@ def _cards_by_page(result: ExamProjectRunResultV1) -> dict[str, int]:
     return dict(sorted(counts.items(), key=lambda item: int(item[0])))
 
 
+def diagnose_grounding(prepared: PreparedAgentDocument, checks: Sequence[PageCheck]) -> list[dict[str, Any]]:
+    """Name every proposal grounding rejects, in the runner's document order.
+
+    Each proposal is grounded together with the proposals accepted before it, so
+    ownership conflicts are attributed to the later proposal and one bad proposal
+    does not hide the next.
+    """
+
+    accepted: list[Step2AFactProposal] = []
+    findings: list[dict[str, Any]] = []
+    for check in checks:
+        for proposal in check.proposals:
+            try:
+                ground_step2a_proposals(
+                    manifest=prepared.manifest,
+                    proposals=(*accepted, proposal),
+                    content_policy=prepared.profile.content_policy,
+                    material_profile_id=prepared.profile.material_profile.profile_id,
+                    sample_id=prepared.sample_id,
+                )
+            except ValueError as error:
+                findings.append(
+                    {
+                        "page_num": check.page_num,
+                        "proposal_key": proposal.proposal_key,
+                        "problem": sanitized_error_summary(error),
+                    }
+                )
+            else:
+                accepted.append(proposal)
+    return findings
+
+
+def diagnose_cards(prepared: PreparedAgentDocument, workspace: AgentStep2Workspace) -> list[dict[str, Any]]:
+    """Name every card the Step 4 bridge refuses to compile."""
+
+    with tempfile.TemporaryDirectory(prefix="agent-step2-diagnose-") as scratch:
+        adapter = Step2OpenAIAdapter(
+            storage_root=Path(scratch),
+            transport=AgentFileStep2Transport(response_root=workspace.responses_dir),
+            idempotency_supported=False,
+        )
+        pipeline = run_document_fact_pipeline(
+            manifest=prepared.manifest,
+            content_policy=prepared.profile.content_policy,
+            adapter=adapter,
+            model=prepared.profile.step2_model,
+            material_profile_id=prepared.profile.material_profile.profile_id,
+            sample_id=prepared.sample_id,
+            decoder=agent_decoder_config(),
+        )
+    findings: list[dict[str, Any]] = []
+    for card in pipeline.cards:
+        try:
+            build_knowledge_card_image_request_v1(card, profile=prepared.profile.image_profile)
+        except Exception as error:  # the runner also treats any compile error as card_compilation_failed
+            findings.append(
+                {
+                    "page_nums": list(card.source_pages),
+                    "card_title": card.title,
+                    "problem": sanitized_error_summary(error),
+                }
+            )
+    return findings
+
+
+def _diagnose(
+    code: str,
+    prepared: PreparedAgentDocument,
+    workspace: AgentStep2Workspace,
+    checks: Sequence[PageCheck],
+) -> list[dict[str, Any]] | None:
+    try:
+        if code == "knowledge_extraction_failed":
+            return diagnose_grounding(prepared, checks)
+        if code == "card_compilation_failed":
+            return diagnose_cards(prepared, workspace)
+    except (ValueError, ExamProjectRunError) as error:
+        return [{"problem": "diagnosis itself failed: " + sanitized_error_summary(error)}]
+    return None
+
+
 def run_agent_document(
     prepared: PreparedAgentDocument,
     workspace: AgentStep2Workspace,
@@ -645,6 +761,9 @@ def run_agent_document(
     except ExamProjectRunError as error:
         summary["status"] = "runner_failed"
         summary["runner_failure"] = _run_failure(error)
+        diagnosis = _diagnose(error.code, prepared, workspace, checks)
+        if diagnosis is not None:
+            summary["diagnosis"] = diagnosis
         return summary
     summary["status"] = "completed"
     summary["fact_count"] = len(result.fact_pipeline.facts)
@@ -768,6 +887,12 @@ def main(argv: Sequence[str] | None = None) -> int:
         return 0
     if summary["status"] == "runner_failed":
         print(f"{args.command}: runner failed - {summary['runner_failure']['code']}", file=sys.stderr)
+        for finding in summary.get("diagnosis") or []:
+            where = finding.get("proposal_key") or finding.get("card_title") or ""
+            page = finding.get("page_num", finding.get("page_nums", ""))
+            print(f"    - page {page} {where}: {finding['problem']}", file=sys.stderr)
+        if summary.get("diagnosis") == []:
+            print("    - diagnosis found no single failing proposal or card", file=sys.stderr)
     else:
         print(f"{args.command}: not every page is accepted yet", file=sys.stderr)
     return 1

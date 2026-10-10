@@ -64,7 +64,7 @@ export ──▶ Agent 逐页写 responses/*.response.json ──▶ check（可
 | `prompt.md` | 系统提示词（与 API 流水线相同的模板，未改动） |
 | `response_schema.json` | 严格 JSON Schema（当前请求版本 `step2a_contract_v10_table_atomic_continuation`） |
 | `request_identity.json` | 绑定字段 |
-| `worksheet.md` | 按 section 列出 span id 与文本，写响应时查 id 用 |
+| `worksheet.md` | 开头是 grounding 类型规则；随后按 section 列出 span id 与文本，写响应时查 id 用 |
 | `page.png` | 页面图像，用于核对表格结构、看出 OCR 漏掉的内容 |
 | `response_template.json` | 绑定字段已预填的信封模板；`author.agent_label` 是占位符，不改会被判 `invalid_envelope` |
 
@@ -127,7 +127,11 @@ export ──▶ Agent 逐页写 responses/*.response.json ──▶ check（可
 | `knowledge_extraction_failed`（stage=grounding） | `ground_step2a_proposals` | 类型/模式与推导不符、主属重叠、`proposal_key` 跨页重复 |
 | `card_compilation_failed` | Step4 桥接 | 渲染器不一致、卡片不可发布；换行问题已修 |
 
-逐条定位：参考 `.test-tmp/agent-s2-scratch/dbg6.py`（逐条累加调用 `ground_step2a_proposals`）和 `dbg9.py`（逐张卡编译）。
+逐条定位：runner 失败时 `check`/`run` 会自动诊断，并在 stderr 和 `last_check.json.diagnosis` 里列出：
+- `knowledge_extraction_failed`：按文档顺序逐条 grounding（每条和之前已通过的一起检查），列出**每一条**被拒的 proposal 及原因；
+- `card_compilation_failed`：逐张编译卡片，列出被拒卡片的标题、页码和原因。
+
+工作表 `worksheet.md` 开头附有 grounding 类型推导规则（与 `fact_classify._fact_type` 一致），写响应前先看。
 
 ## 9. 试跑记录：doc01
 
