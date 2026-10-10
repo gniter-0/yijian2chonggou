@@ -122,6 +122,8 @@ class OverlayMask:
 
     glyph_boxes: tuple[tuple[float, float, float, float], ...]
     texts: tuple[str, ...]
+    # Character drawn in each glyph box ("" when only a span box was available).
+    glyph_chars: tuple[str, ...] = ()
 
     @property
     def characters(self) -> frozenset[str]:
@@ -130,6 +132,7 @@ class OverlayMask:
 
 def page_overlay_mask(page: NativePage) -> OverlayMask:
     boxes: list[tuple[float, float, float, float]] = []
+    chars: list[str] = []
     texts: list[str] = []
     for line in page.lines:
         if not is_overlay_line(line):
@@ -138,9 +141,13 @@ def page_overlay_mask(page: NativePage) -> OverlayMask:
         if text:
             texts.append(text)
         for span in line.spans:
-            glyphs = [char.bbox for char in span.chars if char.char.strip()]
-            boxes.extend(glyphs or ([span.bbox] if span.text.strip() else []))
-    return OverlayMask(glyph_boxes=tuple(boxes), texts=tuple(texts))
+            glyphs = [(char.char, char.bbox) for char in span.chars if char.char.strip()]
+            if not glyphs and span.text.strip():
+                glyphs = [("", span.bbox)]
+            for char, box in glyphs:
+                chars.append(char)
+                boxes.append(box)
+    return OverlayMask(glyph_boxes=tuple(boxes), texts=tuple(texts), glyph_chars=tuple(chars))
 
 
 def overlay_coverage(bbox: tuple[float, float, float, float], mask: OverlayMask) -> float:
@@ -180,6 +187,83 @@ def classify_overlay_fragment(
     if set(normalized) & mask.characters:
         return "overlap"
     return None
+
+
+def _center_inside(glyph: tuple[float, float, float, float], bbox: tuple[float, float, float, float]) -> bool:
+    return bbox[0] <= (glyph[0] + glyph[2]) / 2 <= bbox[2] and bbox[1] <= (glyph[1] + glyph[3]) / 2 <= bbox[3]
+
+
+def body_characters(page: NativePage, bbox: tuple[float, float, float, float] | None) -> Counter[str]:
+    """Count the normalized characters of non-overlay native text drawn inside ``bbox``."""
+    counts: Counter[str] = Counter()
+    if bbox is None:
+        return counts
+    for line in page.lines:
+        if is_overlay_line(line):
+            continue
+        for span in line.spans:
+            for char in span.chars:
+                if char.char.strip() and _center_inside(char.bbox, bbox):
+                    counts.update(normalized_compare_text(char.char))
+    return counts
+
+
+def strip_overlay_lines(
+    text: str,
+    *,
+    bbox: tuple[float, float, float, float] | None,
+    mask: OverlayMask,
+    body: Counter[str] | None = None,
+) -> tuple[str, tuple[str, ...], bool]:
+    """Remove overlay glyphs that table extraction folded into a cell's text.
+
+    Table extraction collects every character inside a cell, so a diagonal
+    watermark crossing the table leaks glyphs into cells (``"系\\n2021"``,
+    ``"施工 8"``).  A fragment -- a whole line, or a whitespace-separated token of
+    a kept line -- is removed only when every character is matched by an overlay
+    glyph touching the cell and the cell still keeps at least as many
+    of each character as the body text drawn there (``body``).  So a body glyph is
+    never removed even when the watermark repeats it.  The cell is never emptied.
+    Returns ``(cleaned_text, removed_fragments, overlap)``; ``overlap`` marks a kept
+    text that still shares characters with unexplained in-cell overlay glyphs.
+    """
+    if bbox is None or not text or not mask.glyph_chars:
+        return text, (), False
+    inside: Counter[str] = Counter(
+        # Overlap, not centre: table extraction also folds in glyphs straddling the cell edge.
+        # Body glyphs stay protected by the ``body`` floor below.
+        char for char, glyph in zip(mask.glyph_chars, mask.glyph_boxes) if char and bbox_intersects(glyph, bbox)
+    )
+    if not inside:
+        return text, (), False
+    floor = body or Counter()
+    remaining = Counter(normalized_compare_text(text))
+    removed: list[str] = []
+
+    def take(fragment: str) -> bool:
+        nonlocal inside, remaining
+        need = Counter(normalized_compare_text(fragment))
+        if not need or sum(remaining.values()) - sum(need.values()) <= 0:
+            return False
+        if not all(inside[char] >= count and remaining[char] - count >= floor[char] for char, count in need.items()):
+            return False
+        inside -= need
+        remaining -= need
+        removed.append(fragment.strip())
+        return True
+
+    kept: list[str] = []
+    for line in text.split("\n"):
+        if take(line):
+            continue
+        parts = re.split(r"(\s+)", line)
+        if len(parts) > 1:
+            parts = ["" if not part.isspace() and take(part) else part for part in parts]
+            line = re.sub(r"\s{2,}", " ", "".join(parts)).strip()
+        kept.append(line)
+    cleaned = "\n".join(line for line in kept if line).strip()
+    overlap = bool(set(normalized_compare_text(cleaned)) & set(inside))
+    return cleaned, tuple(removed), overlap
 
 
 def detect_repeated_noise(pages: tuple[NativePage, ...]) -> frozenset[str]:

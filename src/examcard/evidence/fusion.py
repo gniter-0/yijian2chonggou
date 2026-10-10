@@ -20,7 +20,9 @@ from .layout import (
     equivalent_text,
     heading_level,
     normalized_compare_text,
+    body_characters,
     page_overlay_mask,
+    strip_overlay_lines,
 )
 from .schema import (
     BBox,
@@ -139,6 +141,7 @@ def fuse_page(
     conflicts: list[SourceConflict] = []
     order = 0
     outline = heading_stack if heading_stack is not None else []
+    overlay_mask = page_overlay_mask(native)
 
     # Figures are emitted before OCR nodes so diagram evidence can preserve parent linkage.
     figure_parents: list[tuple[tuple[float, float, float, float], str, str | None]] = []
@@ -279,6 +282,13 @@ def fuse_page(
 
     # Preserve table geometry as a tree instead of relying on paragraph reconstruction later.
     for table in native.tables:
+        cleaned = {
+            (cell.row, cell.column): strip_overlay_lines(
+                cell.text, bbox=cell.bbox, mask=overlay_mask, body=body_characters(native, cell.bbox)
+            )
+            for cell in table.cells
+        }
+        cells = tuple(cell.model_copy(update={"text": cleaned[(cell.row, cell.column)][0]}) for cell in table.cells)
         table_crop = _crop_path(
             page=page,
             bbox=table.bbox,
@@ -291,8 +301,8 @@ def fuse_page(
             page_num=native.page_num,
             kind=EvidenceKind.TABLE,
             bbox=table.bbox,
-            raw_text="\n".join(cell.text for cell in table.cells if cell.text),
-            canonical_text="\n".join(cell.text for cell in table.cells if cell.text),
+            raw_text="\n".join(cell.text for cell in cells if cell.text),
+            canonical_text="\n".join(cell.text for cell in cells if cell.text),
             semantic_role=SemanticRole.CORE,
             source_quality=SourceQuality.NATIVE_ONLY,
             confidence=0.92,
@@ -309,7 +319,7 @@ def fuse_page(
         units.append(table_unit)
         order += 1
         for row_index in range(table.row_count):
-            row_cells = [cell for cell in table.cells if cell.row == row_index and cell.bbox is not None]
+            row_cells = [cell for cell in cells if cell.row == row_index and cell.bbox is not None]
             if not row_cells:
                 continue
             row_bbox = _union_bbox(cell.bbox for cell in row_cells if cell.bbox is not None)
@@ -351,15 +361,24 @@ def fuse_page(
                     config_hash=config_hash,
                     parent_id=row_unit.evidence_id,
                     region_id=f"table_{table.table_index}_r{cell.row}_c{cell.column}",
-                    risk_tags={"table"},
+                    risk_tags={"table", "overlay_overlap"} if cleaned[(cell.row, cell.column)][2] else {"table"},
                     must_cover_by_source=bool(cell.text),
-                    metadata={"row": cell.row, "column": cell.column, "row_span": cell.row_span, "col_span": cell.col_span},
+                    metadata={
+                        "row": cell.row,
+                        "column": cell.column,
+                        "row_span": cell.row_span,
+                        "col_span": cell.col_span,
+                        **(
+                            {"overlay_removed": list(cleaned[(cell.row, cell.column)][1])}
+                            if cleaned[(cell.row, cell.column)][1]
+                            else {}
+                        ),
+                    },
                 )
                 units.append(cell_unit)
                 order += 1
 
     figure_ocr: dict[str, list[OCRLine]] = {figure_id: [] for _, figure_id, _ in figure_parents}
-    overlay_mask = page_overlay_mask(native)
     for ocr_index, ocr_line in enumerate(ocr.lines):
         if ocr_index in used_ocr or ocr_line.confidence < minimum_ocr_confidence:
             continue

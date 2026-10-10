@@ -10,6 +10,8 @@ ROOT = Path(__file__).resolve().parents[1]
 
 from examcard.evidence.engine_types import NativeLine, NativePage, NativeSpan, OCRLine, OCRPage, VisualReviewHint
 from examcard.evidence.ingest import EvidenceEngine, EvidenceEngineConfig
+from collections import Counter
+
 from examcard.evidence.layout import (
     OverlayMask,
     classify_native_line,
@@ -18,6 +20,7 @@ from examcard.evidence.layout import (
     heading_level,
     is_overlay_line,
     normalized_compare_text,
+    strip_overlay_lines,
 )
 from examcard.evidence.schema import EvidenceKind, SourceQuality
 from examcard.evidence.vision import GoldenFixtureVisionVerifier, VisionVerification
@@ -377,3 +380,41 @@ def test_ocr_reread_of_overlay_and_figure_noise_never_become_core(tmp_path):
     assert label.kind == EvidenceKind.DIAGRAM_NODE and label.semantic_role.value == "core"
     body = next(unit for unit in units if unit.raw_text == "Bodytext")
     assert body.semantic_role.value == "core"
+
+
+def test_table_cells_drop_only_overlay_glyph_lines_drawn_inside_the_cell():
+    # "联" and "系" glyphs of a diagonal watermark sit inside two different cells.
+    mask = OverlayMask(
+        glyph_boxes=((12, 12, 18, 18), (52, 12, 58, 18)),
+        texts=("唯一联系微信3849178",),
+        glyph_chars=("系", "联"),
+    )
+    cell_a, cell_b = (10, 10, 40, 30), (50, 10, 80, 30)
+    assert strip_overlay_lines("系\n2021", bbox=cell_a, mask=mask) == ("2021", ("系",), False)
+    assert strip_overlay_lines("联\n45 题", bbox=cell_b, mask=mask) == ("45 题", ("联",), False)
+    # The glyph is not inside this cell, so identical body characters stay.
+    assert strip_overlay_lines("联\n45 题", bbox=cell_a, mask=mask) == ("联\n45 题", (), False)
+    # A body line that merely shares the character is kept and tagged.
+    assert strip_overlay_lines("联系人", bbox=cell_b, mask=mask) == ("联系人", (), True)
+    # A cell is never emptied.
+    assert strip_overlay_lines("系", bbox=cell_a, mask=mask) == ("系", (), True)
+    assert strip_overlay_lines("系\n2021", bbox=None, mask=mask) == ("系\n2021", (), False)
+
+
+def test_table_cell_tokens_are_removed_only_beyond_the_body_glyph_count():
+    mask = OverlayMask(
+        glyph_boxes=((30, 12, 36, 18), (20, 22, 26, 28)),
+        texts=("唯一联系微信3849178",),
+        glyph_chars=("8", "7"),
+    )
+    cell = (10, 10, 60, 30)
+    body = Counter("防护工程设置与施工")
+    # The trailing "8" and the "7" line are watermark: the body has neither.
+    assert strip_overlay_lines("防护工程设置与施工 8\n7", bbox=cell, mask=mask, body=body) == (
+        "防护工程设置与施工",
+        ("8", "7"),
+        False,
+    )
+    # A body "8" in the same cell keeps one "8"; only the surplus is watermark.
+    assert strip_overlay_lines("压实度 8 8", bbox=cell, mask=mask, body=Counter("压实度8")) == ("压实度 8", ("8",), False)
+    assert strip_overlay_lines("压实度 8", bbox=cell, mask=mask, body=Counter("压实度8")) == ("压实度 8", (), True)
