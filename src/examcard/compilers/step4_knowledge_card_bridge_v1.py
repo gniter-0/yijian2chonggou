@@ -172,7 +172,7 @@ class KnowledgeCardImageRequestV1(StrictModel):
         )
         if self.expected_visible_texts != expected_texts:
             raise ValueError("expected visible text is not the source projection")
-        if any(text not in self.prompt_text for text in self.expected_visible_texts):
+        if any(_prompt_json_text(text) not in self.prompt_text for text in self.expected_visible_texts):
             raise ValueError("expected visible text is missing from the prompt")
 
         expected_prompt = _render_prompt(
@@ -240,6 +240,15 @@ class KnowledgeCardImageRequestV1(StrictModel):
 
 def _unique_texts(values: tuple[str, ...]) -> tuple[str, ...]:
     return tuple(dict.fromkeys(value for value in values if value))
+
+
+def _prompt_json_text(value: str) -> str:
+    """Return ``value`` exactly as ``_render_prompt`` serializes it.
+
+    The prompt embeds visible texts as JSON, so newlines, quotes and backslashes
+    appear escaped.  Texts without such characters are unchanged.
+    """
+    return json.dumps(value, ensure_ascii=False)[1:-1]
 
 
 def _presentation_for_segment(segment: ContentSegment) -> str:

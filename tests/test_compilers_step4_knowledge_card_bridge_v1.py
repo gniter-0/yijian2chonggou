@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import json
+
 import pytest
 from typing import Any, cast
 
@@ -168,3 +170,22 @@ def test_request_hash_changes_with_source_content_but_not_from_nondelivery_calls
     assert first.content_sha256 != changed.content_sha256
     assert first.request_sha256 != changed.request_sha256
     assert canonical_hash(first.evidence_refs) == canonical_hash(changed.evidence_refs)
+
+
+def test_multiline_and_quoted_source_text_compiles_and_survives_the_prompt_json() -> None:
+    text = '（4）特殊填料（煤矸\n石、泡沫轻质土）"引号" \\ 反斜杠'
+    card = _card(renderer="table", text=text)
+
+    request = build_knowledge_card_image_request_v1(card, profile=PROFILE)
+    projection = json.loads(request.prompt_text.split("\n", 1)[1])
+
+    assert text in request.expected_visible_texts
+    assert projection["source_elements"][0]["text"] == text
+    assert type(request).model_validate(request.model_dump(mode="python")) == request
+
+
+def test_single_line_prompt_is_unchanged_by_the_json_aware_visibility_check() -> None:
+    request = build_knowledge_card_image_request_v1(_card(), profile=PROFILE)
+
+    for text in request.expected_visible_texts:
+        assert text in request.prompt_text
