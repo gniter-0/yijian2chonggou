@@ -15,10 +15,16 @@ writing one JSON response file per page.  It never talks to a provider:
   runner in another throwaway root.  Nothing durable is written.
 * ``run`` repeats the check and only then dry-runs ``run_exam_project_v1``
   with a durable adapter storage root keyed by the digest of the response set,
-  so editing a response can never be shadowed by a cached record.
+  so editing a response can never be shadowed by a cached record.  It also
+  exports one image work packet per card under ``agent_images/``.
+* ``images`` repeats ``run`` and, once the agent has written every
+  ``agent_images/responses/prompt-<sha256>.png``, executes the runner for real
+  (``dry_run=False``) with ``AgentFileImageCallerV1``: every PNG still passes the
+  unchanged image envelope gate and is written to ``result/images/``.
 
 Provenance stays honest: the request identity carries the ``agent-file:``
-model label, completions carry ``x-examcard-transport: agent_file_v1`` and no
+model label, completions carry ``x-examcard-transport: agent_file_v1``, agent
+images carry zero usage and ``created=0`` (no provider was called) and no
 response is ever treated as a review or an approval.
 """
 
@@ -79,10 +85,17 @@ from examcard.pipeline.exam_project_runner_v1 import (  # noqa: E402
     run_exam_project_v1,
 )
 from examcard.projects.exam_subject_profile_v1 import ExamSubjectProfileV1  # noqa: E402
+from examcard.providers.agent_file_image_caller_v1 import (  # noqa: E402
+    AGENT_IMAGE_TRANSPORT_ID,
+    AgentFileImageCallerV1,
+    agent_image_prompt_sha256,
+    agent_image_response_path,
+)
 from examcard.providers.base import sanitized_error_summary  # noqa: E402
 from examcard.providers.envelope_profiles import build_image_profile  # noqa: E402
 
 __all__ = [
+    "AGENT_IMAGE_QUEUE_VERSION",
     "AGENT_STEP2_QUEUE_VERSION",
     "AGENT_STEP2_RUN_SUMMARY_VERSION",
     "DEFAULT_AGENT_MODEL",
@@ -98,12 +111,15 @@ __all__ = [
     "main",
     "prepare_agent_document",
     "response_set_digest",
+    "export_image_packets",
     "run_agent_document",
+    "run_agent_images",
 ]
 
 DEFAULT_AGENT_MODEL: Final = f"{AGENT_STEP2_MODEL_PREFIX}pdf-page-review"
 AGENT_STEP2_QUEUE_VERSION: Final = "examcard_agent_step2_queue_v1"
 AGENT_STEP2_RUN_SUMMARY_VERSION: Final = "examcard_agent_step2_run_summary_v1"
+AGENT_IMAGE_QUEUE_VERSION: Final = "examcard_agent_image_queue_v1"
 _DEFAULT_MATERIAL_PROFILE: Final = NEW_ROOT / "configs" / "v2" / "material_profiles" / "yijian_gonglu_2026.yaml"
 _DEFAULT_CONTENT_POLICY: Final = NEW_ROOT / "configs" / "v2" / "content_policies" / "core_only_v1.yaml"
 _PAGE_IMAGE_DPI: Final = 150
@@ -154,6 +170,22 @@ class AgentStep2Workspace:
 
     def step2_storage(self, digest: str) -> Path:
         return self.run_root / "step2" / digest[:16]
+
+    @property
+    def image_root(self) -> Path:
+        return self.run_root / "agent_images"
+
+    @property
+    def image_requests_dir(self) -> Path:
+        return self.image_root / "requests"
+
+    @property
+    def image_responses_dir(self) -> Path:
+        return self.image_root / "responses"
+
+    @property
+    def image_queue_path(self) -> Path:
+        return self.image_root / "queue.json"
 
     def packet_dir(self, request: Step2ARequest) -> Path:
         return self.requests_dir / f"p{request.projection.page_num:04d}"
@@ -609,11 +641,15 @@ def _dry_run(
     workspace: AgentStep2Workspace,
     *,
     storage_root: Path,
+    image_caller: AgentFileImageCallerV1 | None = None,
 ) -> ExamProjectRunResultV1:
+    """Run the unchanged runner; it is a dry run unless an agent image caller is given."""
+
     dependencies = build_exam_project_dependencies_v1(
         storage_root=storage_root,
         transport=AgentFileStep2Transport(response_root=workspace.responses_dir),
         idempotency_supported=False,
+        image_caller=image_caller,
         evidence_engine=_PrecomputedEvidence(prepared.manifest, prepared.evidence_report),
     )
     return run_exam_project_v1(
@@ -622,7 +658,7 @@ def _dry_run(
         output_root=workspace.result_dir,
         cache_root=workspace.evidence_cache,
         dependencies=dependencies,
-        dry_run=True,
+        dry_run=image_caller is None,
         source_relative_path=prepared.source_relative_path,
         sample_id=prepared.sample_id,
         step2_decoder_config=agent_decoder_config(),
@@ -800,6 +836,104 @@ def run_agent_document(
         _write_json(workspace.result_dir / "cards.json", [card.model_dump(mode="json") for card in result.cards])
         _write_json(workspace.result_dir / "facts.json", [fact.model_dump(mode="json") for fact in result.fact_pipeline.facts])
         _write_json(workspace.result_dir / "image_requests.json", [request.model_dump(mode="json") for request in result.requests])
+        queue = export_image_packets(result, workspace)
+        summary["image_packets"] = len(queue["requests"])
+        summary["images_missing"] = sum(1 for entry in queue["requests"] if not entry["present"])
+    return summary
+
+
+def export_image_packets(result: ExamProjectRunResultV1, workspace: AgentStep2Workspace) -> dict[str, Any]:
+    """Write one image work packet per card and a queue naming the PNG each one needs.
+
+    The PNG name is the sha256 of the exact request prompt (see
+    ``AgentFileImageCallerV1``), so a packet can only be answered for the card
+    content it was exported from.
+    """
+
+    workspace.image_responses_dir.mkdir(parents=True, exist_ok=True)
+    first_request = result.projections[0].http_request if result.projections else None
+    entries: list[dict[str, Any]] = []
+    for request, projection in zip(result.requests, result.projections, strict=True):
+        prompt_sha256 = agent_image_prompt_sha256(request.prompt_text)
+        response = agent_image_response_path(workspace.image_responses_dir, prompt_sha256)
+        name = f"card-{request.raw_id.removeprefix('kp:')}"
+        request_json = request.model_dump(mode="json")
+        packet = {
+            "schema_version": AGENT_IMAGE_QUEUE_VERSION,
+            "transport": AGENT_IMAGE_TRANSPORT_ID,
+            "response_path": response.relative_to(workspace.run_root).as_posix(),
+            "http_request": projection.http_request.model_dump(mode="json"),
+            "request": request_json,
+        }
+        _write_json(workspace.image_requests_dir / f"{name}.json", packet)
+        entries.append(
+            {
+                "raw_id": request.raw_id,
+                "title": request.title,
+                "presentation": request_json["presentation"],
+                "source_pages": list(request.source_pages),
+                "prompt_sha256": prompt_sha256,
+                "packet": f"requests/{name}.json",
+                "response_file": response.name,
+                "present": response.is_file(),
+            }
+        )
+    queue: dict[str, Any] = {
+        "schema_version": AGENT_IMAGE_QUEUE_VERSION,
+        "transport": AGENT_IMAGE_TRANSPORT_ID,
+        "size": first_request.size if first_request is not None else None,
+        "requests": entries,
+    }
+    _write_json(workspace.image_queue_path, queue)
+    return queue
+
+
+def run_agent_images(prepared: PreparedAgentDocument, workspace: AgentStep2Workspace) -> dict[str, Any]:
+    """``run`` plus a real (non-dry) runner execution fed by agent-written PNGs."""
+
+    summary = run_agent_document(prepared, workspace, durable=True)
+    summary["image_transport"] = AGENT_IMAGE_TRANSPORT_ID
+    if summary["status"] != "completed":
+        return summary
+    queue = json.loads(workspace.image_queue_path.read_text(encoding="utf-8"))
+    missing = [entry for entry in queue["requests"] if not entry["present"]]
+    if missing:
+        summary["status"] = "images_missing"
+        summary["missing_images"] = [
+            {"raw_id": entry["raw_id"], "title": entry["title"], "response_file": entry["response_file"]}
+            for entry in missing
+        ]
+        return summary
+    caller = AgentFileImageCallerV1(
+        response_root=workspace.image_responses_dir,
+        profile=prepared.profile.image_profile,
+    )
+    try:
+        result = _dry_run(
+            prepared,
+            workspace,
+            storage_root=workspace.step2_storage(summary["response_set_sha256"]),
+            image_caller=caller,
+        )
+    except ExamProjectRunError as error:
+        summary["status"] = "runner_failed"
+        summary["runner_failure"] = _run_failure(error)
+        return summary
+    summary["status"] = "completed"
+    summary["dry_run"] = result.dry_run
+    summary["images"] = [
+        {
+            "raw_id": image.raw_id,
+            "source_pages": list(image.source_pages),
+            "output_path": image.output_path.relative_to(workspace.run_root).as_posix() if image.output_path else None,
+            "image_sha256": image.image_sha256,
+        }
+        for image in result.images
+    ]
+    _write_json(
+        workspace.result_dir / "images.json",
+        {"transport": AGENT_IMAGE_TRANSPORT_ID, "human_approved": False, "images": summary["images"]},
+    )
     return summary
 
 
@@ -808,7 +942,7 @@ def run_agent_document(
 
 def _parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="Agent-as-model Step 2A lane (no provider calls).")
-    parser.add_argument("command", choices=("export", "check", "run"))
+    parser.add_argument("command", choices=("export", "check", "run", "images"))
     parser.add_argument("--pdf", required=True, type=Path, help="explicit PDF input path")
     parser.add_argument("--run-root", required=True, type=Path, help="isolated run directory")
     parser.add_argument("--model", default=DEFAULT_AGENT_MODEL, help="agent-file:<label> model label")
@@ -902,7 +1036,10 @@ def main(argv: Sequence[str] | None = None) -> int:
             print(f"warning: response file matches no current request: {name}")
         return 0
     _warn_on_request_drift(prepared, workspace)
-    summary = run_agent_document(prepared, workspace, durable=args.command == "run")
+    if args.command == "images":
+        summary = run_agent_images(prepared, workspace)
+    else:
+        summary = run_agent_document(prepared, workspace, durable=args.command == "run")
     _print_checks(summary)
     _write_json(workspace.agent_root / f"last_{args.command}.json", summary)
     for warning in summary.get("overlay_warnings") or []:
@@ -915,7 +1052,19 @@ def main(argv: Sequence[str] | None = None) -> int:
             f"{args.command}: completed - {summary['fact_count']} fact(s), "
             f"{summary['card_count']} card(s); cards by page {summary['cards_by_page']}"
         )
+        if "images" in summary:
+            print(f"images: wrote {len(summary['images'])} PNG(s) to {workspace.result_dir / 'images'}")
+        elif summary.get("image_packets"):
+            print(
+                f"images: {summary['image_packets']} packet(s) in {workspace.image_requests_dir}, "
+                f"{summary['images_missing']} PNG(s) still missing in {workspace.image_responses_dir}"
+            )
         return 0
+    if summary["status"] == "images_missing":
+        print(f"{args.command}: {len(summary['missing_images'])} agent image(s) missing", file=sys.stderr)
+        for entry in summary["missing_images"]:
+            print(f"    - {entry['raw_id']} {entry['title']}: {entry['response_file']}", file=sys.stderr)
+        return 1
     if summary["status"] == "runner_failed":
         print(f"{args.command}: runner failed - {summary['runner_failure']['code']}", file=sys.stderr)
         for finding in summary.get("diagnosis") or []:
