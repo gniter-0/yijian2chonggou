@@ -28,7 +28,6 @@ import argparse
 import hashlib
 import json
 import os
-import subprocess
 import sys
 import tempfile
 from collections.abc import Iterator, Sequence
@@ -107,7 +106,6 @@ _DEFAULT_CONTENT_POLICY: Final = NEW_ROOT / "configs" / "v2" / "content_policies
 _PAGE_IMAGE_DPI: Final = 150
 _TEMPLATE_AGENT_LABEL: Final = "FILL-ME"
 _HASH_SEED_ENV: Final = "PYTHONHASHSEED"
-_PINNED_HASH_SEED: Final = "0"
 
 
 # --------------------------------------------------------------------------- layout
@@ -681,16 +679,27 @@ def _parser() -> argparse.ArgumentParser:
 
 
 def _warn_on_request_drift(prepared: PreparedAgentDocument, workspace: AgentStep2Workspace) -> None:
+    """Warn when the live request ids no longer match the last export.
+
+    Evidence JSON is serialized independently of ``PYTHONHASHSEED`` (sorted
+    frozensets), so ids should only move when the frozen manifest, the model
+    label, the profile or the contract code changed.
+    """
+
     if not workspace.queue_path.is_file():
         return
     queue = json.loads(workspace.queue_path.read_text(encoding="utf-8"))
-    exported = [entry.get("request_id") for entry in queue.get("requests", [])]
-    current = [request.identity.request_id for request in prepared.requests]
-    if exported != current:
-        print(
-            "warning: request ids differ from the last export; re-run export and rewrite the affected responses",
-            file=sys.stderr,
-        )
+    exported = {entry.get("page_num"): entry.get("request_id") for entry in queue.get("requests", [])}
+    current = {request.projection.page_num: request.identity.request_id for request in prepared.requests}
+    if exported == current:
+        return
+    drifted = sorted(page for page in exported.keys() | current.keys() if exported.get(page) != current.get(page))
+    print(
+        "warning: request ids differ from the last export for page(s) "
+        + ", ".join(str(page) for page in drifted)
+        + "; re-run export and rewrite the affected responses",
+        file=sys.stderr,
+    )
 
 
 def _print_checks(summary: dict[str, Any]) -> None:
@@ -764,24 +773,5 @@ def main(argv: Sequence[str] | None = None) -> int:
     return 1
 
 
-def _reexec_with_pinned_hash_seed() -> int | None:
-    """Re-run this script under ``PYTHONHASHSEED=0`` unless already pinned.
-
-    Evidence models carry ``frozenset`` fields (``source_channels``,
-    ``risk_tags``) whose JSON order follows the per-process string hash seed.
-    The Step 2A page snapshot is hashed from that JSON, so without a pinned
-    seed table pages get different request ids in every process and export,
-    check and run would never agree.  Pinning the seed here is a local
-    workaround; the durable fix belongs in the Evidence serialisation.
-    """
-
-    if os.environ.get(_HASH_SEED_ENV) == _PINNED_HASH_SEED:
-        return None
-    env = {**os.environ, _HASH_SEED_ENV: _PINNED_HASH_SEED}
-    completed = subprocess.run([sys.executable, str(Path(__file__).resolve()), *sys.argv[1:]], env=env, check=False)
-    return completed.returncode
-
-
 if __name__ == "__main__":
-    reexec_code = _reexec_with_pinned_hash_seed()
-    raise SystemExit(main() if reexec_code is None else reexec_code)
+    raise SystemExit(main())

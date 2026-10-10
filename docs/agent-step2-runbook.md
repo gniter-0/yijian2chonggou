@@ -21,7 +21,7 @@
 export ──▶ Agent 逐页写 responses/*.response.json ──▶ check（可反复）──▶ run
 ```
 
-所有命令都在仓库根目录执行（脚本会自动以 `PYTHONHASHSEED=0` 重新执行自身，原因见 §6）：
+所有命令都在仓库根目录执行（不需要固定 `PYTHONHASHSEED`，见 §6）：
 
 ```bash
 .venv/Scripts/python.exe migration/run_agent_step2_v1.py export --pdf "<pdf>" --run-root pilot_runs/<日期>-agent-step2-<名称>
@@ -89,7 +89,7 @@ export ──▶ Agent 逐页写 responses/*.response.json ──▶ check（可
 |---|---|---|
 | `missing` | 没有响应文件 | 写响应 |
 | `invalid_envelope` | 信封 JSON/Schema 不合法，或 agent_label 仍是占位符 | 看 `detail` |
-| `binding_mismatch` | 响应写给的是别的请求（通常是重新冻结或改了模型标签） | 按新的工作包重写；旧文件挪到 `superseded_responses/` |
+| `binding_mismatch` | 响应写给的是别的请求（通常是重新冻结、改了模型标签，或升级到排序序列化之前写的响应） | 按新的工作包重写；旧文件挪到 `superseded_responses/` |
 | `rejected` | Adapter 契约门禁拒绝 | 看 `detail` / `forensics`，见 §7 |
 | `accepted` | 该页通过 Step2A | — |
 
@@ -97,7 +97,7 @@ export ──▶ Agent 逐页写 responses/*.response.json ──▶ check（可
 
 ## 6. 已知限制
 
-1. **PYTHONHASHSEED 固定**：Evidence 的 `frozenset` 字段按哈希种子顺序序列化，表格页的 request_id 每个进程都不一样。CLI 目前以 `PYTHONHASHSEED=0` 重新执行自身作为临时措施；根本修复在 `fix/evidence-frozenset-order` 分支（合并后改为只给漂移警告）。**API 流水线的缓存/续跑同样受影响。**
+1. **request_id 跨进程稳定**：Evidence 与 ContentPolicy 的 `frozenset` 字段现在按排序输出 JSON（`fix/evidence-frozenset-order`，已合并到本分支），不同 `PYTHONHASHSEED` 下 request_id 一致。CLI 不再重新执行自身；当前 request_id 与上次 export 不一致时，会打印漂移警告并列出页码。此后 request_id 只会因为重新冻结证据、改模型标签、改 profile 或契约代码而变化。**一次性影响**：该修正之前（按旧的哈希种子顺序）算出的 request_id/缓存键全部作废一次，doc01 旧响应已移到 `superseded_responses/pre-sorted-frozenset/`。
 2. **水印字符**：表格单元格的证据文本里混有“联、题、押、精、信、系、微、准”等水印残字，会原样进入卡片文本。过滤属于后续工作。
 3. **只到 dry-run**：图像生成不在本通道范围内。
 
@@ -134,4 +134,5 @@ export ──▶ Agent 逐页写 responses/*.response.json ──▶ check（可
 - PDF：`input_pdf_公路/01 第1章（1）路基施工准备.pdf`（6 页，sha256 `ace9041ad220…`）
 - 运行目录：`pilot_runs/20261009-agent-step2-doc01/`
 - 结果：6/6 页 accepted → 30 条 Fact → 30 张卡（按页 2/5/10/9/3/1），`run` 退出码 0，`durable: true`，`human_approved: false`
+- 跨进程验证：`PYTHONHASHSEED=1` 下 export，`=7` 和不设置时 check 都没有漂移警告；`=5` 下 run 同样 30/30
 - 响应的取舍说明写在各响应的 `author.notes` 里（例如 p6 例题按 definition 记录，题干不在证据中）。
