@@ -41,6 +41,9 @@ _PYMUPDF_IMPORTERS = frozenset(
     {
         "migration/b1_echo_admission_materials.py",
         "migration/b1_echo_diagram_admission_materials.py",
+        # agent Step2 通道：export 把整页渲染成 page.png 给扮演模型的 agent 看图核对，
+        # 与 run_exam_pipeline.py 同属 migration 进程边缘，不进 knowledge 层。
+        "migration/run_agent_step2_v1.py",
         "migration/run_exam_pipeline.py",
         "src/examcard/evidence/fusion.py",
         "src/examcard/evidence/golden.py",

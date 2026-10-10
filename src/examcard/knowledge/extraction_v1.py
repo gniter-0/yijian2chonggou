@@ -137,11 +137,10 @@ def _page_source_paths(
         yield temporary_paths
 
 
-def extract_document_proposals(
+def iter_document_step2a_requests(
     *,
     manifest: DocumentEvidenceManifest,
     content_policy: ContentPolicy,
-    adapter: Step2OpenAIAdapter,
     model: str,
     material_profile_id: str | None = None,
     sample_id: str | None = None,
@@ -149,16 +148,18 @@ def extract_document_proposals(
     source_manifest_references: Mapping[int, str] | None = None,
     decoder: Step2DecoderConfig | None = None,
     prompt_template: str | None = None,
-) -> DocumentExtractionResult:
-    """Run the existing typed Step2A adapter once for each eligible page."""
+) -> Iterator[Step2ARequest]:
+    """Yield the immutable Step 2A request for each eligible page, in page order.
+
+    This is the single request-building path: ``extract_document_proposals``
+    consumes it for provider execution, and offline tooling (for example the
+    agent file-exchange export) consumes it without executing anything.
+    """
 
     profile_id = material_profile_id or manifest.material_profile_id
     if profile_id != manifest.material_profile_id:
         raise ValueError("material profile does not match the Evidence manifest")
     stable_sample_id = sample_id or manifest.document_id.removeprefix("doc:")
-    requests: list[Step2ARequest] = []
-    records: list[Step2AExecutionRecord] = []
-    proposals: list[Step2AFactProposal] = []
     with _page_source_paths(manifest=manifest, supplied=page_manifest_paths) as page_paths:
         for page in manifest.pages:
             if not _page_has_extractable_input(page=page, policy=content_policy):
@@ -175,7 +176,7 @@ def extract_document_proposals(
                 source_manifest_reference=reference,
                 content_policy=content_policy,
             )
-            request = build_step2a_request(
+            yield build_step2a_request(
                 sample_id=stable_sample_id,
                 material_profile_id=profile_id,
                 projection=built.projection,
@@ -184,13 +185,44 @@ def extract_document_proposals(
                 decoder=decoder,
                 prompt_template=prompt_template,
             )
-            record = adapter.complete_step2a(request)
-            if record.response.state != Step2ResultState.SUCCEEDED:
-                state = record.response.failure.state.value if record.response.failure is not None else "failed"
-                raise ValueError(f"Step 2A extraction failed for page {page.page_num}: {state}")
-            requests.append(request)
-            records.append(record)
-            proposals.extend(record.response.proposals)
+
+
+def extract_document_proposals(
+    *,
+    manifest: DocumentEvidenceManifest,
+    content_policy: ContentPolicy,
+    adapter: Step2OpenAIAdapter,
+    model: str,
+    material_profile_id: str | None = None,
+    sample_id: str | None = None,
+    page_manifest_paths: Mapping[int, Path] | None = None,
+    source_manifest_references: Mapping[int, str] | None = None,
+    decoder: Step2DecoderConfig | None = None,
+    prompt_template: str | None = None,
+) -> DocumentExtractionResult:
+    """Run the existing typed Step2A adapter once for each eligible page."""
+
+    requests: list[Step2ARequest] = []
+    records: list[Step2AExecutionRecord] = []
+    proposals: list[Step2AFactProposal] = []
+    for request in iter_document_step2a_requests(
+        manifest=manifest,
+        content_policy=content_policy,
+        model=model,
+        material_profile_id=material_profile_id,
+        sample_id=sample_id,
+        page_manifest_paths=page_manifest_paths,
+        source_manifest_references=source_manifest_references,
+        decoder=decoder,
+        prompt_template=prompt_template,
+    ):
+        record = adapter.complete_step2a(request)
+        if record.response.state != Step2ResultState.SUCCEEDED:
+            state = record.response.failure.state.value if record.response.failure is not None else "failed"
+            raise ValueError(f"Step 2A extraction failed for page {request.projection.page_num}: {state}")
+        requests.append(request)
+        records.append(record)
+        proposals.extend(record.response.proposals)
     return DocumentExtractionResult(
         manifest=manifest,
         requests=tuple(requests),
@@ -241,6 +273,7 @@ __all__ = [
     "DocumentFactPipelineResult",
     "select_document_extraction_path",
     "source_owned_extract_document_proposals",
+    "iter_document_step2a_requests",
     "extract_document_proposals",
     "run_document_fact_pipeline",
 ]
