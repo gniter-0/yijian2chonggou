@@ -8,9 +8,17 @@ from PIL import Image, ImageDraw
 
 ROOT = Path(__file__).resolve().parents[1]
 
-from examcard.evidence.engine_types import NativeLine, NativePage, OCRLine, OCRPage, VisualReviewHint
+from examcard.evidence.engine_types import NativeLine, NativePage, NativeSpan, OCRLine, OCRPage, VisualReviewHint
 from examcard.evidence.ingest import EvidenceEngine, EvidenceEngineConfig
-from examcard.evidence.layout import classify_native_line, equivalent_text, heading_level, normalized_compare_text
+from examcard.evidence.layout import (
+    OverlayMask,
+    classify_native_line,
+    classify_overlay_fragment,
+    equivalent_text,
+    heading_level,
+    is_overlay_line,
+    normalized_compare_text,
+)
 from examcard.evidence.schema import EvidenceKind, SourceQuality
 from examcard.evidence.vision import GoldenFixtureVisionVerifier, VisionVerification
 from examcard.materials.catalog import load_material_profile
@@ -219,7 +227,10 @@ def test_cache_schema_revision_invalidates_derived_evidence_cache(tmp_path):
     revised = EvidenceEngine(
         profile=profile,
         cache_root=tmp_path / "cache",
-        config=EvidenceEngineConfig(render_dpi=144, cache_schema_version="evidence-engine-v3"),
+        config=EvidenceEngineConfig(
+            render_dpi=144,
+            cache_schema_version=EvidenceEngineConfig().cache_schema_version + "-revised",
+        ),
         ocr_provider=provider,
     )
     revised.process_pages(pdf, page_numbers=(1,))
@@ -254,3 +265,115 @@ def test_golden_fixture_vision_is_deterministic_and_accepts_only_png():
         assert "PNG" in str(exc)
     else:
         raise AssertionError("fixture verifier accepted a non-PNG payload")
+
+
+def _line(text: str, *, direction=(1.0, 0.0), writing_mode=0, alpha=255) -> NativeLine:
+    span = NativeSpan(text=text, bbox=(20, 120, 260, 135), font="f", size=12, alpha=alpha)
+    return NativeLine(
+        block_index=0,
+        line_index=0,
+        bbox=(20, 120, 260, 135),
+        text=text,
+        spans=(span,),
+        writing_mode=writing_mode,
+        direction=direction,
+    )
+
+
+def test_overlay_line_is_decided_by_geometry_not_wording():
+    page = NativePage(page_num=1, width=300, height=300, lines=(), images=(), tables=(), rawdict_block_count=0)
+    diagonal = _line("示例文字 ABC 2026", direction=(0.7071, -0.7071))
+    assert is_overlay_line(diagonal)
+    kind, role, tags, must_cover = classify_native_line(diagonal, page=page, repeated_noise=frozenset())
+    assert (kind, role.value, must_cover) == (EvidenceKind.WATERMARK, "watermark", False)
+    assert "overlay_text" in tags
+    assert is_overlay_line(_line("半透明文字", alpha=122))
+    # Horizontal body copy, vertical writing and axis-aligned rotated labels stay content.
+    assert not is_overlay_line(_line("路基施工准备"))
+    assert not is_overlay_line(_line("竖排", direction=(0.0, 1.0), writing_mode=1))
+    assert not is_overlay_line(_line("表头", direction=(0.0, -1.0)))
+
+
+def test_overlay_fragment_needs_overlay_glyph_coverage_and_overlay_text():
+    mask = OverlayMask(glyph_boxes=((100, 100, 140, 140), (140, 100, 180, 140)), texts=("精准押题联系微信3849178",))
+    on_glyphs = (105, 105, 175, 135)
+    assert classify_overlay_fragment("联系微信", bbox=on_glyphs, mask=mask) == "overlay"
+    assert classify_overlay_fragment("49178", bbox=on_glyphs, mask=mask) == "overlay"
+    # Body text fused with the watermark is tagged, never dropped.
+    assert classify_overlay_fragment("供系", bbox=on_glyphs, mask=mask) == "overlap"
+    # Body text under the watermark shares no characters with it.
+    assert classify_overlay_fragment("土的主要性能参数", bbox=on_glyphs, mask=mask) is None
+    # The same words away from the overlay glyphs are not touched.
+    assert classify_overlay_fragment("联系微信", bbox=(10, 10, 60, 30), mask=mask) is None
+    # A single shared character is not enough to call a fragment watermark.
+    assert classify_overlay_fragment("9", bbox=on_glyphs, mask=mask) == "overlap"
+    assert classify_overlay_fragment("联系微信", bbox=on_glyphs, mask=OverlayMask(glyph_boxes=(), texts=())) is None
+
+
+class OverlayOCRProvider:
+    """OCR that re-reads part of the rotated overlay and two labels inside the figure."""
+
+    name = "fake_overlay_ocr"
+    version = "1"
+
+    def audit(self, page: pymupdf.Page, *, page_num: int, render_dpi: int) -> OCRPage:
+        glyphs = [
+            char
+            for block in page.get_text("rawdict")["blocks"]
+            for line in block.get("lines", [])
+            if abs(line["dir"][1]) > 0.05 and abs(line["dir"][0]) > 0.05
+            for span in line["spans"]
+            for char in span["chars"]
+        ]
+        piece = glyphs[-5:]  # "49178"
+        box = (
+            min(char["bbox"][0] for char in piece),
+            min(char["bbox"][1] for char in piece),
+            max(char["bbox"][2] for char in piece),
+            max(char["bbox"][3] for char in piece),
+        )
+
+        def ocr(bbox, text):
+            x0, y0, x1, y1 = bbox
+            return OCRLine(bbox=bbox, polygon=((x0, y0), (x1, y0), (x1, y1), (x0, y1)), text=text, confidence=0.95)
+
+        return OCRPage(
+            page_num=page_num,
+            render_dpi=render_dpi,
+            engine_name=self.name,
+            engine_version=self.version,
+            elapsed_seconds=0.01,
+            lines=(
+                ocr(box, "".join(char["c"] for char in piece)),
+                ocr((60, 130, 100, 145), "嗨学"),
+                ocr((150, 160, 180, 175), "75"),
+            ),
+        )
+
+
+def test_ocr_reread_of_overlay_and_figure_noise_never_become_core(tmp_path):
+    image_path = tmp_path / "figure.png"
+    Image.new("RGB", (400, 160), "white").save(image_path)
+    pdf = tmp_path / "overlay.pdf"
+    doc = pymupdf.open()
+    page = doc.new_page(width=300, height=300)
+    page.insert_text((20, 40), "Body text", fontsize=12)
+    page.insert_image(pymupdf.Rect(40, 120, 240, 200), filename=image_path)
+    pivot = pymupdf.Point(40, 290)
+    page.insert_text(pivot, "CALL 3849178", fontsize=24, morph=(pivot, pymupdf.Matrix(45)))
+    doc.save(pdf)
+    doc.close()
+
+    result = _engine(tmp_path, OverlayOCRProvider()).process_pages(pdf, page_numbers=(1,))
+    units = result.pages[0].evidence_units
+    rotated = next(unit for unit in units if unit.raw_text == "CALL3849178")  # rawdict chars carry no spaces
+    assert rotated.kind == EvidenceKind.WATERMARK and "overlay_text" in rotated.risk_tags
+    reread = next(unit for unit in units if unit.raw_text == "49178")
+    assert reread.kind == EvidenceKind.WATERMARK
+    assert reread.semantic_role.value == "watermark" and reread.must_cover_by_source is False
+    brand = next(unit for unit in units if unit.raw_text == "嗨学")
+    assert brand.kind == EvidenceKind.WATERMARK and brand.parent_id is None
+    label = next(unit for unit in units if unit.raw_text == "75")
+    assert label.kind == EvidenceKind.DIAGRAM_NODE and label.semantic_role.value == "core"
+    body = next(unit for unit in units if unit.raw_text == "Bodytext")
+    assert body.semantic_role.value == "core"

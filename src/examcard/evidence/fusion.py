@@ -15,10 +15,12 @@ from .layout import (
     bbox_intersects,
     bbox_iou,
     classify_native_line,
+    classify_overlay_fragment,
     classify_visual_text,
     equivalent_text,
     heading_level,
     normalized_compare_text,
+    page_overlay_mask,
 )
 from .schema import (
     BBox,
@@ -357,11 +359,32 @@ def fuse_page(
                 order += 1
 
     figure_ocr: dict[str, list[OCRLine]] = {figure_id: [] for _, figure_id, _ in figure_parents}
+    overlay_mask = page_overlay_mask(native)
     for ocr_index, ocr_line in enumerate(ocr.lines):
         if ocr_index in used_ocr or ocr_line.confidence < minimum_ocr_confidence:
             continue
+        overlay = classify_overlay_fragment(ocr_line.text, bbox=ocr_line.bbox, mask=overlay_mask)
         figure = next((item for item in figure_parents if _center_in(ocr_line.bbox, item[0])), None)
-        if figure is not None:
+        noise = classify_visual_text(ocr_line.text, bbox=ocr_line.bbox, page=native)
+        if overlay == "overlay":
+            # OCR re-read of the page's own rotated/transparent overlay text.
+            kind, role, visual_risk_tags, must_cover = (
+                EvidenceKind.WATERMARK,
+                SemanticRole.WATERMARK,
+                frozenset({"watermark", "overlay_text"}),
+                False,
+            )
+            parent = None
+            region_id = None
+            provenance_crop = None
+        elif figure is not None and noise[1] in {SemanticRole.WATERMARK, SemanticRole.HEADER_FOOTER}:
+            # Figure OCR gets the same noise routing as page OCR. Page-number shapes are
+            # deliberately not applied here: bare numbers are ordinary diagram labels.
+            kind, role, visual_risk_tags, must_cover = noise
+            parent = None
+            region_id = None
+            provenance_crop = None
+        elif figure is not None:
             figure_bbox, parent_id, crop_path = figure
             figure_ocr[parent_id].append(ocr_line)
             # 换名而非复用 native 那一遍的 risk_tags：本循环的取值来自 classify_visual_text
@@ -377,12 +400,14 @@ def fuse_page(
             region_id = f"diagram_{parent_id[-8:]}"
             provenance_crop = crop_path
         else:
-            kind, role, visual_risk_tags, must_cover = classify_visual_text(ocr_line.text, bbox=ocr_line.bbox, page=native)
+            kind, role, visual_risk_tags, must_cover = noise
             parent = None
             region_id = None
             provenance_crop = None
             if "=" in ocr_line.text or "＝" in ocr_line.text:
                 kind, visual_risk_tags, must_cover = EvidenceKind.FORMULA, frozenset(visual_risk_tags) | {"formula", "numeric"}, True
+        if overlay == "overlap" and role == SemanticRole.CORE:
+            visual_risk_tags = frozenset(visual_risk_tags) | {"overlay_overlap"}
         unit = build_evidence_unit(
             document_sha256=document_sha256,
             page_num=native.page_num,

@@ -4,6 +4,8 @@ from __future__ import annotations
 import re
 import statistics
 from collections import Counter
+from dataclasses import dataclass
+from typing import Literal
 
 from examcard.materials.schema import SemanticRole
 
@@ -93,6 +95,93 @@ def expand_bbox(bbox: tuple[float, float, float, float], *, margin: float, width
     )
 
 
+# A baseline must deviate from both axes by more than ~3 degrees to count as rotated.
+# Axis-aligned vertical labels (dir = (0, +-1)) are ordinary table/figure text.
+_ROTATION_TOLERANCE = 0.05
+OVERLAY_MIN_COVERAGE = 0.6
+
+
+def is_overlay_line(line: NativeLine) -> bool:
+    """Return whether a native line is drawn as a page overlay rather than body copy.
+
+    The decision uses rendering geometry only, never the wording: body text in the
+    handouts is horizontal (or vertical with ``writing_mode=1``) and opaque, while a
+    diagonal baseline or text whose visible spans are all semi-transparent is a
+    page-level overlay (watermark) whatever it says.
+    """
+    dx, dy = line.direction
+    if line.writing_mode == 0 and abs(dx) > _ROTATION_TOLERANCE and abs(dy) > _ROTATION_TOLERANCE:
+        return True
+    visible = [span for span in line.spans if span.text.strip()]
+    return bool(visible) and all(span.alpha < 255 for span in visible)
+
+
+@dataclass(frozen=True)
+class OverlayMask:
+    """Glyph boxes and normalized texts of one page's native overlay lines."""
+
+    glyph_boxes: tuple[tuple[float, float, float, float], ...]
+    texts: tuple[str, ...]
+
+    @property
+    def characters(self) -> frozenset[str]:
+        return frozenset("".join(self.texts))
+
+
+def page_overlay_mask(page: NativePage) -> OverlayMask:
+    boxes: list[tuple[float, float, float, float]] = []
+    texts: list[str] = []
+    for line in page.lines:
+        if not is_overlay_line(line):
+            continue
+        text = normalized_compare_text(line.text)
+        if text:
+            texts.append(text)
+        for span in line.spans:
+            glyphs = [char.bbox for char in span.chars if char.char.strip()]
+            boxes.extend(glyphs or ([span.bbox] if span.text.strip() else []))
+    return OverlayMask(glyph_boxes=tuple(boxes), texts=tuple(texts))
+
+
+def overlay_coverage(bbox: tuple[float, float, float, float], mask: OverlayMask) -> float:
+    area = bbox_area(bbox)
+    if area <= 0 or not mask.glyph_boxes:
+        return 0.0
+    covered = 0.0
+    for glyph in mask.glyph_boxes:
+        x0, y0 = max(bbox[0], glyph[0]), max(bbox[1], glyph[1])
+        x1, y1 = min(bbox[2], glyph[2]), min(bbox[3], glyph[3])
+        covered += max(0.0, x1 - x0) * max(0.0, y1 - y0)
+    return min(1.0, covered / area)
+
+
+def classify_overlay_fragment(
+    text: str,
+    *,
+    bbox: tuple[float, float, float, float],
+    mask: OverlayMask,
+) -> Literal["overlay", "overlap"] | None:
+    """Classify an OCR line against the page's own native overlay text.
+
+    ``overlay``: the OCR box sits on the overlay glyphs and its text is a contiguous
+    piece of an overlay line, so it is the watermark re-read by OCR.  ``overlap``:
+    the box sits on the overlay glyphs and shares characters with it, but also
+    carries other characters (body text fused with the watermark); it stays content
+    and is only tagged.  Body text merely lying under the watermark shares no
+    characters and is left untouched.
+    """
+    if not mask.texts:
+        return None
+    normalized = normalized_compare_text(text)
+    if not normalized or overlay_coverage(bbox, mask) < OVERLAY_MIN_COVERAGE:
+        return None
+    if len(normalized) >= 2 and any(normalized in line for line in mask.texts):
+        return "overlay"
+    if set(normalized) & mask.characters:
+        return "overlap"
+    return None
+
+
 def detect_repeated_noise(pages: tuple[NativePage, ...]) -> frozenset[str]:
     """Identify repeated header/footer strings without deleting their evidence."""
     counts: Counter[str] = Counter()
@@ -117,6 +206,8 @@ def classify_native_line(
     y_ratio = (line.bbox[1] + line.bbox[3]) / 2 / page.height
     if _PAGE_NUMBER.fullmatch(text):
         return EvidenceKind.PAGE_NUMBER, SemanticRole.PAGE_NUMBER, frozenset({"page_number"}), False
+    if is_overlay_line(line):
+        return EvidenceKind.WATERMARK, SemanticRole.WATERMARK, frozenset({"watermark", "overlay_text"}), False
     if normalized in repeated_noise or _NOISE_TEXT.search(text):
         role = SemanticRole.HEADER_FOOTER if y_ratio <= 0.13 or y_ratio >= 0.87 else SemanticRole.WATERMARK
         kind = EvidenceKind.HEADER_FOOTER if role == SemanticRole.HEADER_FOOTER else EvidenceKind.WATERMARK

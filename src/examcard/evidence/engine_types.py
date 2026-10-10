@@ -18,6 +18,8 @@ class NativeSpan(StrictModel):
     size: float = Field(ge=0)
     flags: int = 0
     color: int = 0
+    # PyMuPDF span opacity (0-255). Semi-transparent text is a page overlay signal.
+    alpha: int = Field(default=255, ge=0, le=255)
     chars: tuple[NativeChar, ...] = ()
 
 
@@ -28,6 +30,8 @@ class NativeLine(StrictModel):
     text: str
     spans: tuple[NativeSpan, ...]
     writing_mode: int = 0
+    # Unit baseline direction (cos, sin) as reported by PyMuPDF ``line["dir"]``.
+    direction: tuple[float, float] = (1.0, 0.0)
 
 
 class NativeImage(StrictModel):

@@ -92,6 +92,15 @@ def _extract_tables(page: pymupdf.Page) -> tuple[NativeTable, ...]:
     return tuple(tables)
 
 
+def _line_direction(value: object) -> tuple[float, float]:
+    if isinstance(value, (tuple, list)) and len(value) == 2:
+        try:
+            return (round(float(value[0]), 4), round(float(value[1]), 4))
+        except (TypeError, ValueError):
+            pass
+    return (1.0, 0.0)
+
+
 def extract_native_page(page: pymupdf.Page, *, page_num: int) -> NativePage:
     """Extract unmodified native text, style, char boxes, images, tables and drawings."""
     page_rect = page.rect
@@ -118,6 +127,7 @@ def extract_native_page(page: pymupdf.Page, *, page_num: int) -> NativePage:
                         size=float(raw_span.get("size") or 0),
                         flags=int(raw_span.get("flags") or 0),
                         color=int(raw_span.get("color") or 0),
+                        alpha=int(raw_span.get("alpha", 255)),
                         chars=chars,
                     )
                 )
@@ -134,6 +144,7 @@ def extract_native_page(page: pymupdf.Page, *, page_num: int) -> NativePage:
                     text=text,
                     spans=tuple(spans),
                     writing_mode=int(raw_line.get("wmode") or 0),
+                    direction=_line_direction(raw_line.get("dir")),
                 )
             )
 
