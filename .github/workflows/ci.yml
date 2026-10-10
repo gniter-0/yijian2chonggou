@@ -53,7 +53,7 @@ jobs:
       # 漏收编就等于它一诞生就在 lint 之外，这条一致性由
       # tests/test_repo_discipline_seal.py 钉成机器判定，不靠下一个人恰好想起来。
       - name: ruff
-        run: uv run ruff check src tests migration tools
+        run: uv run ruff check src tests migration tools skills
 
       # mypy 正式入门禁。一次跑覆盖两档，靠 pyproject [tool.mypy] 的逐模块配置分流：
       #   - gates/ 与 compilers/ 走严格档（disallow_untyped_defs 等一整套），实测清零；
