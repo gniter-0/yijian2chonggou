@@ -4,7 +4,7 @@ from __future__ import annotations
 from enum import StrEnum
 from typing import Any
 
-from pydantic import Field, model_validator
+from pydantic import Field, field_serializer, model_validator
 
 from examcard.materials.schema import PolicyDecision, SemanticRole, StrictModel, V2_SCHEMA_VERSION
 
@@ -78,6 +78,11 @@ class EvidenceProvenance(StrictModel):
     config_hash: str
     generated_at_utc: str
 
+    @field_serializer("source_channels", when_used="json")
+    def _source_channels_json(self, value: frozenset[SourceChannel]) -> list[str]:
+        # JSON order must not follow PYTHONHASHSEED: manifests and Step 2A ids hash this JSON.
+        return sorted(channel.value for channel in value)
+
 
 class SourceConflict(StrictModel):
     conflict_id: str
@@ -109,6 +114,11 @@ class EvidenceUnit(StrictModel):
     policy_decision: PolicyDecision | None = None
     provenance: EvidenceProvenance
     metadata: dict[str, Any] = Field(default_factory=dict)
+
+    @field_serializer("risk_tags", when_used="json")
+    def _risk_tags_json(self, value: frozenset[str]) -> list[str]:
+        # JSON order must not follow PYTHONHASHSEED: manifests and Step 2A ids hash this JSON.
+        return sorted(value)
 
     @model_validator(mode="after")
     def validate_grounding_shape(self) -> "EvidenceUnit":

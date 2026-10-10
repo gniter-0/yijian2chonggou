@@ -9,7 +9,7 @@ from __future__ import annotations
 import re
 from enum import StrEnum
 
-from pydantic import BaseModel, ConfigDict, Field, model_validator
+from pydantic import BaseModel, ConfigDict, Field, field_serializer, model_validator
 
 
 V2_SCHEMA_VERSION = "2.0"
@@ -126,6 +126,11 @@ class ContentPolicy(StrictModel):
     presentation_transform_rules: tuple[PresentationTransformRule, ...] = ()
     allow_fact_promotion_from_excluded: bool = False
     description: str = ""
+
+    @field_serializer("included_roles", "excluded_roles", "optional_roles", "manual_review_roles", when_used="json")
+    def _role_set_json(self, value: frozenset[SemanticRole]) -> list[str]:
+        # JSON order must not follow PYTHONHASHSEED: policy and profile fingerprints hash this JSON.
+        return sorted(role.value for role in value)
 
     @model_validator(mode="after")
     def validate_role_sets(self) -> "ContentPolicy":
